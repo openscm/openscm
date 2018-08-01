@@ -12,6 +12,7 @@ addons:
       - libboost-filesystem1.55-dev
       - g++-4.8
 before_install:
+- pip install pip --upgrade
 - pip install pytest pytest-cov codecov
 install:
   - pip install -e .
