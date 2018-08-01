@@ -1,0 +1,10 @@
+language: python
+dist: trusty
+python:
+  - "3.6"
+before_install:
+- pip install pytest pytest-cov codecov
+install:
+  - pip install -e .
+script:
+  - pytest --cov
