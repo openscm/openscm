@@ -1,0 +1,23 @@
+language: python
+cache: pip
+dist: trusty
+python:
+  - "3.6"
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - libboost-system1.55-dev
+      - libboost-filesystem1.55-dev
+      - g++-4.8
+before_install:
+- pip install pip --upgrade
+- pip install pytest pytest-cov codecov
+install:
+  - pip install -e .
+script:
+  - pytest --cov
+after_success:
+  - codecov
