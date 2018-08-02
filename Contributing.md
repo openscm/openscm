@@ -38,7 +38,7 @@ Many editors have built in support for `Editorconfig` but some require a plugin.
 
 ### Your First Contribution
 
-The development methodology for MAGICC makes heavy use of `git`, `make`, virtual environments and test driven development. If you aren't familiar
+The development methodology for openscm makes heavy use of `git`, `make`, virtual environments and test driven development. If you aren't familiar
 with any of these terms it might be helpful to spend some time getting up to speed on these technologies. Some helpful resources (the longest take about 5 hours to work through):
 
 - [git intro by software carpentry](https://swcarpentry.github.io/git-novice/)
