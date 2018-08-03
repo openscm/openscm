@@ -51,22 +51,16 @@ with any of these terms it might be helpful to spend some time getting up to spe
 
 ## Development workflow
 
-For almost all changes, there should be a corresponding issue on GitHub to discuss the changes and track the overall implementation of the feature.
-These issues should contain a checklist of tasks needed to complete the feature.
-This checklist should include:
-
->* [ ]  Documentation of what the change is doing
->* [ ]  Add changelog entry
->* [ ]  Adding tests which involve this new change
->* [ ]  Updating documentation relating to this new change
->* [ ]  Providing an example of how to use the new change (if applicable)
+For almost all changes, there should be a corresponding [Pull Request](https://github.com/openclimatedata/openscm/pulls) (PR) on GitHub to discuss the changes and track the overall implementation of the feature.
+These PRs should use the PR template.
 
 It is better to break a larger problem into smaller features if you can.
 Each feature is implemented as a branch and merged into master once all of the tests pass.
 This is instead of one long-lived branch which can be difficult to merge.
 
 The workflow for implementing a change to opencm is:
-- Each feature/bug fix should occur in a branch. When you start a new feature be sure to pull any changes to master
+- Create a PR. Initially you will not be ready to merge so preface the title of the PR with 'WIP:'.
+- Start a branch for the feature (or bug fix). When you start a new branch, be sure to pull any changes to master first
  ````bash
 git checkout master
 git pull
@@ -74,7 +68,7 @@ git branch my-feature && git checkout my-feature
  ````
 - Develop your feature. Ensure that you run `make test` locally regularly to ensure that the tests still pass
 - Push your local development branch. This builds, tests and packages openscm under Linux. The committer will be emailed if this process fails.
-- Create a [Pull Request](https://github.com/openclimatedata/openscm/pulls) (PR). If you are not yet ready to merge, preface the title of the PR with WIP. Before the PR can be merged it has to be approved by another team member and it must pass the test suite. If you have a particular reviewer in mind, assign the MR to that user.
+- Before the PR can be merged it should be approved by another team member and it must pass the test suite. If you have a particular reviewer in mind, assign the MR to that user.
 - Your PR may need to be [rebased](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase) before it can be merged. Rebasing replays your commits onto the new master commit and allows you to rewrite history.
 ```bash
 git fetch
