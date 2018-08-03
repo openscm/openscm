@@ -2,9 +2,11 @@
 
 [Add table of contents]
 
-Thanks for contributing to openscm. We are always trying to improve this tool, add new users and can do so even faster with your help!
+Thanks for contributing to openscm.
+We are always trying to improve this tool, add new users and can do so even faster with your help!
 
-Following the guidelines will help us work together as efficiently as possible. When we all work with a common understanding, we can make sure that issues are addressed quickly, suggested changes can be easily assessed and pull requests can be finalised painlessly.
+Following the guidelines will help us work together as efficiently as possible.
+When we all work with a common understanding, we can make sure that issues are addressed quickly, suggested changes can be easily assessed and pull requests can be finalised painlessly.
 
 All contributions are welcome, some possible suggestions include:
 
@@ -15,7 +17,8 @@ All contributions are welcome, some possible suggestions include:
 - improving the documentation
 - blog posts
 
-Please don't use the repository to have discussions about the results. Such discussions are scientific and generally belong in the scientific literature, not in a development repository.
+Please don't use the repository to have discussions about the results.
+Such discussions are scientific and generally belong in the scientific literature, not in a development repository.
 
 ## Ground Rules
 
@@ -31,16 +34,20 @@ As a contributor, it is vital that we all follow a few conventions:
 
 ### Editor Config
 
-The repository contains a `.editorconfig` file. This ensures that all of our text editors behave the same way and avoids spurious changes simply due to differing whitespace or end of line rules.
+The repository contains a `.editorconfig` file.
+This ensures that all of our text editors behave the same way and avoids spurious changes simply due to differing whitespace or end of line rules.
 
-Many editors have built in support for `Editorconfig` but some require a plugin. To work out if your editor requires a plugin, please check https://editorconfig.org/.
+Many editors have built in support for `Editorconfig` but some require a plugin.
+To work out if your editor requires a plugin, please check https://editorconfig.org/.
 
 ## Getting started
 
 ### Your First Contribution
 
-The development methodology for openscm makes heavy use of `git`, `make`, virtual environments and test driven development. If you aren't familiar
-with any of these terms it might be helpful to spend some time getting up to speed on these technologies. Some helpful resources (the longest take about 5 hours to work through):
+The development methodology for openscm makes heavy use of `git`, `make`, virtual environments and test driven development.
+If you aren't familiar
+with any of these terms it might be helpful to spend some time getting up to speed on these technologies.
+Some helpful resources (the longest take about 5 hours to work through):
 
 - [git intro by software carpentry](https://swcarpentry.github.io/git-novice/)
 - [making a pull request](http://makeapullrequest.com/)
