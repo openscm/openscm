@@ -21,11 +21,11 @@ Please don't use the repository to have discussions about the results. Such disc
 
 As a contributor, it is vital that we all follow a few conventions:
 
-- Never push directly to master, all changes should come via pull requests
-- Ensure that you pass all the tests before making a pull request
-- Use our `.editorconfig` file (see [Editor Config](#editor-config))
-- Create issues for changes and enhancements, this ensures that everyone in the community has a chance to comment
 - Be welcoming to newcomers and encourage diverse new contributors from all backgrounds. See the [Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
+- Create issues for changes and enhancements, this ensures that everyone in the community has a chance to comment
+- Use our `.editorconfig` file (see [Editor Config](#editor-config))
+- Ensure that you pass all the tests before making a pull request
+- Avoid pushing directly to master, all changes should come via pull requests
 
 ## Setup
 
@@ -51,8 +51,8 @@ with any of these terms it might be helpful to spend some time getting up to spe
 
 ## Development workflow
 
-For almost all changes, there should be a corresponding issue on GitHub to discuss the changes and track the overall
-implementation of the feature. These issues should contain a checklist of tasks needed to complete the feature.
+For almost all changes, there should be a corresponding issue on GitHub to discuss the changes and track the overall implementation of the feature.
+These issues should contain a checklist of tasks needed to complete the feature.
 This checklist should include:
 
 >* [ ]  Documentation of what the change is doing
@@ -61,8 +61,9 @@ This checklist should include:
 >* [ ]  Updating documentation relating to this new change
 >* [ ]  Providing an example of how to use the new change (if applicable)
 
-It is better to break a larger problem into smaller features if you can. Each feature is implemented as a branch and merged
-into master once all of the tests pass. This is instead of one long-lived branch which can be difficult to merge.
+It is better to break a larger problem into smaller features if you can.
+Each feature is implemented as a branch and merged into master once all of the tests pass.
+This is instead of one long-lived branch which can be difficult to merge.
 
 The workflow for implementing a change to opencm is:
 - Each feature/bug fix should occur in a branch. When you start a new feature be sure to pull any changes to master
@@ -71,15 +72,10 @@ git checkout master
 git pull
 git branch my-feature && git checkout my-feature
  ````
-- Develop your feature. Ensure that you run `make test` locally regularly to ensure that the
- tests still pass
-- Push your local development branch. This builds, tests and packages openscm under Linux. The committer will
-be emailed if this process fails.
-- Create a [Pull Request](https://github.com/openclimatedata/openscm/pulls) (PR). If you are not yet ready to merge preface the title of the PR with WIP. Before the PR can
-be merged it has to be approved by another team member and it must pass the test suite. If you
- have a particular reviewer in mind, assign the MR to that user. [check this re locking master]
-- Your PR may need to be [rebased](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase) before it can
- be merged. Rebasing replays your commits onto the new master commit and allows you to rewrite history.
+- Develop your feature. Ensure that you run `make test` locally regularly to ensure that the tests still pass
+- Push your local development branch. This builds, tests and packages openscm under Linux. The committer will be emailed if this process fails.
+- Create a [Pull Request](https://github.com/openclimatedata/openscm/pulls) (PR). If you are not yet ready to merge, preface the title of the PR with WIP. Before the PR can be merged it has to be approved by another team member and it must pass the test suite. If you have a particular reviewer in mind, assign the MR to that user.
+- Your PR may need to be [rebased](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase) before it can be merged. Rebasing replays your commits onto the new master commit and allows you to rewrite history.
 ```bash
 git fetch
 git checkout my-feature
@@ -89,12 +85,13 @@ git rebase -i origin/master
 
 ## Testing
 
-The tests are automatically run after every push using GitHub's CI pipelines. If the
-tests fail, the person who committed the code is alerted via email.
+The tests are automatically run after every push using GitHub's CI pipelines. If the tests fail, the person who committed the code is alerted via email.
 
 ### Running the tests
 
-To run the tests locally, simply run `make test`. This will create an isolated virtual environment with the required python libraries. This virtual environment can be manually regenerated using `make venv -B`.
+To run the tests locally, simply run `make test`.
+This will create an isolated virtual environment with the required python libraries.
+This virtual environment can be manually regenerated using `make venv -B`.
 
 ### Types of test
 
@@ -125,19 +122,18 @@ We have a number of different types of test:
 We use tags to represent released versions of openscm. Once you have tagged a new release in our git respoitory, `versioneer` takes care of the rest.
 
 We follow [Semantic Versioning](https://semver.org/), where version strings are of the format vMAJOR.MINOR.PATCH.
-The version number increments the:
-* MAJOR version when you make incompatible API changes,
-* MINOR version when you add functionality in a backwards-compatible manner, and
-* PATCH version when you make backwards-compatible bug fixes.
+We follow these conventions when deciding how to increment the version number, increment
+- MAJOR version when you make incompatible API changes,
+- MINOR version when you add functionality in a backwards-compatible manner
+- PATCH version when you make backwards-compatible bug fixes.
 
 The steps undertaken to create a release are:
 
-* Checkout the latest commit in the master branch and ensure that your working copy is clean
-* Update `CHANGELOG.md` to tag the unreleased items with the version and date of release. The
- unreleased section should now be empty
-* Commit the changes with the message "Bumped to {}" where {} is replaced with the version string
-* Tag the commit with the version string. i.e.  `git tag v7.1.0`
-* Push the commit and tags `git push; git push --tags`
+- Checkout the latest commit in the master branch and ensure that your working copy is clean
+- Update `CHANGELOG.md` to tag the unreleased items with the version and date of release. The unreleased section should now be empty.
+- Commit the changes with the message "Bumped to {}" where {} is replaced with the version string
+- Tag the commit with the version string. i.e.  `git tag v7.1.0`
+- Push the commit and tags `git push; git push --tags`
 
 ## Attribution
 
