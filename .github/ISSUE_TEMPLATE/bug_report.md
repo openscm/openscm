@@ -1,9 +1,3 @@
-> 1. What version/commit of MAGICC are you using?
-> 2. What operating system are you using?
-> 3. What did you do?
-> 4. What did you expect to see?
-> 5. What did you see instead?
-
 ---
 name: Bug Report
 about: Write a report to help us improve
