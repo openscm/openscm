@@ -1,0 +1,320 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,shorthands=off]{babel}
+\usepackage[autostyle]{csquotes}
+\MakeOuterQuote{"}
+\usepackage{lmodern}
+\usepackage[default]{lato}
+\usepackage[
+tracking=true,
+expansion=true,
+protrusion=true,
+babel
+]{microtype}
+\usepackage{tikz}
+
+\usetikzlibrary{%
+  arrows,
+  arrows.meta,
+  calc,
+  decorations,
+  decorations.shapes,
+  decorations.text,
+  decorations.pathreplacing,
+  fit,
+  positioning,
+  shapes.geometric,
+}
+
+\definecolor{tableaublack}{HTML}{181818}
+\definecolor{tableaublue}{HTML}{1F77B4}
+\definecolor{tableauorange}{HTML}{FF7F0E}
+\definecolor{tableaugreen}{HTML}{2CA02C}
+\definecolor{tableaured}{HTML}{D62728}
+\definecolor{tableaupurple}{HTML}{9467BD}
+\definecolor{tableaubrown}{HTML}{8C564B}
+\definecolor{tableaumagenta}{HTML}{E377C2}
+\definecolor{tableaugray}{HTML}{7F7F7F}
+\definecolor{tableaugrey}{HTML}{7F7F7F}
+\definecolor{tableaulime}{HTML}{BCBD22}
+\definecolor{tableaucyan}{HTML}{17BECF}
+\definecolor{tableaulightblue}{HTML}{AEC7E8}
+\definecolor{tableaulightorange}{HTML}{FFBB78}
+\definecolor{tableaulightgreen}{HTML}{98DF8A}
+\definecolor{tableaulightred}{HTML}{FF9896}
+\definecolor{tableaulightpurple}{HTML}{C5B0D5}
+\definecolor{tableaulightbrown}{HTML}{C49C94}
+\definecolor{tableaulightmagenta}{HTML}{F7B6D2}
+\definecolor{tableaulightgray}{HTML}{C7C7C7}
+\definecolor{tableaulightgrey}{HTML}{C7C7C7}
+\definecolor{tableaulightlime}{HTML}{DBDB8D}
+\definecolor{tableaulightcyan}{HTML}{9EDAE5}
+
+\usepackage[graphics,active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+\setlength{\PreviewBorder}{1mm}
+\newlength{\roundedcorners}
+\setlength{\roundedcorners}{5pt}
+\newlength{\distancex}
+\setlength{\distancex}{10pt}
+\newlength{\distancey}
+\setlength{\distancey}{15pt}
+\newlength{\componentwidth}
+
+\tikzset{
+  box/.style = {
+    align=center,
+    inner sep=3pt,
+    minimum height=20pt,
+    shape=rectangle,
+    text=black,
+  },
+  connect/.style = {
+    arrows={Stealth[inset=0pt, angle=60:7pt, line width=0]-Stealth[inset=0pt, angle=60:7pt, line width=0]},
+    line width=3pt,
+    draw=tableaublue!50!black,
+  },
+  interface/.style={
+    box,
+    text=white,
+    fill=black,
+    opacity=0.5,
+  },
+  component/.style={
+    box,
+    append after command={
+      \pgfextra
+      \clip[rounded corners=\roundedcorners] (\tikzlastnode.south west) rectangle (\tikzlastnode.north east);
+      \endpgfextra
+    }
+  },
+  outline/.style={
+    draw=black,
+    inner sep=0,
+    rounded corners=\roundedcorners,
+  },
+}
+
+\begin{document}
+\begin{tikzpicture}
+  \setlength{\componentwidth}{450pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightblue,
+    minimum width=\componentwidth,
+    minimum height=100pt,
+    ] (core) {
+      \begin{minipage}{0.5\componentwidth}
+        \centering
+        \vspace{20pt}
+        \texttt{openscm.core}\\[0.25em]
+        Provides the basic functionality to run a particular simple
+        climate model as well as getting and setting its parameter
+        values. Mapping of parameter names and units is done
+        internally.
+      \end{minipage}
+    };
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (core.north) {\texttt{openscm.Core} -- low-level interface};
+  \end{scope}
+  \node[outline,fit=(core)] {};
+
+  \setlength{\componentwidth}{120pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightpurple,
+    minimum width=\componentwidth,
+    minimum height=70pt,
+    below right=\distancey and 0pt of core.south west,
+    ] (magiccadapter) {};
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (magiccadapter.north) {\texttt{openscm.model.Adapter}};
+
+    \node[
+    anchor=south,
+    minimum width=\componentwidth-10pt,
+    yshift=5pt,
+    minimum height=40pt,
+    rounded corners=\roundedcorners,
+    draw=black,
+    fill=tableaupurple,
+    text=white
+    ] at (magiccadapter.south) {
+      \begin{minipage}{40pt}
+        \centering
+        MAGICC\\model
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(magiccadapter)] {};
+
+  \setlength{\componentwidth}{120pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightpurple,
+    minimum width=\componentwidth,
+    minimum height=70pt,
+    right=\distancex of magiccadapter,
+    ] (hectoradapter) {};
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (hectoradapter.north) {\texttt{openscm.model.Adapter}};
+
+    \node[
+    anchor=south,
+    minimum width=\componentwidth-10pt,
+    yshift=5pt,
+    minimum height=40pt,
+    rounded corners=\roundedcorners,
+    draw=black,
+    fill=tableaupurple,
+    text=white
+    ] at (hectoradapter.south) {
+      \begin{minipage}{40pt}
+        \centering
+        Hector\\model
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(hectoradapter)] {};
+
+  \setlength{\componentwidth}{120pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightpurple,
+    minimum width=\componentwidth,
+    minimum height=70pt,
+    right=\distancex of hectoradapter,
+    ] (fairadapter) {};
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (fairadapter.north) {\texttt{openscm.model.Adapter}};
+
+    \node[
+    anchor=south,
+    minimum width=\componentwidth-10pt,
+    yshift=5pt,
+    minimum height=40pt,
+    rounded corners=\roundedcorners,
+    draw=black,
+    fill=tableaupurple,
+    text=white
+    ] at (fairadapter.south) {
+      \begin{minipage}{40pt}
+        \centering
+        FAIR\\model
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(fairadapter)] {};
+
+  \node[box,right=2\distancex of fairadapter] {\Huge ...};
+
+  \draw[connect] let \p1=(core.south), \p2=(magiccadapter.north) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(core.south), \p2=(hectoradapter.north) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(core.south), \p2=(fairadapter.north) in (\x2,\y1) -- (\x2,\y2);
+
+  \setlength{\componentwidth}{250pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightred,
+    minimum width=\componentwidth,
+    minimum height=100pt,
+    above left=\distancey and 0pt of core.north east,
+    ] (library) {};
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (library.north) {\texttt{openscm.OpenSCM} -- high-level interface};
+
+    \node[
+    interface,
+    fill=none,
+    text=black,
+    opacity=1,
+    yshift=10pt,
+    anchor=south,
+    minimum width=\componentwidth,
+    ] at (library.south) {
+      \begin{minipage}{0.8\componentwidth}
+        \centering
+        \texttt{openscm.highlevel}\\[0.25em]
+        Provides high-level functionality around single model runs.
+        This includes reading/writing input and output data, easy setting of parameters and stochastic ensemble runs.
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(library)] {};
+
+  \draw[connect] let \p1=(core.north), \p2=(library.south) in (\x2,\y1) -- (\x2,\y2);
+
+  \setlength{\componentwidth}{450pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightgreen,
+    minimum width=\componentwidth,
+    minimum height=50pt,
+    above left=\distancey and 0pt of library.north east,
+    ] (users) {};
+
+    \node[
+    anchor=west,
+    minimum width=115pt,
+    xshift=5pt,
+    minimum height=40pt,
+    rounded corners=\roundedcorners,
+    draw=black,
+    fill=tableaugreen,
+    text=white
+    ] (endusers) at (users.west) {
+      \begin{minipage}{210pt}
+        \centering
+        Other libraries\\{\small IAMs, ...}
+      \end{minipage}
+    };
+
+    \node[
+    minimum width=115pt,
+    minimum height=40pt,
+    rounded corners=\roundedcorners,
+    draw=black,
+    fill=tableaugreen,
+    text=white,
+    xshift=-4pt,
+    right=\distancex of endusers,
+    ] {
+      \begin{minipage}{210pt}
+        \centering
+        OpenSCM Tool\\{\small Command line interface}
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(users)] {};
+
+  \draw[connect] let \p1=(users.south), \p2=($(core.north)!.5!(core.north west)$) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(library.north) in (\x2,\y1) -- (\x2,\y2);
+\end{tikzpicture}
+\end{document}
