@@ -18,7 +18,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 setup(
     name="openscm",
     version=versioneer.get_version(),
-    description="An API for Simple Climate Models",
+    description="A unifying interface for Simple Climate Models",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/openclimatedata/openscm",

@@ -1,42 +1,38 @@
 OpenSCM
 =======
 
-The **Open Simple Climate Model framework** unifies access to several
-simple climate models (SCMs). It defines a standard interface for
-getting and setting model parameters, input and output data as well as
-for running the models. Additionally, OpenSCM provides a standardized
-file format for these parameters and scenarios including functions for
-reading and writing such files. Its high-level interface further adds
-convenience functions and easily enables stochastic ensemble runs,
-e.g. for model tuning.
-
-OpenSCM comes with a command line tool :doc:`openscm </tool>`.
-
+.. include:: ../README.rst
+    :start-after: sec-begin-index
+    :end-before: sec-end-index
 
 Schema
 ------
 
 .. image:: static/schema.png
-   :width: 650px
-   :align: center
+    :align: center
 
-
-Contents
---------
 
 .. toctree::
-   :maxdepth: 3
+    :maxdepth: 2
+    :caption: Documentation
 
-   usage
-   tool
-   lowlevel
-   highlevel
-   internals
+    installation
+    tool
+    quickstart
+    usage
+    development
 
+.. toctree::
+    :maxdepth: 2
+    :caption: API reference
 
-Indices and tables
-------------------
+    lowlevel
+    highlevel
+    internals
+    adapters
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+    :maxdepth: 2
+    :caption: Versions
+
+    changelog
