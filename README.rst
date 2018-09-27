@@ -16,7 +16,7 @@ reading and writing such files. Its high-level interface further adds
 convenience functions and easily enables stochastic ensemble runs,
 e.g. for model tuning.
 
-OpenSCM comes with a command line tool `openscm`.
+OpenSCM comes with a command line tool ``openscm``.
 
 .. sec-end-index
 .. sec-begin-installation
@@ -35,7 +35,7 @@ Quickstart
 Documentation
 -------------
 
-Detailed documentation is given on `ReadTheDocs <https://openscm.readthedocs.io/en/latest/>`.
+Detailed documentation is given on `ReadTheDocs <https://openscm.readthedocs.io/en/latest/>`_.
 
 .. sec-begin-development
 
@@ -56,8 +56,8 @@ Tests can be run locally with
 .. sec-end-development
 
 .. |Build Status| image:: https://img.shields.io/travis/openclimatedata/openscm.svg
-   :target: https://travis-ci.org/openclimatedata/openscm
+    :target: https://travis-ci.org/openclimatedata/openscm
 .. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
-   :target: https://openscm.readthedocs.io/en/latest/
+    :target: https://openscm.readthedocs.io/en/latest/
 .. |Codecov| image:: https://img.shields.io/codecov/c/github/openclimatedata/openscm.svg
-   :target: https://codecov.io/gh/openclimatedata/openscm
+    :target: https://codecov.io/gh/openclimatedata/openscm
