@@ -12,6 +12,9 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../openscm"))
+
+from _version import get_versions
 
 # -- Project information -----------------------------------------------------
 
@@ -19,11 +22,11 @@ project = "OpenSCM"
 copyright = "2018, Robert Gieseke, Zebedee Nicholls, Sven Willner"
 author = "Robert Gieseke, Zebedee Nicholls, Sven Willner"
 
-# The short X.Y version
-version = ""
-# The full version, including alpha/beta/rc tags
-release = ""
 
+# The short X.Y version
+version = get_versions()["version"]
+# The full version, including alpha/beta/rc tags
+release = version
 
 # -- General configuration ---------------------------------------------------
 
@@ -34,7 +37,23 @@ release = ""
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.autosummary", "sphinx.ext.todo", "sphinx_autodoc_typehints"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.todo",
+    "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+]
+
+autodoc_default_flags = [
+    "members",
+    "undoc-members",
+    "private-members",
+    "inherited-members",
+    "show-inheritance",
+]
+
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["templates"]
@@ -69,7 +88,7 @@ pygments_style = "sphinx"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "nature"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -90,7 +109,15 @@ html_static_path = ["static"]
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-html_sidebars = {"**": ["globaltoc.html", "relations.html", "searchbox.html"]}
+# html_sidebars = {}
+
+html_context = {
+    "display_github": False,
+    "github_user": "openclimatedata",
+    "github_repo": "openscm",
+    "github_version": "master",
+    "conf_py_path": "/docs/",
+}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
@@ -143,7 +170,7 @@ texinfo_documents = [
         "OpenSCM Documentation",
         author,
         "OpenSCM",
-        "One line description of project.",
+        "A unifying interface for Simple Climate Models.",
         "Miscellaneous",
     )
 ]
