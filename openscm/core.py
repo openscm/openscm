@@ -1,7 +1,7 @@
 """
 Then OpenSCM low-level API includes the basic functionality to run a
 particular simple climate model with OpenSCM as well as
-setting/getting its parameter values.  Mapping of parameter names and
+setting/getting its parameter values. Mapping of parameter names and
 units is done internally.
 """
 
@@ -15,7 +15,8 @@ Unit = str
 
 class ParameterLengthError(Exception):
     """
-    Exception raised when sequences in timeseries do not match run size.
+    Exception raised when sequences in timeseries do not match run
+    size.
     """
 
 
@@ -23,8 +24,8 @@ class ParameterReadonlyError(Exception):
     """
     Exception raised when a requested parameter is read-only.
 
-    This can happen, for instance, if a parameter's parent parameter in
-    the parameter hierarchy has already been requested as writable.
+    This can happen, for instance, if a parameter's parent parameter
+    in the parameter hierarchy has already been requested as writable.
     """
 
 
@@ -39,8 +40,12 @@ class ParameterView:
     """
     Generic view to a parameter (scalar or timeseries).
 
-    :param name: Hierarchical name
-    :param unit: Unit
+    Parameters
+    ----------
+    name
+        Hierarchical name
+    unit
+        Unit
     """
 
     def __init__(self, name: Tuple[str], unit: Unit):
@@ -50,9 +55,12 @@ class ParameterView:
 
 class ParameterInfo(ParameterView):
     """
-    Provides info about a parameter.
+    Provides information about a parameter.
 
-    :param parameter_type: Type (``"scalar"`` or ``"timeseries"``)
+    Attributes
+    ----------
+    parameter_type
+        Type (``"scalar"`` or ``"timeseries"``)
     """
 
     parameter_type: str
@@ -60,7 +68,7 @@ class ParameterInfo(ParameterView):
 
 class ScalarView(ParameterView):
     """
-    Read-only :class:`ParameterView` of a scalar parameter.
+    Read-only view of a scalar parameter.
     """
 
     def get(self) -> float:
@@ -72,15 +80,17 @@ class ScalarView(ParameterView):
 
 class WritableScalarView(ScalarView):
     """
-    :class:`ParameterView` of a scalar parameter whose value can be
-    changed.
+    View of a scalar parameter whose value can be changed.
     """
 
     def set(value: float) -> None:
         """
         Set current value of scalar parameter.
 
-        :param value: Value
+        Parameters
+        ----------
+        value
+            Value
         """
         raise NotImplementedError
 
@@ -92,35 +102,46 @@ class TimeseriesView(ParameterView):
 
     def get() -> Sequence[float]:
         """
-        Get values of the full timeseries"""
+        Get values of the full timeseries.
+        """
         raise NotImplementedError
 
     def get(time: Time) -> float:
         """
         Get value at a particular time.
 
-        :param time: Time
+        Parameters
+        ----------
+        time
+            Time
 
-        :raises IndexError: ``time`` is out of run time range.
+        Raises
+        ------
+        IndexError
+            ``time`` is out of run time range.
         """
         raise NotImplementedError
 
 
 class WritableTimeseriesView(TimeseriesView):
     """
-    :class:`ParameterView` of a timeseries whose values can be changed.
+    View of a timeseries whose values can be changed.
     """
 
     def set_series(self, values: Sequence[float]) -> None:
         """
         Set value for whole time series.
 
-        :param values: Values to set.  The length of this sequence
-            (list/1-D array/...) of ``float`` values must equal run
-            size.
+        Parameters
+        ----------
+        values
+            Values to set. The length of this sequence (list/1-D
+            array/...) of ``float`` values must equal run size.
 
-        :raises ParameterLengthError: Length of ``values`` does not
-            equal run size.
+        Raises
+        ------
+        ParameterLengthError
+            Length of ``values`` does not equal run size.
         """
         raise NotImplementedError
 
@@ -128,10 +149,17 @@ class WritableTimeseriesView(TimeseriesView):
         """
         Set value for a particular time in the time series.
 
-        :param value: Value
-        :param time: Time
+        Parameters
+        ----------
+        value
+            Value
+        time
+            Time
 
-        :raises IndexError: ``time`` is out of run time range.
+        Raises
+        ------
+        IndexError
+            ``time`` is out of run time range.
         """
         raise NotImplementedError
 
@@ -147,12 +175,21 @@ class ParameterSet:
 
         The parameter is created as a scalar if not viewed so far.
 
-        :param name: Hierarchy name of the parameter
-        :param region: Region
-        :param unit: Unit for the values in the view
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
+        region
+            Region
+        unit
+            Unit for the values in the view
 
-        :raises ParameterTypeError: Parameter is not scalar
-        :raises ValueError: Name not given or invalid region
+        Raises
+        ------
+        ParameterTypeError
+            Parameter is not scalar
+        ValueError
+            Name not given or invalid region
         """
         raise NotImplementedError
 
@@ -162,14 +199,23 @@ class ParameterSet:
 
         The parameter is created as a scalar if not viewed so far.
 
-        :param name: Hierarchy name of the parameter
-        :param region: Region
-        :param unit: Unit for the values in the view
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
+        region
+            Region
+        unit
+            Unit for the values in the view
 
-        :raises ParameterReadonlyError: Parameter is read-only (e.g.
-            because its parent has been written to)
-        :raises ParameterTypeError: Parameter is not scalar
-        :raises ValueError: Name not given or invalid region
+        Raises
+        ------
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        ParameterTypeError
+            Parameter is not scalar
+        ValueError
+            Name not given or invalid region
         """
         raise NotImplementedError
 
@@ -179,12 +225,21 @@ class ParameterSet:
 
         The parameter is created as a timeseries if not viewed so far.
 
-        :param name: Hierarchy name of the parameter
-        :param region: Region
-        :param unit: Unit for the values in the view
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
+        region
+            Region
+        unit
+            Unit for the values in the view
 
-        :raises ParameterTypeError: Parameter is not timeseries
-        :raises ValueError: Name not given or invalid region
+        Raises
+        ------
+        ParameterTypeError
+            Parameter is not timeseries
+        ValueError
+            Name not given or invalid region
         """
         raise NotImplementedError
 
@@ -194,14 +249,23 @@ class ParameterSet:
 
         The parameter is created as a timeseries if not viewed so far.
 
-        :param name: Hierarchy name of the parameter
-        :param region: Region
-        :param unit: Unit for the values in the view
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
+        region
+            Region
+        unit
+            Unit for the values in the view
 
-        :raises ParameterReadonlyError: Parameter is read-only (e.g.
-            because its parent has been written to)
-        :raises ParameterTypeError: Parameter is not timeseries
-        :raises ValueError: Name not given or invalid region
+        Raises
+        ------
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        ParameterTypeError
+            Parameter is not timeseries
+        ValueError
+            Name not given or invalid region
         """
         raise NotImplementedError
 
@@ -209,12 +273,20 @@ class ParameterSet:
         """
         Get information about a parameter.
 
-        :param: Hierarchy name of the parameter
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
 
-        :raises ValueError: Name not given
+        Raises
+        ------
+        ValueError
+            Name not given
 
-        :returns: :class:`ParameterInfo` of the parameter or ``None``
-                  if the parameter has not been created yet.
+        Returns
+        -------
+        ParameterInfo
+            Information about the parameter or ``None`` if the parameter has not been created yet.
         """
         raise NotImplementedError
 
@@ -225,14 +297,32 @@ class Core:
 
     Represents a model run with a particular simple climate model.
 
-    :param model: Name of the SCM to run
-    :param start_time: Beginning of the time range to run over
-    :param end_time: End of the time range to run over
+    Parameters
+    ----------
+    model
+        Name of the SCM to run
+    start_time
+        Beginning of the time range to run over
+    end_time
+        End of the time range to run over
 
-    :var parameterset: Set of parameters for the run
+    Raises
+    ------
+    KeyError
+        No adapter for SCM named ``model`` found
+    ValueError
+        ``end_time`` before ``start_time``
 
-    :raises KeyError: No adapter for SCM named ``model`` found
-    :raises ValueError: ``end_time`` before ``start_time``
+    Attributes
+    ----------
+    end_time
+        End of the time range to run over (read-only)
+    model
+        Name of the SCM to run (read-only)
+    parameterset
+        Set of parameters for the run (read-only)
+    start_time
+        Beginning of the time range to run over (read-only)
     """
 
     parameters: ParameterSet
@@ -253,6 +343,9 @@ class Core:
         """
         Do a single time step.
 
-        :returns: Current time
+        Returns
+        -------
+        Time
+            Current time
         """
         raise NotImplementedError
