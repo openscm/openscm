@@ -16,7 +16,7 @@ reading and writing such files. Its high-level interface further adds
 convenience functions and easily enables stochastic ensemble runs,
 e.g. for model tuning.
 
-OpenSCM comes with a command line tool :doc:`openscm </tool>`.
+OpenSCM comes with a command line tool `openscm`.
 
 .. sec-end-index
 .. sec-begin-installation
