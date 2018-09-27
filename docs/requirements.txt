@@ -1,3 +1,0 @@
-# For Readthedocs
-numpydoc
-sphinx-autodoc-typehints

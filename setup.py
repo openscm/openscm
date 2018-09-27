@@ -41,4 +41,5 @@ setup(
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
         "Source": "https://github.com/openclimatedata/openscm/",
     },
+    extras_require={"docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]},
 )
