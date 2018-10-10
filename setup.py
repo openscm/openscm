@@ -35,7 +35,6 @@ setup(
     ],
     keywords="simple climate model",
     packages=["openscm"],
-    install_requires=["pymagicc", "fair", "pyhector"],
     tests_require=["pytest"],
     project_urls={  # Optional
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
