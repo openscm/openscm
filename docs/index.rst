@@ -24,6 +24,13 @@ Schema
 
 .. toctree::
     :maxdepth: 2
+    :caption: Standards
+
+    parameters
+    fileformats
+
+.. toctree::
+    :maxdepth: 2
     :caption: API reference
 
     lowlevel

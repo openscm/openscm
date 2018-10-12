@@ -1,3 +1,5 @@
+.. _low-level-reference:
+
 Low-level API
 -------------
 

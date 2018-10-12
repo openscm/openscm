@@ -16,13 +16,19 @@ reading and writing such files. Its high-level interface further adds
 convenience functions and easily enables stochastic ensemble runs,
 e.g. for model tuning.
 
-OpenSCM comes with a command line tool ``openscm``.
+Being designed as a programmin-language agnostic interface and standard in mind, this will be the reference implementation in Python 3.
+
+This OpenSCM implementation comes with a command line tool ``openscm``.
 
 .. sec-end-index
 .. sec-begin-installation
 
 Installation
 ------------
+
+OpenSCM will be made available via ’’pip``.
+
+OpenSCM comes with model adapters only for some very simple SCMs. If you want to run other models, you will also need to install their corresponding OpenSCM adapters.
 
 .. sec-end-installation
 .. sec-begin-quickstart
