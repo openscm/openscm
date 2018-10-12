@@ -129,10 +129,11 @@ class TimeseriesView(ParameterView):
         """
         raise NotImplementedError
         
-    def length() -> int
+    def length() -> int:
         """
         Get length of time series
         """
+        raise NotImplementedError
 
 
 class WritableTimeseriesView(TimeseriesView):
