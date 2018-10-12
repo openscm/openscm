@@ -5,9 +5,9 @@ OpenSCM defines and provides three interfaces for its users.
 
 Its **low-level** interface is targeted to users who want to include OpenSCM in their model, e.g. integrated assessment modellers. This interface provides the basic functionality necessary to run all SCMs included in OpenSCM. It includes functions for getting and setting parameters as well as to run and reset the model.
 
-The **high-level* interface adds several convinience functions on top of the low-level interface. It allows for reading and writing parameters from and to a standardized and other file formats, including whole scenario definitions. Also, it provides functions for running ensembles of model runs and doing stochastic analyses and model tuning.
+The **high-level** interface adds several convinience functions on top of the low-level interface. It allows for reading and writing parameters from and to a standardized and other file formats, including whole scenario definitions. Also, it provides functions for running ensembles of model runs and doing stochastic analyses and model tuning.
 
-The **command line* interface lets users run models with specified parameters and model input directly from the command line without coding themselves. Please see :ref:`tool` for its usage documentation.
+The **command line** interface lets users run models with specified parameters and model input directly from the command line without coding themselves. Please see :ref:`tool` for its usage documentation.
 
 
 Parameters
