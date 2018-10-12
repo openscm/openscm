@@ -7,11 +7,6 @@ units is done internally.
 
 from typing import NewType, Sequence, Tuple
 
-# TODO Make proper types where necessary
-Region = str
-Time = float
-Unit = str
-
 
 class ParameterLengthError(Exception):
     """
@@ -36,23 +31,6 @@ class ParameterTypeError(Exception):
     """
 
 
-class ParameterView:
-    """
-    Generic view to a parameter (scalar or timeseries).
-
-    Parameters
-    ----------
-    name
-        Hierarchical name
-    unit
-        Unit
-    """
-
-    def __init__(self, name: Tuple[str], unit: Unit):
-        self.name = name
-        self.unit = unit
-
-
 class ParameterInfo(ParameterView):
     """
     Provides information about a parameter.
@@ -64,6 +42,35 @@ class ParameterInfo(ParameterView):
     """
 
     parameter_type: str
+
+
+class ParameterView:
+    """
+    Generic view to a parameter (scalar or timeseries).
+
+    Parameters
+    ----------
+    name
+        Hierarchical name
+    region
+        Region (hierarchy)
+    unit
+        Unit
+
+    Attributes
+    ----------
+    name
+        Hierarchical name (read-only)
+    region
+        Region (hierarchy) (read-only)
+    unit
+        Unit (read-only)
+    """
+
+    def __init__(self, name: Tuple[str], region: Tuple[str], unit: str):
+        self.name = name
+        self.region = region
+        self.unit = unit
 
 
 class ScalarView(ParameterView):
@@ -106,14 +113,14 @@ class TimeseriesView(ParameterView):
         """
         raise NotImplementedError
 
-    def get(time: Time) -> float:
+    def get(index: int) -> float:
         """
         Get value at a particular time.
 
         Parameters
         ----------
-        time
-            Time
+        index
+            Time step index
 
         Raises
         ------
@@ -121,6 +128,11 @@ class TimeseriesView(ParameterView):
             ``time`` is out of run time range.
         """
         raise NotImplementedError
+        
+    def length() -> int
+        """
+        Get length of time series
+        """
 
 
 class WritableTimeseriesView(TimeseriesView):
@@ -136,16 +148,16 @@ class WritableTimeseriesView(TimeseriesView):
         ----------
         values
             Values to set. The length of this sequence (list/1-D
-            array/...) of ``float`` values must equal run size.
+            array/...) of ``float`` values must equal size.
 
         Raises
         ------
         ParameterLengthError
-            Length of ``values`` does not equal run size.
+            Length of ``values`` does not equal size.
         """
         raise NotImplementedError
 
-    def set(self, value: float, time: Time) -> None:
+    def set(self, value: float, index: int) -> None:
         """
         Set value for a particular time in the time series.
 
@@ -153,13 +165,13 @@ class WritableTimeseriesView(TimeseriesView):
         ----------
         value
             Value
-        time
-            Time
+        index
+            Time step index
 
         Raises
         ------
         IndexError
-            ``time`` is out of run time range.
+            ``index`` is out of range.
         """
         raise NotImplementedError
 
@@ -169,7 +181,7 @@ class ParameterSet:
     Collates a set of parameters.
     """
 
-    def get_scalar_view(name: Tuple[str], region: Region, unit: Unit) -> ScalarView:
+    def get_scalar_view(name: Tuple[str], region: Tuple[str], unit: str) -> ScalarView:
         """
         Get a read-only view to a scalar parameter.
 
@@ -180,7 +192,7 @@ class ParameterSet:
         name
             Hierarchy name of the parameter
         region
-            Region
+            Region (hierarchy)
         unit
             Unit for the values in the view
 
@@ -193,7 +205,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_writable_scalar_view(name: Tuple[str], region: Region, unit: Unit) -> WritableScalarView:
+    def get_writable_scalar_view(name: Tuple[str], region: Tuple[str], unit: str) -> WritableScalarView:
         """
         Get a writable view to a scalar parameter.
 
@@ -204,7 +216,7 @@ class ParameterSet:
         name
             Hierarchy name of the parameter
         region
-            Region
+            Region (hierarchy)
         unit
             Unit for the values in the view
 
@@ -219,20 +231,27 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_timeseries_view(name: Tuple[str], region: Region, unit: Unit) -> TimeseriesView:
+    def get_timeseries_view(name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> TimeseriesView:
         """
         Get a read-only view to a timeseries parameter.
 
         The parameter is created as a timeseries if not viewed so far.
+        The length of the returned ParameterView's timeseries is adjusted such
+        that its last value corresponds to a time not exceeding the ``end_time``
+        of the underlying run (i.e. ``Core`` object).
 
         Parameters
         ----------
         name
             Hierarchy name of the parameter
         region
-            Region
+            Region (hierarchy)
         unit
             Unit for the values in the view
+        start_time
+            Time for first point in timeseries (seconds since 1970-01-01 00:00:00)
+        period_length
+            Length of single time step in seconds
 
         Raises
         ------
@@ -243,7 +262,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_writable_timeseries_view(name: Tuple[str], region: Region, unit: Unit) -> WritableTimeseriesView:
+    def get_writable_timeseries_view(name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> WritableTimeseriesView:
         """
         Get a writable view to a timeseries parameter.
 
@@ -254,9 +273,13 @@ class ParameterSet:
         name
             Hierarchy name of the parameter
         region
-            Region
+            Region (hierarchy)
         unit
             Unit for the values in the view
+        start_time
+            Time for first point in timeseries (seconds since 1970-01-01 00:00:00)
+        period_length
+            Length of single time step in seconds
 
         Raises
         ------
@@ -302,9 +325,9 @@ class Core:
     model
         Name of the SCM to run
     start_time
-        Beginning of the time range to run over
+        Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
     end_time
-        End of the time range to run over
+        End of the time range to run over (seconds since 1970-01-01 00:00:00)
 
     Raises
     ------
@@ -327,7 +350,7 @@ class Core:
 
     parameters: ParameterSet
 
-    def __init__(self, model: str, start_time: Time, stop_time: Time):
+    def __init__(self, model: str, start_time: int, stop_time: int):
         self.model = model
         self.start_time = start_time
         self.stop_time = stop_time
@@ -339,13 +362,13 @@ class Core:
         """
         raise NotImplementedError
 
-    def step(self) -> Time:
+    def step(self) -> int:
         """
         Do a single time step.
 
         Returns
         -------
         Time
-            Current time
+            Current time (seconds since 1970-01-01 00:00:00)
         """
         raise NotImplementedError
