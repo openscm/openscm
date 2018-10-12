@@ -31,19 +31,6 @@ class ParameterTypeError(Exception):
     """
 
 
-class ParameterInfo(ParameterView):
-    """
-    Provides information about a parameter.
-
-    Attributes
-    ----------
-    parameter_type
-        Type (``"scalar"`` or ``"timeseries"``)
-    """
-
-    parameter_type: str
-
-
 class ParameterView:
     """
     Generic view to a parameter (scalar or timeseries).
@@ -71,6 +58,19 @@ class ParameterView:
         self.name = name
         self.region = region
         self.unit = unit
+
+
+class ParameterInfo(ParameterView):
+    """
+    Provides information about a parameter.
+
+    Attributes
+    ----------
+    parameter_type
+        Type (``"scalar"`` or ``"timeseries"``)
+    """
+
+    parameter_type: str
 
 
 class ScalarView(ParameterView):
