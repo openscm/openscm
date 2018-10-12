@@ -3,9 +3,12 @@ Then OpenSCM low-level API includes the basic functionality to run a
 particular simple climate model with OpenSCM as well as
 setting/getting its parameter values. Mapping of parameter names and
 units is done internally.
+
+Parts of this API definition seems unpythonic as it is designed to
+be easily implementable in several programming languages.
 """
 
-from typing import NewType, Sequence, Tuple
+from typing import Sequence, Tuple
 
 
 class ParameterLengthError(Exception):
@@ -59,6 +62,13 @@ class ParameterView:
         self.region = region
         self.unit = unit
 
+    @property
+    def is_empty(self) -> bool:
+        """
+        Check if parameter is empty, i.e. has not yet been written to.
+        """
+        raise NotImplementedError
+
 
 class ParameterInfo(ParameterView):
     """
@@ -90,7 +100,7 @@ class WritableScalarView(ScalarView):
     View of a scalar parameter whose value can be changed.
     """
 
-    def set(value: float) -> None:
+    def set(self, value: float) -> None:
         """
         Set current value of scalar parameter.
 
@@ -107,13 +117,13 @@ class TimeseriesView(ParameterView):
     Read-only :class:`ParameterView` of a timeseries.
     """
 
-    def get() -> Sequence[float]:
+    def get(self) -> Sequence[float]:
         """
         Get values of the full timeseries.
         """
         raise NotImplementedError
 
-    def get(index: int) -> float:
+    def get(self, index: int) -> float:
         """
         Get value at a particular time.
 
@@ -129,7 +139,7 @@ class TimeseriesView(ParameterView):
         """
         raise NotImplementedError
         
-    def length() -> int:
+    def length(self) -> int:
         """
         Get length of time series
         """
@@ -182,7 +192,7 @@ class ParameterSet:
     Collates a set of parameters.
     """
 
-    def get_scalar_view(name: Tuple[str], region: Tuple[str], unit: str) -> ScalarView:
+    def get_scalar_view(self, name: Tuple[str], region: Tuple[str], unit: str) -> ScalarView:
         """
         Get a read-only view to a scalar parameter.
 
@@ -206,7 +216,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_writable_scalar_view(name: Tuple[str], region: Tuple[str], unit: str) -> WritableScalarView:
+    def get_writable_scalar_view(self, name: Tuple[str], region: Tuple[str], unit: str) -> WritableScalarView:
         """
         Get a writable view to a scalar parameter.
 
@@ -232,7 +242,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_timeseries_view(name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> TimeseriesView:
+    def get_timeseries_view(self, name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> TimeseriesView:
         """
         Get a read-only view to a timeseries parameter.
 
@@ -263,7 +273,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_writable_timeseries_view(name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> WritableTimeseriesView:
+    def get_writable_timeseries_view(self, name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> WritableTimeseriesView:
         """
         Get a writable view to a timeseries parameter.
 
@@ -293,7 +303,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_parameter_info(name: Tuple[str]) -> ParameterInfo:
+    def get_parameter_info(self, name: Tuple[str]) -> ParameterInfo:
         """
         Get information about a parameter.
 
@@ -314,6 +324,22 @@ class ParameterSet:
         """
         raise NotImplementedError
 
+    def has_parameter(self, name: Tuple[str]) -> bool:
+        """
+        Query if parameter set has a specific parameter.
+
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
+
+        Raises
+        ------
+        ValueError
+            Name not given
+        """
+        raise NotImplementedError
+
 
 class Core:
     """
@@ -328,7 +354,7 @@ class Core:
     start_time
         Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
     end_time
-        End of the time range to run over (seconds since 1970-01-01 00:00:00)
+        End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
 
     Raises
     ------
@@ -351,10 +377,10 @@ class Core:
 
     parameters: ParameterSet
 
-    def __init__(self, model: str, start_time: int, stop_time: int):
+    def __init__(self, model: str, start_time: int, end_time: int):
         self.model = model
         self.start_time = start_time
-        self.stop_time = stop_time
+        self.end_time = end_time
         self.parameters = ParameterSet()
 
     def run(self) -> None:
@@ -369,7 +395,7 @@ class Core:
 
         Returns
         -------
-        Time
+        int
             Current time (seconds since 1970-01-01 00:00:00)
         """
         raise NotImplementedError
