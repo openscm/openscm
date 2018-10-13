@@ -141,7 +141,7 @@ class TimeseriesView(ParameterView):
         
     def length(self) -> int:
         """
-        Get length of time series
+        Get length of time series.
         """
         raise NotImplementedError
 
