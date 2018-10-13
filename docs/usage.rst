@@ -19,7 +19,7 @@ Parameters
 
 For example, the parameter for industrial carbon emissions belongs to the parameter for carbon emissions, which in turn belongs to the root parameter emission. Thus, it is identified by
 
-``Emissions`` -> ``CO2`` -> ``Industrial``.
+    ``Emissions`` -> ``CO2`` -> ``Industrial``.
 
 In the low-level API parameters are expected to be identified by tuples of strings describing their position in the hierarchy, i.e. in this example ``("Emissions", "CO2", "Industrial")``. The high-level API also allows for giving it as a string with the hierarchical levels separated by ``|``, e.g. ``"Emissions|CO2|Industrial"``.
 
@@ -29,7 +29,7 @@ See :ref:`parameter-hierarchy` for the standard parameters in OpenSCM.
 Time frames
 -----------
 
-Timeseries parameters are always given with a corresponding time frame, which consists of a time point and a period length. The time point gives the start of the timeseries; the period length gives the length of the period between consecutive values in the timeseries. Each parameter value is assumed to be the **average value** for its corresponding period. This implies that additive values such as emissions need to be given as a rate, e.g. ``tC/a`` rather tah ``tC``.
+Timeseries parameters are always given with a corresponding time frame, which consists of a time point and a period length. The time point gives the start of the timeseries; the period length gives the length of the period between consecutive values in the timeseries. Each parameter value is assumed to be the **average value** for its corresponding period. This implies that additive values such as emissions need to be given as a rate, e.g. ``tC/a`` rather than ``tC``.
 
 In the low-level API time points are given in seconds since ``1970-01-01 00:00:00``, while time period lengths are specified in seconds. The high-level API additionally accepts string values and ``datetime.datetime`` objects.
 
@@ -42,7 +42,7 @@ Low-level interface
 Setting up a model run
 **********************
 
-A model run is represented by a :class:`openscm.Core` object specifying the underlying SCM and start and end time:
+A model run is represented by a :py:class:`openscm.Core` object specifying the underlying SCM and start and end time:
 
 .. code:: python
 
@@ -58,9 +58,9 @@ A model run is represented by a :class:`openscm.Core` object specifying the unde
 Setting input parameters
 ************************
 
-In the low-level API parameters are get and set through of subclasses of :class:`ParameterView`. While the values of the parameters are stored internaly, a :class:`ParameterView` provides an (always up-to-date) "view" of the corresponding parameter giving the parameter values in a specific unit and, in the case of timeseries, a specific time frame.
+In the low-level API parameters are get and set through of subclasses of :py:class:`ParameterView`. While the values of the parameters are stored internaly, a :class:`ParameterView` provides an (always up-to-date) "view" of the corresponding parameter giving the parameter values in a specific unit and, in the case of timeseries, a specific time frame.
 
-Unit and time frame have to be specified questing a :class:`ParameterView` from :class:`openscm.Core`'s :class:`ParameterSet` property called `parameters` using one of the following functions:
+Unit and time frame have to be specified questing a :class:`ParameterView` from :class:`openscm.Core`'s :class:`ParameterSet` property called ```parameters``` using one of the following functions:
 
 - :func:`get_scalar_view` returns a read-only view to a scalar parameter (:class:`ScalarView`)
 - :func:`get_timeseries_view` returns a read-only view to a timeseries parameter (:class:`TimeseriesView`)
