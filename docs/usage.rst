@@ -42,7 +42,7 @@ Low-level interface
 Setting up a model run
 **********************
 
-A model run is represented by a :py:class:`openscm.Core` object specifying the underlying SCM and start and end time:
+A model run is represented by a :class:`openscm.Core` object specifying the underlying SCM and start and end time:
 
 .. code:: python
 
@@ -58,9 +58,9 @@ A model run is represented by a :py:class:`openscm.Core` object specifying the u
 Setting input parameters
 ************************
 
-In the low-level API parameters are get and set through of subclasses of :py:class:`ParameterView`. While the values of the parameters are stored internaly, a :class:`ParameterView` provides an (always up-to-date) "view" of the corresponding parameter giving the parameter values in a specific unit and, in the case of timeseries, a specific time frame.
+In the low-level API parameters are get and set through of subclasses of :class:`ParameterView`. While the values of the parameters are stored internaly, a :class:`ParameterView` provides an (always up-to-date) "view" of the corresponding parameter giving the parameter values in a specific unit and, in the case of timeseries, a specific time frame.
 
-Unit and time frame have to be specified questing a :class:`ParameterView` from :class:`openscm.Core`'s :class:`ParameterSet` property called ```parameters``` using one of the following functions:
+Unit and time frame have to be specified questing a :class:`ParameterView` from :class:`openscm.Core`'s :class:`ParameterSet` property called ``parameters`` using one of the following functions:
 
 - :func:`get_scalar_view` returns a read-only view to a scalar parameter (:class:`ScalarView`)
 - :func:`get_timeseries_view` returns a read-only view to a timeseries parameter (:class:`TimeseriesView`)
@@ -71,7 +71,7 @@ Each of these functions take the hierarchical name of the parameter (as describe
 
 Values can be get and set using ``get`` and ``set`` (also, ``get_series`` and ``set_series`` for whole timeseries), respectively. Conversion, if necessary, is done internally by the object. There is no standard for the unit and time frame for internal storage, but those of the first :class:`ParameterView` requested are used. If a scalar view for a time series is requested (or vice-versa), or if the units are not convertible, an error is raised.
 
-:class:`ParameterView`s also convert between hierarchical levels if possible: a view to a higher level parameter yields the sum of its child parameters. This implies that, once a *writable* view to a parameter is requested, there cannot be a view to one of its children. Otherwise consostency cannot be guaranteed, so an error is raised. The same holds if a child parameter has already been set and the user tries to set values for one of its parent parameters. A similar logic applies to the hierarchy of regions.
+:class:`ParameterView` objects also convert between hierarchical levels if possible: a view to a higher level parameter yields the sum of its child parameters. This implies that, once a *writable* view to a parameter is requested, there cannot be a view to one of its children. Otherwise consostency cannot be guaranteed, so an error is raised. The same holds if a child parameter has already been set and the user tries to set values for one of its parent parameters. A similar logic applies to the hierarchy of regions.
 
 Using :class:`ParameterView` as proxy objects rather than directly setting/returning parameter valus allows for efficient parameter handling in the expected units and time frames without specifying these for each value (e.g. seeting a timeseries step-wise would create large overhead).
 
@@ -93,14 +93,14 @@ The model is simply run by calling the :func:`openscm.Core.run` function:
 
     model_run.run()
 
-This tells the adapter for the particular SCM to get the necessary parameters in the format as expected by the model, while conversion for units and time frames is done by the corresponding :class:`ParameterView`s. It then runs the model itself.
+This tells the adapter for the particular SCM to get the necessary parameters in the format as expected by the model, while conversion for units and time frames is done by the corresponding :class:`ParameterView` objects. It then runs the model itself.
 
 After the run the model is reset, so the :func:`openscm.Core.run` function can be called again (setting parameters to new values before, if desired).
 
 Getting output parameters
 *************************
 
-During the run the model adapter sets the output parameters just like the input parameters were set above. Thus, these can be read using read-only :class:`ParameterView`s:
+During the run the model adapter sets the output parameters just like the input parameters were set above. Thus, these can be read using read-only :class:`ParameterView` objects:
 
 .. code:: python
 

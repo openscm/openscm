@@ -1,4 +1,4 @@
-.. _high-level-interface:
+.. _high-level-reference:
 
 High-level API
 --------------
