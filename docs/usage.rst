@@ -42,11 +42,11 @@ Low-level interface
 Setting up a model run
 **********************
 
-A model run is represented by a :class:`openscm.Core` object specifying the underlying SCM and start and end time:
+A model run is represented by a :class:`openscm.core.Core` object specifying the underlying SCM and start and end time:
 
 .. code:: python
 
-    from openscm import Core as ModelRun
+    from openscm.core import Core as ModelRun
     from datetime import datetime, timedelta
 
     start_time = datetime(2006, 1, 1).timestamp()
@@ -60,9 +60,9 @@ Setting input parameters
 
 In the low-level API parameters are get and set through of subclasses of :class:`ParameterView`. While the values of the parameters are stored internaly, a :class:`ParameterView` provides an (always up-to-date) "view" of the corresponding parameter giving the parameter values in a specific unit and, in the case of timeseries, a specific time frame.
 
-Unit and time frame have to be specified questing a :class:`ParameterView` from :class:`openscm.Core`'s :class:`ParameterSet` property called ``parameters`` using one of the following functions:
+Unit and time frame have to be specified questing a :class:`ParameterView` from :class:`openscm.core.Core`'s :class:`openscm.core.ParameterSet` property called ``parameters`` using one of the following functions:
 
-- :func:`get_scalar_view` returns a read-only view to a scalar parameter (:class:`ScalarView`)
+- :func:`test <openscm.core.ParameterSet.get_scalar_view>` returns a read-only view to a scalar parameter (:class:`ScalarView`)
 - :func:`get_timeseries_view` returns a read-only view to a timeseries parameter (:class:`TimeseriesView`)
 - :func:`get_writable_scalar_view` returns a writable view to a scalar parameter (:class:`WritableScalarView`)
 - :func:`get_writable_timeseries_view` returns a writable view to a timeseries parameter (:class:`WritableTimeseriesView`)
