@@ -3,3 +3,10 @@ twine>=1.11.0
 wheel>=0.31.0
 black
 flake8
+notebook
+git+https://github.com/hgrecco/pint.git
+pandas
+matplotlib
+numpy
+git+https://github.com/thedataincubator/expectexception.git@master
+
