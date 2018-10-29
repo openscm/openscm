@@ -117,7 +117,7 @@ class TimeseriesView(ParameterView):
     Read-only :class:`ParameterView` of a timeseries.
     """
 
-    def get(self) -> Sequence[float]:
+    def get_series(self) -> Sequence[float]:
         """
         Get values of the full timeseries.
         """
