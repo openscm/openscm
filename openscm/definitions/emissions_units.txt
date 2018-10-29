@@ -1,0 +1,58 @@
+yr = 1 * year
+kt = 1000 * t
+
+C = [carbon_emissions]
+CO2 = 12/44 * C = carbon_dioxide_emissions
+
+N = [nitrogen_emissions]
+N2O = 14/44 * N = nitrous_oxide_emissions
+NOx = 14/46 * N = nox_emissions = NOX
+N2ON = 14/28 * N = nitrous_oxide_farming_style_emissions
+NH3 = 14/17 * N = ammonia_emissions
+
+S = [sulfur_emissions]
+SO2 = 32/64 * S = sulfur_dioxide_emissions
+SOx = SO2 = SOX
+
+VOC = [VOC_emissions] = NMVOC = non_methane_volatile_organic_compouns_emissions
+
+BC = [BC_emissions]
+C2F6 = [C2F6_emissions]
+CCl4 = [CCl4_emissions] = CCL4
+CF4 = [CF4_emissions]
+CFC11 = [CFC11_emissions]
+CFC113 = [CFC113_emissions]
+CFC114 = [CFC114_emissions]
+CFC115 = [CFC115_emissions]
+CFC12 = [CFC12_emissions]
+CH3Br = [CH3Br_emissions] = CH3BR
+CH3CCl3 = [CH3CCl3_emissions] = CH3CCL3
+CH3Cl = [CH3Cl_emissions] = CH3CL
+CH4 = [CH4_emissions]
+CO = [CO_emissions]
+HCFC141b = [HCFC141b_emissions] = HCFC141B
+HCFC142b = [HCFC142b_emissions] = HCFC142B
+HCFC22 = [HCFC22_emissions]
+HFC125 = [HFC125_emissions]
+HFC134a = [HFC134a_emissions] = HFC134A
+HFC143a = [HFC143a_emissions] = HFC143A
+HFC152a = [HFC152a_emissions] = HFC152A
+HFC227ea = [HFC227ea_emissions] = HFC227EA
+HFC23 = [HFC23_emissions]
+HFC236fa = [HFC236fa_emissions] = HFC236FA
+HFC245fa = [HFC245fa_emissions] = HFC245FA
+HFC32 = [HFC32_emissions]
+HFC365mfc = [HFC365mfc_emissions] = HFC365MFC
+HFC4310mee = [HFC4310mee_emissions] = HFC4310MEE = HFC4310
+Halon1202 = [Halon1202_emissions] = HALON1202
+Halon1211 = [Halon1211_emissions] = HALON1211
+Halon1301 = [Halon1301_emissions] = HALON1301
+Halon2402 = [Halon2402_emissions] = HALON2402
+OC = [OC_emissions]
+SF6 = [SF6_emissions]
+
+@context AR4GWP12
+    [carbon_emissions] -> [nitrogen_emissions]: 20 * N / C * value
+    [nitrogen_emissions] -> [carbon_emissions]: value * C / N / 20
+@end
+
