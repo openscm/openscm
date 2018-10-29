@@ -6,10 +6,12 @@ data, easy setting of parameters and stochastic ensemble runs.
 
 from .core import Core
 
+
 class OpenSCM(Core):
     """
     High-level OpenSCM class.
 
     Represents model runs with a particular simple climate model.
     """
+
     pass

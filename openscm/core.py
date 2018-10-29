@@ -138,7 +138,7 @@ class TimeseriesView(ParameterView):
             ``time`` is out of run time range.
         """
         raise NotImplementedError
-        
+
     def length(self) -> int:
         """
         Get length of time series.
@@ -192,7 +192,9 @@ class ParameterSet:
     Collates a set of parameters.
     """
 
-    def get_scalar_view(self, name: Tuple[str], region: Tuple[str], unit: str) -> ScalarView:
+    def get_scalar_view(
+        self, name: Tuple[str], region: Tuple[str], unit: str
+    ) -> ScalarView:
         """
         Get a read-only view to a scalar parameter.
 
@@ -216,7 +218,9 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_writable_scalar_view(self, name: Tuple[str], region: Tuple[str], unit: str) -> WritableScalarView:
+    def get_writable_scalar_view(
+        self, name: Tuple[str], region: Tuple[str], unit: str
+    ) -> WritableScalarView:
         """
         Get a writable view to a scalar parameter.
 
@@ -242,7 +246,14 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_timeseries_view(self, name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> TimeseriesView:
+    def get_timeseries_view(
+        self,
+        name: Tuple[str],
+        region: Tuple[str],
+        unit: str,
+        start_time: int,
+        period_length: int,
+    ) -> TimeseriesView:
         """
         Get a read-only view to a timeseries parameter.
 
@@ -273,7 +284,14 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_writable_timeseries_view(self, name: Tuple[str], region: Tuple[str], unit: str, start_time: int, period_length: int) -> WritableTimeseriesView:
+    def get_writable_timeseries_view(
+        self,
+        name: Tuple[str],
+        region: Tuple[str],
+        unit: str,
+        start_time: int,
+        period_length: int,
+    ) -> WritableTimeseriesView:
         """
         Get a writable view to a timeseries parameter.
 
