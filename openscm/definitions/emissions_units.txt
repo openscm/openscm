@@ -14,7 +14,7 @@ S = [sulfur_emissions]
 SO2 = 32/64 * S = sulfur_dioxide_emissions
 SOx = SO2 = SOX
 
-VOC = [VOC_emissions] = NMVOC = non_methane_volatile_organic_compouns_emissions
+VOC = [VOC_emissions] = NMVOC = non_methane_volatile_organic_compounds_emissions 
 
 BC = [BC_emissions]
 C2F6 = [C2F6_emissions]
