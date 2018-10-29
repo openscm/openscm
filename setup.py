@@ -32,8 +32,10 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
     keywords="simple climate model",
+    license="GNU Affero General Public License v3.0 or later",
     packages=["openscm"],
     tests_require=["pytest"],
     project_urls={  # Optional
