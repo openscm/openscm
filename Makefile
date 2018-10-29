@@ -3,8 +3,11 @@ venv: dev-requirements.txt docs/requirements.txt
 	./venv/bin/pip install --upgrade pip
 		./venv/bin/pip install -r dev-requirements.txt
 		./venv/bin/pip install -r docs/requirements.txt
-		./venv/bin/pip install -e .
+		./venv/bin/pip install -e .[test]
 	touch venv
+
+test: venv
+	./venv/bin/pytest -rfsxEX tests
 
 docs: venv
 	./venv/bin/sphinx-build -M html docs docs/build
@@ -23,4 +26,4 @@ black: venv
 clean:
 	rm -rf venv
 
-.PHONY: clean
+.PHONY: clean test black clean flake8 docs
