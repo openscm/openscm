@@ -9,6 +9,10 @@ venv: dev-requirements.txt docs/requirements.txt
 test: venv
 	./venv/bin/pytest -rfsxEX tests
 
+test_all: venv
+	./venv/bin/pytest -rfsxEX tests
+	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
+
 docs: venv
 	./venv/bin/sphinx-build -M html docs docs/build
 
@@ -43,4 +47,4 @@ test-pypi-install: venv
 clean:
 	rm -rf venv
 
-.PHONY: clean test black clean flake8 docs publish-on-pypi test-pypi-install
+.PHONY: clean test test_all black clean flake8 docs publish-on-pypi test-pypi-install
