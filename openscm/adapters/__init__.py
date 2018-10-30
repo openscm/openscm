@@ -36,11 +36,10 @@ def load_adapter(name: str) -> Optional[type]:
     adapter: Optional[type] = None
 
     try:
-        # TODO remove once we have at least one real adapter in here
-        if name == "MODELNAME":
-            from .modelname import MODELNAME
+        if name == "DICE":
+            from .dice import DICE
 
-            adapter = MODELNAME
+            adapter = DICE
 
         """
         When implementing an additional adapter, include your adapter NAME here as:
