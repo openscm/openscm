@@ -1,8 +1,3 @@
-"""
-Internally used classes and functions including unit handling and the
-model adapter.
-"""
-
 from .core import ParameterSet
 from abc import ABCMeta, abstractmethod
 
