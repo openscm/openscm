@@ -37,7 +37,7 @@ setup(
     keywords="simple climate model",
     license="GNU Affero General Public License v3.0 or later",
     packages=["openscm"],
-    tests_require=["pytest"],
+    install_requires=["pandas"],
     project_urls={  # Optional
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
         "Source": "https://github.com/openclimatedata/openscm/",
