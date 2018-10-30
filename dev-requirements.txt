@@ -9,4 +9,3 @@ pandas
 matplotlib
 numpy
 git+https://github.com/thedataincubator/expectexception.git@master
-

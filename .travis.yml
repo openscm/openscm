@@ -12,12 +12,18 @@ addons:
       - libboost-system1.55-dev
       - libboost-filesystem1.55-dev
       - g++-4.8
+
 before_install:
-- pip install pip --upgrade
-- pip install pytest pytest-cov codecov
+  - pip install pip --upgrade
+
 install:
-  - pip install -e .
+  # annoyingly we can't put this in setup.py...
+  - pip install git+https://github.com/thedataincubator/expectexception.git@master
+  - pip install -e .[test]
+
 script:
-  - pytest --cov
+  - pytest --cov -rfsxEX
+  - pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
+
 after_success:
   - codecov
