@@ -1,4 +1,9 @@
-# syntax is name = relation to unit already in registry = other names
+# syntax is either:
+# for variables which relate to existing variables in the registry
+# name = relation to unit already in registry = other names
+# for variables which should define a new base unit
+# name = [long_name] = other names
+
 a = 1 * year = annum = yr
 kt = 1000 * t
 
