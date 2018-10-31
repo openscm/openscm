@@ -1,4 +1,5 @@
-a = annum = yr = 1 * year
+# syntax is name = relation to unit already in registry = other names
+a = 1 * year = annum = yr
 kt = 1000 * t
 
 C = [carbon_emissions]
@@ -14,7 +15,7 @@ S = [sulfur_emissions]
 SO2 = 32/64 * S = sulfur_dioxide_emissions
 SOx = SO2 = SOX
 
-VOC = [VOC_emissions] = NMVOC = non_methane_volatile_organic_compounds_emissions 
+VOC = [VOC_emissions] = NMVOC = non_methane_volatile_organic_compounds_emissions
 
 BC = [BC_emissions]
 C2F6 = [C2F6_emissions]
