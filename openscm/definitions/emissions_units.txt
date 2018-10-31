@@ -1,4 +1,4 @@
-yr = 1 * year
+a = annum = yr = 1 * year
 kt = 1000 * t
 
 C = [carbon_emissions]
