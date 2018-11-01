@@ -18,7 +18,7 @@ before_install:
 
 install:
   # annoyingly we can't put this in setup.py...
-  - pip install git+https://github.com/thedataincubator/expectexception.git@master git+https://github.com/hgrecco/pint.git
+  - pip install git+https://github.com/thedataincubator/expectexception.git@master
   - pip install -e .[test]
 
 script:
