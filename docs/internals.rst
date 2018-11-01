@@ -1,6 +1,12 @@
 Internals
----------
+=========
 
-.. automodule:: openscm.internal
+Adapter
+-------
+
+.. automodule:: openscm.adapter
+
+Units
+-----
 
 .. automodule:: openscm.units

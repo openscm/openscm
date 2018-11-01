@@ -5,6 +5,7 @@ The units are defined using `Pint <https://github.com/hgrecco/pint>`.
 """
 
 from pint import Context, UnitRegistry
+from pint.errors import DimensionalityError, UndefinedUnitError
 
 # Start a unit repository using the default variables:
 unit_registry = UnitRegistry()
@@ -26,8 +27,12 @@ The unit registry contains all of our recognised units. A couple of examples
     <Quantity(6.516224050620789, 'C * megametric_ton / week')>
 """
 
-# Define gases:
-# Single names are gas base units, lists are a defining conversion and aliases
+# Define gases. If the value is:
+# - str: this entry defines a base gas unit
+# - list: this entry defines a derived unit
+#    - the first entry defines how to convert from base units
+#    - other entries define other names i.e. aliases
+# make private
 gases = {
     "C": "carbon",
     "CO2": ["12/44 * C", "carbon_dioxide"],
@@ -125,3 +130,66 @@ c.add_transformation(
     lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
 )
 unit_registry.add_context(c)
+
+
+
+class UnitConverter:
+    """
+    Converts numbers between two units.
+
+    """
+
+    _offset: float
+    """Offset for units (e.g. for temperature units)"""
+
+    _scaling: float
+    """Scaling factor between units"""
+
+    def __init__(self, source: str, target: str):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        source
+            Unit to convert **from**
+        target
+            Unit to convert **to**
+
+        Raises
+        ------
+        DimensionalityError
+            Units cannot be converted into each other.
+        UndefinedUnitError
+            Unit undefined.
+        """
+        source_unit = unit_registry.Unit(source)
+        target_unit = unit_registry.Unit(target)
+        s1 = unit_registry.Quantity(1, source_unit)
+        s2 = unit_registry.Quantity(-1, source_unit)
+        t1 = s1.to(target_unit)
+        t2 = s2.to(target_unit)
+        self._scaling = float(t2.m - t1.m) / float(s2.m - s1.m)
+        self._offset = t1.m - self._scaling * s1.m
+
+    def convert_from(self, v):
+        """
+        Convert value **from** source unit to target unit.
+
+        Parameters
+        ----------
+        value
+            Value
+        """
+        return self._offset + v * self._scaling
+
+    def convert_to(self, v):
+        """
+        Convert value from target unit **to** source unit.
+
+        Parameters
+        ----------
+        value
+            Value
+        """
+        return (v - self._offset) / self._scaling
