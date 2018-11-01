@@ -5,6 +5,8 @@
 # name = [long_name] = other names
 
 a = 1 * year = annum = yr
+h = hour
+# since kt is used for "knot" in the defaults:
 kt = 1000 * t
 
 C = [carbon_emissions]
