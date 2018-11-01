@@ -8,7 +8,8 @@ a = 1 * year = annum = yr
 h = hour
 # since kt is used for "knot" in the defaults:
 kt = 1000 * t
-
+degreeC = degC
+degreeF = degF
 C = [carbon_emissions]
 CO2 = 12/44 * C = carbon_dioxide_emissions
 
