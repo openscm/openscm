@@ -37,7 +37,6 @@ Schema
     highlevel
     internals
     adapters
-    definitions
 
 .. toctree::
     :maxdepth: 2
