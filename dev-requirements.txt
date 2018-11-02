@@ -1,1 +1,3 @@
 git+https://github.com/thedataincubator/expectexception.git@master
+# can't unpin this as then definition doesn't work properly...
+git+https://github.com/hgrecco/pint.git@master

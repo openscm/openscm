@@ -33,7 +33,7 @@ The unit registry contains all of our recognised units. A couple of examples
 #    - the first entry defines how to convert from base units
 #    - other entries define other names i.e. aliases
 # make private
-gases = {
+_gases = {
     "C": "carbon",
     "CO2": ["12/44 * C", "carbon_dioxide"],
     "N": "nitrogen",
@@ -89,7 +89,7 @@ def add_short_weight_version(symbol: str):
     unit_registry.define("t{} = t * {}".format(symbol, symbol))
 
 
-for symbol, value in gases.items():
+for symbol, value in _gases.items():
     if isinstance(value, str):
         # symbol is base unit
         unit_registry.define("{} = [{}]".format(symbol, value))
