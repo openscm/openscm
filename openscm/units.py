@@ -1,13 +1,47 @@
 """
 Unit handling.
 
-The units are defined using `Pint <https://github.com/hgrecco/pint>`.
+Our unit handling library is `Pint <https://github.com/hgrecco/pint>`_. This allows us
+to define units simply as well as providing us with the ability to define contexts.
+
+
+**A note on emissions units**
+
+Emissions are a flux composed of three parts: mass, the stuff being emitted and the
+time period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to
+define here are emissions units i.e. the stuff. Here we include as many of the
+canonical emissions units, and their conversions, as possible.
+
+For emissions units, there are a few cases to be considered:
+
+- fairly obvious ones e.g. carbon dioxide emissions can be provided in 'C' or 'CO2' and converting between the two is possible
+- less obvious ones e.g. nitrous oxide emissions can be provided in 'N', 'N2O' or 'N2ON', we provide conversions
+- namespace collisions e.g. methane emissions can be provided in 'CH4' or 'C' and the conversions are valid. However, that also means that methane emissions can be converted directly to 'CO2' which isn't something which should actually be valid.
+- case-sensitivity. In order to provide a simplified interface, using all uppercase versions of any unit is also valid e.g. ``unit_registry("HFC4310mee") == unit_registry("HFC4310MEE")``
+- hyphens and underscores in units. In order to be Pint compatible and to simplify things, we strip all hyphens and underscores from units.
+
+As a convenience, we allow users to combine the first two to make a 'joint unit' e.g.
+"tCO2" but it should be recognised that this joint unit is a derived unit and not a
+base unit.
+
+By definining these three separate components, it is much easier to track what
+conversions are valid and which are not. For example, as the emissions units are all
+defined as emissions units, and not as atomic masses, we are able to prevent invalid
+conversions. If emissions units were simply atomic masses, it would be possible to
+convert between e.g. C and N2O which would be a problem. Conventions such as allowing
+carbon dioxide emissions to be reported in C or CO2, despite the fact that they are
+fundamentally different chemical species, is a convention which is particular to
+emissions (as far as we can tell).
+
+Finally, contexts are particularly useful for emissions as they facilitate much easier
+metric conversions. With a context, a conversion which wouldn't normally be allowed (
+e.g. tCO2 --> tN2O) is allowed and will use whatever metric conversion is appropriate
+for that context (e.g. AR4GWP100).
 """
 
 from pint import Context, UnitRegistry
-from pint.errors import DimensionalityError, UndefinedUnitError
 
-# Start a unit repository using the default variables:
+# Start a unit registry using the default variables:
 unit_registry = UnitRegistry()
 """`obj`:`pint.registry.UnitRegistry`: OpenSCM's unit registry
 
@@ -32,14 +66,15 @@ The unit registry contains all of our recognised units. A couple of examples
 # - list: this entry defines a derived unit
 #    - the first entry defines how to convert from base units
 #    - other entries define other names i.e. aliases
-# make private
 _gases = {
     "C": "carbon",
     "CO2": ["12/44 * C", "carbon_dioxide"],
     "N": "nitrogen",
     "N2O": ["14/44 * N", "nitrous_oxide"],
-    "NOx": ["14/46 * N", "nox"],
     "N2ON": ["14/28 * N", "nitrous_oxide_farming_style"],
+    # "NOx": ["14/46 * N", "nox"],
+    "NOx": "NOx",
+    "nox": ["NOx"],
     "NH3": ["14/17 * N", "ammonia"],
     "S": ["sulfur"],
     "SO2": ["32/64 * S", "sulfur_dioxide"],
@@ -84,7 +119,16 @@ _gases = {
 }
 
 
-def add_short_weight_version(symbol: str):
+def _add_mass_emissions_joint_version(symbol: str):
+    """Add a unit which is the combination of mass and emissions.
+
+    This allows users to access e.g. ``unit_registry("tC")`` rather than requiring a space between the mass and the emissions i.e. ``unit_registry("t C")``
+
+    Parameters
+    ----------
+    symbol
+        The unit to add a joint version for.
+    """
     unit_registry.define("g{} = g * {}".format(symbol, symbol))
     unit_registry.define("t{} = t * {}".format(symbol, symbol))
 
@@ -99,12 +143,12 @@ for symbol, value in _gases.items():
         for alias in value[1:]:
             unit_registry.define("{} = {}".format(alias, symbol))
 
-    add_short_weight_version(symbol)
+    _add_mass_emissions_joint_version(symbol)
 
     # Add alias for upper case symbol:
     if symbol.upper() != symbol:
         unit_registry.define("{} = {}".format(symbol.upper(), symbol))
-        add_short_weight_version(symbol.upper())
+        _add_mass_emissions_joint_version(symbol.upper())
 
 
 # Other definitions:
@@ -115,6 +159,9 @@ unit_registry.define("degreeC = degC")
 unit_registry.define("degreeF = degF")
 unit_registry.define("kt = 1000 * t")  # since kt is used for "knot" in the defaults
 
+unit_registry.define("ppt = [concentrations]")
+unit_registry.define("ppb = 1000*ppt")
+unit_registry.define("ppm = 1000*ppb")
 
 # Contexts:
 
@@ -130,7 +177,6 @@ c.add_transformation(
     lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
 )
 unit_registry.add_context(c)
-
 
 
 class UnitConverter:

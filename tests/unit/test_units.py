@@ -8,18 +8,18 @@ import pytest
 
 def test_unit_registry():
     CO2 = unit_registry("CO2")
-    assert CO2.to("C").magnitude == 12. / 44.
+    assert CO2.to("C").magnitude == 12.0 / 44.0
 
 
 def test_alias():
     CO2 = unit_registry("carbon_dioxide")
-    assert CO2.to("C").magnitude == 12. / 44.
+    assert CO2.to("C").magnitude == 12.0 / 44.0
 
 
 def test_base_unit():
     # I don't know why this is this way, anyway
     with pytest.raises(UndefinedUnitError):
-        C = unit_registry("carbon")
+        unit_registry("carbon")
 
 
 def test_nitrogen():
@@ -27,10 +27,36 @@ def test_nitrogen():
     assert N.to("N2ON").magnitude == 28 / 14
 
 
+def test_nox():
+    # do we want to allow this?
+    NOx = unit_registry("NOx")
+    with pytest.raises(DimensionalityError):
+        NOx.to("N")
+
+
+def test_ppm():
+    # do we want to allow this?
+    ppm = unit_registry("ppm")
+    assert ppm.to("ppb").magnitude == 1000
+
+
+def test_ppt():
+    # do we want to allow this?
+    ppt = unit_registry("ppt")
+    assert ppt.to("ppb").magnitude == 1 / 1000
+
+
+def test_methane():
+    # do we want to allow this?
+    CH4 = unit_registry("CH4")
+    with pytest.raises(DimensionalityError):
+        CH4.to("C")
+
+
 def test_short_definition():
     tC = unit_registry("tC")
-    np.testing.assert_allclose(tC.to("tCO2").magnitude, 44. / 12.)
-    np.testing.assert_allclose(tC.to("gC").magnitude, 10**6)
+    np.testing.assert_allclose(tC.to("tCO2").magnitude, 44.0 / 12.0)
+    np.testing.assert_allclose(tC.to("gC").magnitude, 10 ** 6)
 
 
 def test_uppercase():
@@ -72,17 +98,18 @@ def test_conversion_with_offset():
 
 def test_conversion_unknown_unit():
     with pytest.raises(UndefinedUnitError):
-        uc = UnitConverter("UNKOWN", "degF")
+        UnitConverter("UNKOWN", "degF")
 
 
 def test_conversion_incompatible_units():
     with pytest.raises(DimensionalityError):
-        uc = UnitConverter("kg", "degF")
+        UnitConverter("kg", "degF")
+
 
 def test_context():
     CO2 = unit_registry("CO2")
     with pytest.raises(DimensionalityError):
         CO2.to("N")
 
-    with unit_registry.context('AR4GWP12'):
+    with unit_registry.context("AR4GWP12"):
         np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)

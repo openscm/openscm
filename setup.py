@@ -45,6 +45,15 @@ setup(
     extras_require={
         "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"],
         "tests": ["pytest", "pytest-cov", "codecov", "nbval", "notebook"],
-        "dev": ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0", "black", "flake8", "pandas", "matplotlib", "numpy"]
+        "dev": [
+            "setuptools>=38.6.0",
+            "twine>=1.11.0",
+            "wheel>=0.31.0",
+            "black",
+            "flake8",
+            "pandas",
+            "matplotlib",
+            "numpy",
+        ],
     },
 )
