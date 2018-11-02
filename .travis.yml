@@ -18,8 +18,8 @@ before_install:
 
 install:
   # annoyingly we can't put this in setup.py...
-  - pip install git+https://github.com/thedataincubator/expectexception.git@master
-  - pip install -e .[test]
+  - pip install -r dev-requirements.txt
+  - pip install -e .[tests]
 
 script:
   - pytest --cov -rfsxEX

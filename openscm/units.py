@@ -40,6 +40,8 @@ for that context (e.g. AR4GWP100).
 """
 
 from pint import Context, UnitRegistry
+from pint.errors import DimensionalityError, UndefinedUnitError
+
 
 # Start a unit registry using the default variables:
 unit_registry = UnitRegistry()
