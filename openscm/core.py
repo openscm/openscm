@@ -37,30 +37,54 @@ class ParameterTypeError(Exception):
 class ParameterView:
     """
     Generic view to a parameter (scalar or timeseries).
-
-    Parameters
-    ----------
-    name
-        Hierarchical name
-    region
-        Region (hierarchy)
-    unit
-        Unit
-
-    Attributes
-    ----------
-    name
-        Hierarchical name (read-only)
-    region
-        Region (hierarchy) (read-only)
-    unit
-        Unit (read-only)
     """
 
+    _name: Tuple[str]
+    """Hierarchical name"""
+
+    _region: Tuple[str]
+    """Region (hierarchy)"""
+
+    _unit: str
+    """Unit"""
+
     def __init__(self, name: Tuple[str], region: Tuple[str], unit: str):
-        self.name = name
-        self.region = region
-        self.unit = unit
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        name
+            Hierarchical name
+        region
+            Region (hierarchy)
+        unit
+            Unit
+        """
+        self._name = name
+        self._region = region
+        self._unit = unit
+
+    @property
+    def name(self) -> Tuple[str]:
+        """
+        Hierarchical name
+        """
+        return self._name
+
+    @property
+    def region(self) -> Tuple[str]:
+        """
+        Region (hierarchy)
+        """
+        return self._region
+
+    @property
+    def unit(self) -> str:
+        """
+        Unit
+        """
+        return self._unit
 
     @property
     def is_empty(self) -> bool:
@@ -73,14 +97,26 @@ class ParameterView:
 class ParameterInfo(ParameterView):
     """
     Provides information about a parameter.
-
-    Attributes
-    ----------
-    parameter_type
-        Type (``"scalar"`` or ``"timeseries"``)
     """
 
-    parameter_type: str
+    _parameter_type: str
+    """Type (``"scalar"`` or ``"timeseries"``)"""
+
+    def __init__(self, parameter_type: str):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        parameter_type
+            Type (``"scalar"`` or ``"timeseries"``)
+        """
+        self._parameter_type = parameter_type
+
+    @property
+    def parameter_type(self) -> str:
+        """Type (``"scalar"`` or ``"timeseries"``)"""
+        return self._parameter_type
 
 
 class ScalarView(ParameterView):
@@ -364,48 +400,78 @@ class Core:
     OpenSCM core class.
 
     Represents a model run with a particular simple climate model.
-
-    Parameters
-    ----------
-    model
-        Name of the SCM to run
-    start_time
-        Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
-    end_time
-        End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
-
-    Raises
-    ------
-    KeyError
-        No adapter for SCM named ``model`` found
-    ValueError
-        ``end_time`` before ``start_time``
-
-    Attributes
-    ----------
-    end_time
-        End of the time range to run over (read-only)
-    model
-        Name of the SCM to run (read-only)
-    parameterset
-        Set of parameters for the run (read-only)
-    start_time
-        Beginning of the time range to run over (read-only)
     """
 
-    parameters: ParameterSet
+    _end_time: int
+    """End of the time range to run over (including; seconds since 1970-01-01 00:00:00)"""
+
+    _model: str
+    """Name of the SCM to run"""
+
+    _parameters: ParameterSet
+    """Set of parameters for the run"""
+
+    _start_time: int
+    """Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)"""
 
     def __init__(self, model: str, start_time: int, end_time: int):
-        self.model = model
-        self.start_time = start_time
-        self.end_time = end_time
-        self.parameters = ParameterSet()
+        """
+        Initialize.
+
+        Attributes
+        ----------
+        model
+            Name of the SCM to run
+        start_time
+            Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
+        end_time
+            End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
+
+        Raises
+        ------
+        KeyError
+            No adapter for SCM named ``model`` found
+        ValueError
+            ``end_time`` before ``start_time``
+        """
+        self._model = model
+        self._start_time = start_time
+        self._end_time = end_time
+        self._parameters = ParameterSet()
+
+    @property
+    def end_time(self) -> int:
+        """
+        End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
+        """
+        return self._end_time
+
+    @property
+    def model(self) -> str:
+        """
+        Name of the SCM to run
+        """
+        return self._model
+
+    @property
+    def parameters(self) -> ParameterSet:
+        """
+        Set of parameters for the run
+        """
+        return self._parameterset
 
     def run(self) -> None:
         """
         Run the model over the full time range.
         """
         raise NotImplementedError
+
+    @property
+    def start_time(self) -> int:
+        """
+        Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
+        """
+        return self._start_time
 
     def step(self) -> int:
         """
