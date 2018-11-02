@@ -35,8 +35,8 @@ Schema
 
     lowlevel
     highlevel
-    internals
     adapters
+    units
 
 .. toctree::
     :maxdepth: 2
