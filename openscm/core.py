@@ -1,11 +1,10 @@
 """
-Then OpenSCM low-level API includes the basic functionality to run a
-particular simple climate model with OpenSCM as well as
-setting/getting its parameter values. Mapping of parameter names and
-units is done internally.
+The OpenSCM low-level API includes the basic functionality to run a particular
+simple climate model with OpenSCM as well as setting/getting its parameter values.
+Mapping of parameter names and units is done internally.
 
-Parts of this API definition seems unpythonic as it is designed to
-be easily implementable in several programming languages.
+Parts of this API definition seems unpythonic as it is designed to be easily
+implementable in several programming languages.
 """
 
 from enum import Enum
@@ -723,7 +722,8 @@ class ParameterSet:
         Returns
         -------
         ParameterInfo
-            Information about the parameter or ``None`` if the parameter has not been created yet.
+            Information about the parameter or ``None`` if the parameter has not been
+            created yet.
         """
         raise NotImplementedError
 
@@ -752,7 +752,9 @@ class Core:
     """
 
     _end_time: int
-    """End of the time range to run over (including; seconds since 1970-01-01 00:00:00)"""
+    """
+    End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
+    """
 
     _model: str
     """Name of the SCM to run"""
@@ -774,7 +776,8 @@ class Core:
         start_time
             Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
         end_time
-            End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
+            End of the time range to run over (including; seconds since 1970-01-01
+            00:00:00)
 
         Raises
         ------
