@@ -141,7 +141,7 @@ class _Parameter:
         """
         if len(self._children) > 0:
             raise ParameterReadonlyError
-        self.attempt_read(parameter_type)
+        self.attempt_aggregate(parameter_type)
         self._has_been_written_to = True
 
     @property
@@ -194,7 +194,10 @@ class _Region:
     """Subregions"""
 
     _has_been_aggregated: bool
-    """Tells if a parameter of this region has already been read in an aggregated way"""
+    """
+    Tells if a parameter of this region has already been read in an aggregated way,
+    i.e., aggregating over subregions
+     """
 
     _name: str
     """Name"""
@@ -259,6 +262,13 @@ class _Region:
             res = _Parameter(name)
             self._parameters[name] = res
         return res
+
+    def attempt_aggregate(self) -> None:
+        """
+        Tell region that one of its parameters will be read from in an aggregated way,
+        i.e., aggregating over subregions.
+        """
+        self._has_been_aggregated = True
 
     @property
     def name(self) -> str:
