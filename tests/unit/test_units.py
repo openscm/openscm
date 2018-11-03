@@ -109,5 +109,7 @@ def test_context():
     with pytest.raises(DimensionalityError):
         CO2.to("N")
 
+    N = unit_registry("N")
     with unit_registry.context("AR4GWP12"):
         np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)
+        np.testing.assert_allclose(N.to("CO2").magnitude, 44 / 12 / 20)
