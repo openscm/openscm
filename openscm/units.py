@@ -18,7 +18,9 @@ For emissions units, there are a few cases to be considered:
   converting between the two is possible
 - less obvious ones e.g. nitrous oxide emissions can be provided in 'N', 'N2O' or
   'N2ON', we provide conversions
-- namespace collisions e.g. methane emissions can be provided in 'CH4' or 'C' and the
+
+
+e.g. methane emissions can be provided in 'CH4' or 'C' and the
   conversions are valid. However, that also means that methane emissions can be
   converted directly to 'CO2' which isn't something which should actually be valid.
 - case-sensitivity. In order to provide a simplified interface, using all uppercase
@@ -27,9 +29,24 @@ For emissions units, there are a few cases to be considered:
 - hyphens and underscores in units. In order to be Pint compatible and to simplify
   things, we strip all hyphens and underscores from units.
 
-As a convenience, we allow users to combine the first two to make a 'joint unit' e.g.
-"tCO2" but it should be recognised that this joint unit is a derived unit and not a base
-unit.
+Finally, we discuss namespace collisions.
+
+*CH4*
+
+Methane emissions are defined as 'CH4'. In order to prevent inadvertent conversions of 'CH4' to e.g. 'CO2' via 'C', the conversion 'CH4' <--> 'C' is by default forbidden. However, it can be performed within the context 'CH4_conversions' as shown below:
+
+.. code:: python
+
+    >>> CH4 = unit_registry("CH4")
+    >>> CH4 = unit_registry("CH4")
+
+    >>> CH4 = unit_registry("CH4")
+
+*NOx*
+
+As a convenience, we allow users to combine the mass and the type of emissions to make
+a 'joint unit' e.g. "tCO2" but it should be recognised that this joint unit is a
+derived unit and not a base unit.
 
 By definining these three separate components, it is much easier to track what
 conversions are valid and which are not. For example, as the emissions units are all
@@ -81,7 +98,6 @@ _gases = {
     "N": "nitrogen",
     "N2O": ["14/44 * N", "nitrous_oxide"],
     "N2ON": ["14/28 * N", "nitrous_oxide_farming_style"],
-    # "NOx": ["14/46 * N", "nox"],
     "NOx": "NOx",
     "nox": ["NOx"],
     "NH3": ["14/17 * N", "ammonia"],
@@ -102,7 +118,7 @@ _gases = {
     "CH3Br": "CH3Br",
     "CH3CCl3": "CH3CCl3",
     "CH3Cl": "CH3Cl",
-    "CH4": "CH4",
+    "CH4": "methane",
     "CO": "carbon_monoxide",
     "HCFC141b": "HCFC141b",
     "HCFC142b": "HCFC142b",
@@ -190,6 +206,32 @@ c.add_transformation(
     lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
 )
 unit_registry.add_context(c)
+
+ch4_context = Context("CH4_conversions")
+ch4_context.add_transformation(
+    "[carbon]",
+    "[methane]",
+    lambda unit_registry, x: 16 / 12 * unit_registry.CH4 * x / unit_registry.C
+)
+ch4_context.add_transformation(
+    "[methane]",
+    "[carbon]",
+    lambda unit_registry, x: x * unit_registry.C / unit_registry.CH4 / (16 / 12)
+)
+unit_registry.add_context(ch4_context)
+
+n2o_context = Context("NOx_conversions")
+n2o_context.add_transformation(
+    "[nitrogen]",
+    "[NOx]",
+    lambda unit_registry, x: (14 + 2*16) / 14 * unit_registry.NOx * x / unit_registry.nitrogen
+)
+n2o_context.add_transformation(
+    "[NOx]",
+    "[nitrogen]",
+    lambda unit_registry, x: x * unit_registry.nitrogen / unit_registry.NOx / ((14 + 2*16) / 14)
+)
+unit_registry.add_context(n2o_context)
 
 
 class UnitConverter:

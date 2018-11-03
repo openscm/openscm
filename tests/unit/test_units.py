@@ -24,29 +24,34 @@ def test_nitrogen():
 
 
 def test_nox():
-    # do we want to allow this?
     NOx = unit_registry("NOx")
     with pytest.raises(DimensionalityError):
         NOx.to("N")
 
+    with unit_registry.context("NOx_conversions"):
+        np.testing.assert_allclose(NOx.to("N").magnitude, 14 / 46)
+        # this also becomes allowed, unfortunately...
+        np.testing.assert_allclose(NOx.to("N2O").magnitude, 44 / 46)
+
+
+def test_methane():
+    CH4 = unit_registry("CH4")
+    with pytest.raises(DimensionalityError):
+        CH4.to("C")
+
+    with unit_registry.context("CH4_conversions"):
+        np.testing.assert_allclose(CH4.to("C").magnitude, 12 / 16)
+        # this also becomes allowed, unfortunately...
+        np.testing.assert_allclose(CH4.to("CO2").magnitude, 44 / 16)
 
 def test_ppm():
-    # do we want to allow this?
     ppm = unit_registry("ppm")
     assert ppm.to("ppb").magnitude == 1000
 
 
 def test_ppt():
-    # do we want to allow this?
     ppt = unit_registry("ppt")
     assert ppt.to("ppb").magnitude == 1 / 1000
-
-
-def test_methane():
-    # do we want to allow this?
-    CH4 = unit_registry("CH4")
-    with pytest.raises(DimensionalityError):
-        CH4.to("C")
 
 
 def test_short_definition():
