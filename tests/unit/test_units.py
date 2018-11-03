@@ -1,6 +1,4 @@
 import numpy as np
-
-
 from openscm.units import unit_registry
 from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
 import pytest
