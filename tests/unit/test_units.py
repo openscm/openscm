@@ -1,7 +1,8 @@
 import numpy as np
+import pytest
+
 from openscm.units import unit_registry
 from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
-import pytest
 
 
 def test_unit_registry():
@@ -43,6 +44,7 @@ def test_methane():
         np.testing.assert_allclose(CH4.to("C").magnitude, 12 / 16)
         # this also becomes allowed, unfortunately...
         np.testing.assert_allclose(CH4.to("CO2").magnitude, 44 / 16)
+
 
 def test_ppm():
     ppm = unit_registry("ppm")
