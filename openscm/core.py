@@ -8,17 +8,288 @@ Parts of this API definition seems unpythonic as it is designed to
 be easily implementable in several programming languages.
 """
 
-from typing import Sequence, Tuple
+from enum import Enum
+from typing import Any, Dict, Sequence, Tuple
 
 
-class ParameterLengthError(Exception):
+class ParameterType(Enum):
+    """
+    Parameter type.
+    """
+
+    SCALAR = 1
+    TIMESERIES = 2
+
+
+class _Parameter:
+    """
+    Represents a parameter in the parameter hierarchy.
+    """
+
+    _children: Dict[str, "_Parameter"]
+    """Child parameters"""
+
+    _data: Any
+    """Data"""
+
+    _has_been_aggregated: bool
+    """
+    Tells if parameter has already been read in an aggregated way, i.e., aggregating
+    over child parameters
+    """
+
+    _has_been_written_to: bool
+    """Tells if parameter data has already been changed"""
+
+    _name: str
+    """Name"""
+
+    _parent: "_Parameter"
+    """Parent parameter"""
+
+    _type: ParameterType
+    """Parameter type"""
+
+    _unit: str
+    """Unit"""
+
+    def __init__(self, name: str):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        name
+            Name
+        """
+        self._children = {}
+        self._has_been_aggregated = False
+        self._has_been_written_to = False
+        self._name = name
+        self._parent = None
+        self._type = None
+        self._unit = None
+
+    def get_or_create_child_parameter(
+        self, name: str, unit: str, parameter_type: ParameterType
+    ) -> "_Parameter":
+        """
+        Get a (direct) child parameter of this parameter. Create and add it if not
+        found.
+
+        Parameters
+        ----------
+        name
+            Name
+        unit
+            Unit
+        parameter_type
+            Parameter type
+
+        Raises
+        ------
+        RegionAggregatedError
+            If the subregion would need to be added and a parameter of this region has
+            already been read in an aggregated way. In this case a subregion cannot be
+            created.
+        """
+        res = self._children.get(name, None)
+        if res is None:
+            if self._has_been_written_to:
+                raise ParameterWrittenError
+            if self._has_been_aggregated:
+                raise ParameterAggregatedError
+            res = _Parameter(name)
+            res._parent = self
+            res._type = parameter_type
+            res._unit = unit
+            self._children[name] = res
+        return res
+
+    def attempt_aggregate(self, parameter_type: ParameterType) -> None:
+        """
+        Tell parameter that it will be read from in an aggregated way, i.e., aggregating
+        over child parameters.
+
+        Parameters
+        ----------
+        parameter_type
+            Parameter type to be read
+
+        Raises
+        ------
+        ParameterTypeError
+            If parameter has already been read from or written to in a different type.
+        """
+        if self._type is not None and self._type != parameter_type:
+            raise ParameterTypeError
+        self._type = parameter_type
+        self._has_been_aggregated = True
+
+    def attempt_write(self, parameter_type: ParameterType) -> None:
+        """
+        Tell parameter that its data will be written to.
+
+        Parameters
+        ----------
+        parameter_type
+            Parameter type to be written
+
+        Raises
+        ------
+        ParameterReadonlyError
+            If parameter is read-only because it has child parameters.
+        """
+        if len(self._children) > 0:
+            raise ParameterReadonlyError
+        self.attempt_read(parameter_type)
+        self._has_been_written_to = True
+
+    @property
+    def full_name(self) -> Tuple[str]:
+        """
+        Full hierarchical name
+        """
+        p = self
+        r = []
+        while p is not None:
+            r.append(p.name)
+            p = p._parent
+        return tuple(reversed(r))
+
+    @property
+    def name(self) -> str:
+        """
+        Name
+        """
+        return self._name
+
+    @property
+    def parameter_type(self) -> ParameterType:
+        """
+        Parameter type
+        """
+        return self._type
+
+    @property
+    def parent(self) -> "_Parameter":
+        """
+        Parent parameter
+        """
+        return self._parent
+
+    @property
+    def unit(self) -> str:
+        """
+        Unit
+        """
+        return self._unit
+
+
+class _Region:
+    """
+    Represents a region in the region hierarchy.
+    """
+
+    _children: Dict[str, "_Region"]
+    """Subregions"""
+
+    _has_been_aggregated: bool
+    """Tells if a parameter of this region has already been read in an aggregated way"""
+
+    _name: str
+    """Name"""
+
+    _parameters: Dict[str, _Parameter]
+    """Parameters"""
+
+    _parent: "_Region"
+    """Parent region (or `None` if root region)"""
+
+    def __init__(self, name: str):
+        """
+        Initialize
+
+        Parameters
+        ----------
+        name
+            Name
+        """
+        self._name = name
+        self._children = {}
+        self._has_been_aggregated = False
+        self._parameters = {}
+        self._parent = None
+
+    def get_or_create_subregion(self, name: str) -> "_Region":
+        """
+        Get a (direct) subregion of this region. Create and add it if not found.
+
+        Parameters
+        ----------
+        name
+            Name
+
+        Raises
+        ------
+        RegionAggregatedError
+            If the subregion would need to be added and a parameter of this region has
+            already been read in an aggregated way. In this case a subregion cannot be
+            created.
+        """
+        res = self._children.get(name, None)
+        if res is None:
+            if self._has_been_aggregated:
+                raise RegionAggregatedError
+            res = _Region(name)
+            res._parent = self
+            self._children[name] = res
+        return res
+
+    def get_or_create_parameter(self, name: str) -> _Parameter:
+        """
+        Get a root parameter for this region. Create and add it if not found.
+
+        Parameters
+        ----------
+        name
+            Name
+        """
+        res = self._parameters.get(name, None)
+        if res is None:
+            res = _Parameter(name)
+            self._parameters[name] = res
+        return res
+
+    @property
+    def name(self) -> str:
+        """
+        Name
+        """
+        return self._name
+
+    @property
+    def parent(self) -> "_Region":
+        """
+        Parent region (or `None` if root region)
+        """
+        return self._parent
+
+
+class ParameterError(Exception):
+    """
+    Exception relating to a parameter. Used as super class.
+    """
+
+
+class ParameterLengthError(ParameterError):
     """
     Exception raised when sequences in timeseries do not match run
     size.
     """
 
 
-class ParameterReadonlyError(Exception):
+class ParameterReadonlyError(ParameterError):
     """
     Exception raised when a requested parameter is read-only.
 
@@ -27,10 +298,30 @@ class ParameterReadonlyError(Exception):
     """
 
 
-class ParameterTypeError(Exception):
+class ParameterTypeError(ParameterError):
     """
     Exception raised when a parameter is of a different type than
     requested (scalar or timeseries).
+    """
+
+
+class ParameterAggregatedError(ParameterError):
+    """
+    Exception raised when a parameter has been read from (raised, e.g., when attempting
+    to create a child parameter).
+    """
+
+
+class ParameterWrittenError(ParameterError):
+    """
+    Exception raised when a parameter has been written to (raised, e.g., when attempting
+    to create a child parameter).
+    """
+
+
+class RegionAggregatedError(Exception):
+    """
+    Exception raised when a region has been read from in a region-aggregated way.
     """
 
 
@@ -43,7 +334,7 @@ class ParameterView:
     """Hierarchical name"""
 
     _region: Tuple[str]
-    """Region (hierarchy)"""
+    """Hierarchical region name"""
 
     _unit: str
     """Unit"""
@@ -57,7 +348,7 @@ class ParameterView:
         name
             Hierarchical name
         region
-            Region (hierarchy)
+            Hierarchical region name
         unit
             Unit
         """
@@ -75,7 +366,7 @@ class ParameterView:
     @property
     def region(self) -> Tuple[str]:
         """
-        Region (hierarchy)
+        Hierarchical region name
         """
         return self._region
 
@@ -99,24 +390,24 @@ class ParameterInfo(ParameterView):
     Provides information about a parameter.
     """
 
-    _parameter_type: str
-    """Type (``"scalar"`` or ``"timeseries"``)"""
+    _type: ParameterType
+    """Parameter type"""
 
-    def __init__(self, parameter_type: str):
+    def __init__(self, parameter: _Parameter):
         """
         Initialize.
 
         Parameters
         ----------
-        parameter_type
-            Type (``"scalar"`` or ``"timeseries"``)
+        parameter
+            Parameter
         """
-        self._parameter_type = parameter_type
+        self._type = parameter.parameter_type
 
     @property
-    def parameter_type(self) -> str:
-        """Type (``"scalar"`` or ``"timeseries"``)"""
-        return self._parameter_type
+    def parameter_type(self) -> ParameterType:
+        """Parameter type"""
+        return self._type
 
 
 class ScalarView(ParameterView):
@@ -228,6 +519,64 @@ class ParameterSet:
     Collates a set of parameters.
     """
 
+    _world: _Region
+    """Root region (contains all parameters)"""
+
+    def __init__(self):
+        """
+        Initialize.
+        """
+        self._world = _Region(None)
+
+    def _get_or_create_region(self, name: Tuple[str]) -> _Region:
+        """
+        Get a region. Create and add it if not found.
+
+        Parameters
+        ----------
+        name
+            Hierarchy name of the region
+        """
+        if len(name) > 0:
+            p = self._get_or_create_region(name[:-1])
+            return p.get_or_create_subregion(name[-1])
+        else:
+            return self._world
+
+    def _get_or_create_parameter(
+        self,
+        name: Tuple[str],
+        region: _Region,
+        unit: str,
+        parameter_type: ParameterType,
+    ) -> _Parameter:
+        """
+        Get a parameter. Create and add it if not found.
+
+        Parameters
+        ----------
+        name
+            Hierarchy name of the parameter
+        region
+            Region
+        unit
+            Unit for the values in the view
+        parameter_type
+            Parameter type
+
+        Raises
+        ------
+        ValueError
+            Name not given
+        """
+        if len(name) > 1:
+            p = self._get_or_create_parameter(name[:-1], region, unit, parameter_type)
+            return p.get_or_create_child_parameter(name[-1], unit, parameter_type)
+        elif len(name) == 1:
+            return region.get_or_create_parameter(name[0])
+        else:  # len(name) == 0
+            raise ValueError
+
     def get_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str
     ) -> ScalarView:
@@ -241,7 +590,7 @@ class ParameterSet:
         name
             Hierarchy name of the parameter
         region
-            Region (hierarchy)
+            Hierarchical region name
         unit
             Unit for the values in the view
 
