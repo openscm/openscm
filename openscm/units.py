@@ -7,22 +7,29 @@ to define units simply as well as providing us with the ability to define contex
 
 **A note on emissions units**
 
-Emissions are a flux composed of three parts: mass, the stuff being emitted and the
-time period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to
-define here are emissions units i.e. the stuff. Here we include as many of the
-canonical emissions units, and their conversions, as possible.
+Emissions are a flux composed of three parts: mass, the stuff being emitted and the time
+period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to define
+here are emissions units i.e. the stuff. Here we include as many of the canonical
+emissions units, and their conversions, as possible.
 
 For emissions units, there are a few cases to be considered:
 
-- fairly obvious ones e.g. carbon dioxide emissions can be provided in 'C' or 'CO2' and converting between the two is possible
-- less obvious ones e.g. nitrous oxide emissions can be provided in 'N', 'N2O' or 'N2ON', we provide conversions
-- namespace collisions e.g. methane emissions can be provided in 'CH4' or 'C' and the conversions are valid. However, that also means that methane emissions can be converted directly to 'CO2' which isn't something which should actually be valid.
-- case-sensitivity. In order to provide a simplified interface, using all uppercase versions of any unit is also valid e.g. ``unit_registry("HFC4310mee") == unit_registry("HFC4310MEE")``
-- hyphens and underscores in units. In order to be Pint compatible and to simplify things, we strip all hyphens and underscores from units.
+- fairly obvious ones e.g. carbon dioxide emissions can be provided in 'C' or 'CO2' and
+  converting between the two is possible
+- less obvious ones e.g. nitrous oxide emissions can be provided in 'N', 'N2O' or
+  'N2ON', we provide conversions
+- namespace collisions e.g. methane emissions can be provided in 'CH4' or 'C' and the
+  conversions are valid. However, that also means that methane emissions can be
+  converted directly to 'CO2' which isn't something which should actually be valid.
+- case-sensitivity. In order to provide a simplified interface, using all uppercase
+  versions of any unit is also valid e.g. ``unit_registry("HFC4310mee") ==
+  unit_registry("HFC4310MEE")``
+- hyphens and underscores in units. In order to be Pint compatible and to simplify
+  things, we strip all hyphens and underscores from units.
 
 As a convenience, we allow users to combine the first two to make a 'joint unit' e.g.
-"tCO2" but it should be recognised that this joint unit is a derived unit and not a
-base unit.
+"tCO2" but it should be recognised that this joint unit is a derived unit and not a base
+unit.
 
 By definining these three separate components, it is much easier to track what
 conversions are valid and which are not. For example, as the emissions units are all
@@ -34,8 +41,8 @@ fundamentally different chemical species, is a convention which is particular to
 emissions (as far as we can tell).
 
 Finally, contexts are particularly useful for emissions as they facilitate much easier
-metric conversions. With a context, a conversion which wouldn't normally be allowed (
-e.g. tCO2 --> tN2O) is allowed and will use whatever metric conversion is appropriate
+metric conversions. With a context, a conversion which wouldn't normally be allowed
+(e.g. tCO2 --> tN2O) is allowed and will use whatever metric conversion is appropriate
 for that context (e.g. AR4GWP100).
 """
 
@@ -122,9 +129,11 @@ _gases = {
 
 
 def _add_mass_emissions_joint_version(symbol: str):
-    """Add a unit which is the combination of mass and emissions.
+    """
+    Add a unit which is the combination of mass and emissions.
 
-    This allows users to access e.g. ``unit_registry("tC")`` rather than requiring a space between the mass and the emissions i.e. ``unit_registry("t C")``
+    This allows users to access e.g. ``unit_registry("tC")`` rather than requiring a
+    space between the mass and the emissions i.e. ``unit_registry("t C")``
 
     Parameters
     ----------
