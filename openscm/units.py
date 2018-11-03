@@ -139,6 +139,8 @@ for symbol, value in _gases.items():
     if isinstance(value, str):
         # symbol is base unit
         unit_registry.define("{} = [{}]".format(symbol, value))
+        if value != symbol:
+            unit_registry.define("{} = {}".format(value, symbol))
     else:
         # symbol has conversion and aliases
         unit_registry.define("{} = {}".format(symbol, value[0]))

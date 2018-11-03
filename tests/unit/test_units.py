@@ -17,9 +17,7 @@ def test_alias():
 
 
 def test_base_unit():
-    # I don't know why this is this way, anyway
-    with pytest.raises(UndefinedUnitError):
-        unit_registry("carbon")
+    assert unit_registry("carbon") == unit_registry("C")
 
 
 def test_nitrogen():
