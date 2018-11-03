@@ -7,10 +7,10 @@ to define units simply as well as providing us with the ability to define contex
 
 **A note on emissions units**
 
-Emissions are a flux composed of three parts: mass, the stuff being emitted and the time
-period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to define
-here are emissions units i.e. the stuff. Here we include as many of the canonical
-emissions units, and their conversions, as possible.
+Emissions are a flux composed of three parts: mass, the stuff being emitted and the
+time period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to
+define here are emissions units i.e. the stuff. Here we include as many of the
+canonical emissions units, and their conversions, as possible.
 
 For emissions units, there are a few cases to be considered:
 
@@ -18,31 +18,10 @@ For emissions units, there are a few cases to be considered:
   converting between the two is possible
 - less obvious ones e.g. nitrous oxide emissions can be provided in 'N', 'N2O' or
   'N2ON', we provide conversions
-
-
-e.g. methane emissions can be provided in 'CH4' or 'C' and the
-  conversions are valid. However, that also means that methane emissions can be
-  converted directly to 'CO2' which isn't something which should actually be valid.
 - case-sensitivity. In order to provide a simplified interface, using all uppercase
-  versions of any unit is also valid e.g. ``unit_registry("HFC4310mee") ==
-  unit_registry("HFC4310MEE")``
+  versions of any unit is also valid e.g. ``unit_registry("HFC4310mee")`` is the same as ``unit_registry("HFC4310MEE")``
 - hyphens and underscores in units. In order to be Pint compatible and to simplify
   things, we strip all hyphens and underscores from units.
-
-Finally, we discuss namespace collisions.
-
-*CH4*
-
-Methane emissions are defined as 'CH4'. In order to prevent inadvertent conversions of 'CH4' to e.g. 'CO2' via 'C', the conversion 'CH4' <--> 'C' is by default forbidden. However, it can be performed within the context 'CH4_conversions' as shown below:
-
-.. code:: python
-
-    >>> CH4 = unit_registry("CH4")
-    >>> CH4 = unit_registry("CH4")
-
-    >>> CH4 = unit_registry("CH4")
-
-*NOx*
 
 As a convenience, we allow users to combine the mass and the type of emissions to make
 a 'joint unit' e.g. "tCO2" but it should be recognised that this joint unit is a
@@ -61,6 +40,50 @@ Finally, contexts are particularly useful for emissions as they facilitate much 
 metric conversions. With a context, a conversion which wouldn't normally be allowed
 (e.g. tCO2 --> tN2O) is allowed and will use whatever metric conversion is appropriate
 for that context (e.g. AR4GWP100).
+
+Finally, we discuss namespace collisions.
+
+*CH4*
+
+Methane emissions are defined as 'CH4'. In order to prevent inadvertent conversions of
+'CH4' to e.g. 'CO2' via 'C', the conversion 'CH4' <--> 'C' is by default forbidden.
+However, it can be performed within the context 'CH4_conversions' as shown below:
+
+.. code:: python
+
+    >>> from openscm.units import unit_registry
+    >>> CH4 = unit_registry("CH4")
+    >>> CH4.to("C")
+    pint.errors.DimensionalityError: Cannot convert from 'CH4' ([methane]) to 'C' ([carbon])
+
+    # with a context, the conversion becomes legal again
+    >>> CH4.to("C", "CH4_conversions")
+    <Quantity(0.75, 'C')>
+
+    # as an unavoidable side effect, this also becomes possible
+    >>> CH4.to("CO2", "CH4_conversions")
+    <Quantity(2.75, 'CO2')>
+
+*NOx*
+
+Like for methane, NOx emissions also suffer from a namespace collision. In order to
+prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <-->
+'N' is by default forbidden. It can be performed within the 'NOx_conversions' context:
+
+.. code:: python
+
+    >>> from openscm.units import unit_registry
+    >>> NOx = unit_registry("NOx")
+    >>> NOx.to("N")
+    pint.errors.DimensionalityError: Cannot convert from 'NOx' ([NOx]) to 'N' ([nitrogen])
+
+    # with a context, the conversion becomes legal again
+    >>> NOx.to("N", "NOx_conversions")
+    <Quantity(0.30434782608695654, 'N')>
+
+    # as an unavoidable side effect, this also becomes possible
+    >>> NOx.to("N2O", "NOx_conversions")
+    <Quantity(0.9565217391304348, 'N2O')>
 """
 
 from pint import Context, UnitRegistry
@@ -75,7 +98,7 @@ The unit registry contains all of our recognised units. A couple of examples
 
 .. code:: python
 
-    >>> from openscm.definitions import unit_registry
+    >>> from openscm.units import unit_registry
     >>> unit_registry("CO2")
     <Quantity(1, 'CO2')>
 
@@ -211,12 +234,12 @@ ch4_context = Context("CH4_conversions")
 ch4_context.add_transformation(
     "[carbon]",
     "[methane]",
-    lambda unit_registry, x: 16 / 12 * unit_registry.CH4 * x / unit_registry.C
+    lambda unit_registry, x: 16 / 12 * unit_registry.CH4 * x / unit_registry.C,
 )
 ch4_context.add_transformation(
     "[methane]",
     "[carbon]",
-    lambda unit_registry, x: x * unit_registry.C / unit_registry.CH4 / (16 / 12)
+    lambda unit_registry, x: x * unit_registry.C / unit_registry.CH4 / (16 / 12),
 )
 unit_registry.add_context(ch4_context)
 
@@ -224,12 +247,19 @@ n2o_context = Context("NOx_conversions")
 n2o_context.add_transformation(
     "[nitrogen]",
     "[NOx]",
-    lambda unit_registry, x: (14 + 2*16) / 14 * unit_registry.NOx * x / unit_registry.nitrogen
+    lambda unit_registry, x: (14 + 2 * 16)
+    / 14
+    * unit_registry.NOx
+    * x
+    / unit_registry.nitrogen,
 )
 n2o_context.add_transformation(
     "[NOx]",
     "[nitrogen]",
-    lambda unit_registry, x: x * unit_registry.nitrogen / unit_registry.NOx / ((14 + 2*16) / 14)
+    lambda unit_registry, x: x
+    * unit_registry.nitrogen
+    / unit_registry.NOx
+    / ((14 + 2 * 16) / 14),
 )
 unit_registry.add_context(n2o_context)
 
