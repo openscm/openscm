@@ -162,8 +162,8 @@ unit_registry.define("degreeF = degF")
 unit_registry.define("kt = 1000 * t")  # since kt is used for "knot" in the defaults
 
 unit_registry.define("ppt = [concentrations]")
-unit_registry.define("ppb = 1000*ppt")
-unit_registry.define("ppm = 1000*ppb")
+unit_registry.define("ppb = 1000 * ppt")
+unit_registry.define("ppm = 1000 * ppb")
 
 # Contexts:
 
