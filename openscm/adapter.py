@@ -13,8 +13,19 @@ class Adapter(metaclass=ABCMeta):
     :class:`openscm.core.ParameterSet`.
     """
 
+    _parameters: ParameterSet
+    """Parameter set"""
+
     def __init__(self, parameters: ParameterSet):
-        self.parameters = parameters
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        parameters
+            Parameter set to use
+        """
+        self._parameters = parameters
 
     @abstractmethod
     def initialize(self) -> None:
