@@ -183,25 +183,27 @@ def _add_mass_emissions_joint_version(symbol: str):
     unit_registry.define("t{} = t * {}".format(symbol, symbol))
 
 
-for symbol, value in _gases.items():
-    if isinstance(value, str):
-        # symbol is base unit
-        unit_registry.define("{} = [{}]".format(symbol, value))
-        if value != symbol:
-            unit_registry.define("{} = {}".format(value, symbol))
-    else:
-        # symbol has conversion and aliases
-        unit_registry.define("{} = {}".format(symbol, value[0]))
-        for alias in value[1:]:
-            unit_registry.define("{} = {}".format(alias, symbol))
+def _add_gases_to_unit_registry(unit_registry, gases):
+    for symbol, value in gases.items():
+        if isinstance(value, str):
+            # symbol is base unit
+            unit_registry.define("{} = [{}]".format(symbol, value))
+            if value != symbol:
+                unit_registry.define("{} = {}".format(value, symbol))
+        else:
+            # symbol has conversion and aliases
+            unit_registry.define("{} = {}".format(symbol, value[0]))
+            for alias in value[1:]:
+                unit_registry.define("{} = {}".format(alias, symbol))
 
-    _add_mass_emissions_joint_version(symbol)
+        _add_mass_emissions_joint_version(symbol)
 
-    # Add alias for upper case symbol:
-    if symbol.upper() != symbol:
-        unit_registry.define("{} = {}".format(symbol.upper(), symbol))
-        _add_mass_emissions_joint_version(symbol.upper())
+        # Add alias for upper case symbol:
+        if symbol.upper() != symbol:
+            unit_registry.define("{} = {}".format(symbol.upper(), symbol))
+            _add_mass_emissions_joint_version(symbol.upper())
 
+_add_gases_to_unit_registry(unit_registry, _gases)
 
 # Other definitions:
 
