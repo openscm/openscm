@@ -7,7 +7,7 @@ to define units simply as well as providing us with the ability to define contex
 
 **A note on emissions units**
 
-Emissions are a flux composed of three parts: mass, the stuff being emitted and the
+Emissions are a flux composed of three parts: mass, the species being emitted and the
 time period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to
 define here are emissions units i.e. the stuff. Here we include as many of the
 canonical emissions units, and their conversions, as possible.
@@ -27,7 +27,7 @@ As a convenience, we allow users to combine the mass and the type of emissions t
 a 'joint unit' e.g. "tCO2" but it should be recognised that this joint unit is a
 derived unit and not a base unit.
 
-By definining these three separate components, it is much easier to track what
+By defining these three separate components, it is much easier to track what
 conversions are valid and which are not. For example, as the emissions units are all
 defined as emissions units, and not as atomic masses, we are able to prevent invalid
 conversions. If emissions units were simply atomic masses, it would be possible to
