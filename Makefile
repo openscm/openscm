@@ -46,4 +46,4 @@ test-pypi-install: venv
 clean:
 	rm -rf venv
 
-.PHONY: clean test test_all black clean flake8 docs publish-on-pypi test-pypi-install
+.PHONY: clean test test-all black flake8 docs publish-on-pypi test-pypi-install
