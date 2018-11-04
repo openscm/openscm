@@ -217,34 +217,34 @@ unit_registry.define("ppm = 1000 * ppb")
 
 # Contexts:
 
-c = Context("AR4GWP12")
-c.add_transformation(
+_c = Context("AR4GWP12")
+_c.add_transformation(
     "[carbon]",
     "[nitrogen]",
     lambda unit_registry, x: 20 * unit_registry.N * x / unit_registry.C,
 )
-c.add_transformation(
+_c.add_transformation(
     "[nitrogen]",
     "[carbon]",
     lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
 )
-unit_registry.add_context(c)
+unit_registry.add_context(_c)
 
-ch4_context = Context("CH4_conversions")
-ch4_context.add_transformation(
+_ch4_context = Context("CH4_conversions")
+_ch4_context.add_transformation(
     "[carbon]",
     "[methane]",
     lambda unit_registry, x: 16 / 12 * unit_registry.CH4 * x / unit_registry.C,
 )
-ch4_context.add_transformation(
+_ch4_context.add_transformation(
     "[methane]",
     "[carbon]",
     lambda unit_registry, x: x * unit_registry.C / unit_registry.CH4 / (16 / 12),
 )
-unit_registry.add_context(ch4_context)
+unit_registry.add_context(_ch4_context)
 
-n2o_context = Context("NOx_conversions")
-n2o_context.add_transformation(
+_n2o_context = Context("NOx_conversions")
+_n2o_context.add_transformation(
     "[nitrogen]",
     "[NOx]",
     lambda unit_registry, x: (14 + 2 * 16)
@@ -253,7 +253,7 @@ n2o_context.add_transformation(
     * x
     / unit_registry.nitrogen,
 )
-n2o_context.add_transformation(
+_n2o_context.add_transformation(
     "[NOx]",
     "[nitrogen]",
     lambda unit_registry, x: x
@@ -261,7 +261,7 @@ n2o_context.add_transformation(
     / unit_registry.NOx
     / ((14 + 2 * 16) / 14),
 )
-unit_registry.add_context(n2o_context)
+unit_registry.add_context(_n2o_context)
 
 
 class UnitConverter:
