@@ -7,12 +7,12 @@ from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
 
 def test_unit_registry():
     CO2 = unit_registry("CO2")
-    assert CO2.to("C").magnitude == 12 / 44
+    np.testing.assert_allclose(CO2.to("C").magnitude, 12 / 44)
 
 
 def test_alias():
     CO2 = unit_registry("carbon_dioxide")
-    assert CO2.to("C").magnitude == 12 / 44
+    np.testing.assert_allclose(CO2.to("C").magnitude, 12 / 44)
 
 
 def test_base_unit():
@@ -21,7 +21,7 @@ def test_base_unit():
 
 def test_nitrogen():
     N = unit_registry("N")
-    assert N.to("N2ON").magnitude == 28 / 14
+    np.testing.assert_allclose(N.to("N2ON").magnitude, 28 / 14)
 
 
 def test_nox():
@@ -48,12 +48,12 @@ def test_methane():
 
 def test_ppm():
     ppm = unit_registry("ppm")
-    assert ppm.to("ppb").magnitude == 1000
+    np.testing.assert_allclose(ppm.to("ppb").magnitude, 1000)
 
 
 def test_ppt():
     ppt = unit_registry("ppt")
-    assert ppt.to("ppb").magnitude == 1 / 1000
+    np.testing.assert_allclose(ppt.to("ppb").magnitude, 1 / 1000)
 
 
 def test_short_definition():
@@ -74,12 +74,12 @@ def test_emissions_flux():
 
 def test_kt():
     kt = unit_registry("kt")
-    assert kt.to("t").magnitude == 1000
+    np.testing.assert_allclose(kt.to("t").magnitude, 1000)
 
 
 def test_h():
     h = unit_registry("h")
-    assert h.to("min").magnitude == 60
+    np.testing.assert_allclose(h.to("min").magnitude, 60)
 
 
 def test_a():
@@ -89,14 +89,14 @@ def test_a():
 
 def test_conversion_without_offset():
     uc = UnitConverter("kg", "t")
-    assert uc.convert_from(1000) == 1
-    assert uc.convert_to(1) == 1000
+    np.testing.assert_allclose(uc.convert_from(1000), 1)
+    np.testing.assert_allclose(uc.convert_to(1), 1000)
 
 
 def test_conversion_with_offset():
     uc = UnitConverter("degC", "degF")
-    assert round(uc.convert_from(1), 5) == 33.8
-    assert round(uc.convert_to(1), 5) == -17.22222
+    np.testing.assert_allclose(uc.convert_from(1), 33.8)
+    np.testing.assert_allclose(uc.convert_to(1), -17.22222, rtol=1e-5)
 
 
 def test_conversion_unknown_unit():
