@@ -7,12 +7,12 @@ from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
 
 def test_unit_registry():
     CO2 = unit_registry("CO2")
-    assert CO2.to("C").magnitude == 12.0 / 44.0
+    assert CO2.to("C").magnitude == 12 / 44
 
 
 def test_alias():
     CO2 = unit_registry("carbon_dioxide")
-    assert CO2.to("C").magnitude == 12.0 / 44.0
+    assert CO2.to("C").magnitude == 12 / 44
 
 
 def test_base_unit():
@@ -58,7 +58,7 @@ def test_ppt():
 
 def test_short_definition():
     tC = unit_registry("tC")
-    np.testing.assert_allclose(tC.to("tCO2").magnitude, 44.0 / 12.0)
+    np.testing.assert_allclose(tC.to("tCO2").magnitude, 44 / 12)
     np.testing.assert_allclose(tC.to("gC").magnitude, 10 ** 6)
 
 
