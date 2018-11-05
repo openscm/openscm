@@ -139,7 +139,7 @@ class _Parameter:
         ParameterReadonlyError
             If parameter is read-only because it has child parameters.
         """
-        if len(self._children) > 0:
+        if self._children:
             raise ParameterReadonlyError
         self.attempt_aggregate(parameter_type)
         self._has_been_written_to = True
