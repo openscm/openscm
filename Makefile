@@ -1,15 +1,14 @@
 venv: dev-requirements.txt setup.py
 	[ -d ./venv ] || python3 -m venv ./venv
 	./venv/bin/pip install --upgrade pip
-		./venv/bin/pip install -r dev-requirements.txt
-		./venv/bin/pip install -e .[tests,docs,dev]
+	./venv/bin/pip install -r dev-requirements.txt
+	./venv/bin/pip install -e .[tests,docs,dev]
 	touch venv
 
 test: | venv
-	./venv/bin/pytest -rfsxEX tests
+	./venv/bin/pytest -rfsxEX --cov=openscm tests
 
-test_all: | venv
-	./venv/bin/pytest -rfsxEX tests
+test_all: test | venv
 	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
 
 docs: | venv
