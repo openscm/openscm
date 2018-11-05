@@ -33,7 +33,7 @@ class _Parameter:
 
     _has_been_aggregated: bool
     """
-    Tells if parameter has already been read in an aggregated way, i.e., aggregating
+    If True, parameter has already been read in an aggregated way, i.e., aggregating
     over child parameters
     """
 
