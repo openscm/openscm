@@ -38,7 +38,7 @@ class _Parameter:
     """
 
     _has_been_written_to: bool
-    """Tells if parameter data has already been changed"""
+    """If True, parameter data has already been changed"""
 
     _name: str
     """Name"""
