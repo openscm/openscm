@@ -1,7 +1,8 @@
 """
 The OpenSCM low-level API includes the basic functionality to run a particular
-simple climate model with OpenSCM as well as setting/getting its parameter values.
-Mapping of parameter names and units is done internally.
+simple climate model with OpenSCM as well as setting/getting its :ref:`parameter
+<parameters>` values. Mapping of :ref:`parameter names <parameter-hierarchy>` and
+:ref:`units <units>` is done internally.
 
 Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
@@ -22,7 +23,8 @@ class ParameterType(Enum):
 
 class _Parameter:
     """
-    Represents a parameter in the parameter hierarchy.
+    Represents a :ref:`parameter <parameters>` in the :ref:`parameter hierarchy
+    <parameter-hierarchy>`.
     """
 
     _children: Dict[str, "_Parameter"]
@@ -147,7 +149,7 @@ class _Parameter:
     @property
     def full_name(self) -> Tuple[str]:
         """
-        Full hierarchical name
+        Full :ref:`hierarchical name <parameter-hierarchy>`
         """
         p = self
         r = []
@@ -336,11 +338,11 @@ class RegionAggregatedError(Exception):
 
 class ParameterView:
     """
-    Generic view to a parameter (scalar or timeseries).
+    Generic view to a :ref:`parameter <parameters>` (scalar or timeseries).
     """
 
     _name: Tuple[str]
-    """Hierarchical name"""
+    """:ref:`Hierarchical name <parameter-hierarchy>`"""
 
     _region: Tuple[str]
     """Hierarchical region name"""
@@ -355,7 +357,7 @@ class ParameterView:
         Parameters
         ----------
         name
-            Hierarchical name
+            :ref:`Hierarchical name <parameter-hierarchy>`
         region
             Hierarchical region name
         unit
@@ -368,7 +370,7 @@ class ParameterView:
     @property
     def name(self) -> Tuple[str]:
         """
-        Hierarchical name
+        :ref:`Hierarchical name <parameter-hierarchy>`
         """
         return self._name
 
@@ -396,7 +398,7 @@ class ParameterView:
 
 class ParameterInfo(ParameterView):
     """
-    Provides information about a parameter.
+    Provides information about a :ref:`parameter <parameters>`.
     """
 
     _type: ParameterType
@@ -525,7 +527,7 @@ class WritableTimeseriesView(TimeseriesView):
 
 class ParameterSet:
     """
-    Collates a set of parameters.
+    Collates a set of :ref:`parameters <parameters>`.
     """
 
     _world: _Region
@@ -565,7 +567,7 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
             Region
         unit
@@ -597,7 +599,7 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
             Hierarchical region name
         unit
@@ -623,9 +625,9 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical region name
         unit
             Unit for the values in the view
 
@@ -659,9 +661,9 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical region name
         unit
             Unit for the values in the view
         start_time
@@ -694,9 +696,9 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical region name
         unit
             Unit for the values in the view
         start_time
@@ -722,7 +724,7 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
 
         Raises
         ------
@@ -744,7 +746,7 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
 
         Raises
         ------
@@ -770,7 +772,7 @@ class Core:
     """Name of the SCM to run"""
 
     _parameters: ParameterSet
-    """Set of parameters for the run"""
+    """Set of :ref:`parameters <parameters>` for the run"""
 
     _start_time: int
     """Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)"""
