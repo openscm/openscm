@@ -9,10 +9,15 @@ from openscm.core import (
 )
 import pytest
 
-parameterset = ParameterSet()
+
+@pytest.fixture
+def parameterset():
+    res = ParameterSet()
+    res._get_or_create_region(("DEU", "BER"))
+    return res
 
 
-def test_region():
+def test_region(parameterset):
     region_deu = parameterset._get_or_create_region(("DEU",))
     assert region_deu.name == "DEU"
 
@@ -25,7 +30,7 @@ def test_region():
         parameterset._get_or_create_region(("DEU", "BRB"))
 
 
-def test_parameter():
+def test_parameter(parameterset):
     region_ber = parameterset._get_or_create_region(("DEU", "BER"))
 
     with pytest.raises(ValueError, match="No region name given"):
