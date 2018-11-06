@@ -28,7 +28,7 @@ def test_region():
 def test_parameter():
     region_ber = parameterset._get_or_create_region(("DEU", "BER"))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="No region name given"):
         parameterset._get_or_create_parameter(
             (), region_ber, "GtCO2/a", ParameterType.TIMESERIES
         )

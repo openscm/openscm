@@ -589,7 +589,7 @@ class ParameterSet:
         elif len(name) == 1:
             return region.get_or_create_parameter(name[0])
         else:  # len(name) == 0
-            raise ValueError
+            raise ValueError("No region name given")
 
     def get_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str
