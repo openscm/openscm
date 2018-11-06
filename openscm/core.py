@@ -89,10 +89,13 @@ class _Parameter:
 
         Raises
         ------
-        RegionAggregatedError
-            If the subregion would need to be added and a parameter of this region has
-            already been read in an aggregated way. In this case a subregion cannot be
-            created.
+        ParameterAggregatedError
+            If the child paramater would need to be added, but this parameter has
+            already been read in an aggregated way. In this case a child parameter
+            cannot be added.
+        ParameterWrittenError
+            If the child paramater would need to be added, but this parameter has
+            already been written to. In this case a child parameter cannot be added.
         """
         res = self._children.get(name, None)
         if res is None:
@@ -197,7 +200,7 @@ class _Region:
 
     _has_been_aggregated: bool
     """
-    Tells if a parameter of this region has already been read in an aggregated way,
+    If True, a parameter of this region has already been read in an aggregated way,
     i.e., aggregating over subregions
      """
 
