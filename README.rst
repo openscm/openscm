@@ -26,7 +26,7 @@ This OpenSCM implementation comes with a command line tool ``openscm``.
 Installation
 ------------
 
-OpenSCM will be made available via ’’pip``.
+OpenSCM will be made available via ``pip``.
 
 OpenSCM comes with model adapters only for some very simple SCMs. If you want to run other models, you will also need to install their corresponding OpenSCM adapters.
 
