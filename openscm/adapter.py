@@ -6,7 +6,6 @@ All model adapters in OpenSCM are implemented as subclasses of the
 """
 
 from abc import ABCMeta, abstractmethod
-
 from .core import ParameterSet
 
 
