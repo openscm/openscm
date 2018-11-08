@@ -1,0 +1,4 @@
+Timeframes
+----------
+
+.. automodule:: openscm.timeframes
