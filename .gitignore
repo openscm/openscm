@@ -16,3 +16,5 @@ build/
 dist/
 docs/_build
 venv/
+.cov2emacs.log
+htmlcov/
