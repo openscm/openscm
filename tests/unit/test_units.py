@@ -29,8 +29,10 @@ def test_nox():
     with pytest.raises(DimensionalityError):
         NOx.to("N")
 
+    N = unit_registry("N")
     with unit_registry.context("NOx_conversions"):
         np.testing.assert_allclose(NOx.to("N").magnitude, 14 / 46)
+        np.testing.assert_allclose(N.to("NOx").magnitude, 46 / 14)
         # this also becomes allowed, unfortunately...
         np.testing.assert_allclose(NOx.to("N2O").magnitude, 44 / 46)
 
@@ -40,8 +42,10 @@ def test_methane():
     with pytest.raises(DimensionalityError):
         CH4.to("C")
 
+    C = unit_registry("C")
     with unit_registry.context("CH4_conversions"):
         np.testing.assert_allclose(CH4.to("C").magnitude, 12 / 16)
+        np.testing.assert_allclose(C.to("CH4").magnitude, 16 / 12)
         # this also becomes allowed, unfortunately...
         np.testing.assert_allclose(CH4.to("CO2").magnitude, 44 / 16)
 
