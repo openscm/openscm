@@ -1,92 +1,128 @@
+from copy import copy
 import numpy as np
+from typing import Tuple
 
 
-def _running_mean(v: np.ndarray, n: int) -> np.ndarray:
+class Timeframe:
     """
     TODO
     """
-    c = np.cumsum(np.concatenate(([0], v)))
+
+    start_time: int
+    """Start time (seconds since :literal:`1970-01-01 00:00:00`)"""
+
+    period_length: int
+    """Period length in seconds"""
+
+    def __init__(self, start_time, period_length):
+        """
+        TODO
+        """
+        self.start_time = start_time
+        self.period_length = period_length
+
+    def get_points(self, count: int) -> np.ndarray:
+        """
+        TODO
+        """
+        return np.linspace(self.start_time, self.get_stop_time(count), count)
+
+    def get_stop_time(self, count: int) -> int:
+        """
+        TODO
+        """
+        return self.start_time + (count - 1) * self.period_length
+
+    def get_length_until(self, stop_time: int) -> int:
+        """
+        TODO
+        """
+        return (
+            stop_time - self.start_time + self.period_length - 1
+        ) // self.period_length
+
+
+def _running_mean(values: np.ndarray, n: int) -> np.ndarray:
+    """
+    TODO
+    """
+    c = np.cumsum(np.concatenate(([0], values)))
     return (c[n:] - c[:-n]) / n
 
 
-def _calc_linearization_values(v: np.ndarray) -> np.ndarray:
+def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
     """
     TODO
     """
-    edge_points = _running_mean(v, 2)
-    middle_points = 3 * v[1:-1] / 2 - (v[0:-2] + v[2:]) / 4
-    first_edge_point = 2 * v[0] - edge_points[0]
-    last_edge_point = 2 * v[-1] - edge_points[-1]
+    edge_points = _running_mean(values, 2)
+    middle_points = 3 * values[1:-1] / 2 - (values[0:-2] + values[2:]) / 4
+    first_edge_point = 2 * values[0] - edge_points[0]
+    last_edge_point = 2 * values[-1] - edge_points[-1]
     return np.concatenate(
         (
             np.array(
                 [
                     np.concatenate(([first_edge_point], edge_points)),
-                    np.concatenate(([v[0]], middle_points, [v[-1]])),
+                    np.concatenate(([values[0]], middle_points, [values[-1]])),
                 ]
-            ).T.reshape(2 * len(v)),
+            ).T.reshape(2 * len(values)),
             [last_edge_point],
         )
     )
 
 
 def _calc_linearization(
-    source_values: np.ndarray, source_start_time: int, source_period_length: int
-) -> (np.ndarray, np.ndarray):
+    values: np.ndarray, timeframe: Timeframe
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     TODO
     """
-    source_stop_time = source_start_time + len(source_values) * source_period_length
+    stop_time = timeframe.start_time + len(values) * timeframe.period_length
     linearization_points = np.linspace(
-        source_start_time, source_stop_time, 2 * len(source_values) + 1
+        timeframe.start_time, stop_time, 2 * len(values) + 1
     )
-    linearization_values = _calc_linearization_values(source_values)
+    linearization_values = _calc_linearization_values(values)
     return linearization_points, linearization_values
 
 
 def _calc_interpolation_points(
-    source_len: int,
-    source_start_time: int,
-    source_period_length: int,
-    target_start_time: int,
-    target_period_length: int,
-) -> (np.ndarray, np.ndarray, int, int):
+    source_len: int, source: Timeframe, target: Timeframe
+) -> Tuple[np.ndarray, np.ndarray, int, int]:
     """
     TODO
     """
-    source_len *= 2
-    source_start_time *= 2
-    target_start_time *= 2
-    target_period_length *= 2
+    linearization_points_len = 2 * source_len + 1
+    source = Timeframe(2 * source.start_time, 1 * source.period_length)
+    target = Timeframe(2 * target.start_time, 2 * target.period_length)
 
-    if target_start_time >= source_start_time:
-        skip_len = 1 + (target_start_time - source_start_time) // source_period_length
-        source_len -= skip_len
-        source_start_time += skip_len * source_period_length
-        first_target_point = target_start_time
-        first_interval_length = target_period_length
+    if target.start_time >= source.start_time:
+        skip_len = 1 + (target.start_time - source.start_time) // source.period_length
+        linearization_points_len -= skip_len
+        source.start_time += skip_len * source.period_length
+        first_target_point = target.start_time
+        first_interval_length = target.period_length
     else:
-        first_target_point = target_start_time + target_period_length
-        first_interval_length = source_start_time - target_start_time
+        first_target_point = target.start_time + target.period_length
+        first_interval_length = source.start_time - target.start_time
 
-    source_stop_time = source_start_time + source_len * source_period_length
-    linearization_points = np.linspace(
-        source_start_time, source_stop_time, source_len + 1
-    )
-
-    target_len = (source_stop_time - first_target_point) // target_period_length
-    target_stop_time = first_target_point + target_len * target_period_length
-    target_points = np.linspace(first_target_point, target_stop_time, target_len + 1)
-
-    interpolation_points, indices = np.unique(
-        np.concatenate((target_points, linearization_points)), return_index=True
-    )
-    target_indices = np.where(indices < target_len + 1)[0]
+    source_stop_time = source.get_stop_time(linearization_points_len)
+    target_len = 1 + (source_stop_time - first_target_point) // target.period_length
+    target_stop_time = target.get_stop_time(target_len)
 
     if source_stop_time > target_stop_time:
         last_interval_length = source_stop_time - target_stop_time
     else:
-        last_interval_length = target_period_length
+        last_interval_length = target.period_length
+
+    interpolation_points, indices = np.unique(
+        np.concatenate(
+            (target.get_points(target_len), source.get_points(linearization_points_len))
+        ),
+        return_index=True,
+    )
+    target_indices = np.where(indices < target_len)[0]
+
+    if source_stop_time <= target_stop_time:
         target_indices = target_indices[:-1]
 
     return (
@@ -102,7 +138,7 @@ def _calc_interval_averages(
     interpolation_values: np.ndarray,
     target_indices: np.ndarray,
     first_interval_length: int,
-    target_period_length: int,
+    period_length: int,
     last_interval_length: int,
 ) -> np.ndarray:
     """
@@ -121,38 +157,25 @@ def _calc_interval_averages(
     return np.concatenate(
         (
             [interval_sums[0] / first_interval_length],
-            interval_sums[1:-1] / target_period_length,
+            interval_sums[1:-1] / period_length,
             [interval_sums[-1] / last_interval_length],
         )
     )
 
 
 def _convert(
-    source_values: np.ndarray,
-    source_start_time: int,
-    source_period_length: int,
-    target_start_time: int,
-    target_period_length: int,
-    interpolation_cache=None,
+    values: np.ndarray, source: Timeframe, target: Timeframe, interpolation_cache=None
 ) -> np.ndarray:
     """
     TODO
     """
     if interpolation_cache is None:
-        interpolation_cache = _calc_interpolation_points(
-            len(source_values),
-            source_start_time,
-            source_period_length,
-            target_start_time,
-            target_period_length,
-        )
+        interpolation_cache = _calc_interpolation_points(len(values), source, target)
     interpolation_points, target_indices, first_interval_length, last_interval_length = (
         interpolation_cache
     )
 
-    linearization_points, linearization_values = _calc_linearization(
-        source_values, source_start_time, source_period_length
-    )
+    linearization_points, linearization_values = _calc_linearization(values, source)
 
     interpolation_values = np.interp(
         interpolation_points, linearization_points, linearization_values
@@ -163,7 +186,7 @@ def _convert(
         interpolation_values,
         target_indices,
         first_interval_length,
-        target_period_length,
+        target.period_length,
         last_interval_length,
     )
 
@@ -174,65 +197,47 @@ class TimeframeConverter:
     of the first point and a period length).
     """
 
-    _source_start_time: int
-    """Start time of source timeframe (seconds since 1970-01-01 00:00:00)"""
+    _source: Timeframe
+    """Source timeframe"""
 
-    _source_period_length: int
-    """Period length of source timeframe in seconds"""
+    _target: Timeframe
+    """Target timeframe"""
 
-    _target_start_time: int
-    """Start time of target timeframe (seconds since 1970-01-01 00:00:00)"""
-
-    _target_period_length: int
-    """Period length of target timeframe in seconds"""
-
-    def __init__(
-        self,
-        source_start_time: int,
-        source_period_length: int,
-        target_start_time: int,
-        target_period_length: int,
-    ):
+    def __init__(self, source: Timeframe, target: Timeframe):
         """
         Initialize.
 
         Parameters
         ----------
-        source_start_time
-           Start time of source timeframe (seconds since 1970-01-01 00:00:00)
-        source_period_length
-            Period length of source timeframe in seconds
-        target_start_time
-            Start time of target timeframe (seconds since 1970-01-01 00:00:00)
-        target_period_length
-            Period length of target timeframe in seconds
+        source
+            Source timeframe
+        target
+            Target timeframe
         """
-        self._source_start_time = source_start_time
-        self._source_period_length = source_period_length
-        self._target_start_time = target_start_time
-        self._target_period_length = target_period_length
+        self._source = copy(source)
+        self._target = copy(target)
 
-        if source_start_time > target_start_time + target_period_length:
+        if source.start_time > target.start_time + target.period_length:
             raise Exception("TODO Not enough information about first point")
 
-    def convert_from(self, v):
+    def convert_from(self, values):
         """
         Convert value **from** source timeframe to target timeframe.
 
         Parameters
         ----------
-        value
+        values
             Value
         """
         raise NotImplementedError
 
-    def convert_to(self, v):
+    def convert_to(self, values):
         """
         Convert value from target timeframe **to** source timeframe.
 
         Parameters
         ----------
-        value
+        values
             Value
         """
         raise NotImplementedError
