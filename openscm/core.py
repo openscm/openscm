@@ -670,7 +670,7 @@ class ParameterSet:
         unit
             Unit for the values in the view
         start_time
-            Time for first point in timeseries (seconds since 1970-01-01 00:00:00)
+            Time for first point in timeseries (seconds since ``1970-01-01 00:00:00``)
         period_length
             Length of single time step in seconds
 
@@ -705,7 +705,7 @@ class ParameterSet:
         unit
             Unit for the values in the view
         start_time
-            Time for first point in timeseries (seconds since 1970-01-01 00:00:00)
+            Time for first point in timeseries (seconds since ``1970-01-01 00:00:00``)
         period_length
             Length of single time step in seconds
 
@@ -768,7 +768,8 @@ class Core:
 
     _end_time: int
     """
-    End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
+    End of the time range to run over (including; seconds since
+    ``1970-01-01 00:00:00``)
     """
 
     _model: str
@@ -778,7 +779,10 @@ class Core:
     """Set of :ref:`parameters <parameters>` for the run"""
 
     _start_time: int
-    """Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)"""
+    """
+    Beginning of the time range to run over (seconds since
+    ``1970-01-01 00:00:00``)
+    """
 
     def __init__(self, model: str, start_time: int, end_time: int):
         """
@@ -789,10 +793,11 @@ class Core:
         model
             Name of the SCM to run
         start_time
-            Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
+            Beginning of the time range to run over (seconds since
+            ``1970-01-01 00:00:00``)
         end_time
-            End of the time range to run over (including; seconds since 1970-01-01
-            00:00:00)
+            End of the time range to run over (including; seconds since
+            ``1970-01-01 00:00:00``)
 
         Raises
         ------
@@ -809,7 +814,8 @@ class Core:
     @property
     def end_time(self) -> int:
         """
-        End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
+        End of the time range to run over (including; seconds since
+        ``1970-01-01 00:00:00``)
         """
         return self._end_time
 
@@ -836,7 +842,8 @@ class Core:
     @property
     def start_time(self) -> int:
         """
-        Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
+        Beginning of the time range to run over (seconds since
+        ``1970-01-01 00:00:00``)
         """
         return self._start_time
 
@@ -847,6 +854,6 @@ class Core:
         Returns
         -------
         int
-            Current time (seconds since 1970-01-01 00:00:00)
+            Current time (seconds since ``1970-01-01 00:00:00``)
         """
         raise NotImplementedError
