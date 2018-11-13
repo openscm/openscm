@@ -28,7 +28,7 @@ class Timeframe:
     """
 
     start_time: int
-    """Start time (seconds since ``1970-01-01 00:00:00``)"""
+    """Start time (seconds since :literal:`1970-01-01 00:00:00`)"""
 
     period_length: int
     """Period length in seconds"""
@@ -218,7 +218,7 @@ class _Interpolation(NamedTuple):
     """
 
     points: np.ndarray
-    """Array of interpolation time points (seconds since ``1970-01-01 00:00:00``)"""
+    """Array of interpolation time points"""
 
     period_length: int
     """
@@ -398,11 +398,9 @@ def _convert_cached(
         Source timeframe
     target
         Target timeframe
-    cache
+    interpolation
         Interpolation data (as resulting from
         :func:`openscm.timeframes._calc_interpolation_points`)
-    cache_len
-        Length of the data array for which the cache ``cache`` is valid
 
     Returns
     -------
