@@ -16,11 +16,17 @@ help:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile static/schema.png
+%: Makefile static/schema.png static/schema_small.png
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 static/schema.png: sources/schema.tex
 	@$(eval TMP := $(shell mktemp -d))
 	@pdflatex -output-directory $(TMP) $<
 	@convert -flatten -density 200 -antialias $(TMP)/schema.pdf $@
+	@rm -rf $(TMP)
+
+static/schema_small.png: sources/schema.tex
+	@$(eval TMP := $(shell mktemp -d))
+	@pdflatex -output-directory $(TMP) $<
+	@convert -flatten -density 100 -antialias $(TMP)/schema.pdf $@
 	@rm -rf $(TMP)
