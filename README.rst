@@ -16,11 +16,27 @@ reading and writing such files. Its high-level interface further adds
 convenience functions and easily enables stochastic ensemble runs,
 e.g. for model tuning.
 
-Being designed as a programmin-language agnostic interface and standard in mind, this will be the reference implementation in Python 3.
+Being designed as a programming-language agnostic interface and
+standard in mind, this will be the reference implementation in
+Python 3.
 
-This OpenSCM implementation comes with a command line tool ``openscm``.
+This OpenSCM implementation comes with a command line tool
+``openscm``.
 
 .. sec-end-index
+
+Documentation
+-------------
+
+Detailed documentation is given on `ReadTheDocs
+<https://openscm.readthedocs.io/en/latest/>`_.
+
+Schema
+------
+
+.. image:: docs/static/schema.png
+    :align: center
+
 .. sec-begin-installation
 
 Installation
@@ -28,7 +44,9 @@ Installation
 
 OpenSCM will be made available via ``pip``.
 
-OpenSCM comes with model adapters only for some very simple SCMs. If you want to run other models, you will also need to install their corresponding OpenSCM adapters.
+OpenSCM comes with model adapters only for some very simple SCMs. If
+you want to run other models, you will also need to install their
+corresponding OpenSCM adapters.
 
 .. sec-end-installation
 .. sec-begin-quickstart
@@ -37,12 +55,6 @@ Quickstart
 ----------
 
 .. sec-end-quickstart
-
-Documentation
--------------
-
-Detailed documentation is given on `ReadTheDocs <https://openscm.readthedocs.io/en/latest/>`_.
-
 .. sec-begin-development
 
 Development
