@@ -34,7 +34,7 @@ Detailed documentation is given on `ReadTheDocs
 Schema
 ------
 
-.. image:: docs/static/schema.png
+.. image:: docs/static/schema_small.png
     :align: center
 
 .. sec-begin-installation
