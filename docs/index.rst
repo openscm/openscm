@@ -24,6 +24,15 @@ Schema
 
 .. toctree::
     :maxdepth: 2
+    :caption: Models
+
+    DICE
+    FAIR
+    Hector
+    MAGICC
+
+.. toctree::
+    :maxdepth: 2
     :caption: Standards
 
     parameters
