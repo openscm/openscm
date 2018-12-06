@@ -255,8 +255,9 @@ def _calc_interpolation_points(
         Object wrapping the actual interpolation points and additional information
     """
     linearization_points_len = 2 * source_len + 1
-    # Use double the time points to stick to integers when using half the source period
-    # length:
+    # For in-between steps periods in the source timeframe need to be halved. To stick
+    # calculations to integer calculations, rather than devide source period length by 2
+    # double all other times/period lengths and devide at the end:
     source = Timeframe(2 * source.start_time, 1 * source.period_length)
     target = Timeframe(2 * target.start_time, 2 * target.period_length)
 
@@ -322,10 +323,13 @@ def _calc_interval_averages(
     np.ndarray
         Array of the interval/period averages
     """
+    # Use trapezium rule to determine the integral over each period in the interpolated
+    # timeseries, i.e. # interval_sum = (y2 + y1) * (x2 - x1) / 2
+    # and use np.add.reduceat to sum these according to the target timeframe:
     interval_sums = (
         np.add.reduceat(
-            (interpolation_values[1:] + interpolation_values[:-1])
-            * (interpolation.points[1:] - interpolation.points[:-1]),
+            (interpolation_values[1:] + interpolation_values[:-1]) # (y2 + y1)
+            * (interpolation.points[1:] - interpolation.points[:-1]), # (x2 - x1)
             np.concatenate(([0], interpolation.target_indices))
             if interpolation.target_indices[0] != 0
             else interpolation.target_indices,
