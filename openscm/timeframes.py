@@ -110,26 +110,6 @@ class Timeframe:
         return (stop_time - self.start_time) // self.period_length + 1
 
 
-def _running_mean(values: np.ndarray, n: int) -> np.ndarray:
-    """
-    Calculate the running mean over ``values`` with a window width of ``n``.
-
-    Parameters
-    ----------
-    values
-        Input array
-    n
-        Window width
-
-    Returns
-    -------
-    np.ndarray
-        Running mean (of length ``len(values) - n + 1``)
-    """
-    c = np.cumsum(np.concatenate(([0], values)))
-    return (c[n:] - c[:-n]) / n
-
-
 def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
     """
     Calculate the "linearization" values of the array ``values`` which is assumed to
@@ -147,7 +127,7 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
     np.ndarray
         Values of linearization (of length ``2 * len(values) + 1``)
     """
-    edge_points = _running_mean(values, 2)
+    edge_points = (values[1:] + values[:-1]) / 2
     middle_points = (4 * values[1:-1] - edge_points[:-1] - edge_points[1:]) / 2  # values = 1 / 2 * (edges_lower + middle_points) / 2 + 1 / 2 * (middle_points + edges_upper) / 2
     first_edge_point = 2 * values[0] - edge_points[0]  # values[0] = (first_edge_point + edge_points[0] ) / 2
     last_edge_point = 2 * values[-1] - edge_points[-1]  # values[-1] = (last_edge_point + edge_points[-1] ) / 2
