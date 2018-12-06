@@ -127,19 +127,19 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
     np.ndarray
         Values of linearization (of length ``2 * len(values) + 1``)
     """
-    edge_points = (values[1:] + values[:-1]) / 2
-    middle_points = (4 * values[1:-1] - edge_points[:-1] - edge_points[1:]) / 2  # values = 1 / 2 * (edges_lower + middle_points) / 2 + 1 / 2 * (middle_points + edges_upper) / 2
-    first_edge_point = 2 * values[0] - edge_points[0]  # values[0] = (first_edge_point + edge_points[0] ) / 2
-    last_edge_point = 2 * values[-1] - edge_points[-1]  # values[-1] = (last_edge_point + edge_points[-1] ) / 2
+    edge_point_values = (values[1:] + values[:-1]) / 2
+    middle_point_values = (4 * values[1:-1] - edge_point_values[:-1] - edge_point_values[1:]) / 2  # values = 1 / 2 * (edges_lower + middle_point_values) / 2 + 1 / 2 * (middle_point_values + edges_upper) / 2
+    first_edge_point_value = 2 * values[0] - edge_point_values[0]  # values[0] = (first_edge_point_value + edge_point_values[0] ) / 2
+    last_edge_point_value = 2 * values[-1] - edge_point_values[-1]  # values[-1] = (last_edge_point_value + edge_point_values[-1] ) / 2
     return np.concatenate(
         (
             np.array(
                 [
-                    np.concatenate(([first_edge_point], edge_points)),
-                    np.concatenate(([values[0]], middle_points, [values[-1]])),
+                    np.concatenate(([first_edge_point_value], edge_point_values)),
+                    np.concatenate(([values[0]], middle_point_values, [values[-1]])),
                 ]
             ).T.reshape(2 * len(values)),
-            [last_edge_point],
+            [last_edge_point_value],
         )
     )
 
