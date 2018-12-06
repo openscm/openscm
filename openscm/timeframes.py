@@ -128,9 +128,15 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
         Values of linearization (of length ``2 * len(values) + 1``)
     """
     edge_point_values = (values[1:] + values[:-1]) / 2
-    middle_point_values = (4 * values[1:-1] - edge_point_values[:-1] - edge_point_values[1:]) / 2  # values = 1 / 2 * (edges_lower + middle_point_values) / 2 + 1 / 2 * (middle_point_values + edges_upper) / 2
-    first_edge_point_value = 2 * values[0] - edge_point_values[0]  # values[0] = (first_edge_point_value + edge_point_values[0] ) / 2
-    last_edge_point_value = 2 * values[-1] - edge_point_values[-1]  # values[-1] = (last_edge_point_value + edge_point_values[-1] ) / 2
+    middle_point_values = (
+        4 * values[1:-1] - edge_point_values[:-1] - edge_point_values[1:]
+    ) / 2  # values = 1 / 2 * (edges_lower + middle_point_values) / 2 + 1 / 2 * (middle_point_values + edges_upper) / 2
+    first_edge_point_value = (
+        2 * values[0] - edge_point_values[0]
+    )  # values[0] = (first_edge_point_value + edge_point_values[0] ) / 2
+    last_edge_point_value = (
+        2 * values[-1] - edge_point_values[-1]
+    )  # values[-1] = (last_edge_point_value + edge_point_values[-1] ) / 2
     return np.concatenate(
         (
             np.array(
@@ -308,8 +314,8 @@ def _calc_interval_averages(
     # and use np.add.reduceat to sum these according to the target timeframe:
     interval_sums = (
         np.add.reduceat(
-            (interpolation_values[1:] + interpolation_values[:-1]) # (y2 + y1)
-            * (interpolation.points[1:] - interpolation.points[:-1]), # (x2 - x1)
+            (interpolation_values[1:] + interpolation_values[:-1])  # (y2 + y1)
+            * (interpolation.points[1:] - interpolation.points[:-1]),  # (x2 - x1)
             np.concatenate(([0], interpolation.target_indices))
             if interpolation.target_indices[0] != 0
             else interpolation.target_indices,
