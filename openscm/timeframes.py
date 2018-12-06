@@ -1,6 +1,6 @@
 """
 Different climate models often use different time frames for their input and output
-data. This includes different start of time steps (e.g. beginning vs middle of year) and
+data. This includes different 'meanings' of time steps (e.g. beginning vs middle of year) and
 different lengths of the time steps (e.g. years vs months). Accordingly, OpenSCM
 supports the conversion of timeseries data between such timeframes, which is handled in
 this module. A thorough explaination of the procedure used is given in a dedicated
@@ -13,10 +13,10 @@ import numpy as np
 from typing import NamedTuple, Tuple
 
 
-class InsufficientDataError(Exception):
+class InsufficientDataError(ValueError):
     """
     Exception raised when not enough data overlap is available when converting from one
-    timeframe to another (e.g. when the target timeframe is far too early than the
+    timeframe to another (e.g. when the target timeframe is outside the range of the
     source timeframe) or when data is too short (less than 3 data points).
     """
 
@@ -148,9 +148,9 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
         Values of linearization (of length ``2 * len(values) + 1``)
     """
     edge_points = _running_mean(values, 2)
-    middle_points = 3 * values[1:-1] / 2 - (values[0:-2] + values[2:]) / 4
-    first_edge_point = 2 * values[0] - edge_points[0]
-    last_edge_point = 2 * values[-1] - edge_points[-1]
+    middle_points = (4 * values[1:-1] - edge_points[:-1] - edge_points[1:]) / 2  # values = 1 / 2 * (edges_lower + middle_points) / 2 + 1 / 2 * (middle_points + edges_upper) / 2
+    first_edge_point = 2 * values[0] - edge_points[0]  # values[0] = (first_edge_point + edge_points[0] ) / 2
+    last_edge_point = 2 * values[-1] - edge_points[-1]  # values[-1] = (last_edge_point + edge_points[-1] ) / 2
     return np.concatenate(
         (
             np.array(
