@@ -8,524 +8,16 @@ Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
 """
 
-from enum import Enum
-from typing import Any, Dict, Sequence, Tuple
-
-
-class ParameterType(Enum):
-    """
-    Parameter type.
-    """
-
-    SCALAR = 1
-    TIMESERIES = 2
-
-
-class _Parameter:
-    """
-    Represents a :ref:`parameter <parameters>` in the :ref:`parameter hierarchy
-    <parameter-hierarchy>`.
-    """
-
-    _children: Dict[str, "_Parameter"]
-    """Child parameters"""
-
-    _data: Any
-    """Data"""
-
-    _has_been_aggregated: bool
-    """
-    If True, parameter has already been read in an aggregated way, i.e., aggregating
-    over child parameters
-    """
-
-    _has_been_written_to: bool
-    """If True, parameter data has already been changed"""
-
-    _name: str
-    """Name"""
-
-    _parent: "_Parameter"
-    """Parent parameter"""
-
-    _type: ParameterType
-    """Parameter type"""
-
-    _unit: str
-    """Unit"""
-
-    def __init__(self, name: str):
-        """
-        Initialize.
-
-        Parameters
-        ----------
-        name
-            Name
-        """
-        self._children = {}
-        self._has_been_aggregated = False
-        self._has_been_written_to = False
-        self._name = name
-        self._parent = None
-        self._type = None
-        self._unit = None
-
-    def get_or_create_child_parameter(
-        self, name: str, unit: str, parameter_type: ParameterType
-    ) -> "_Parameter":
-        """
-        Get a (direct) child parameter of this parameter. Create and add it if not
-        found.
-
-        Parameters
-        ----------
-        name
-            Name
-        unit
-            Unit
-        parameter_type
-            Parameter type
-
-        Raises
-        ------
-        ParameterAggregatedError
-            If the child paramater would need to be added, but this parameter has
-            already been read in an aggregated way. In this case a child parameter
-            cannot be added.
-        ParameterWrittenError
-            If the child paramater would need to be added, but this parameter has
-            already been written to. In this case a child parameter cannot be added.
-        """
-        res = self._children.get(name, None)
-        if res is None:
-            if self._has_been_written_to:
-                raise ParameterWrittenError
-            if self._has_been_aggregated:
-                raise ParameterAggregatedError
-            res = _Parameter(name)
-            res._parent = self
-            res._type = parameter_type
-            res._unit = unit
-            self._children[name] = res
-        return res
-
-    def attempt_aggregate(self, parameter_type: ParameterType) -> None:
-        """
-        Tell parameter that it will be read from in an aggregated way, i.e., aggregating
-        over child parameters.
-
-        Parameters
-        ----------
-        parameter_type
-            Parameter type to be read
-
-        Raises
-        ------
-        ParameterTypeError
-            If parameter has already been read from or written to in a different type.
-        """
-        if self._type is not None and self._type != parameter_type:
-            raise ParameterTypeError
-        self._type = parameter_type
-        self._has_been_aggregated = True
-
-    def attempt_write(self, parameter_type: ParameterType) -> None:
-        """
-        Tell parameter that its data will be written to.
-
-        Parameters
-        ----------
-        parameter_type
-            Parameter type to be written
-
-        Raises
-        ------
-        ParameterReadonlyError
-            If parameter is read-only because it has child parameters.
-        """
-        if self._children:
-            raise ParameterReadonlyError
-        self.attempt_aggregate(parameter_type)
-        self._has_been_written_to = True
-
-    @property
-    def full_name(self) -> Tuple[str]:
-        """
-        Full :ref:`hierarchical name <parameter-hierarchy>`
-        """
-        p = self
-        r = []
-        while p is not None:
-            r.append(p.name)
-            p = p._parent
-        return tuple(reversed(r))
-
-    @property
-    def name(self) -> str:
-        """
-        Name
-        """
-        return self._name
-
-    @property
-    def parameter_type(self) -> ParameterType:
-        """
-        Parameter type
-        """
-        return self._type
-
-    @property
-    def parent(self) -> "_Parameter":
-        """
-        Parent parameter
-        """
-        return self._parent
-
-    @property
-    def unit(self) -> str:
-        """
-        Unit
-        """
-        return self._unit
-
-
-class _Region:
-    """
-    Represents a region in the region hierarchy.
-    """
-
-    _children: Dict[str, "_Region"]
-    """Subregions"""
-
-    _has_been_aggregated: bool
-    """
-    If True, a parameter of this region has already been read in an aggregated way,
-    i.e., aggregating over subregions
-     """
-
-    _name: str
-    """Name"""
-
-    _parameters: Dict[str, _Parameter]
-    """Parameters"""
-
-    _parent: "_Region"
-    """Parent region (or `None` if root region)"""
-
-    def __init__(self, name: str):
-        """
-        Initialize
-
-        Parameters
-        ----------
-        name
-            Name
-        """
-        self._name = name
-        self._children = {}
-        self._has_been_aggregated = False
-        self._parameters = {}
-        self._parent = None
-
-    def get_or_create_subregion(self, name: str) -> "_Region":
-        """
-        Get a (direct) subregion of this region. Create and add it if not found.
-
-        Parameters
-        ----------
-        name
-            Name
-
-        Raises
-        ------
-        RegionAggregatedError
-            If the subregion would need to be added and a parameter of this region has
-            already been read in an aggregated way. In this case a subregion cannot be
-            created.
-        """
-        res = self._children.get(name, None)
-        if res is None:
-            if self._has_been_aggregated:
-                raise RegionAggregatedError
-            res = _Region(name)
-            res._parent = self
-            self._children[name] = res
-        return res
-
-    def get_or_create_parameter(self, name: str) -> _Parameter:
-        """
-        Get a root parameter for this region. Create and add it if not found.
-
-        Parameters
-        ----------
-        name
-            Name
-        """
-        res = self._parameters.get(name, None)
-        if res is None:
-            res = _Parameter(name)
-            self._parameters[name] = res
-        return res
-
-    def attempt_aggregate(self) -> None:
-        """
-        Tell region that one of its parameters will be read from in an aggregated way,
-        i.e., aggregating over subregions.
-        """
-        self._has_been_aggregated = True
-
-    @property
-    def name(self) -> str:
-        """
-        Name
-        """
-        return self._name
-
-    @property
-    def parent(self) -> "_Region":
-        """
-        Parent region (or `None` if root region)
-        """
-        return self._parent
-
-
-class ParameterError(Exception):
-    """
-    Exception relating to a parameter. Used as super class.
-    """
-
-
-class ParameterLengthError(ParameterError):
-    """
-    Exception raised when sequences in timeseries do not match run
-    size.
-    """
-
-
-class ParameterReadonlyError(ParameterError):
-    """
-    Exception raised when a requested parameter is read-only.
-
-    This can happen, for instance, if a parameter's parent parameter
-    in the parameter hierarchy has already been requested as writable.
-    """
-
-
-class ParameterTypeError(ParameterError):
-    """
-    Exception raised when a parameter is of a different type than
-    requested (scalar or timeseries).
-    """
-
-
-class ParameterAggregatedError(ParameterError):
-    """
-    Exception raised when a parameter has been read from (raised, e.g., when attempting
-    to create a child parameter).
-    """
-
-
-class ParameterWrittenError(ParameterError):
-    """
-    Exception raised when a parameter has been written to (raised, e.g., when attempting
-    to create a child parameter).
-    """
-
-
-class RegionAggregatedError(Exception):
-    """
-    Exception raised when a region has been read from in a region-aggregated way.
-    """
-
-
-class ParameterView:
-    """
-    Generic view to a :ref:`parameter <parameters>` (scalar or timeseries).
-    """
-
-    _name: Tuple[str]
-    """:ref:`Hierarchical name <parameter-hierarchy>`"""
-
-    _region: Tuple[str]
-    """Hierarchical region name"""
-
-    _unit: str
-    """Unit"""
-
-    def __init__(self, name: Tuple[str], region: Tuple[str], unit: str):
-        """
-        Initialize.
-
-        Parameters
-        ----------
-        name
-            :ref:`Hierarchical name <parameter-hierarchy>`
-        region
-            Hierarchical region name
-        unit
-            Unit
-        """
-        self._name = name
-        self._region = region
-        self._unit = unit
-
-    @property
-    def name(self) -> Tuple[str]:
-        """
-        :ref:`Hierarchical name <parameter-hierarchy>`
-        """
-        return self._name
-
-    @property
-    def region(self) -> Tuple[str]:
-        """
-        Hierarchical region name
-        """
-        return self._region
-
-    @property
-    def unit(self) -> str:
-        """
-        Unit
-        """
-        return self._unit
-
-    @property
-    def is_empty(self) -> bool:
-        """
-        Check if parameter is empty, i.e. has not yet been written to.
-        """
-        raise NotImplementedError
-
-
-class ParameterInfo(ParameterView):
-    """
-    Provides information about a :ref:`parameter <parameters>`.
-    """
-
-    _type: ParameterType
-    """Parameter type"""
-
-    def __init__(self, parameter: _Parameter):
-        """
-        Initialize.
-
-        Parameters
-        ----------
-        parameter
-            Parameter
-        """
-        self._type = parameter.parameter_type
-
-    @property
-    def parameter_type(self) -> ParameterType:
-        """Parameter type"""
-        return self._type
-
-
-class ScalarView(ParameterView):
-    """
-    Read-only view of a scalar parameter.
-    """
-
-    def get(self) -> float:
-        """
-        Get current value of scalar parameter.
-        """
-        raise NotImplementedError
-
-
-class WritableScalarView(ScalarView):
-    """
-    View of a scalar parameter whose value can be changed.
-    """
-
-    def set(self, value: float) -> None:
-        """
-        Set current value of scalar parameter.
-
-        Parameters
-        ----------
-        value
-            Value
-        """
-        raise NotImplementedError
-
-
-class TimeseriesView(ParameterView):
-    """
-    Read-only :class:`ParameterView` of a timeseries.
-    """
-
-    def get_series(self) -> Sequence[float]:
-        """
-        Get values of the full timeseries.
-        """
-        raise NotImplementedError
-
-    def get(self, index: int) -> float:
-        """
-        Get value at a particular time.
-
-        Parameters
-        ----------
-        index
-            Time step index
-
-        Raises
-        ------
-        IndexError
-            ``time`` is out of run time range.
-        """
-        raise NotImplementedError
-
-    def length(self) -> int:
-        """
-        Get length of time series.
-        """
-        raise NotImplementedError
-
-
-class WritableTimeseriesView(TimeseriesView):
-    """
-    View of a timeseries whose values can be changed.
-    """
-
-    def set_series(self, values: Sequence[float]) -> None:
-        """
-        Set value for whole time series.
-
-        Parameters
-        ----------
-        values
-            Values to set. The length of this sequence (list/1-D
-            array/...) of ``float`` values must equal size.
-
-        Raises
-        ------
-        ParameterLengthError
-            Length of ``values`` does not equal size.
-        """
-        raise NotImplementedError
-
-    def set(self, value: float, index: int) -> None:
-        """
-        Set value for a particular time in the time series.
-
-        Parameters
-        ----------
-        value
-            Value
-        index
-            Time step index
-
-        Raises
-        ------
-        IndexError
-            ``index`` is out of range.
-        """
-        raise NotImplementedError
+from typing import Tuple
+from .parameter_views import (
+    ParameterInfo,
+    ScalarView,
+    WritableScalarView,
+    TimeseriesView,
+    WritableTimeseriesView,
+)
+from .parameters import _Parameter, ParameterType
+from .regions import _Region
 
 
 class ParameterSet:
@@ -549,13 +41,24 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the region
+            Hierarchical name of the region or ``()`` for "World".
         """
         if len(name) > 0:
             p = self._get_or_create_region(name[:-1])
             return p.get_or_create_subregion(name[-1])
         else:
             return self._world
+
+    def _get_region(self, name: Tuple[str]) -> _Region:
+        """
+        Get a region or ``None`` if not found.
+
+        Parameters
+        ----------
+        name
+            Hierarchical name of the region or ``()`` for "World".
+        """
+        return self._world.get_subregion(name)
 
     def _get_or_create_parameter(
         self,
@@ -589,7 +92,7 @@ class ParameterSet:
         elif len(name) == 1:
             return region.get_or_create_parameter(name[0])
         else:  # len(name) == 0
-            raise ValueError("No region name given")
+            raise ValueError("No parameter name given")
 
     def get_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str
@@ -604,7 +107,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical region name
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
 
@@ -630,7 +133,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical region name
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
 
@@ -666,7 +169,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical region name
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
         start_time
@@ -701,7 +204,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical region name
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
         start_time
@@ -720,7 +223,7 @@ class ParameterSet:
         """
         raise NotImplementedError
 
-    def get_parameter_info(self, name: Tuple[str]) -> ParameterInfo:
+    def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """
         Get information about a parameter.
 
@@ -728,6 +231,8 @@ class ParameterSet:
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
 
         Raises
         ------
@@ -740,9 +245,14 @@ class ParameterSet:
             Information about the parameter or ``None`` if the parameter has not been
             created yet.
         """
-        raise NotImplementedError
+        region = self._get_region(region)
+        if region is not None:
+            parameter = region.get_parameter(name)
+            if parameter is not None:
+                return ParameterInfo(parameter)
+        return None
 
-    def has_parameter(self, name: Tuple[str]) -> bool:
+    def has_parameter(self, name: Tuple[str], region: Tuple[str]) -> bool:
         """
         Query if parameter set has a specific parameter.
 
@@ -750,13 +260,16 @@ class ParameterSet:
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
 
         Raises
         ------
         ValueError
-            Name not given
+            Name or region not given
         """
-        raise NotImplementedError
+        region = self._get_region(region)
+        return region is not None and region.get_parameter(name) is not None
 
 
 class Core:
@@ -837,7 +350,7 @@ class Core:
         """
         Run the model over the full time range.
         """
-        raise NotImplementedError
+        self._model.run()
 
     @property
     def start_time(self) -> int:
