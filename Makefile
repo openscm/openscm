@@ -8,6 +8,9 @@ venv: dev-requirements.txt setup.py
 test: | venv
 	./venv/bin/pytest -rfsxEX --cov=openscm tests
 
+coverage: test
+	coverage html
+
 test_all: test | venv
 	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
 
@@ -45,4 +48,4 @@ test-pypi-install: | venv
 clean:
 	rm -rf venv
 
-.PHONY: clean test test-all black flake8 docs publish-on-pypi test-pypi-install
+.PHONY: clean coverage test test-all black flake8 docs publish-on-pypi test-pypi-install
