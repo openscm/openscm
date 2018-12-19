@@ -106,17 +106,23 @@ def test_conversion(source, target, source_values_index):
         np.testing.assert_allclose(values, target_values)
         assert len(values) == target.get_length_until(
             source.get_stop_time(len(source_values))
-        ) + (1 if target.start_time >= source.start_time else 0)
+        )
 
 
 def test_timeframeconverter(source, target, source_values_index):
     source_values, target_values = get_test_values(source, target, source_values_index)
     if target_values is not None:
         timeframeconverter = timeframes.TimeframeConverter(source, target)
+        assert timeframeconverter.get_target_len(len(source_values)) == len(
+            target_values
+        )
         values = timeframeconverter.convert_from(source_values)
         np.testing.assert_allclose(values, target_values)
 
         timeframeconverter = timeframes.TimeframeConverter(target, source)
+        assert timeframeconverter.get_source_len(len(source_values)) == len(
+            target_values
+        )
         values = timeframeconverter.convert_to(source_values)
         np.testing.assert_allclose(values, target_values)
 

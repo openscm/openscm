@@ -74,7 +74,7 @@ class Timeframe:
         np.ndarray
             Array of time points
         """
-        return np.linspace(self.start_time, self.get_stop_time(count), count)
+        return np.linspace(self.start_time, self.get_stop_time(count - 1), count)
 
     def get_stop_time(self, count: int) -> int:
         """
@@ -91,7 +91,7 @@ class Timeframe:
         int
             Time point (seconds since ``1970-01-01 00:00:00``)
         """
-        return self.start_time + (count - 1) * self.period_length
+        return self.start_time + count * self.period_length
 
     def get_length_until(self, stop_time: int) -> int:
         """
@@ -107,7 +107,7 @@ class Timeframe:
         int
             Number of time points
         """
-        return (stop_time - self.start_time) // self.period_length + 1
+        return (stop_time + 1 - self.start_time) // self.period_length
 
 
 def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
@@ -257,8 +257,8 @@ def _calc_interpolation_points(
         first_target_point = target.start_time + target.period_length
         first_interval_length = source.start_time - target.start_time
 
-    source_stop_time = source.get_stop_time(linearization_points_len)
-    target_len = 1 + (source_stop_time - first_target_point) // target.period_length
+    source_stop_time = source.get_stop_time(linearization_points_len - 1)
+    target_len = (source_stop_time - first_target_point) // target.period_length
     target_stop_time = target.get_stop_time(target_len)
 
     if source_stop_time > target_stop_time:
@@ -268,11 +268,14 @@ def _calc_interpolation_points(
 
     interpolation_points, indices = np.unique(
         np.concatenate(
-            (target.get_points(target_len), source.get_points(linearization_points_len))
+            (
+                target.get_points(target_len + 1),
+                source.get_points(linearization_points_len),
+            )
         ),
         return_index=True,
     )
-    target_indices = np.where(indices < target_len)[0]
+    target_indices = np.where(indices <= target_len)[0]
 
     if source_stop_time <= target_stop_time:
         target_indices = target_indices[:-1]
@@ -487,6 +490,28 @@ class TimeframeConverter:
             values, self._target, self._source, self._convert_to_interpolation
         )
         return result
+
+    def get_source_len(self, target_len: int) -> int:
+        """
+        Get length of timeseries in source timeframe.
+
+        Parameters
+        ----------
+        target_len
+            Length of timeseries in target timeframe.
+        """
+        return self._source.get_length_until(self._target.get_stop_time(target_len))
+
+    def get_target_len(self, source_len: int) -> int:
+        """
+        Get length of timeseries in target timeframe.
+
+        Parameters
+        ----------
+        source_len
+            Length of timeseries in source timeframe.
+        """
+        return self._target.get_length_until(self._source.get_stop_time(source_len))
 
     @property
     def source(self) -> Timeframe:
