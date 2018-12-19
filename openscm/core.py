@@ -10,14 +10,14 @@ implementable in several programming languages.
 
 from typing import Tuple
 from .parameter_views import (
-    ParameterInfo,
     ScalarView,
     WritableScalarView,
     TimeseriesView,
     WritableTimeseriesView,
 )
-from .parameters import _Parameter, ParameterType
+from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
+from .timeframes import Timeframe
 
 
 class ParameterSet:
@@ -60,13 +60,7 @@ class ParameterSet:
         """
         return self._world.get_subregion(name)
 
-    def _get_or_create_parameter(
-        self,
-        name: Tuple[str],
-        region: _Region,
-        unit: str,
-        parameter_type: ParameterType,
-    ) -> _Parameter:
+    def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
         """
         Get a parameter. Create and add it if not found.
 
@@ -76,10 +70,6 @@ class ParameterSet:
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
             Region
-        unit
-            Unit for the values in the view
-        parameter_type
-            Parameter type
 
         Raises
         ------
@@ -87,8 +77,8 @@ class ParameterSet:
             Name not given
         """
         if len(name) > 1:
-            p = self._get_or_create_parameter(name[:-1], region, unit, parameter_type)
-            return p.get_or_create_child_parameter(name[-1], unit, parameter_type)
+            p = self._get_or_create_parameter(name[:-1], region)
+            return p.get_or_create_child_parameter(name[-1])
         elif len(name) == 1:
             return region.get_or_create_parameter(name[0])
         else:  # len(name) == 0
@@ -118,7 +108,11 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_read(unit, ParameterType.SCALAR)
+        return ScalarView(parameter, unit)
 
     def get_writable_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str
@@ -146,7 +140,11 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_write(unit, ParameterType.SCALAR)
+        return WritableScalarView(parameter, unit)
 
     def get_timeseries_view(
         self,
@@ -184,7 +182,12 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        timeframe = Timeframe(start_time, period_length)
+        parameter.attempt_read(unit, ParameterType.TIMESERIES, timeframe)
+        return TimeseriesView(parameter, unit, timeframe)
 
     def get_writable_timeseries_view(
         self,
@@ -221,11 +224,16 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        timeframe = Timeframe(start_time, period_length)
+        parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
+        return WritableTimeseriesView(parameter, unit, timeframe)
 
     def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """
-        Get information about a parameter.
+        Get a parameter or ``None`` if not found.
 
         Parameters
         ----------
@@ -241,35 +249,15 @@ class ParameterSet:
 
         Returns
         -------
-        ParameterInfo
-            Information about the parameter or ``None`` if the parameter has not been
-            created yet.
+        _Parameter
+            Parameter or ``None`` if the parameter has not been created yet.
         """
         region = self._get_region(region)
         if region is not None:
             parameter = region.get_parameter(name)
             if parameter is not None:
-                return ParameterInfo(parameter)
+                return parameter.info
         return None
-
-    def has_parameter(self, name: Tuple[str], region: Tuple[str]) -> bool:
-        """
-        Query if parameter set has a specific parameter.
-
-        Parameters
-        ----------
-        name
-            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
-        region
-            Hierarchical name of the region or ``()`` for "World".
-
-        Raises
-        ------
-        ValueError
-            Name or region not given
-        """
-        region = self._get_region(region)
-        return region is not None and region.get_parameter(name) is not None
 
 
 class Core:
@@ -344,13 +332,13 @@ class Core:
         """
         Set of parameters for the run
         """
-        return self._parameterset
+        return self._parameters
 
     def run(self) -> None:
         """
         Run the model over the full time range.
         """
-        self._model.run()
+        raise NotImplementedError
 
     @property
     def start_time(self) -> int:

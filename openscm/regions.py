@@ -2,6 +2,7 @@ from typing import Dict, Tuple
 from .errors import RegionAggregatedError
 from .parameters import _Parameter
 
+
 class _Region:
     """
     Represents a region in the region hierarchy.
@@ -93,7 +94,7 @@ class _Region:
         """
         res = self._parameters.get(name, None)
         if res is None:
-            res = _Parameter(name)
+            res = _Parameter(name, self)
             self._parameters[name] = res
         return res
 
@@ -111,13 +112,12 @@ class _Region:
         ValueError
             Name not given
         """
-        if len(name) > 0:
-            root_parameter = self._parameters.get(name, None)
-            if root_parameter is not None and len(name) > 1:
-                return root_parameter.get_subparameter(name[1:])
-            return root_parameter
-        else:
-            raise ValueError
+        if name is None or len(name) == 0:
+            raise ValueError("No parameter name given")
+        root_parameter = self._parameters.get(name[0], None)
+        if root_parameter is not None and len(name) > 1:
+            return root_parameter.get_subparameter(name[1:])
+        return root_parameter
 
     def attempt_aggregate(self) -> None:
         """
@@ -125,6 +125,18 @@ class _Region:
         i.e., aggregating over subregions.
         """
         self._has_been_aggregated = True
+
+    @property
+    def full_name(self) -> Tuple[str]:
+        """
+        Full hierarchical name
+        """
+        p = self
+        r = []
+        while p._parent is not None:
+            r.append(p.name)
+            p = p._parent
+        return tuple(reversed(r))
 
     @property
     def name(self) -> str:

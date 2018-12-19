@@ -4,13 +4,6 @@ class ParameterError(Exception):
     """
 
 
-class ParameterLengthError(ParameterError):
-    """
-    Exception raised when sequences in timeseries do not match run
-    size.
-    """
-
-
 class ParameterReadonlyError(ParameterError):
     """
     Exception raised when a requested parameter is read-only.
@@ -27,7 +20,7 @@ class ParameterTypeError(ParameterError):
     """
 
 
-class ParameterAggregatedError(ParameterError):
+class ParameterReadError(ParameterError):
     """
     Exception raised when a parameter has been read from (raised, e.g., when attempting
     to create a child parameter).

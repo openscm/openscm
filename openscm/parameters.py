@@ -1,11 +1,14 @@
+from copy import copy
 from enum import Enum
+import numpy as np
 from typing import Any, Dict, Tuple
 from .errors import (
-    ParameterAggregatedError,
+    ParameterReadError,
     ParameterReadonlyError,
     ParameterTypeError,
     ParameterWrittenError,
 )
+from .timeframes import Timeframe
 
 
 class ParameterType(Enum):
@@ -15,6 +18,72 @@ class ParameterType(Enum):
 
     SCALAR = 1
     TIMESERIES = 2
+
+
+class ParameterInfo:
+    """
+    Information for a :ref:`parameter <parameters>`.
+    """
+
+    _name: str
+    """Name"""
+
+    _region: "_Region"
+    """Region this parameter belongs to"""
+
+    _timeframe: Timeframe
+    """Timeframe; only for timeseries parameters"""
+
+    _type: ParameterType
+    """Parameter type"""
+
+    _unit: str
+    """Unit"""
+
+    def __init__(self, name: str, region: "_Region"):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        name
+            Name
+        region
+            Region
+        """
+        self._name = name
+        self._region = region
+        self._timeframe = None
+        self._type = None
+        self._unit = None
+
+    @property
+    def name(self) -> str:
+        """
+        Name
+        """
+        return self._name
+
+    @property
+    def parameter_type(self) -> ParameterType:
+        """
+        Parameter type
+        """
+        return self._type
+
+    @property
+    def region(self) -> Tuple[str]:
+        """
+        Hierarchichal name of the region this parameter belongs to
+        """
+        return self._region.full_name
+
+    @property
+    def unit(self) -> str:
+        """
+        Unit
+        """
+        return self._unit
 
 
 class _Parameter:
@@ -29,28 +98,19 @@ class _Parameter:
     _data: Any
     """Data"""
 
-    _has_been_aggregated: bool
-    """
-    If True, parameter has already been read in an aggregated way, i.e., aggregating
-    over child parameters
-    """
+    _has_been_read_from: bool
+    """If True, parameter has already been read from"""
 
     _has_been_written_to: bool
     """If True, parameter data has already been changed"""
 
-    _name: str
-    """Name"""
+    _info: ParameterInfo
+    """Information about the parameter"""
 
     _parent: "_Parameter"
     """Parent parameter"""
 
-    _type: ParameterType
-    """Parameter type"""
-
-    _unit: str
-    """Unit"""
-
-    def __init__(self, name: str):
+    def __init__(self, name: str, region: "_Region"):
         """
         Initialize.
 
@@ -60,16 +120,12 @@ class _Parameter:
             Name
         """
         self._children = {}
-        self._has_been_aggregated = False
+        self._has_been_read_from = False
         self._has_been_written_to = False
-        self._name = name
+        self._info = ParameterInfo(name, region)
         self._parent = None
-        self._type = None
-        self._unit = None
 
-    def get_or_create_child_parameter(
-        self, name: str, unit: str, parameter_type: ParameterType
-    ) -> "_Parameter":
+    def get_or_create_child_parameter(self, name: str) -> "_Parameter":
         """
         Get a (direct) child parameter of this parameter. Create and add it if not
         found.
@@ -79,30 +135,27 @@ class _Parameter:
         name
             Name
         unit
-            Unit
+            Unit for the parameter if it is going to be created
         parameter_type
-            Parameter type
+            Parameter type if it is going to be created
 
         Raises
         ------
-        ParameterAggregatedError
-            If the child paramater would need to be added, but this parameter has
-            already been read in an aggregated way. In this case a child parameter
-            cannot be added.
+        ParameterReadError
+            If the child parameter would need to be added, but this parameter has
+            already been read from. In this case a child parameter cannot be added.
         ParameterWrittenError
-            If the child paramater would need to be added, but this parameter has
+            If the child parameter would need to be added, but this parameter has
             already been written to. In this case a child parameter cannot be added.
         """
         res = self._children.get(name, None)
         if res is None:
             if self._has_been_written_to:
                 raise ParameterWrittenError
-            if self._has_been_aggregated:
-                raise ParameterAggregatedError
-            res = _Parameter(name)
+            if self._has_been_read_from:
+                raise ParameterReadError
+            res = _Parameter(name, self._info._region)
             res._parent = self
-            res._type = parameter_type
-            res._unit = unit
             self._children[name] = res
         return res
 
@@ -124,34 +177,55 @@ class _Parameter:
         else:
             return self
 
-    def attempt_aggregate(self, parameter_type: ParameterType) -> None:
+    def attempt_read(
+        self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
+    ) -> None:
         """
-        Tell parameter that it will be read from in an aggregated way, i.e., aggregating
-        over child parameters.
+        Tell parameter that it will be read from. If the parameter has child parameters
+        it will be read in in an aggregated way, i.e., aggregating over child
+        parameters.
 
         Parameters
         ----------
+        unit
+            Unit to be read
         parameter_type
             Parameter type to be read
+        timeframe
+            Timeframe; only for timeseries parameters
 
         Raises
         ------
         ParameterTypeError
             If parameter has already been read from or written to in a different type.
         """
-        if self._type is not None and self._type != parameter_type:
+        # TODO aggregate
+        if self._info._type is not None and self._info._type != parameter_type:
             raise ParameterTypeError
-        self._type = parameter_type
-        self._has_been_aggregated = True
+        if self._info._unit is None:
+            self._info._unit = unit
+            self._info._type = parameter_type
+            if parameter_type == ParameterType.SCALAR:
+                self._data = float("NaN")
+            else:  # parameter_type == ParameterType.TIMESERIES
+                self._data = np.array([])
+                self._info._timeframe = copy(timeframe)
+        self._has_been_read_from = True
 
-    def attempt_write(self, parameter_type: ParameterType) -> None:
+    def attempt_write(
+        self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
+    ) -> None:
         """
         Tell parameter that its data will be written to.
 
         Parameters
         ----------
+        unit
+            Unit to be written
         parameter_type
             Parameter type to be written
+        timeframe
+            Timeframe; only for timeseries parameters
 
         Raises
         ------
@@ -160,7 +234,7 @@ class _Parameter:
         """
         if self._children:
             raise ParameterReadonlyError
-        self.attempt_aggregate(parameter_type)
+        self.attempt_read(unit, parameter_type, timeframe)
         self._has_been_written_to = True
 
     @property
@@ -171,23 +245,16 @@ class _Parameter:
         p = self
         r = []
         while p is not None:
-            r.append(p.name)
+            r.append(p._info._name)
             p = p._parent
         return tuple(reversed(r))
 
     @property
-    def name(self) -> str:
+    def info(self) -> ParameterInfo:
         """
-        Name
+        Parameter information
         """
-        return self._name
-
-    @property
-    def parameter_type(self) -> ParameterType:
-        """
-        Parameter type
-        """
-        return self._type
+        return self._info
 
     @property
     def parent(self) -> "_Parameter":
@@ -195,10 +262,3 @@ class _Parameter:
         Parent parameter
         """
         return self._parent
-
-    @property
-    def unit(self) -> str:
-        """
-        Unit
-        """
-        return self._unit
