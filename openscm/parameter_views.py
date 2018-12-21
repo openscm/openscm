@@ -1,6 +1,5 @@
-from typing import Sequence, Tuple
-from .errors import ParameterTypeError
-from .parameters import _Parameter, ParameterType
+from typing import Sequence
+from .parameters import _Parameter
 from .timeframes import Timeframe, TimeframeConverter
 from .units import UnitConverter
 

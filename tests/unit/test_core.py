@@ -1,6 +1,6 @@
 import numpy as np
 from math import isnan
-from openscm.core import Core, ParameterSet, ParameterType
+from openscm.core import Core, ParameterType
 from openscm.errors import (
     ParameterReadError,
     ParameterReadonlyError,
