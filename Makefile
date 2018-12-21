@@ -5,22 +5,22 @@ venv: dev-requirements.txt setup.py
 	./venv/bin/pip install -e .[tests,docs,dev]
 	touch venv
 
-test: | venv
+test: venv
 	./venv/bin/pytest -rfsxEX --cov=openscm tests
 
 coverage: test
 	coverage html
 
-test_all: test | venv
+test_all: test venv
 	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
 
-docs: | venv
+docs: venv
 	./venv/bin/sphinx-build -M html docs docs/build
 
-flake8: | venv
+flake8: venv
 	./venv/bin/flake8 openscm tests
 
-black: | venv
+black: venv
 	@status=$$(git status --porcelain openscm tests); \
 	if test "x$${status}" = x; then \
 		./venv/bin/black --exclude _version.py setup.py openscm tests; \
@@ -28,7 +28,7 @@ black: | venv
 		echo Not trying any formatting. Working directory is dirty ... >&2; \
 	fi;
 
-publish-on-pypi: | venv
+publish-on-pypi: venv
 	-rm -rf build dist
 	@status=$$(git status --porcelain); \
 	if test "x$${status}" = x; then \
@@ -38,7 +38,7 @@ publish-on-pypi: | venv
 		echo Working directory is dirty >&2; \
 	fi;
 
-test-pypi-install: | venv
+test-pypi-install: venv
 	$(eval TEMPVENV := $(shell mktemp -d))
 	python3 -m venv $(TEMPVENV)
 	$(TEMPVENV)/bin/pip install pip --upgrade
