@@ -198,7 +198,7 @@ The steps undertaken to create a release are:
 
 -  Checkout the latest commit in the master branch and ensure that your
    working copy is clean
--  Update ``CHANGELOG.md`` to tag the unreleased items with the version
+-  Update ``CHANGELOG.rst`` to tag the unreleased items with the version
    and date of release. The unreleased section should now be empty.
 -  Commit the changes with the message “Bumped to {}” where {} is
    replaced with the version string
