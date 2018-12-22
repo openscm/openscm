@@ -165,22 +165,18 @@ We have a number of different types of test:
 Unit
 ^^^^
 
-[TODO: to be written properly]
-
--  isolate one bit of code
--  only work if functions are small
--  will almost inevitably require the use of mocking
--  help to isolate bugs
+Unit tests test isolated bits of codes one at a time. Thus, they only
+work if the tested functions are small and will almost inevitably
+require the use of mocking. Their purpose is to help to isolate bugs
+down to particular functions or lines of code.
 
 Integration
 ^^^^^^^^^^^
 
-[TODO: to be written properly]
-
--  test a pipeline
--  ensure that all our joins make sense when run without (or with few)
-   mocks
--  should reproduce how a user would interact with the package
+Integration tests test a whole pipeline of functions on a higher level
+than unit tests. They ensure that all our joins make sense when run
+without (or with few) mocks. Overall, integration tests should
+reproduce how a user would interact with the package.
 
 
 Release Process
