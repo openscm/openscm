@@ -67,17 +67,29 @@ aren’t familiar with any of these terms it might be helpful to spend
 some time getting up to speed on these technologies. Some helpful
 resources (the longest take about 5 hours to work through):
 
--  `git intro by software
-   carpentry <https://swcarpentry.github.io/git-novice/>`__
--  `making a pull request <http://makeapullrequest.com/>`__
--  `my first pull request <http://www.firsttimersonly.com/>`__
--  `tests intro by software
-   carpentry <https://v4.software-carpentry.org/test/index.html>`__ and
-   `getting started with
-   mocking <https://semaphoreci.com/community/tutorials/getting-started-with-mocking-in-python>`__
--  `make intro by software
-   carpentry <https://swcarpentry.github.io/make-novice/>`__
--  `venv <https://docs.python.org/3/library/venv.html>`__
+-  `Introduction to git <https://swcarpentry.github.io/git-novice/>`__
+   by Software Carpentry
+-  `"Making a pull request" <http://makeapullrequest.com/>`__
+-  `"My first pull request" <http://www.firsttimersonly.com/>`__
+-  `Intoduction to tests
+   <https://v4.software-carpentry.org/test/index.html>`__ by Software
+   Carpentry and `"Getting started with mocking"
+   <https://semaphoreci.com/community/tutorials/getting-started-with-mocking-in-python>`__
+-  `Introduction to make
+   <https://swcarpentry.github.io/make-novice/>`__ by Software
+   Carpentry
+-  Virtual environments with `venv
+   <https://docs.python.org/3/library/venv.html>`__
+-  `Continuous integration (CI)
+   <https://docs.travis-ci.com/user/for-beginners/>`__; we use `Travis
+   CI <https://travis-ci.com/>`_ for our CI but there are a number of
+   good providers.
+-  `Jupyter Notebooks
+   <https://medium.com/codingthesmartway-com-blog/getting-started-with-jupyter-notebook-for-python-4e7082bd5d46>`__;
+   we recommend simply installing ``jupyter`` (``conda install
+   jupyter`` or ``pip install jupyter``) in your virtual environment.
+-  Documentation generation with `Sphinx
+   <http://www.sphinx-doc.org/en/master/>`__
 
 
 Development workflow
