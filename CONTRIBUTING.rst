@@ -110,9 +110,14 @@ The workflow for implementing a change to opencm is:
 -  Create a PR. Initially you will not be ready to merge so preface
    the title of the PR with ‘WIP:’.
 -  Start a branch for the feature (or bug fix). When you start a new
-   branch, be sure to pull any changes to master first ``bash git
-   checkout master git pull git branch my-feature && git checkout
-   my-feature``
+   branch, be sure to pull any changes to master first.
+
+   .. code:: bash
+
+      git checkout master
+      git pull
+      git checkout -b my-feature
+
 -  Develop your feature. Ensure that you run ``make test`` locally
    regularly to ensure that the tests still pass
 -  Push your local development branch. This builds, tests and packages
@@ -126,11 +131,11 @@ The workflow for implementing a change to opencm is:
    before it can be merged. Rebasing replays your commits onto the new
    master commit and allows you to rewrite history.
 
-.. code:: bash
+   .. code:: bash
 
-   git fetch
-   git checkout my-feature
-   git rebase -i origin/master
+      git fetch
+      git checkout my-feature
+      git rebase -i origin/master
 
 -  Once approved, a maintainer can merge the PR.
 
