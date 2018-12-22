@@ -36,5 +36,5 @@ class ParameterWrittenError(ParameterError):
 
 class RegionAggregatedError(Exception):
     """
-    Exception raised when a region has been read from in a region-aggregated way.
+    Exception raised when a region has already been read from in a region-aggregated way.
     """
