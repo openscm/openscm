@@ -125,7 +125,7 @@ The workflow for implementing a change to opencm is:
    fails.
 -  Before the PR can be merged it should be approved by another team
    member and it must pass the test suite. If you have a particular
-   reviewer in mind, assign the MR to that user.
+   reviewer in mind, assign the PR to that user.
 -  Your PR may need to be `rebased
    <https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase>`__
    before it can be merged. Rebasing replays your commits onto the new
