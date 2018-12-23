@@ -6,10 +6,10 @@ welcoming environment around the OpenSCM project. To that end, we have
 a few ground rules that we ask everyone to adhere to. This code
 applies equally to everyone involved in the project.
 
-This is not an exhaustive list of things that you cannot do. Rather,
-take it in the spirit in which it is intended - a guide to make it
-easier to enrich all of us and the technical communities in which we
-participate.
+This is not an exhaustive code which covers all possible behaviour.
+Rather, take it in the spirit in which it is intended - a guide to
+make it easier to enrich all of us and the technical communities in
+which we participate.
 
 This code of conduct applies to all spaces managed by the OpenSCM
 project. This includes mailing lists, the issue tracker, group calls,

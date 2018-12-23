@@ -61,7 +61,7 @@ Getting started
 Your First Contribution
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The development methodology for openscm makes heavy use of ``git``,
+The development methodology for OpenSCM makes heavy use of ``git``,
 ``make``, virtual environments and test driven development. If you
 aren’t familiar with any of these terms it might be helpful to spend
 some time getting up to speed on these technologies. Some helpful
@@ -100,15 +100,15 @@ Request <https://github.com/openclimatedata/openscm/pulls>`__ (PR) on
 GitHub to discuss the changes and track the overall implementation of
 the feature. These PRs should use the PR template.
 
-It is better to break a larger problem into smaller features if you can.
-Each feature is implemented as a branch and merged into master once all
-of the tests pass. This is instead of one long-lived branch which can be
-difficult to merge.
+It is better to break a larger problem into smaller features if you
+can. Each feature is implemented as a branch and merged into master
+once all of the tests pass. This is development workflow is preferred
+to one long-lived branch which can be difficult to merge.
 
 The workflow for implementing a change to opencm is:
 
--  Create a PR. Initially you will not be ready to merge so preface
-   the title of the PR with ‘WIP:’.
+-  Create a PR. Initially you will not be ready to merge so prefix the
+   title of the PR with ‘WIP:’.
 -  Start a branch for the feature (or bug fix). When you start a new
    branch, be sure to pull any changes to master first.
 
@@ -121,7 +121,7 @@ The workflow for implementing a change to opencm is:
 -  Develop your feature. Ensure that you run ``make test`` locally
    regularly to ensure that the tests still pass
 -  Push your local development branch. This builds, tests and packages
-   openscm under Linux. The committer will be emailed if this process
+   OpenSCM under Linux. The committer will be emailed if this process
    fails.
 -  Before the PR can be merged it should be approved by another team
    member and it must pass the test suite. If you have a particular
@@ -165,7 +165,7 @@ We have a number of different types of test:
 Unit
 ^^^^
 
-Unit tests test isolated bits of codes one at a time. Thus, they only
+Unit tests test isolated bits of code, one at a time. Thus, they only
 work if the tested functions are small and will almost inevitably
 require the use of mocking. Their purpose is to help to isolate bugs
 down to particular functions or lines of code.
@@ -182,7 +182,7 @@ reproduce how a user would interact with the package.
 Release Process
 ***************
 
-We use tags to represent released versions of openscm. Once you have
+We use tags to represent released versions of OpenSCM. Once you have
 tagged a new release in our git respoitory, ``versioneer`` takes care of
 the rest.
 
