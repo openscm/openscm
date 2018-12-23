@@ -209,6 +209,7 @@ _add_gases_to_unit_registry(unit_registry, _gases)
 
 unit_registry.define("a = 1 * year = annum = yr")
 unit_registry.define("h = hour")
+unit_registry.define("d = day")
 unit_registry.define("degreeC = degC")
 unit_registry.define("degreeF = degF")
 unit_registry.define("kt = 1000 * t")  # since kt is used for "knot" in the defaults

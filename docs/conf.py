@@ -147,7 +147,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "OpenSCM.tex", "OpenSCM Documentation", "Robert Gieseke, Zebedee Nicholls, Sven Willner", "manual")
+    (
+        master_doc,
+        "OpenSCM.tex",
+        "OpenSCM Documentation",
+        "Robert Gieseke, Zebedee Nicholls, Sven Willner",
+        "manual",
+    )
 ]
 
 
@@ -174,6 +180,16 @@ texinfo_documents = [
         "Miscellaneous",
     )
 ]
+
+
+def skip_init(app, what, name, obj, skip, options):
+    if name == "__init__":
+        return False
+    return skip
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip_init)
 
 
 # -- Extension configuration -------------------------------------------------

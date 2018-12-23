@@ -1,196 +1,88 @@
 """
-Then OpenSCM low-level API includes the basic functionality to run a
-particular simple climate model with OpenSCM as well as
-setting/getting its parameter values. Mapping of parameter names and
-units is done internally.
+The OpenSCM low-level API includes the basic functionality to run a particular
+simple climate model with OpenSCM as well as setting/getting its :ref:`parameter
+<parameters>` values. Mapping of :ref:`parameter names <parameter-hierarchy>` and
+:ref:`units <units>` is done internally.
 
-Parts of this API definition seems unpythonic as it is designed to
-be easily implementable in several programming languages.
+Parts of this API definition seems unpythonic as it is designed to be easily
+implementable in several programming languages.
 """
 
-from typing import Sequence, Tuple
-
-
-class ParameterLengthError(Exception):
-    """
-    Exception raised when sequences in timeseries do not match run
-    size.
-    """
-
-
-class ParameterReadonlyError(Exception):
-    """
-    Exception raised when a requested parameter is read-only.
-
-    This can happen, for instance, if a parameter's parent parameter
-    in the parameter hierarchy has already been requested as writable.
-    """
-
-
-class ParameterTypeError(Exception):
-    """
-    Exception raised when a parameter is of a different type than
-    requested (scalar or timeseries).
-    """
-
-
-class ParameterView:
-    """
-    Generic view to a parameter (scalar or timeseries).
-
-    Parameters
-    ----------
-    name
-        Hierarchical name
-    region
-        Region (hierarchy)
-    unit
-        Unit
-
-    Attributes
-    ----------
-    name
-        Hierarchical name (read-only)
-    region
-        Region (hierarchy) (read-only)
-    unit
-        Unit (read-only)
-    """
-
-    def __init__(self, name: Tuple[str], region: Tuple[str], unit: str):
-        self.name = name
-        self.region = region
-        self.unit = unit
-
-    @property
-    def is_empty(self) -> bool:
-        """
-        Check if parameter is empty, i.e. has not yet been written to.
-        """
-        raise NotImplementedError
-
-
-class ParameterInfo(ParameterView):
-    """
-    Provides information about a parameter.
-
-    Attributes
-    ----------
-    parameter_type
-        Type (``"scalar"`` or ``"timeseries"``)
-    """
-
-    parameter_type: str
-
-
-class ScalarView(ParameterView):
-    """
-    Read-only view of a scalar parameter.
-    """
-
-    def get(self) -> float:
-        """
-        Get current value of scalar parameter.
-        """
-        raise NotImplementedError
-
-
-class WritableScalarView(ScalarView):
-    """
-    View of a scalar parameter whose value can be changed.
-    """
-
-    def set(self, value: float) -> None:
-        """
-        Set current value of scalar parameter.
-
-        Parameters
-        ----------
-        value
-            Value
-        """
-        raise NotImplementedError
-
-
-class TimeseriesView(ParameterView):
-    """
-    Read-only :class:`ParameterView` of a timeseries.
-    """
-
-    def get_series(self) -> Sequence[float]:
-        """
-        Get values of the full timeseries.
-        """
-        raise NotImplementedError
-
-    def get(self, index: int) -> float:
-        """
-        Get value at a particular time.
-
-        Parameters
-        ----------
-        index
-            Time step index
-
-        Raises
-        ------
-        IndexError
-            ``time`` is out of run time range.
-        """
-        raise NotImplementedError
-
-    def length(self) -> int:
-        """
-        Get length of time series.
-        """
-        raise NotImplementedError
-
-
-class WritableTimeseriesView(TimeseriesView):
-    """
-    View of a timeseries whose values can be changed.
-    """
-
-    def set_series(self, values: Sequence[float]) -> None:
-        """
-        Set value for whole time series.
-
-        Parameters
-        ----------
-        values
-            Values to set. The length of this sequence (list/1-D
-            array/...) of ``float`` values must equal size.
-
-        Raises
-        ------
-        ParameterLengthError
-            Length of ``values`` does not equal size.
-        """
-        raise NotImplementedError
-
-    def set(self, value: float, index: int) -> None:
-        """
-        Set value for a particular time in the time series.
-
-        Parameters
-        ----------
-        value
-            Value
-        index
-            Time step index
-
-        Raises
-        ------
-        IndexError
-            ``index`` is out of range.
-        """
-        raise NotImplementedError
+from typing import Tuple
+from .parameter_views import (
+    ScalarView,
+    WritableScalarView,
+    TimeseriesView,
+    WritableTimeseriesView,
+)
+from .parameters import _Parameter, ParameterInfo, ParameterType
+from .regions import _Region
+from .timeframes import Timeframe
 
 
 class ParameterSet:
     """
-    Collates a set of parameters.
+    Collates a set of :ref:`parameters <parameters>`.
     """
+
+    _world: _Region
+    """Root region (contains all parameters)"""
+
+    def __init__(self):
+        """
+        Initialize.
+        """
+        self._world = _Region(None)
+
+    def _get_or_create_region(self, name: Tuple[str]) -> _Region:
+        """
+        Get a region. Create and add it if not found.
+
+        Parameters
+        ----------
+        name
+            Hierarchical name of the region or ``()`` for "World".
+        """
+        if len(name) > 0:
+            p = self._get_or_create_region(name[:-1])
+            return p.get_or_create_subregion(name[-1])
+        else:
+            return self._world
+
+    def _get_region(self, name: Tuple[str]) -> _Region:
+        """
+        Get a region or ``None`` if not found.
+
+        Parameters
+        ----------
+        name
+            Hierarchical name of the region or ``()`` for "World".
+        """
+        return self._world.get_subregion(name)
+
+    def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
+        """
+        Get a parameter. Create and add it if not found.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Region
+
+        Raises
+        ------
+        ValueError
+            Name not given
+        """
+        if len(name) > 1:
+            p = self._get_or_create_parameter(name[:-1], region)
+            return p.get_or_create_child_parameter(name[-1])
+        elif len(name) == 1:
+            return region.get_or_create_parameter(name[0])
+        else:  # len(name) == 0
+            raise ValueError("No parameter name given")
 
     def get_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str
@@ -203,9 +95,9 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
 
@@ -216,7 +108,11 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_read(unit, ParameterType.SCALAR)
+        return ScalarView(parameter, unit)
 
     def get_writable_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str
@@ -229,9 +125,9 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
 
@@ -244,7 +140,11 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_write(unit, ParameterType.SCALAR)
+        return WritableScalarView(parameter, unit)
 
     def get_timeseries_view(
         self,
@@ -265,13 +165,13 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
         start_time
-            Time for first point in timeseries (seconds since 1970-01-01 00:00:00)
+            Time for first point in timeseries (seconds since ``1970-01-01 00:00:00``)
         period_length
             Length of single time step in seconds
 
@@ -282,7 +182,12 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        timeframe = Timeframe(start_time, period_length)
+        parameter.attempt_read(unit, ParameterType.TIMESERIES, timeframe)
+        return TimeseriesView(parameter, unit, timeframe)
 
     def get_writable_timeseries_view(
         self,
@@ -300,13 +205,13 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Region (hierarchy)
+            Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
         start_time
-            Time for first point in timeseries (seconds since 1970-01-01 00:00:00)
+            Time for first point in timeseries (seconds since ``1970-01-01 00:00:00``)
         period_length
             Length of single time step in seconds
 
@@ -319,16 +224,23 @@ class ParameterSet:
         ValueError
             Name not given or invalid region
         """
-        raise NotImplementedError
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        timeframe = Timeframe(start_time, period_length)
+        parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
+        return WritableTimeseriesView(parameter, unit, timeframe)
 
-    def get_parameter_info(self, name: Tuple[str]) -> ParameterInfo:
+    def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """
-        Get information about a parameter.
+        Get a parameter or ``None`` if not found.
 
         Parameters
         ----------
         name
-            Hierarchy name of the parameter
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
 
         Raises
         ------
@@ -337,26 +249,15 @@ class ParameterSet:
 
         Returns
         -------
-        ParameterInfo
-            Information about the parameter or ``None`` if the parameter has not been created yet.
+        _Parameter
+            Parameter or ``None`` if the parameter has not been created yet.
         """
-        raise NotImplementedError
-
-    def has_parameter(self, name: Tuple[str]) -> bool:
-        """
-        Query if parameter set has a specific parameter.
-
-        Parameters
-        ----------
-        name
-            Hierarchy name of the parameter
-
-        Raises
-        ------
-        ValueError
-            Name not given
-        """
-        raise NotImplementedError
+        region = self._get_region(region)
+        if region is not None:
+            parameter = region.get_parameter(name)
+            if parameter is not None:
+                return parameter.info
+        return None
 
 
 class Core:
@@ -364,48 +265,88 @@ class Core:
     OpenSCM core class.
 
     Represents a model run with a particular simple climate model.
-
-    Parameters
-    ----------
-    model
-        Name of the SCM to run
-    start_time
-        Beginning of the time range to run over (seconds since 1970-01-01 00:00:00)
-    end_time
-        End of the time range to run over (including; seconds since 1970-01-01 00:00:00)
-
-    Raises
-    ------
-    KeyError
-        No adapter for SCM named ``model`` found
-    ValueError
-        ``end_time`` before ``start_time``
-
-    Attributes
-    ----------
-    end_time
-        End of the time range to run over (read-only)
-    model
-        Name of the SCM to run (read-only)
-    parameterset
-        Set of parameters for the run (read-only)
-    start_time
-        Beginning of the time range to run over (read-only)
     """
 
-    parameters: ParameterSet
+    _end_time: int
+    """
+    End of the time range to run over (including; seconds since
+    ``1970-01-01 00:00:00``)
+    """
+
+    _model: str
+    """Name of the SCM to run"""
+
+    _parameters: ParameterSet
+    """Set of :ref:`parameters <parameters>` for the run"""
+
+    _start_time: int
+    """
+    Beginning of the time range to run over (seconds since
+    ``1970-01-01 00:00:00``)
+    """
 
     def __init__(self, model: str, start_time: int, end_time: int):
-        self.model = model
-        self.start_time = start_time
-        self.end_time = end_time
-        self.parameters = ParameterSet()
+        """
+        Initialize.
+
+        Attributes
+        ----------
+        model
+            Name of the SCM to run
+        start_time
+            Beginning of the time range to run over (seconds since
+            ``1970-01-01 00:00:00``)
+        end_time
+            End of the time range to run over (including; seconds since
+            ``1970-01-01 00:00:00``)
+
+        Raises
+        ------
+        KeyError
+            No adapter for SCM named ``model`` found
+        ValueError
+            ``end_time`` before ``start_time``
+        """
+        self._model = model
+        self._start_time = start_time
+        self._end_time = end_time
+        self._parameters = ParameterSet()
+
+    @property
+    def end_time(self) -> int:
+        """
+        End of the time range to run over (including; seconds since
+        ``1970-01-01 00:00:00``)
+        """
+        return self._end_time
+
+    @property
+    def model(self) -> str:
+        """
+        Name of the SCM to run
+        """
+        return self._model
+
+    @property
+    def parameters(self) -> ParameterSet:
+        """
+        Set of parameters for the run
+        """
+        return self._parameters
 
     def run(self) -> None:
         """
         Run the model over the full time range.
         """
         raise NotImplementedError
+
+    @property
+    def start_time(self) -> int:
+        """
+        Beginning of the time range to run over (seconds since
+        ``1970-01-01 00:00:00``)
+        """
+        return self._start_time
 
     def step(self) -> int:
         """
@@ -414,6 +355,6 @@ class Core:
         Returns
         -------
         int
-            Current time (seconds since 1970-01-01 00:00:00)
+            Current time (seconds since ``1970-01-01 00:00:00``)
         """
         raise NotImplementedError
