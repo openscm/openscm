@@ -17,7 +17,6 @@ All contributions are welcome, some possible suggestions include:
 -  tutorials (or support questions which, once solved, result in a new
    tutorial :D)
 -  improving the documentation
--  blog posts
 
 Please don’t use the repository to have discussions about the results.
 Such discussions are scientific and generally belong in the scientific
@@ -33,8 +32,6 @@ As a contributor, it is vital that we all follow a few conventions:
    all backgrounds. See the :ref:`code_of_conduct`.
 -  Create issues for changes and enhancements, this ensures that
    everyone in the community has a chance to comment
--  Use our ``.editorconfig`` file (see `Editor
-   Config <#editor-config>`__)
 -  Ensure that you pass all the tests before making a pull request
 -  Avoid pushing directly to master, all changes should come via pull
    requests
