@@ -68,4 +68,7 @@ you report it by emailing the maintainers listed in the README.
 
 This Code of Conduct is adapted from the `Django Code of Conduct
 <https://www.djangoproject.com/conduct/>`__ and the `Contributor
-Covenant <https://www.contributor-covenant.org>`__.
+Covenant <https://www.contributor-covenant.org>`__. Similar to these,
+this document is released under `Creative Commons Attribution 4.0
+International Public License (CC BY 4.0)
+<https://creativecommons.org/licenses/by/4.0/>`__
