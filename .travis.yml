@@ -6,7 +6,7 @@ python:
   - "3.7"
 
 before_install:
-  - pip install pip --upgrade
+  - pip install pip pytest --upgrade
 
 install:
   # annoyingly we can't put this in setup.py...
