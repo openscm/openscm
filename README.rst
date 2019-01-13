@@ -71,6 +71,21 @@ Tests can be run locally with
 
     python setup.py test
 
+Maintainers
+-----------
+
+Current maintainers of OpenSCM are:
+
+-  `Robert Gieseke <http://github.com/rgieseke>`__
+   <`robert.gieseke@pik-potsdam.de
+   <mailto:robert.gieseke@pik-potsdam.de>`__>
+-  `Zeb Nicholls <http://github.com/znicholls>`__
+   <`zebedee.nicholls@climate-energy-college.org
+   <mailto:zebedee.nicholls@climate-energy-college.org>`__>
+-  `Sven Willner <http://github.com/swillner>`__
+   <`sven.willner@pik-potsdam.de
+   <mailto:sven.willner@pik-potsdam.de>`__>
+
 .. sec-end-development
 
 .. |Build Status| image:: https://img.shields.io/travis/openclimatedata/openscm.svg
