@@ -59,6 +59,8 @@ Tests can be run locally with
 
     python setup.py test
 
+.. sec-end-development
+
 Maintainers
 -----------
 
@@ -73,8 +75,6 @@ Current maintainers of OpenSCM are:
 -  `Sven Willner <http://github.com/swillner>`__
    <`sven.willner@pik-potsdam.de
    <mailto:sven.willner@pik-potsdam.de>`__>
-
-.. sec-end-development
 
 .. |Build Status| image:: https://img.shields.io/travis/openclimatedata/openscm.svg
     :target: https://travis-ci.org/openclimatedata/openscm
