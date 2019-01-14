@@ -9,8 +9,6 @@ before_install:
   - pip install pip pytest --upgrade
 
 install:
-  # annoyingly we can't put this in setup.py...
-  - pip install -r dev-requirements.txt
   - pip install -e .[tests]
 
 script:

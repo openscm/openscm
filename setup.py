@@ -12,9 +12,6 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
-# Arguments marked as "Required" below must be included for upload to PyPI.
-# Fields marked as "Optional" may be commented out.
-
 setup(
     name="openscm",
     version=versioneer.get_version(),
@@ -30,20 +27,20 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
     keywords="simple climate model",
     license="GNU Affero General Public License v3.0 or later",
     packages=["openscm"],
-    install_requires=["pyam-iamc"],
-    project_urls={  # Optional
+    install_requires=["numpy", "pint"],
+    project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
         "Source": "https://github.com/openclimatedata/openscm/",
     },
     extras_require={
-        "docs": ["sphinx >= 1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"],
+        "docs": ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"],
         "tests": ["pytest", "pytest-cov", "codecov", "nbval", "notebook"],
         "dev": [
             "setuptools>=38.6.0",
@@ -53,7 +50,6 @@ setup(
             "flake8",
             "pandas",
             "matplotlib",
-            "numpy",
         ],
     },
 )
