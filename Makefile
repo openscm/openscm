@@ -1,7 +1,6 @@
-venv: dev-requirements.txt setup.py
+venv: setup.py
 	[ -d ./venv ] || python3 -m venv ./venv
 	./venv/bin/pip install --upgrade pip
-	./venv/bin/pip install -r dev-requirements.txt
 	./venv/bin/pip install -e .[tests,docs,dev]
 	touch venv
 
