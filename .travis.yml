@@ -1,6 +1,6 @@
 language: python
 cache: pip
-dist: trusty
+
 python:
   - "3.6"
   - "3.7"
