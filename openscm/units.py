@@ -203,6 +203,7 @@ def _add_gases_to_unit_registry(unit_registry, gases):
             unit_registry.define("{} = {}".format(symbol.upper(), symbol))
             _add_mass_emissions_joint_version(symbol.upper())
 
+
 _add_gases_to_unit_registry(unit_registry, _gases)
 
 # Other definitions:
