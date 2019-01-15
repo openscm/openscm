@@ -34,7 +34,7 @@ setup(
     keywords="simple climate model",
     license="GNU Affero General Public License v3.0 or later",
     packages=["openscm"],
-    install_requires=["numpy", "pint"],
+    install_requires=["numpy", "pint", "git+https://github.com/thedataincubator/expectexception.git@master"],
     dependency_links=["https://github.com/thedataincubator/expectexception"],
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
