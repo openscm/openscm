@@ -45,7 +45,7 @@ setup(
     },
     extras_require={
         "docs": ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"],
-        "tests": ["codecov", "matplotlib", "nbval", "notebook", "pytest", "pytest-cov"],
+        "tests": ["codecov", "matplotlib", "nbval", "notebook", "pytest>=4.1.1", "pytest-cov"],
         "dev": [
             "setuptools>=38.6.0",
             "twine>=1.11.0",
