@@ -36,8 +36,7 @@ setup(
     packages=["openscm"],
     install_requires=[
         "numpy",
-        "pint",
-        "expectexception @ git+https://github.com/thedataincubator/expectexception.git@master",
+        "pint"
     ],
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
