@@ -22,6 +22,14 @@ class OpenSCM(Core):
     pass
 
 class OpenSCMDataFrame(IamDataFrame):
+    """OpenSCM's custom data frame implementation.
+
+    The data frame wraps around pyam's IamDataFrame, which itself wraps around pandas.
+
+    The dataframe provides a number of diagnostic features (including validation of
+    data, completeness of variables provided, running of simple climate models) as
+    well as a number of visualization and plotting tools.
+    """
     def _format_datetime_col(self, df):
         not_datetime = [not isinstance(x, datetime) for x in df["time"]]
         if any(not_datetime):
