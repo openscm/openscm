@@ -30,11 +30,9 @@ class OpenSCMDataFrame(IamDataFrame):
     data, completeness of variables provided, running of simple climate models) as
     well as a number of visualization and plotting tools.
     """
-    def _format_datetime_col(self, df):
-        not_datetime = [not isinstance(x, datetime) for x in df["time"]]
+    def _format_datetime_col(self):
+        not_datetime = [not isinstance(x, datetime) for x in self.data["time"]]
         if any(not_datetime):
-            bad_values = df[not_datetime]["time"]
+            bad_values = self.data[not_datetime]["time"]
             error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(bad_values)
             raise ValueError(error_msg)
-
-        return df
