@@ -37,6 +37,7 @@ setup(
     install_requires=[
         "numpy",
         "pint",
+        "seaborn",
         "pyam-iamc @ git+https://github.com/znicholls/pyam.git@allow-custom-time-formatting"
     ],
     project_urls={
