@@ -7,5 +7,5 @@ def test_write_read_datafile(test_pd_df, tmp_path):
 
     tdf.to_csv(tfile)
 
-    odf = OpenSCMDataFrame(tfile)
+    OpenSCMDataFrame(tfile)
 

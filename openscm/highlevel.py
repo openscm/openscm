@@ -4,6 +4,7 @@ single model runs.  This includes reading/writing input and output
 data, easy setting of parameters and stochastic ensemble runs.
 """
 from datetime import datetime
+from dateutil import parser
 
 
 from pyam import IamDataFrame
@@ -31,6 +32,12 @@ class OpenSCMDataFrame(IamDataFrame):
     well as a number of visualization and plotting tools.
     """
     def _format_datetime_col(self):
+        if isinstance(self.data["time"].iloc[0], str):
+            def convert_str_to_datetime(inp):
+                return parser.parse(inp)
+
+            self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
+
         not_datetime = [not isinstance(x, datetime) for x in self.data["time"]]
         if any(not_datetime):
             bad_values = self.data[not_datetime]["time"]
