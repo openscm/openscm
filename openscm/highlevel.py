@@ -40,12 +40,6 @@ class OpenSCMDataFrameBase(IamDataFrame):
             error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(bad_values)
             raise ValueError(error_msg)
 
-    def append(self, other, ignore_meta_conflict=False, inplace=False, **kwargs):
-        if not isinstance(other, OpenSCMDataFrame):
-            other = OpenSCMDataFrame(other, **kwargs)
-
-        super().append(other, ignore_meta_conflict=ignore_meta_conflict, inplace=inplace)
-
 
 class OpenSCMDataFrame(OpenSCMDataFrameBase):
     """OpenSCM's custom data frame implementation.
