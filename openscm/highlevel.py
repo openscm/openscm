@@ -44,9 +44,9 @@ class OpenSCMDataFrameBase(IamDataFrame):
 class OpenSCMDataFrame(OpenSCMDataFrameBase):
     """OpenSCM's custom DataFrame implementation.
 
-    The DataFrame wraps around `pyam`'s IamDataFrame, which itself wraps around Pandas.
+    The OpenSCMDataFrame wraps around `pyam`'s IamDataFrame, which itself wraps around Pandas.
 
-    The dataframe provides a number of diagnostic features (including validation of
+    The OpenSCMDataFrame provides a number of diagnostic features (including validation of
     data, completeness of variables provided, running of simple climate models) as
     well as a number of visualization and plotting tools.
     """
