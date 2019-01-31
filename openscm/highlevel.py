@@ -22,10 +22,10 @@ class OpenSCM(Core):
 
     pass
 
-class OpenSCMDataFrameBase(IamDataFrame):
+class ScmDataFrameBase(IamDataFrame):
     """This base is the class other libraries can subclass
 
-    Having such a subclass avoids a potential circularity where e.g. openscm imports OpenSCMDataFrame as well as Pymagicc, but Pymagicc wants to import OpenSCMDataFrame and hence to try and import OpenSCMDataFrame you have to import OpenSCMDataFrame itself (hence the circularity).
+    Having such a subclass avoids a potential circularity where e.g. openscm imports ScmDataFrame as well as Pymagicc, but Pymagicc wants to import ScmDataFrame and hence to try and import ScmDataFrame you have to import ScmDataFrame itself (hence the circularity).
     """
     def _format_datetime_col(self):
         if isinstance(self.data["time"].iloc[0], str):
@@ -41,13 +41,13 @@ class OpenSCMDataFrameBase(IamDataFrame):
             raise ValueError(error_msg)
 
 
-class OpenSCMDataFrame(OpenSCMDataFrameBase):
+class ScmDataFrame(ScmDataFrameBase):
     """OpenSCM's custom DataFrame implementation.
 
-    The OpenSCMDataFrame wraps around `pyam`'s IamDataFrame, which itself wraps around Pandas.
+    The ScmDataFrame wraps around `pyam`'s IamDataFrame, which itself wraps around Pandas.
 
-    The OpenSCMDataFrame provides a number of diagnostic features (including validation of
-    data, completeness of variables provided, running of simple climate models) as
-    well as a number of visualization and plotting tools.
+    The ScmDataFrame provides a number of diagnostic features (including validation
+    of data, completeness of variables provided, running of simple climate models)
+    as well as a number of visualization and plotting tools.
     """
     pass
