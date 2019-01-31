@@ -38,7 +38,7 @@ setup(
         "numpy",
         "pint",
         "seaborn",
-        "pyam-iamc @ git+https://github.com/znicholls/pyam.git@allow-custom-time-formatting"
+        "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master"
     ],
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
