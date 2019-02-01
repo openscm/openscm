@@ -1,7 +1,9 @@
 from copy import copy
 from enum import Enum
-import numpy as np
 from typing import Any, Dict, Tuple
+
+import numpy as np
+
 from .errors import (
     ParameterReadError,
     ParameterReadonlyError,
@@ -9,6 +11,7 @@ from .errors import (
     ParameterWrittenError,
 )
 from .timeframes import Timeframe
+from .decorators import str_to_list
 
 
 class ParameterType(Enum):
@@ -159,6 +162,7 @@ class _Parameter:
             self._children[name] = res
         return res
 
+    @str_to_list
     def get_subparameter(self, name: Tuple[str]) -> "_Parameter":
         """
         Get a sub parameter of this parameter or ``None`` if not found.

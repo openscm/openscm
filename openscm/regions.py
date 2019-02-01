@@ -136,6 +136,7 @@ class _Region:
         while p._parent is not None:
             r.append(p.name)
             p = p._parent
+        r.append(p.name)
         return tuple(reversed(r))
 
     @property
