@@ -18,6 +18,7 @@ from .parameter_views import (
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
 from .timeframes import Timeframe
+from .decorators import str_to_list
 
 
 class ParameterSet:
@@ -39,6 +40,7 @@ class ParameterSet:
         """
         self._root = _Region(name_root)
 
+    @str_to_list
     def _get_or_create_region(self, name: Tuple[str]) -> _Region:
         """
         Get a region. Create and add it if not found.
@@ -52,18 +54,20 @@ class ParameterSet:
             p = self._get_or_create_region(name[:-1])
             return p.get_or_create_subregion(name[-1])
         elif len(name) == 1:
+            name_str = name[0]
             root_name = self._root._name
-            if name != root_name:
+            if name_str != root_name:
                 error_msg = (
                     "Cannot access region {}, root region for this parameter set "
                     "is {}"
-                ).format(name, root_name)
+                ).format(name_str, root_name)
                 raise ValueError(error_msg)
 
             return self._root
         else:  # len(name) == 0
             raise ValueError("No region name given")
 
+    @str_to_list
     def _get_region(self, name: Tuple[str]) -> _Region:
         """
         Get a region or ``None`` if not found.
@@ -71,9 +75,12 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region.
         """
-        return self._root.get_subregion(name)
+        if name[0] != self._root.name:
+            return None
+        else:
+            return self._root.get_subregion(name[1:])
 
     def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
         """
@@ -246,6 +253,7 @@ class ParameterSet:
         parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
         return WritableTimeseriesView(parameter, unit, timeframe)
 
+    @str_to_list
     def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """
         Get a parameter or ``None`` if not found.
