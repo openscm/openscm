@@ -25,14 +25,19 @@ class ParameterSet:
     Collates a set of :ref:`parameters <parameters>`.
     """
 
-    _world: _Region
+    _root: _Region
     """Root region (contains all parameters)"""
 
-    def __init__(self):
+    def __init__(self, name_root: str = "World"):
         """
         Initialize.
+
+        Parameters
+        ----------
+        name_root : str
+            Name of root region, default is "World".
         """
-        self._world = _Region(None)
+        self._root = _Region(name_root)
 
     def _get_or_create_region(self, name: Tuple[str]) -> _Region:
         """
@@ -43,11 +48,21 @@ class ParameterSet:
         name
             Hierarchical name of the region or ``()`` for "World".
         """
-        if len(name) > 0:
+        if len(name) > 1:
             p = self._get_or_create_region(name[:-1])
             return p.get_or_create_subregion(name[-1])
-        else:
-            return self._world
+        elif len(name) == 1:
+            root_name = self._root._name
+            if name != root_name:
+                error_msg = (
+                    "Cannot access region {}, root region for this parameter set "
+                    "is {}"
+                ).format(name, root_name)
+                raise ValueError(error_msg)
+
+            return self._root
+        else:  # len(name) == 0
+            raise ValueError("No region name given")
 
     def _get_region(self, name: Tuple[str]) -> _Region:
         """
@@ -58,7 +73,7 @@ class ParameterSet:
         name
             Hierarchical name of the region or ``()`` for "World".
         """
-        return self._world.get_subregion(name)
+        return self._root.get_subregion(name)
 
     def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
         """
