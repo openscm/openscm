@@ -3,22 +3,78 @@
 
 import versioneer
 
-from setuptools import setup
-from os import path
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
-here = path.abspath(path.dirname(__file__))
+
+PACKAGE_NAME = "openscm"
+AUTHOR = "Robert Gieseke"
+EMAIL = "robert.gieseke@pik-potsdam.de"
+URL = "https://github.com/openclimatedata/openscm"
+
+DESCRIPTION = "A unifying interface for Simple Climate Models"
+README = "README.rst"
+
+REQUIREMENTS = [
+    "numpy",
+    "pint",
+    "seaborn",
+    "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master"
+]
+REQUIREMENTS_TESTS = ["codecov", "matplotlib", "nbval", "notebook", "pytest", "pytest-cov"]
+REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
+REQUIREMENTS_DEPLOY = [
+    "setuptools>=38.6.0",
+    "twine>=1.11.0",
+    "wheel>=0.31.0",
+    "pandas",
+    "matplotlib",
+]
+
+requirements_dev = [
+    *["flake8", "black"],
+    *REQUIREMENTS_TESTS,
+    *REQUIREMENTS_DOCS,
+    *REQUIREMENTS_DEPLOY,
+]
+
+requirements_extras = {
+    "docs": REQUIREMENTS_DOCS,
+    "tests": REQUIREMENTS_TESTS,
+    "deploy": REQUIREMENTS_DEPLOY,
+    "dev": requirements_dev,
+}
 
 # Get the long description from the README file
-with open(path.join(here, "README.rst"), encoding="utf-8") as f:
-    long_description = f.read()
+with open(README, "r", encoding="utf-8") as f:
+    README_TEXT = f.read()
+
+
+class OpenSCMTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+
+        pytest.main(self.test_args)
+
+
+cmdclass = versioneer.get_cmdclass()
+cmdclass.update({"test": OpenSCMTest})
 
 setup(
-    name="openscm",
+    name=PACKAGE_NAME,
     version=versioneer.get_version(),
-    description="A unifying interface for Simple Climate Models",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/openclimatedata/openscm",
+    description=DESCRIPTION,
+    long_description=README_TEXT,
+    long_description_content_type="text/x-rst",
+    author=AUTHOR,
+    author_email=EMAIL,
+    url=URL,
+    license="GNU Affero General Public License v3.0 or later",
     classifiers=[
         #   3 - Alpha
         #   4 - Beta
@@ -31,30 +87,14 @@ setup(
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
-    keywords="simple climate model",
-    license="GNU Affero General Public License v3.0 or later",
-    packages=["openscm"],
-    install_requires=[
-        "numpy",
-        "pint",
-        "seaborn",
-        "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master"
-    ],
+    keywords=["simple climate model"],
+
+    packages=find_packages(exclude=["tests"]),
+    install_requires=REQUIREMENTS,
+    extras_require=requirements_extras,
+    cmdclass=cmdclass,
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
         "Source": "https://github.com/openclimatedata/openscm/",
-    },
-    extras_require={
-        "docs": ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"],
-        "tests": ["codecov", "matplotlib", "nbval", "notebook", "pytest", "pytest-cov"],
-        "dev": [
-            "setuptools>=38.6.0",
-            "twine>=1.11.0",
-            "wheel>=0.31.0",
-            "black",
-            "flake8",
-            "pandas",
-            "matplotlib",
-        ],
     },
 )
