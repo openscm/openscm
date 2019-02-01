@@ -82,6 +82,7 @@ class ParameterSet:
         else:
             return self._root.get_subregion(name[1:])
 
+    @str_to_list
     def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
         """
         Get a parameter. Create and add it if not found.
@@ -253,7 +254,6 @@ class ParameterSet:
         parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
         return WritableTimeseriesView(parameter, unit, timeframe)
 
-    @str_to_list
     def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """
         Get a parameter or ``None`` if not found.

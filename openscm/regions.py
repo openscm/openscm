@@ -1,6 +1,7 @@
 from typing import Dict, Tuple
 from .errors import RegionAggregatedError
 from .parameters import _Parameter
+from .decorators import str_to_list
 
 
 class _Region:
@@ -66,6 +67,7 @@ class _Region:
             self._children[name] = res
         return res
 
+    @str_to_list
     def get_subregion(self, name: Tuple[str]) -> "_Region":
         """
         Get a subregion of this region or ``None`` if not found.
@@ -98,6 +100,7 @@ class _Region:
             self._parameters[name] = res
         return res
 
+    @str_to_list
     def get_parameter(self, name: Tuple[str]) -> _Parameter:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
