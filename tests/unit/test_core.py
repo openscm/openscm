@@ -1,6 +1,10 @@
-import numpy as np
 from math import isnan
-from openscm.core import Core, ParameterType
+import re
+
+import pytest
+import numpy as np
+
+from openscm.core import Core, ParameterType, ParameterSet
 from openscm.errors import (
     ParameterReadError,
     ParameterReadonlyError,
@@ -9,7 +13,6 @@ from openscm.errors import (
     RegionAggregatedError,
 )
 from openscm.units import DimensionalityError
-import pytest
 
 
 @pytest.fixture
@@ -30,7 +33,7 @@ def end_time():
 @pytest.fixture
 def core(model, start_time, end_time):
     core = Core(model, start_time, end_time)
-    core.parameters._get_or_create_region(("DEU", "BER"))
+    core.parameters._get_or_create_region(("World", "DEU", "BER"))
     return core
 
 
@@ -42,49 +45,58 @@ def test_core(core, model, start_time, end_time):
 
 def test_region(core):
     parameterset = core.parameters
-    region_deu = parameterset._get_or_create_region(("DEU",))
-    assert region_deu.full_name == ("DEU",)
-    assert region_deu.name == "DEU"
+    for accessor in ["World", ("World"), ("World",), ["World"]]:
+        region_world = parameterset._get_or_create_region(accessor)
+        assert region_world.full_name == ("World",)
+        assert region_world.name == "World"
 
-    region_ber = parameterset._get_or_create_region(("DEU", "BER"))
-    assert region_ber.full_name == ("DEU", "BER")
+    for accessor in [("World", "DEU"), ["World", "DEU"]]:
+        region_deu = parameterset._get_or_create_region(accessor)
+        assert region_deu.full_name == ("World", "DEU",)
+        assert region_deu.name == "DEU"
+
+    region_ber = parameterset._get_or_create_region(("World", "DEU", "BER"))
+    assert region_ber.full_name == ("World", "DEU", "BER")
     assert region_ber.name == "BER"
     assert region_ber.parent == region_deu
 
     region_deu.attempt_aggregate()
     with pytest.raises(RegionAggregatedError):
-        parameterset._get_or_create_region(("DEU", "BRB"))
+        parameterset._get_or_create_region(("World", "DEU", "BRB"))
 
 
 def test_parameter(core):
     parameterset = core.parameters
-    region_ber = parameterset._get_or_create_region(("DEU", "BER"))
+    region_ber = parameterset._get_or_create_region(("World", "DEU", "BER"))
 
     with pytest.raises(ValueError, match="No parameter name given"):
         parameterset._get_or_create_parameter((), region_ber)
 
     param_co2 = parameterset._get_or_create_parameter(("Emissions", "CO2"), region_ber)
+    # not clear what the value of being able to access with `()` is...
     assert param_co2.get_subparameter(()) == param_co2
-    assert param_co2.parent.get_subparameter(("CO2",)) == param_co2
+    for accessor in ["CO2", ("CO2"), ("CO2",), ["CO2"]]:
+        assert param_co2.parent.get_subparameter(accessor) == param_co2
     assert region_ber.get_parameter(("Emissions", "CO2")) == param_co2
     assert param_co2.full_name == ("Emissions", "CO2")
-    assert param_co2.info.region == ("DEU", "BER")
+    assert param_co2.info.region == ("World", "DEU", "BER")
     assert param_co2.info.name == "CO2"
     assert (
-        parameterset.get_parameter_info(("Emissions", "CO2"), ("DEU", "BER"))
+        parameterset.get_parameter_info(("Emissions", "CO2"), ("World", "DEU", "BER"))
         == param_co2.info
     )
-    assert (
-        parameterset.get_parameter_info(("Emissions",), ("DEU", "BER"))
-        == param_co2.parent.info
-    )
-    assert parameterset.get_parameter_info(("Emissions", "NOx"), ("DEU", "BER")) is None
-    assert parameterset.get_parameter_info(("Emissions",), ("DEU", "BRB")) is None
+    for accessor in ["Emissions", ("Emissions"), ("Emissions",), ["Emissions"]]:
+        assert (
+            parameterset.get_parameter_info(accessor, ("World", "DEU", "BER"))
+            == param_co2.parent.info
+        )
+    assert parameterset.get_parameter_info(("Emissions", "NOx"), ("World", "DEU", "BER")) is None
+    assert parameterset.get_parameter_info(("Emissions",), ("World", "DEU", "BRB")) is None
 
     with pytest.raises(ValueError, match="No parameter name given"):
-        parameterset.get_parameter_info(None, ("DEU", "BER"))
+        parameterset.get_parameter_info(None, ("World", "DEU", "BER"))
     with pytest.raises(ValueError, match="No parameter name given"):
-        parameterset.get_parameter_info((), ("DEU", "BER"))
+        parameterset.get_parameter_info((), ("World", "DEU", "BER"))
 
     param_emissions = param_co2.parent
     assert param_emissions.full_name == ("Emissions",)
@@ -125,22 +137,38 @@ def test_parameter(core):
         )
 
 
+def test_parameterset_default_initialisation():
+    paraset = ParameterSet()
+
+    assert paraset._get_or_create_region("World") == paraset._root
+    error_msg = (
+        "Cannot access region Earth, root region for this parameter set is World"
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        paraset._get_or_create_region("Earth")
+
+
+def test_parameterset_named_initialisation():
+    paraset_named = ParameterSet("Earth")
+    assert paraset_named._get_or_create_region("Earth") == paraset_named._root
+
+
 def test_scalar_parameter_view(core):
     parameterset = core.parameters
-    cs = parameterset.get_scalar_view(("Climate Sensitivity"), (), "degC")
+    cs = parameterset.get_scalar_view(("Climate Sensitivity"), "World", "degC")
     assert isnan(cs.get())
     assert cs.is_empty
     cs_writable = parameterset.get_writable_scalar_view(
-        ("Climate Sensitivity"), (), "degF"
+        ("Climate Sensitivity"), "World", "degF"
     )
     cs_writable.set(68)
     assert cs_writable.get() == 68
     assert not cs.is_empty
     np.testing.assert_allclose(cs.get(), 20)
     with pytest.raises(ParameterTypeError):
-        parameterset.get_timeseries_view(("Climate Sensitivity"), (), "degC", 0, 1)
+        parameterset.get_timeseries_view(("Climate Sensitivity"), "World", "degC", 0, 1)
     with pytest.raises(DimensionalityError):
-        parameterset.get_scalar_view(("Climate Sensitivity"), (), "kg")
+        parameterset.get_scalar_view(("Climate Sensitivity"), "World", "kg")
 
 
 @pytest.fixture(
@@ -156,10 +184,10 @@ def series(request):
 def test_timeseries_parameter_view(core, start_time, series):
     parameterset = core.parameters
     carbon = parameterset.get_timeseries_view(
-        ("Emissions", "CO2"), (), "GtCO2/a", start_time, 365 * 24 * 3600
+        ("Emissions", "CO2"), ("World"), "GtCO2/a", start_time, 365 * 24 * 3600
     )
     carbon_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2"), (), "ktC/d", start_time, 24 * 3600
+        ("Emissions", "CO2"), ("World"), "ktC/d", start_time, 24 * 3600
     )
     inseries = series[0]
     outseries = series[1]
@@ -169,6 +197,6 @@ def test_timeseries_parameter_view(core, start_time, series):
     assert carbon.length == 5
     np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
     with pytest.raises(ParameterTypeError):
-        parameterset.get_scalar_view(("Emissions", "CO2"), (), "GtCO2/a")
+        parameterset.get_scalar_view(("Emissions", "CO2"), "World", "GtCO2/a")
     with pytest.raises(DimensionalityError):
-        parameterset.get_timeseries_view(("Emissions", "CO2"), (), "kg", 0, 1)
+        parameterset.get_timeseries_view(("Emissions", "CO2"), "World", "kg", 0, 1)
