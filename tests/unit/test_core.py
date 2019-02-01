@@ -208,3 +208,35 @@ def test_timeseries_parameter_view(core, start_time, series):
         parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
     with pytest.raises(DimensionalityError):
         parameterset.get_timeseries_view(("Emissions", "CO2"), ("World",), "kg", 0, 1)
+
+
+def test_timeseries_parameter_view_aggregation(core, start_time):
+    fossil_emms = np.array([0, 1, 2])
+    land_emms = np.array([0.05, 0.1, 0.2])
+
+    parameterset = core.parameters
+
+    fossil_writable = parameterset.get_writable_timeseries_view(
+        ("Emissions", "CO2", "Fossil"), ("World"), "GtC/yr", start_time, 24 * 3600
+    )
+    fossil_writable.set_series(fossil_emms)
+
+    land_writable = parameterset.get_writable_timeseries_view(
+        ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
+    )
+    land_writable.set_series(land_emms)
+
+    fossil = parameterset.get_timeseries_view(
+        ("Emissions", "CO2", "Fossil"), ("World"), "GtC/yr", start_time, 24 * 3600
+    )
+    np.testing.assert_allclose(fossil.get_series(), fossil_emms)
+
+    land = parameterset.get_timeseries_view(
+        ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
+    )
+    np.testing.assert_allclose(land.get_series(), land_emms)
+
+    total = parameterset.get_timeseries_view(
+        ("Emissions", "CO2"), ("World"), "GtC/yr", start_time, 24 * 3600
+    )
+    np.testing.assert_allclose(total.get_series(), land_emms + fossil_emms)
