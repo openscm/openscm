@@ -5,6 +5,7 @@ data, easy setting of parameters and stochastic ensemble runs.
 """
 from .core import Core
 from .scmdataframebase import ScmDataFrameBase
+from pyam import IamDataFrame
 
 
 class OpenSCM(Core):
@@ -26,5 +27,5 @@ class ScmDataFrame(ScmDataFrameBase):
     of data, completeness of variables provided, running of simple climate models)
     as well as a number of visualization and plotting tools.
     """
-
-    pass
+    def as_iam(self):
+        return IamDataFrame(self.data)
