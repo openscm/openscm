@@ -2,7 +2,7 @@ import pymagicc
 
 
 from ..internal import Adapter
-from ..core import Core
+from ..core import Core, ParameterSet
 
 
 class MAGICC6(Adapter):
@@ -20,6 +20,12 @@ class MAGICC6(Adapter):
     	"""
     	self.magicc = self._magicc_class(**kwargs)
     	self.magicc.__enter__()
+
+    def set_drivers(self, parameters: ParameterSet) -> None:
+        raise NotImplementedError
+
+    def set_config(self, parameters: ParameterSet) -> None:
+        raise NotImplementedError
 
     def run(self) -> Core:
     	raise NotImplementedError

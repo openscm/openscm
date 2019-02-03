@@ -17,14 +17,24 @@ class Adapter(metaclass=ABCMeta):
     runs its wrapped SCM and writes the output data back to a
     :class:`openscm.core.ParameterSet`.
     """
-
-    def __init__(self, parameters: ParameterSet):
-        self.parameters = parameters
-
     @abstractmethod
     def initialize(self) -> None:
         """
         Initialize the model.
+        """
+        pass
+
+    @abstractmethod
+    def set_drivers(self, parameters: ParameterSet) -> None:
+        """
+        Set the drivers (emissions, concentrations etc.) for the model to run.
+        """
+        pass
+
+    @abstractmethod
+    def set_config(self, parameters: ParameterSet) -> None:
+        """
+        Run the model over the full time range.
         """
         pass
 
