@@ -7,10 +7,18 @@ from ..core import Core
 
 class MAGICC6(Adapter):
     def __init__(self):
-    	self.magicc = pymagicc.MAGICC6()
+    	self._magicc_class = pymagicc.MAGICC6 
+    	self.magicc = None
 
-    def initialize(self) -> None:
-    	raise NotImplementedError
+    def initialize(self, **kwargs) -> None:
+    	"""Initialise the model.
+
+		Parameters
+		----------
+		kwargs
+			Passed to ``pymagicc.MAGICC6.__init__``
+    	"""
+    	self.magicc = self._magicc_class(**kwargs)
 
     def run(self) -> Core:
     	raise NotImplementedError
