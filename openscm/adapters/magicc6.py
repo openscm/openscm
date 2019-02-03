@@ -26,3 +26,6 @@ class MAGICC6(Adapter):
 
     def step(self) -> None:
     	raise NotImplementedError
+
+    def shutdown(self) -> None:
+    	self.magicc.__exit__()

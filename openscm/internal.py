@@ -41,3 +41,10 @@ class Adapter(metaclass=ABCMeta):
         Do a single time step.
         """
         pass
+
+    @abstractmethod
+    def shutdown(self) -> None:
+        """
+        Shut the model down, cleaning up any artefacts.
+        """
+        pass
