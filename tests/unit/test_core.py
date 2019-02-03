@@ -9,6 +9,7 @@ from openscm.errors import (
     ParameterReadError,
     ParameterReadonlyError,
     ParameterTypeError,
+    ParameterEmptyError,
     ParameterWrittenError,
     RegionAggregatedError,
 )
@@ -194,6 +195,10 @@ def test_timeseries_parameter_view(core, start_time, series):
     carbon = parameterset.get_timeseries_view(
         ("Emissions", "CO2"), ("World"), "GtCO2/a", start_time, 365 * 24 * 3600
     )
+    assert carbon.is_empty
+    with pytest.raises(ParameterEmptyError):
+        carbon.get_series()
+
     carbon_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2"), ("World"), "ktC/d", start_time, 24 * 3600
     )
@@ -235,6 +240,11 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
     )
     np.testing.assert_allclose(land.get_series(), land_emms)
+
+    with pytest.raises(ParameterReadonlyError):
+        parameterset.get_writable_timeseries_view(
+            ("Emissions", "CO2"), ("World"), "GtC/yr", start_time, 24 * 3600
+        )
 
     total = parameterset.get_timeseries_view(
         ("Emissions", "CO2"), ("World"), "GtC/yr", start_time, 24 * 3600
