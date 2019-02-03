@@ -19,6 +19,7 @@ class MAGICC6(Adapter):
 			Passed to ``pymagicc.MAGICC6.__init__``
     	"""
     	self.magicc = self._magicc_class(**kwargs)
+    	self.magicc.__enter__()
 
     def run(self) -> Core:
     	raise NotImplementedError
