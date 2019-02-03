@@ -10,7 +10,7 @@ before_install:
   - pip install pip --upgrade
 
 install:
-  - pip install .[tests]
+  - pip install .[tests,models]
 
 script:
   - pytest -rfsxEX --cov=openscm tests --cov-report term-missing
