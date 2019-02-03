@@ -120,6 +120,10 @@ def test_scm_df(request):
     yield ScmDataFrame(**request.param)
 
 
+def test_adapter(request):
+    return request.cls.tadapter()
+
+
 # temporary workaround until this is in Pint itself and can be imported
 def assert_pint_equal(a, b, **kwargs):
     c = b.to(a.units)
