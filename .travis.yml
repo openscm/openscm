@@ -10,10 +10,11 @@ before_install:
   - pip install pip --upgrade
 
 install:
-  - pip install -e .[tests]
+  - pip install .[tests]
 
 script:
-  - pytest --cov -rfsxEX
+  - pytest -rfsxEX --cov=openscm tests --cov-report term-missing
+  - pip install .[notebooks]
   - pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
 
 after_success:

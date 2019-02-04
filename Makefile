@@ -5,7 +5,7 @@ venv: setup.py
 	touch venv
 
 test: venv
-	./venv/bin/pytest -rfsxEX --cov=openscm tests
+	./venv/bin/pytest -rfsxEX --cov=openscm tests --cov-report term-missing
 
 coverage: test
 	coverage html

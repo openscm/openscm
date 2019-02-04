@@ -18,27 +18,32 @@ README = "README.rst"
 REQUIREMENTS = [
     "numpy",
     "pint",
-    "seaborn",
-    "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master"
+    "pandas",
+    # can be moved into notebooks dependencies once Jared's new backend is in place
+    "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master"  
 ]
-REQUIREMENTS_TESTS = ["codecov", "matplotlib", "nbval", "notebook", "pytest", "pytest-cov"]
+REQUIREMENTS_NOTEBOOKS = [
+	"notebook", 
+	"seaborn",
+]
+REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = [
     "setuptools>=38.6.0",
     "twine>=1.11.0",
     "wheel>=0.31.0",
-    "pandas",
-    "matplotlib",
 ]
 
 requirements_dev = [
     *["flake8", "black"],
+    *REQUIREMENTS_NOTEBOOKS,
     *REQUIREMENTS_TESTS,
     *REQUIREMENTS_DOCS,
     *REQUIREMENTS_DEPLOY,
 ]
 
 requirements_extras = {
+	"notebooks": REQUIREMENTS_NOTEBOOKS,
     "docs": REQUIREMENTS_DOCS,
     "tests": REQUIREMENTS_TESTS,
     "deploy": REQUIREMENTS_DEPLOY,
