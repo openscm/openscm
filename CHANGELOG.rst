@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- (`#92 <https://github.com/openclimatedata/openscm/pull/92>`_) Updated installation to remove notebook dependencies from minimum requirements as discussed in `#90 <https://github.com/openclimatedata/openscm/issues/90>`_
 - (`#85 <https://github.com/openclimatedata/openscm/pull/85>`_) Split out submodule for ScmDataFrameBase ``openscm.scmdataframebase`` to avoid circular imports
 - (`#83 <https://github.com/openclimatedata/openscm/pull/83>`_) Rename OpenSCMDataFrame to ScmDataFrame
 - (`#78 <https://github.com/openclimatedata/openscm/pull/78>`_) Added OpenSCMDataFrame
