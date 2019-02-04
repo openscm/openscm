@@ -11,7 +11,7 @@ from .errors import (
     ParameterWrittenError,
 )
 from .timeframes import Timeframe
-from .decorators import str_to_list
+from .utils import ensure_input_is_tuple
 
 
 class ParameterType(Enum):
@@ -162,7 +162,6 @@ class _Parameter:
             self._children[name] = res
         return res
 
-    @str_to_list
     def get_subparameter(self, name: Tuple[str]) -> "_Parameter":
         """
         Get a sub parameter of this parameter or ``None`` if not found.
@@ -173,6 +172,7 @@ class _Parameter:
             :ref:`Hierarchical name <parameter-hierarchy>` of the subparameter below this
             parameter or ``()`` for this parameter
         """
+        name = ensure_input_is_tuple(name)
         if len(name) > 0:
             res = self._children.get(name[0], None)
             if res is not None:
