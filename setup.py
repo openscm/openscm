@@ -31,6 +31,9 @@ REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 REQUIREMENTS_MODELS = [
     "pymagicc @ git+https://github.com/openclimatedata/pymagicc.git@master"
 ]
+REQUIREMENTS_MODELS = [
+    "pymagicc @ git+https://github.com/openclimatedata/pymagicc.git@master"
+]
 
 requirements_dev = [
     *["flake8", "black"],
