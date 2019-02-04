@@ -8,10 +8,7 @@ def str_to_list(base_func):
     # https://realpython.com/primer-on-python-decorators/#simple-decorators...
     @functools.wraps(base_func)
     def flexible_to_str_input(*args):
-        new_args = tuple([
-            [a] if isinstance(a, str) else a
-            for a in args
-        ])
+        new_args = tuple([[a] if isinstance(a, str) else a for a in args])
 
         return base_func(*new_args)
 
