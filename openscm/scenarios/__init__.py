@@ -6,6 +6,7 @@ from ..highlevel import df_append
 
 here = dirname(realpath(__file__))
 
+
 """ScmDataFrame: RCP emissions data
 """
 rcps = df_append(

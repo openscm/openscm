@@ -776,3 +776,4 @@ class LongIamDataFrame(IamDataFrame):
                 bad_values
             )
             raise ValueError(error_msg)
+
