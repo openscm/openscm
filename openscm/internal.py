@@ -2,9 +2,11 @@
 Internally used classes and functions including unit handling and the
 model adapter.
 """
+from abc import ABCMeta, abstractmethod
+
 
 from .core import ParameterSet
-from abc import ABCMeta, abstractmethod
+from .errors import ModelNotInitialisedError
 
 
 class Adapter(metaclass=ABCMeta):
@@ -17,12 +19,15 @@ class Adapter(metaclass=ABCMeta):
     runs its wrapped SCM and writes the output data back to a
     :class:`openscm.core.ParameterSet`.
     """
+    def __init__(self):
+        self.initialized = False
+
     @abstractmethod
     def initialize(self) -> None:
         """
         Initialize the model.
         """
-        pass
+        self.initialized = True
 
     @abstractmethod
     def set_drivers(self, parameters: ParameterSet) -> None:
@@ -36,7 +41,8 @@ class Adapter(metaclass=ABCMeta):
         """
         Run the model over the full time range.
         """
-        pass
+        if not self.initialized:
+            raise ModelNotInitialisedError
 
     @abstractmethod
     def run(self) -> None:

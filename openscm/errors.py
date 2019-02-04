@@ -58,3 +58,9 @@ class OverwriteError(AssertionError):
     """
 
     pass
+
+
+class ModelNotInitialisedError(Exception):
+    """
+    Exception raised when a model is being used before being initiliased
+    """

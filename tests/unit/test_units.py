@@ -91,6 +91,12 @@ def test_a():
     np.testing.assert_allclose(a.to("day").magnitude, 365.24219878)
 
 
+def test_forcing():
+    uc = UnitConverter("kW/m^2", "W/m^2")
+    np.testing.assert_allclose(uc.convert_from(1), 10**3)
+    np.testing.assert_allclose(uc.convert_to(-600), -0.6)
+
+
 def test_conversion_without_offset():
     uc = UnitConverter("kg", "t")
     assert uc._source == "kg"
