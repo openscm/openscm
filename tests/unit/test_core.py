@@ -51,7 +51,7 @@ def test_region(core):
 
     for accessor in [("World", "DEU"), ["World", "DEU"]]:
         region_deu = parameterset._get_or_create_region(accessor)
-        assert region_deu.full_name == ("World", "DEU",)
+        assert region_deu.full_name == ("World", "DEU")
         assert region_deu.name == "DEU"
 
     region_ber = parameterset._get_or_create_region(("World", "DEU", "BER"))
@@ -89,8 +89,13 @@ def test_parameter(core):
             parameterset.get_parameter_info(accessor, ("World", "DEU", "BER"))
             == param_co2.parent.info
         )
-    assert parameterset.get_parameter_info(("Emissions", "NOx"), ("World", "DEU", "BER")) is None
-    assert parameterset.get_parameter_info(("Emissions",), ("World", "DEU", "BRB")) is None
+    assert (
+        parameterset.get_parameter_info(("Emissions", "NOx"), ("World", "DEU", "BER"))
+        is None
+    )
+    assert (
+        parameterset.get_parameter_info(("Emissions",), ("World", "DEU", "BRB")) is None
+    )
 
     with pytest.raises(ValueError, match="No parameter name given"):
         parameterset.get_parameter_info(None, ("World", "DEU", "BER"))
