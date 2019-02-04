@@ -42,12 +42,19 @@ Schema
 Installation
 ------------
 
-OpenSCM will be made available via ``pip``. 
-
 To install OpenSCM and all the dependencies required to run the example 
-notebooks the required command is ``pip install openscm[notebooks]``.
-To install only the minimum requirements to run OpenSCM, the required 
-command is ``pip install openscm``.
+notebooks
+
+.. code:: bash
+
+    pip install openscm[notebooks]
+
+To install only the minimum requirements to run OpenSCM
+
+
+.. code:: bash
+
+    pip install openscm
 
 OpenSCM comes with model adapters only for some very simple SCMs. If
 you want to run other models, you will also need to install their
