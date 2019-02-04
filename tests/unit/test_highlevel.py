@@ -8,7 +8,9 @@ from openscm.highlevel import ScmDataFrame
 def test_init_df_long_timespan(test_pd_df):
     df = ScmDataFrame(test_pd_df)
 
-    pd.testing.assert_frame_equal(df.timeseries().reset_index(), test_pd_df, check_like=True)
+    pd.testing.assert_frame_equal(
+        df.timeseries().reset_index(), test_pd_df, check_like=True
+    )
 
 
 def test_init_df_datetime_error(test_pd_df):

@@ -6,6 +6,7 @@ data, easy setting of parameters and stochastic ensemble runs.
 from .core import Core
 from .scmdataframebase import ScmDataFrameBase
 
+
 class OpenSCM(Core):
     """
     High-level OpenSCM class.
@@ -25,4 +26,5 @@ class ScmDataFrame(ScmDataFrameBase):
     of data, completeness of variables provided, running of simple climate models)
     as well as a number of visualization and plotting tools.
     """
+
     pass

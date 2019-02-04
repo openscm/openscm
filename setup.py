@@ -20,19 +20,12 @@ REQUIREMENTS = [
     "pint",
     "pandas",
     # can be moved into notebooks dependencies once Jared's new backend is in place
-    "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master"  
+    "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master",
 ]
-REQUIREMENTS_NOTEBOOKS = [
-	"notebook", 
-	"seaborn",
-]
+REQUIREMENTS_NOTEBOOKS = ["notebook", "seaborn"]
 REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
-REQUIREMENTS_DEPLOY = [
-    "setuptools>=38.6.0",
-    "twine>=1.11.0",
-    "wheel>=0.31.0",
-]
+REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 
 requirements_dev = [
     *["flake8", "black"],
@@ -43,7 +36,7 @@ requirements_dev = [
 ]
 
 requirements_extras = {
-	"notebooks": REQUIREMENTS_NOTEBOOKS,
+    "notebooks": REQUIREMENTS_NOTEBOOKS,
     "docs": REQUIREMENTS_DOCS,
     "tests": REQUIREMENTS_TESTS,
     "deploy": REQUIREMENTS_DEPLOY,
@@ -93,7 +86,6 @@ setup(
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
     keywords=["simple climate model"],
-
     packages=find_packages(exclude=["tests"]),
     install_requires=REQUIREMENTS,
     extras_require=requirements_extras,
