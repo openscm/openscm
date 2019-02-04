@@ -18,7 +18,7 @@ from .parameter_views import (
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
 from .timeframes import Timeframe
-from .decorators import str_to_list
+from .utils import ensure_input_is_tuple
 
 
 class ParameterSet:
@@ -40,7 +40,6 @@ class ParameterSet:
         """
         self._root = _Region(name_root)
 
-    @str_to_list
     def _get_or_create_region(self, name: Tuple[str]) -> _Region:
         """
         Get a region. Create and add it if not found.
@@ -50,6 +49,7 @@ class ParameterSet:
         name
             Hierarchical name of the region or ``()`` for "World".
         """
+        name = ensure_input_is_tuple(name)
         if len(name) > 1:
             p = self._get_or_create_region(name[:-1])
             return p.get_or_create_subregion(name[-1])
@@ -67,7 +67,6 @@ class ParameterSet:
         else:  # len(name) == 0
             raise ValueError("No region name given")
 
-    @str_to_list
     def _get_region(self, name: Tuple[str]) -> _Region:
         """
         Get a region or ``None`` if not found.
@@ -77,12 +76,12 @@ class ParameterSet:
         name
             Hierarchical name of the region.
         """
+        name = ensure_input_is_tuple(name)
         if name[0] != self._root.name:
             return None
         else:
             return self._root.get_subregion(name[1:])
 
-    @str_to_list
     def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
         """
         Get a parameter. Create and add it if not found.
@@ -99,6 +98,8 @@ class ParameterSet:
         ValueError
             Name not given
         """
+        name = ensure_input_is_tuple(name)
+        region = ensure_input_is_tuple(region)
         if len(name) > 1:
             p = self._get_or_create_parameter(name[:-1], region)
             return p.get_or_create_child_parameter(name[-1])

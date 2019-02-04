@@ -24,10 +24,9 @@ def counted(base_func):
 
 
 @counted
-def convert_string_to_tuple(inp):
+def ensure_input_is_tuple(inp):
     if isinstance(inp, str):
-        print(convert_string_to_tuple.calls)
-        if convert_string_to_tuple.calls == 1:
+        if ensure_input_is_tuple.calls == 1:
             warnings.warn("Converting input {} from string to tuple".format(inp))
         return (inp,)
     else:
