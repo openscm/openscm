@@ -13,7 +13,10 @@ from openscm.errors import ModelNotInitialisedError
 
 @pytest.fixture(scope="function")
 def test_adapter(request):
-    yield request.cls.tadapter()
+    try:
+        yield request.cls.tadapter()
+    except TypeError:
+        pytest.skip("{} cannot be instantiated".format(str(request)))
 
 
 @pytest.fixture(scope="function")
