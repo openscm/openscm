@@ -14,6 +14,10 @@ from .parameter_views import (
     WritableScalarView,
     TimeseriesView,
     WritableTimeseriesView,
+    BooleanView,
+    WritableBooleanView,
+    ArrayView,
+    WritableArrayView,
 )
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
@@ -135,7 +139,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_read(unit, ParameterType.SCALAR)
+        parameter.attempt_read(ParameterType.SCALAR, unit)
         return ScalarView(parameter, unit)
 
     def get_writable_scalar_view(
@@ -167,8 +171,134 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_write(unit, ParameterType.SCALAR)
+        parameter.attempt_write(ParameterType.SCALAR, unit)
         return WritableScalarView(parameter, unit)
+
+    def get_boolean_view(
+        self, name: Tuple[str], region: Tuple[str]
+    ) -> ScalarView:
+        """
+        Get a read-only view to a boolean parameter.
+
+        The parameter is created as a boolean if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+
+        Raises
+        ------
+        ParameterTypeError
+            Parameter is not boolean
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_read(ParameterType.BOOLEAN)
+        return BooleanView(parameter)
+
+    def get_writable_boolean_view(
+        self, name: Tuple[str], region: Tuple[str]
+    ) -> WritableScalarView:
+        """
+        Get a writable view to a boolean parameter.
+
+        The parameter is created as a boolean if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+
+        Raises
+        ------
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        ParameterTypeError
+            Parameter is not boolean
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_write(ParameterType.BOOLEAN)
+        return WritableBooleanView(parameter)
+
+    def get_array_view(
+        self, name: Tuple[str], region: Tuple[str], unit: str
+    ) -> ScalarView:
+        """
+        Get a read-only view to an array parameter (i.e. a parameter that's an array).
+
+        These arrays should not be timeseries, for timeseries data use
+        ``get_timeseries_view``.
+
+        The parameter is created as an empty array if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+        unit
+            Unit for the values in the view
+
+        Raises
+        ------
+        ParameterTypeError
+            Parameter is not an array
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_read(ParameterType.ARRAY, unit)
+        return ArrayView(parameter, unit)
+
+    def get_writable_array_view(
+        self, name: Tuple[str], region: Tuple[str], unit: str
+    ) -> WritableScalarView:
+        """
+        Get a writable view to an array parameter (i.e. a parameter that's an array).
+
+        These arrays should not be timeseries, for timeseries data use
+        ``get_timeseries_view``.
+
+        The parameter is created as an empty array if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+        unit
+            Unit for the values in the view
+
+        Raises
+        ------
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        ParameterTypeError
+            Parameter is not an array
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_write(ParameterType.ARRAY, unit)
+        return WritableArrayView(parameter, unit)
 
     def get_timeseries_view(
         self,
@@ -210,7 +340,7 @@ class ParameterSet:
             name, self._get_or_create_region(region)
         )
         timeframe = Timeframe(start_time, period_length)
-        parameter.attempt_read(unit, ParameterType.TIMESERIES, timeframe)
+        parameter.attempt_read(ParameterType.TIMESERIES, unit, timeframe)
         return TimeseriesView(parameter, unit, timeframe)
 
     def get_writable_timeseries_view(
@@ -252,7 +382,7 @@ class ParameterSet:
             name, self._get_or_create_region(region)
         )
         timeframe = Timeframe(start_time, period_length)
-        parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
+        parameter.attempt_write(ParameterType.TIMESERIES, unit, timeframe)
         return WritableTimeseriesView(parameter, unit, timeframe)
 
     def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:

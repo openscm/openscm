@@ -12,6 +12,7 @@ from openscm.errors import (
     ParameterEmptyError,
     ParameterWrittenError,
     RegionAggregatedError,
+    ArrayLengthError,
 )
 from openscm.units import DimensionalityError
 
@@ -120,14 +121,14 @@ def test_parameter(core):
     assert param_industry.full_name == ("Emissions", "CO2", "Industry")
     assert param_industry.info.name == "Industry"
 
-    param_industry.attempt_read("GtCO2/a", ParameterType.TIMESERIES)
+    param_industry.attempt_read(ParameterType.TIMESERIES, "GtCO2/a")
     assert param_industry.info.parameter_type == ParameterType.TIMESERIES
     assert param_industry.info.unit == "GtCO2/a"
 
     with pytest.raises(ParameterReadonlyError):
-        param_co2.attempt_write("GtCO2/a", ParameterType.TIMESERIES)
+        param_co2.attempt_write(ParameterType.TIMESERIES, "GtCO2/a")
 
-    param_co2.attempt_read("GtCO2/a", ParameterType.TIMESERIES)
+    param_co2.attempt_read(ParameterType.TIMESERIES, "GtCO2/a")
     with pytest.raises(ParameterTypeError):
         param_co2.attempt_read("GtCO2/a", ParameterType.SCALAR)
 
@@ -137,9 +138,9 @@ def test_parameter(core):
         )
 
     with pytest.raises(ParameterTypeError):
-        param_industry.attempt_write("GtCO2/a", ParameterType.SCALAR)
+        param_industry.attempt_write(ParameterType.SCALAR, "GtCO2/a")
 
-    param_industry.attempt_write("GtCO2/a", ParameterType.TIMESERIES)
+    param_industry.attempt_write(ParameterType.TIMESERIES, "GtCO2/a")
     with pytest.raises(ParameterWrittenError):
         parameterset._get_or_create_parameter(
             ("Emissions", "CO2", "Industry", "Other"), region_ber
@@ -179,6 +180,10 @@ def test_scalar_parameter_view(core):
         parameterset.get_timeseries_view(
             ("Climate Sensitivity"), ("World",), "degC", 0, 1
         )
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_array_view(("Climate Sensitivity"), "World", "degC")
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_boolean_view(("Climate Sensitivity"), "World")
     with pytest.raises(DimensionalityError):
         parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "kg")
 
@@ -224,6 +229,48 @@ def test_scalar_parameter_view_aggregation(core, start_time):
     np.testing.assert_allclose(total.get(), ta_1 + ta_2 + tb)
 
 
+def test_boolean_parameter_view(core):
+    parameterset = core.parameters
+    cs = parameterset.get_boolean_view(("CO2 Temperature Feedback"), "World")
+    assert not cs.get()  # not sure what to use as default here...
+    assert cs.is_empty
+    cs_writable = parameterset.get_writable_boolean_view(
+        ("CO2 Temperature Feedback"), "World"
+    )
+    cs_writable.set(True)
+    assert cs_writable.get()
+    assert not cs.is_empty
+    assert cs.get()
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_timeseries_view(("CO2 Temperature Feedback"), "World", "degC", 0, 1)
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_scalar_view(("CO2 Temperature Feedback"), "World", "kg")
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_array_view(("CO2 Temperature Feedback"), "World", "kg")
+
+
+def test_array_parameter_view(core):
+    parameterset = core.parameters
+    cs = parameterset.get_array_view(("NH SH split"), "World", "dimensionless")
+    assert cs.is_empty
+    assert isinstance(cs.get(), np.ndarray)
+    cs_writable = parameterset.get_writable_array_view(
+        ("NH SH split"), "World", "dimensionless"
+    )
+    cs_writable.set(np.array([1, 2]))
+    np.testing.assert_allclose(cs.get(), [1, 2])
+    assert not cs.is_empty
+    np.testing.assert_allclose(cs.get(), [1, 2])
+    with pytest.raises(ArrayLengthError):
+        cs_writable.set(np.array([1, 2, 3]))
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_timeseries_view(("NH SH split"), "World", "dimensionless", 0, 1)
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_scalar_view(("NH SH split"), "World", "dimensionless")
+    with pytest.raises(DimensionalityError):
+        parameterset.get_array_view(("NH SH split"), "World", "kg")
+
+
 @pytest.fixture(
     params=[
         (range(5 * 365), [0.24373829, 0.7325541, 1.22136991, 1.71018572, 2.19900153]),
@@ -255,6 +302,10 @@ def test_timeseries_parameter_view(core, start_time, series):
     np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_array_view(("Emissions", "CO2"), "World", "GtCO2/a")
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_boolean_view(("Emissions", "CO2"), "World")
     with pytest.raises(DimensionalityError):
         parameterset.get_timeseries_view(("Emissions", "CO2"), "World", "kg", 0, 1)
 

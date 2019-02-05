@@ -22,6 +22,8 @@ class ParameterType(Enum):
 
     SCALAR = 1
     TIMESERIES = 2
+    BOOLEAN = 3
+    ARRAY = 4
 
 
 class ParameterInfo:
@@ -183,7 +185,7 @@ class _Parameter:
             return self
 
     def attempt_read(
-        self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
+        self, parameter_type: ParameterType, unit: str=None, timeframe: Timeframe = None
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -207,18 +209,22 @@ class _Parameter:
         # TODO aggregate
         if self._info._type is not None and self._info._type != parameter_type:
             raise ParameterTypeError
-        if self._info._unit is None:
-            self._info._unit = unit
+        if self._info._type is None:
             self._info._type = parameter_type
+            self._info._unit = unit
             if parameter_type == ParameterType.SCALAR:
                 self._data = float("NaN")
+            elif parameter_type == ParameterType.BOOLEAN:
+                self._data = False
+            elif parameter_type == ParameterType.ARRAY:
+                self._data = np.array([])
             else:  # parameter_type == ParameterType.TIMESERIES
                 self._data = np.array([])
                 self._info._timeframe = copy(timeframe)
         self._has_been_read_from = True
 
     def attempt_write(
-        self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
+        self, parameter_type: ParameterType, unit: str=None, timeframe: Timeframe = None
     ) -> None:
         """
         Tell parameter that its data will be written to.
@@ -239,7 +245,7 @@ class _Parameter:
         """
         if self._children:
             raise ParameterReadonlyError
-        self.attempt_read(unit, parameter_type, timeframe)
+        self.attempt_read(parameter_type, unit, timeframe)
         self._has_been_written_to = True
 
     @property

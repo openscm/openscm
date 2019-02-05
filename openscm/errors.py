@@ -22,7 +22,7 @@ class ParameterEmptyError(ParameterError):
 class ParameterTypeError(ParameterError):
     """
     Exception raised when a parameter is of a different type than
-    requested (scalar or timeseries).
+    requested.
     """
 
 
@@ -58,6 +58,13 @@ class OverwriteError(AssertionError):
     """
 
     pass
+
+
+class ArrayLengthError(ParameterError):
+    """
+    Exception raised when a user attempts to set an array parameter with an array of a
+    different length to what has already been set.
+    """
 
 
 class ModelNotInitialisedError(Exception):

@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from .parameters import _Parameter
 from .timeframes import Timeframe, TimeframeConverter
 from .units import UnitConverter
-from .errors import ParameterEmptyError
+from .errors import ParameterEmptyError, ArrayLengthError
 
 
 class ParameterView(metaclass=ABCMeta):
@@ -159,6 +159,95 @@ class WritableScalarView(ScalarView):
         value
             Value
         """
+        self._parameter._data = self._unit_converter.convert_to(value)
+
+
+class BooleanView(ParameterView):
+    """
+    Read-only view of a boolean parameter.
+    """
+
+    def __init__(self, parameter: _Parameter):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        parameter
+            Parameter
+        """
+        super().__init__(parameter)
+
+    def get(self) -> bool:
+        """
+        Get current value of boolean parameter.
+        """
+        return self._parameter._data
+
+
+class WritableBooleanView(BooleanView):
+    """
+    View of a boolean parameter whose value can be changed.
+    """
+
+    def set(self, value: bool) -> None:
+        """
+        Set current value of boolean parameter.
+
+        Parameters
+        ----------
+        value
+            Value
+        """
+        self._parameter._data = value
+
+
+class ArrayView(ParameterView):
+    """
+    Read-only view of an array parameter.
+    """
+
+    _unit_converter: UnitConverter
+    """Unit converter"""
+
+    def __init__(self, parameter: _Parameter, unit: str):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        parameter
+            Parameter
+        unit
+            Unit for the values in the view
+        """
+        super().__init__(parameter)
+        self._unit_converter = UnitConverter(parameter._info._unit, unit)
+
+    def get(self) -> float:
+        """
+        Get current value of an array parameter.
+        """
+        return self._unit_converter.convert_from(self._parameter._data)
+
+
+class WritableArrayView(ArrayView):
+    """
+    View of an array parameter whose value can be changed.
+    """
+
+    def set(self, value: float) -> None:
+        """
+        Set current value of array parameter.
+
+        Parameters
+        ----------
+        value
+            Value
+        """
+        ld = self._parameter._data.size
+        if (ld != 0) and (ld != value.size):
+            raise ArrayLengthError
         self._parameter._data = self._unit_converter.convert_to(value)
 
 
