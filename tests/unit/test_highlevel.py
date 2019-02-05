@@ -33,6 +33,11 @@ def test_init_ts(test_ts, test_pd_df):
         df.timeseries().reset_index(), test_pd_df, check_like=True
     )
 
+    b = ScmDataFrame(test_pd_df)
+
+    pd.testing.assert_frame_equal(df.meta, b.meta, check_like=True)
+    pd.testing.assert_frame_equal(df._data, b._data)
+
 
 def test_init_ts_with_index(test_pd_df):
     df = ScmDataFrame(test_pd_df)
@@ -133,6 +138,22 @@ def test_init_datetime_subclass_long_timespan(test_pd_df):
 
     assert df["time"].max() == tmax
     assert df["time"].min() == tmin
+
+
+def test_init_iam(test_iam_df, test_pd_df):
+    a = ScmDataFrame(test_iam_df.data)
+    b = ScmDataFrame(test_pd_df)
+
+    pd.testing.assert_frame_equal(a.meta, b.meta)
+    pd.testing.assert_frame_equal(a._data, b._data)
+
+
+def test_init_iam(test_iam_df, test_pd_df):
+    a = ScmDataFrame(test_iam_df.data)
+    b = ScmDataFrame(test_pd_df)
+
+    pd.testing.assert_frame_equal(a.meta, b.meta)
+    pd.testing.assert_frame_equal(a._data, b._data)
 
 
 def test_get_item(test_scm_df):

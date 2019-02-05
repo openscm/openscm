@@ -7,11 +7,9 @@ import dateutil
 import numpy as np
 import pandas as pd
 from dateutil import parser
-from pyam import IamDataFrame
 from pyam.core import _raise_filter_error
 from pyam.utils import (
     isstr,
-    META_IDX,
     IAMC_IDX,
     years_match,
     month_match,
@@ -83,6 +81,8 @@ def format_data(df, **kwargs):
             raise ValueError(msg)
         extra_cols = list(set(cols) - set(IAMC_IDX + [time_col, 'value']))
         df = df.pivot_table(columns=IAMC_IDX + extra_cols, index=time_col).value
+        meta = df.columns.to_frame(index=None)
+        df.columns = meta.index
     else:
         # if in wide format, check if columns are years (int) or datetime
         cols = set(df.columns) - set(IAMC_IDX)
@@ -104,6 +104,9 @@ def format_data(df, **kwargs):
         df = df[list(cols - set(extra_cols))].T
         if len(year_cols):
             df.index = to_int(df.index).astype(int)
+            df.index.name = 'year'
+        else:
+            df.index.name = 'time'
         meta = orig[IAMC_IDX + extra_cols].set_index(df.columns)
 
     # cast value columns to numeric, drop NaN's, sort data
@@ -123,6 +126,12 @@ def from_ts(df, index=None, **columns):
     if not set(IAMC_IDX).issubset(columns.keys()):
         missing = list(set(IAMC_IDX) - set(columns.keys()))
         raise ValueError("missing required columns `{}`!".format(missing))
+
+    if df.index.dtype in [int, float]:
+        df.index.name = 'year'
+        df.index = to_int(df.index).astype(int)
+    else:
+        df.index.name = 'time'
 
     num_ts = len(df.columns)
     for c_name in columns:
@@ -219,6 +228,7 @@ class ScmDataFrameBase(object):
         elif isinstance(self._data.index[0], str):
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
+
             self['time'] = time_srs.apply(convert_str_to_datetime)
 
         not_datetime = [not isinstance(x, datetime) for x in self['time']]
@@ -274,7 +284,7 @@ class ScmDataFrameBase(object):
         ret._data = ret._data.where(idx).dropna(axis=1, how='all').dropna(axis=0, how='all')
         ret._meta = ret._meta[idx.sum(axis=0) > 0]
 
-        assert(len(ret._data.columns) == len(ret._meta))
+        assert (len(ret._data.columns) == len(ret._meta))
 
         if len(ret._meta) == 0:
             logger.warning('Filtered IamDataFrame is empty!')
