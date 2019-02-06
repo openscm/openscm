@@ -265,12 +265,6 @@ class ScmDataFrameBase(object):
             )
             raise ValueError(error_msg)
 
-    def append(self, other, **kwargs):
-        if not isinstance(other, ScmDataFrameBase):
-            other = ScmDataFrameBase(other, **kwargs)
-
-        super().append(other, inplace=True)
-
     def timeseries(self):
         d = self._data.copy()
         d.columns = pd.MultiIndex.from_arrays(
@@ -431,16 +425,19 @@ class ScmDataFrameBase(object):
         if not inplace:
             return ret
 
-    def append(self, other):
+    def append(self, other, inplace=False, **kwargs):
         """Appends additional timeseries from a castable object to the current dataframe
 
         The appending does not occur along a time series
 
         Parameters
         ----------
-        other: openscm.ScmDataFrame
+        other: openscm.ScmDataFrame or something which can be cast to ScmDataFrameBase
         """
-        return df_append([self, other])
+        if not isinstance(other, ScmDataFrameBase):
+            other = ScmDataFrameBase(other, **kwargs)
+
+        return df_append([self, other], inplace=True)
 
     def set_meta(self, meta, name=None, index=None):
         """Add metadata columns as pd.Series, list or value (int/float/str)
