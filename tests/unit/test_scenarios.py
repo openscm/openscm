@@ -10,9 +10,9 @@ def test_rcp26():
         region="World",
         year=1994,
         scenario="RCP26"
-    )["value"]
+    ).timeseries().values
 
-    assert not value.empty
+    assert len(value)
     np.testing.assert_allclose(value, 324.46375)
 
 def test_rcp45():
@@ -21,9 +21,9 @@ def test_rcp45():
         region="World",
         year=1765,
         scenario="RCP45"
-    )["value"]
+    ).timeseries().values
     
-    assert not value.empty
+    assert len(value)
     np.testing.assert_allclose(value, 0)
 
 def test_rcp60():
@@ -32,9 +32,9 @@ def test_rcp60():
         region="World",
         year=2034,
         scenario="RCP60"
-    )["value"]
+    ).timeseries().values
     
-    assert not value.empty
+    assert len(value)
     np.testing.assert_allclose(value, 10.61878)
 
 def test_rcp85():
@@ -43,7 +43,7 @@ def test_rcp85():
         region="World",
         year=2500,
         scenario="RCP85"
-    )["value"]
+    ).timeseries().values
     
-    assert not value.empty
+    assert len(value)
     np.testing.assert_allclose(value, 13.344)

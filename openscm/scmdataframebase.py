@@ -347,7 +347,7 @@ class ScmDataFrameBase(object):
             elif col == "year":
                 if not self.is_annual_timeseries:
                     keep_ts &= years_match(
-                        self._data.index.apply(lambda x: x.year), values
+                        pd.Series(self._data.index).apply(lambda x: x.year), values
                     )
                 else:
                     keep_ts &= years_match(self._data.index, values)
@@ -356,7 +356,7 @@ class ScmDataFrameBase(object):
                 if self.is_annual_timeseries:
                     _raise_filter_error(col)
                 keep_ts &= month_match(
-                    self._data.index.apply(lambda x: x.month), values
+                    pd.Series(self._data.index).apply(lambda x: x.month), values
                 )
 
             elif col == "day":
@@ -370,16 +370,16 @@ class ScmDataFrameBase(object):
                     wday = False
 
                 if wday:
-                    days = self._data.index.apply(lambda x: x.weekday())
+                    days = pd.Series(self._data.index).apply(lambda x: x.weekday())
                 else:  # ints or list of ints
-                    days = self._data.index.apply(lambda x: x.day)
+                    days = pd.Series(self._data.index).apply(lambda x: x.day)
 
                 keep_ts &= day_match(days, values)
 
             elif col == "hour":
                 if self.is_annual_timeseries:
                     _raise_filter_error(col)
-                keep_ts &= hour_match(self._data.index.apply(lambda x: x.hour), values)
+                keep_ts &= hour_match(pd.Series(self._data.index).apply(lambda x: x.hour), values)
 
             elif col == "time":
                 if self.is_annual_timeseries:
