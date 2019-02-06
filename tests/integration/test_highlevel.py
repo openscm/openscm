@@ -7,7 +7,11 @@ import pandas as pd
 import numpy as np
 
 
-from openscm.highlevel import ScmDataFrame, convert_scmdataframe_to_parameterset
+from openscm.highlevel import (
+    ScmDataFrame,
+    convert_scmdataframe_to_parameterset,
+    convert_parameterset_to_scmdataframe,
+)
 from openscm.scenarios import rcps
 from openscm.constants import ONE_YEAR
 from openscm.utils import convert_datetime_to_openscm_time
@@ -30,7 +34,9 @@ def test_init_df_datetime_error(test_pd_df):
         ScmDataFrame(tdf)
 
 
-def assert_parameterset(expected, time, paraset, name, region, unit, start, period_length):
+def assert_parameterset(
+    expected, time, paraset, name, region, unit, start, period_length
+):
     pview = paraset.get_timeseries_view(name, region, unit, start, period_length)
     relevant_idx = (np.abs(pview.get_times() - time)).argmin()
     np.testing.assert_allclose(pview.get(relevant_idx), expected)
@@ -47,8 +53,7 @@ def test_convert_scmdataframe_to_parameterset():
 
     def get_comparison_time_for_year(yr):
         return convert_datetime_to_openscm_time(
-            tstart_dt +
-            relativedelta.relativedelta(years=yr-tstart_dt.year)
+            tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
         )
 
     assert_parameterset(
@@ -74,13 +79,52 @@ def test_convert_scmdataframe_to_parameterset():
     )
 
     assert_parameterset(
-        7.2168971, get_comparison_time_for_year(1983), res, ("Emissions", "N2O"), "World", "MtN2ON / yr", tstart, tperiod_length
+        7.2168971,
+        get_comparison_time_for_year(1983),
+        res,
+        ("Emissions", "N2O"),
+        "World",
+        "MtN2ON / yr",
+        tstart,
+        tperiod_length,
     )
 
     assert_parameterset(
-        0.56591996, get_comparison_time_for_year(1766), res, ("Emissions", "OC"), "World", "MtOC / yr", tstart, tperiod_length
+        0.56591996,
+        get_comparison_time_for_year(1766),
+        res,
+        ("Emissions", "OC"),
+        "World",
+        "MtOC / yr",
+        tstart,
+        tperiod_length,
     )
 
     assert_parameterset(
-        0.22445, get_comparison_time_for_year(2087), res, ("Emissions", "SF6"), "World", "ktSF6 / yr", tstart, tperiod_length
+        0.22445,
+        get_comparison_time_for_year(2087),
+        res,
+        ("Emissions", "SF6"),
+        "World",
+        "ktSF6 / yr",
+        tstart,
+        tperiod_length,
     )
+
+
+def test_convert_parameterset_to_scmdataframe():
+    tdata = rcps.filter(scenario="RCP26")
+
+    intermediate = convert_scmdataframe_to_parameterset(tdata)
+
+    res = convert_parameterset_to_scmdataframe(
+        intermediate,
+        model="IMAGE",
+        scenario="RCP26",
+        climate_model="unspecified",
+        start=convert_datetime_to_openscm_time(tdata["time"].min()),
+        period_length=ONE_YEAR.to("s").magnitude,
+        no_timesteps=len(tdata["time"].unique()),
+    )
+
+    assert tdata == res

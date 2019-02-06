@@ -331,7 +331,6 @@ class TimeseriesView(ParameterView):
             self._unit_converter.convert_from(self._parameter._data)
         )[index]
 
-
     def get_times(self) -> float:
         """Get the time axis of the timeseries.
 
