@@ -4,7 +4,7 @@ single model runs.  This includes reading/writing input and output
 data, easy setting of parameters and stochastic ensemble runs.
 """
 from .core import Core
-from .scmdataframebase import ScmDataFrameBase, df_append
+from .scmdataframebase import ScmDataFrameBase, df_append  # pylint: disable=unused-import
 
 
 class OpenSCM(Core):
