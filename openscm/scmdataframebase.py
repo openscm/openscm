@@ -7,7 +7,7 @@ import dateutil
 import numpy as np
 import pandas as pd
 from dateutil import parser
-from pyam.core import _raise_filter_error, IamDataFrame
+from pyam.core import _raise_filter_error, IamDataFrame, read_files
 from pyam.utils import (
     isstr,
     IAMC_IDX,
@@ -23,34 +23,7 @@ from pyam.utils import (
 logger = getLogger(__name__)
 
 
-def read_pandas(fname, *args, **kwargs):
-    """Read a file and return a pd.DataFrame"""
-    if not os.path.exists(fname):
-        raise ValueError("no data file `{}` found!".format(fname))
-    if fname.endswith("csv"):
-        df = pd.read_csv(fname, *args, **kwargs)
-    else:
-        xl = pd.ExcelFile(fname)
-        if len(xl.sheet_names) > 1 and "sheet_name" not in kwargs:
-            kwargs["sheet_name"] = "data"
-        df = pd.read_excel(fname, *args, **kwargs)
-    return df
-
-
-def read_files(fnames, *args, **kwargs):
-    """Read data from a snapshot file saved in the standard IAMC format
-    or a table with year/value columns
-    """
-    if not isstr(fnames):
-        raise ValueError(
-            "reading multiple files not supported, "
-            "please use `pyam.IamDataFrame.append()`"
-        )
-    logger.info("Reading `{}`".format(fnames))
-    return format_data(read_pandas(fnames, *args, **kwargs))
-
-
-def format_data(df, **kwargs):
+def format_data(df):
     """Convert an imported dataframe and check all required columns"""
     if isinstance(df, pd.Series):
         df = df.to_frame()
@@ -182,23 +155,51 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        data: pd.DataFrame, np.ndarray or data file
+        data: pd.DataFrame, np.ndarray or string
             A pd.DataFrame or data file with IAMC-format data columns, or a numpy array of timeseries data if `columns` is specified.
+            If a string is passed, data will be attempted to be read from file.
         columns: dict
-            dictionary containing the key-value pair of metadata for the timeseries being passed as a numpy array. The values must be
-            arrays of length 1 or length n where n is the number of timeseries.
+            If a value for columns is provided, use this dict to generate the metadata for each timeseries. `columns `is dictionary
+            containing the metadata for the timeseries. For each metadata key, an array of values (one per time series) is expected.
+            Alternatively, an array of length 1 would set the same value for all time series. For example, if you had three
+            timeseries from 'rcp26' for 3 different models 'model', 'model2' and 'model3' the column dict could look like either `col_1` or `col_2`:
+
+            .. code:: python
+                >>> col_1 = {
+                    "scenario": ["rcp26"],
+                    "model": ["model1", "model2", "model3"],
+                    "region": ["unspecified"],
+                    "variable": ["unspecified"],
+                    "unit": ["unspecified"]
+                }
+                >>> col_2 = {
+                    "scenario": ["rcp26", "rcp26", "rcp26"],
+                    "model": ["model1", "model2", "model3"],
+                    "region": ["unspecified"],
+                    "variable": ["unspecified"],
+                    "unit": ["unspecified"]
+                }
+                >>> assert pd.testing.assert_frame_equal(
+                    ScmDataFrameBase(d, columns=col_1).meta,
+                    ScmDataFrameBase(d, columns=col_2).meta
+                )
+            Metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is required, otherwise a ValueError will be raised.
+        kwargs:
+            Additional parameters passed to `pyam.core.read_files` to read nonstandard files
+
+
         """
         if columns is not None:
             _data = from_ts(data, **columns)
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
-            _data = format_data(data.copy(), **kwargs)
+            _data = format_data(data.copy())
         else:
             _data = read_files(data, **kwargs)
         self.is_annual_timeseries = False
         self._data, self._meta = _data
         self._format_datetime_col()
 
-    def as_iam(self):
+    def to_iamdataframe(self):
         """Convert to  IamDataFrame instance
 
         Returns
@@ -215,7 +216,7 @@ class ScmDataFrameBase(object):
         path: string
             file path
         """
-        self.as_iam().to_csv(path, **kwargs)
+        self.to_iamdataframe().to_csv(path, **kwargs)
 
     def __getitem__(self, key):
         _key_check = [key] if isstr(key) else key
@@ -277,7 +278,7 @@ class ScmDataFrameBase(object):
         return self._meta.copy()
 
     def filter(self, keep=True, inplace=False, **kwargs):
-        """Return a filtered IamDataFrame (i.e., a subset of current data)
+        """Return a filtered ScmDataFrame (i.e., a subset of current data)
 
         Parameters
         ----------
@@ -483,7 +484,7 @@ class ScmDataFrameBase(object):
 
 
 class LongIamDataFrame(IamDataFrame):
-    """This baseclass is a custom implementation of the IamDataFrame which handles data which spans longer than which pd.to_datetime
+    """This baseclass is a custom implementation of the IamDataFrame which handles datetime data which spans longer than pd.to_datetime
     can handle
     """
 

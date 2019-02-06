@@ -133,7 +133,7 @@ def test_init_iam(test_iam_df, test_pd_df):
 
 
 def test_as_iam(test_iam_df, test_pd_df):
-    df = ScmDataFrame(test_pd_df).as_iam()
+    df = ScmDataFrame(test_pd_df).to_iamdataframe()
 
     assert isinstance(df, IamDataFrame)
 

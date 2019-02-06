@@ -24,9 +24,9 @@ class ScmDataFrame(ScmDataFrameBase):
     IamDataFrame, but is focused on the providing a performant way of storing
     time series data and the metadata associated with those time series.
 
-    The ScmDataFrame provides a number of diagnostic features (including validation
-    of data, completeness of variables provided, running of simple climate models)
-    as well as a number of visualization and plotting tools.
+    For users who wish to take advantage of all of Pyam's functionality, please cast
+    your data frame to an IamDataFrame first with `to_iamdataframe()`. Note: this
+    operation can be relatively computationally expensive for large data sets.
     """
 
     pass
