@@ -4,7 +4,6 @@ from dateutil import relativedelta
 
 import pytest
 import pandas as pd
-import numpy as np
 
 
 from openscm.highlevel import (
@@ -15,6 +14,9 @@ from openscm.highlevel import (
 from openscm.scenarios import rcps
 from openscm.constants import ONE_YEAR_IN_S_INTEGER
 from openscm.utils import convert_datetime_to_openscm_time
+
+
+from conftest import assert_core
 
 
 def test_init_df_long_timespan(test_pd_df):
@@ -32,14 +34,6 @@ def test_init_df_datetime_error(test_pd_df):
     error_msg = r"^All time values must be convertible to datetime\. The following values are not:(.|\s)*$"
     with pytest.raises(ValueError, match=error_msg):
         ScmDataFrame(tdf)
-
-
-def assert_core(
-    expected, time, test_core, name, region, unit, start, period_length
-):
-    pview = test_core.parameters.get_timeseries_view(name, region, unit, start, period_length)
-    relevant_idx = (np.abs(pview.get_times() - time)).argmin()
-    np.testing.assert_allclose(pview.get(relevant_idx), expected)
 
 
 def test_convert_scmdataframe_to_core():

@@ -1,11 +1,14 @@
 from datetime import datetime
 
+
+import pytest
 import numpy as np
 import pandas as pd
-import pytest
 from pyam import IamDataFrame
 
+
 from openscm.highlevel import ScmDataFrame
+
 
 TEST_DF_LONG_TIMES = pd.DataFrame(
     [
@@ -122,6 +125,14 @@ def test_scm_df(request):
 
 def test_adapter(request):
     return request.cls.tadapter()
+
+
+def assert_core(
+    expected, time, test_core, name, region, unit, start, period_length
+):
+    pview = test_core.parameters.get_timeseries_view(name, region, unit, start, period_length)
+    relevant_idx = (np.abs(pview.get_times() - time)).argmin()
+    np.testing.assert_allclose(pview.get(relevant_idx), expected)
 
 
 # temporary workaround until this is in Pint itself and can be imported

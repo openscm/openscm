@@ -15,6 +15,9 @@ from openscm.highlevel import convert_scmdataframe_to_core
 from openscm.errors import NotAnScmParameterError
 
 
+from conftest import assert_core
+
+
 @pytest.fixture(scope="function")
 def test_adapter(request):
     try:
@@ -70,10 +73,10 @@ class _AdapterTester(object):
         with pytest.raises(NotAnScmParameterError, match=error_msg):
             test_adapter.set_config(test_config_paraset)
 
-    # def test_run(self, test_adapter, test_drivers_core):
-    #   test_adapter.initialize()
-    #   test_adapter.set_drivers(test_drivers_core)
-    #   test_adapter.run()
+    def test_run(self, test_adapter, test_drivers_core):
+      test_adapter.initialize()
+      test_adapter.set_drivers(test_drivers_core)
+      test_adapter.run()
 
 
 class TestMAGICCAdapter(_AdapterTester):
@@ -138,12 +141,31 @@ class TestMAGICCAdapter(_AdapterTester):
             magicc_config["nml_allcfgs"]["gen_sresregions2nh"] == tgen_sresregions2nh
         ).all()
 
-    # def test_run(self, test_adapter):
-    #   test_adapter.initialize()
-    #   test_adapter.set_drivers()
-    #   test_adapter.run()
+    def test_run(self, test_adapter, test_drivers_core):
+        test_adapter.initialize()
+        test_adapter.set_drivers(test_drivers_core)
+        results = test_adapter.run()
 
-    #   assert on results
+        import pdb
+        pdb.set_trace()
+        test_drivers_core
+
+        def get_comparison_time_for_year(yr):
+            return convert_datetime_to_openscm_time(
+                tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
+            )
+
+        assert_core(
+            9.14781,
+            get_comparison_time_for_year(2017),
+            res,
+            ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
+            "World",
+            "GtC / yr",
+            tstart,
+            tperiod_length,
+        )
+        assert False
 
 
 class TestHectorAdapter(_AdapterTester):
