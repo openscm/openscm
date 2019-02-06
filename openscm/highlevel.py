@@ -10,10 +10,13 @@ import numpy as np
 import pandas as pd
 
 
-from .core import Core, ParameterSet
+from .core import Core
 from .scmdataframebase import ScmDataFrameBase, DATA_HIERARCHY_SEPARATOR, df_append  # pylint: disable=unused-import
-from .constants import ONE_YEAR
-from .utils import convert_datetime_to_openscm_time
+from .constants import ONE_YEAR_IN_S_INTEGER
+from .utils import (
+    convert_datetime_to_openscm_time,
+    convert_openscm_time_to_datetime,
+)
 from .parameters import ParameterType
 
 
@@ -42,8 +45,11 @@ class ScmDataFrame(ScmDataFrameBase):
     pass
 
 
-def convert_scmdataframe_to_parameterset(scmdf: ScmDataFrame) -> ParameterSet:
-    parameter_set = ParameterSet()
+def convert_scmdataframe_to_core(scmdf: ScmDataFrame, climate_model: str = "unspecified") -> Core:
+    # TODO: move to method of scmdataframe
+    st = convert_datetime_to_openscm_time(scmdf["time"].min())
+    et = convert_datetime_to_openscm_time(scmdf["time"].max())
+    core = Core(climate_model, st, et)
     for (variable, region), df in scmdf.data.groupby(["variable", "region"]):
         df = df.sort_values("time")
         variable_openscm = tuple(variable.split(DATA_HIERARCHY_SEPARATOR))
@@ -78,11 +84,9 @@ def convert_scmdataframe_to_parameterset(scmdf: ScmDataFrame) -> ParameterSet:
         ), (
             "have not considered cases other than the RCPs read in by pymagicc yet"
         )  # TODO: remove this restriction
-        tstep = ONE_YEAR.to(
-            "s"
-        ).magnitude  # having passed all above, can safely assume this [TODO: remove this assumption]
+        tstep = ONE_YEAR_IN_S_INTEGER  # having passed all above, can safely assume this [TODO: remove this assumption]
 
-        emms_view = parameter_set.get_writable_timeseries_view(
+        emms_view = core.parameters.get_writable_timeseries_view(
             variable_openscm,
             region_openscm,
             unit,
@@ -91,17 +95,15 @@ def convert_scmdataframe_to_parameterset(scmdf: ScmDataFrame) -> ParameterSet:
         )
         emms_view.set_series(df["value"].values)
 
-    return parameter_set
+    return core
 
 
-def convert_parameterset_to_scmdataframe(
-    paraset: ParameterSet,
+def convert_core_to_scmdataframe(
+    core: Core,
+    period_length: int = ONE_YEAR_IN_S_INTEGER,
     model: str = "unspecified",
     scenario: str = "unspecified",
     climate_model: str = "unspecified",
-    start: int = 0,
-    period_length: int = ONE_YEAR.to("s").magnitude,
-    no_timesteps: int = 10,
 ) -> ScmDataFrame:
     metadata = {
         "climate_model": climate_model,
@@ -109,11 +111,11 @@ def convert_parameterset_to_scmdataframe(
         "model": model,
     }
 
-    def get_metadata(para):
+    def get_metadata(c, para):
         md = {}
         if para._children:
             for _, child_para in para._children.items():
-                md.update(get_metadata(child_para))
+                md.update(get_metadata(c, child_para))
         is_time_data = para._info._type == ParameterType.TIMESERIES
         if (para._info._type is None) or is_time_data:
             return metadata
@@ -126,42 +128,50 @@ def convert_parameterset_to_scmdataframe(
 
         return metadata
 
-    for key, value in paraset._root._parameters.items():
-        metadata.update(get_metadata(value))
+    for key, value in core.parameters._root._parameters.items():
+        metadata.update(get_metadata(core, value))
 
-    def get_dataframes(para, metadata):
+    def get_dataframes(c, para, metadata):
         df = []
         if para._children:
             for _, child_para in para._children.items():
-                df.append(get_dataframes(child_para, metadata))
+                df += get_dataframes(c, child_para, metadata)
         if not para._info._type == ParameterType.TIMESERIES:
             return df
 
-        import pdb
-        pdb.set_trace()
-        values = para._data
         variable = DATA_HIERARCHY_SEPARATOR.join(para.full_name)
         region = DATA_HIERARCHY_SEPARATOR.join(para.info.region)
         unit = para.info.unit
-        # time =
+
+        tview = core.parameters.get_timeseries_view(
+            para.full_name,
+            para.info.region,
+            unit,
+            c.start_time,
+            period_length,
+        )
+        values = tview.get_series()
+        time = [
+            convert_openscm_time_to_datetime(int(t))
+            for t in tview.get_times()
+        ]
         tdf = {
             **metadata,
-            "variable": [variable] * no_timesteps,
-            "unit": [unit] * no_timesteps,
-            "region": [region] * no_timesteps,
+            "variable": variable,
+            "unit": unit,
+            "region": region,
             "time": time,
+            "value": values,
         }
-        tdf["value"] = values
 
-        return pd.DataFrame(tdf)
+        return [pd.DataFrame(tdf)]
 
     dataframes = []
-    for key, value in paraset._root._parameters.items():
-        dfs = get_dataframes(value, metadata)
+    for key, value in core.parameters._root._parameters.items():
+        dfs = get_dataframes(core, value, metadata)
         if dfs:
-            dataframes.append(dfs)
+            dataframes += dfs
 
-
-    result = ScmDataFrame(pd.concat(dataframes))
+    result = ScmDataFrame(pd.concat(dataframes).reset_index(drop=True))
 
     return result

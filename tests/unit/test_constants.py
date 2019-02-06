@@ -1,5 +1,6 @@
-from openscm.constants import ONE_YEAR
+from openscm.constants import ONE_YEAR_IN_S_INTEGER
 
 
 def test_one_year():
-    assert ONE_YEAR.to("s").magnitude == 31556925.9747
+    assert ONE_YEAR_IN_S_INTEGER == 31556926
+    assert isinstance(ONE_YEAR_IN_S_INTEGER, int)
