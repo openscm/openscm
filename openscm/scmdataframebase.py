@@ -154,6 +154,7 @@ def from_ts(df, index=None, **columns):
 
 
 def df_append(dfs, inplace=False):
+    dfs = [df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs]
     ret = copy.deepcopy(dfs[0]) if not inplace else dfs[0]
 
     meta = pd.concat([d._meta for d in dfs], ignore_index=True, sort=False)
@@ -204,7 +205,7 @@ class ScmDataFrameBase(object):
         -------
         An pyam.IamDataFrame instance containing the same data
         """
-        return IamDataFrame(self.timeseries())
+        return LongIamDataFrame(self.timeseries())
 
     def to_csv(self, path, **kwargs):
         """Write timeseries data to a csv file
@@ -273,7 +274,7 @@ class ScmDataFrameBase(object):
     def timeseries(self):
         d = self._data.copy()
         d.columns = pd.MultiIndex.from_arrays(
-            self.meta.values.T, names=self.meta.columns
+            self._meta.values.T, names=self._meta.columns
         )
         return d.T
 
@@ -482,3 +483,25 @@ class ScmDataFrameBase(object):
                 .reset_index()
                 .set_index("index")
         )
+
+
+class LongIamDataFrame(IamDataFrame):
+    """This baseclass is a custom implementation of the IamDataFrame which handles data which spans longer than which pd.to_datetime
+    can handle
+    """
+
+    def _format_datetime_col(self):
+        if isinstance(self.data["time"].iloc[0], str):
+
+            def convert_str_to_datetime(inp):
+                return parser.parse(inp)
+
+            self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
+
+        not_datetime = [not isinstance(x, datetime) for x in self.data["time"]]
+        if any(not_datetime):
+            bad_values = self.data[not_datetime]["time"]
+            error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
+                bad_values
+            )
+            raise ValueError(error_msg)
