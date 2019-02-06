@@ -143,7 +143,7 @@ def convert_parameterset_to_scmdataframe(
         variable = DATA_HIERARCHY_SEPARATOR.join(para.full_name)
         region = DATA_HIERARCHY_SEPARATOR.join(para.info.region)
         unit = para.info.unit
-        time =
+        # time =
         tdf = {
             **metadata,
             "variable": [variable] * no_timesteps,

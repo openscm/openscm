@@ -8,7 +8,10 @@ import numpy as np
 
 
 import openscm.utils
-from openscm.utils import convert_datetime_to_openscm_time
+from openscm.utils import (
+    convert_datetime_to_openscm_time,
+    convert_openscm_time_to_datetime
+)
 
 
 @pytest.fixture(scope="function")
@@ -77,3 +80,4 @@ def test_convert_datetime_to_openscm_time(input, expected):
     res = convert_datetime_to_openscm_time(input)
 
     np.testing.assert_allclose(res, expected)
+    assert convert_openscm_time_to_datetime(res) == input
