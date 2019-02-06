@@ -133,6 +133,7 @@ def from_ts(df, index=None, **columns):
         columns[c_name] = col * num_ts
 
     meta = pd.DataFrame(columns, index=df.columns)
+    meta = meta[IAMC_IDX + list(set(meta.columns) - set(IAMC_IDX))]
     return df, meta
 
 
