@@ -12,18 +12,21 @@ core_climatesensitivity = {
     "type": ParameterType.SCALAR,
     "unit": "K",
 }
-f2x_co2 = {
-    "name": "core_delq2xco2",
-    "type": ParameterType.SCALAR,
-    "unit": "W / m^2",
-}
+f2x_co2 = {"name": "core_delq2xco2", "type": ParameterType.SCALAR, "unit": "W / m^2"}
 parameters_magicc = {
     "ecs": core_climatesensitivity,
     "core_climatesensitivity": core_climatesensitivity,
     "core_delq2xco2": f2x_co2,
     "f2xco2": f2x_co2,
-    "co2_tempfeedback_switch": {"name": "co2_tempfeedback_switch", "type": ParameterType.BOOLEAN},
-    "gen_sresregions2nh": {"name": "gen_sresregions2nh", "type": ParameterType.ARRAY, "unit": "dimensionless"}
+    "co2_tempfeedback_switch": {
+        "name": "co2_tempfeedback_switch",
+        "type": ParameterType.BOOLEAN,
+    },
+    "gen_sresregions2nh": {
+        "name": "gen_sresregions2nh",
+        "type": ParameterType.ARRAY,
+        "unit": "dimensionless",
+    },
 }
 
 
@@ -58,23 +61,16 @@ class MAGICC6(Adapter):
             # regional parameters kind of...)
             if pval.info._type == ParameterType.SCALAR:
                 pview = parameters.get_scalar_view(
-                    pname,
-                    pval.info.region,
-                    parameters_magicc[pname]["unit"]
+                    pname, pval.info.region, parameters_magicc[pname]["unit"]
                 )
                 config_dict[parameters_magicc[pname]["name"]] = pview.get()
             elif pval.info._type == ParameterType.ARRAY:
                 pview = parameters.get_array_view(
-                    pname,
-                    pval.info.region,
-                    parameters_magicc[pname]["unit"]
+                    pname, pval.info.region, parameters_magicc[pname]["unit"]
                 )
                 config_dict[parameters_magicc[pname]["name"]] = list(pview.get())
             elif pval.info._type == ParameterType.BOOLEAN:
-                pview = parameters.get_boolean_view(
-                    pname,
-                    pval.info.region
-                )
+                pview = parameters.get_boolean_view(pname, pval.info.region)
                 config_dict[parameters_magicc[pname]["name"]] = pview.get()
             else:
                 raise NotImplementedError

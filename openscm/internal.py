@@ -19,6 +19,7 @@ class Adapter(metaclass=ABCMeta):
     runs its wrapped SCM and writes the output data back to a
     :class:`openscm.core.ParameterSet`.
     """
+
     def __init__(self):
         self.initialized = False
 

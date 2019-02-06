@@ -22,11 +22,7 @@ def test_adapter(request):
 @pytest.fixture(scope="function")
 def test_config_paraset():
     parameters = ParameterSet()
-    ecs_writable = parameters.get_writable_scalar_view(
-        "ecs",
-        "World",
-        "K"
-    )
+    ecs_writable = parameters.get_writable_scalar_view("ecs", "World", "K")
     ecs_writable.set(3)
 
     yield parameters
@@ -63,10 +59,10 @@ class _AdapterTester(object):
         test_adapter.set_config(test_config_paraset)
 
     # def test_junk_config(self, test_adapter, test_config_paraset):
-        # test_adapter.initialize()
-        # what to do here
-        # with pytest.raises(Error):
-        #   test_adapter.set_config(junk para set)
+    # test_adapter.initialize()
+    # what to do here
+    # with pytest.raises(Error):
+    #   test_adapter.set_config(junk para set)
 
     # def test_run(self, test_adapter, test_drivers_paraset):
     #   test_adapter.initialize()
@@ -103,24 +99,19 @@ class TestMAGICCAdapter(_AdapterTester):
 
         tf2x = 3.8
         f2x_writable = test_config_paraset.get_writable_scalar_view(
-            "f2xco2",
-            "World",
-            "mW / m^2",
+            "f2xco2", "World", "mW / m^2"
         )
         f2x_writable.set(tf2x * 1000)
 
         tco2_tempfeedback_switch = False
         co2_tempfeedback_switch_writable = test_config_paraset.get_writable_boolean_view(
-            "co2_tempfeedback_switch",
-            "World",
+            "co2_tempfeedback_switch", "World"
         )
         co2_tempfeedback_switch_writable.set(tco2_tempfeedback_switch)
 
         tgen_sresregions2nh = np.array([0.95, 1.0, 1.0, 0.4])
         gen_sresregions2nh_writable = test_config_paraset.get_writable_array_view(
-            "gen_sresregions2nh",
-            "World",
-            "dimensionless",
+            "gen_sresregions2nh", "World", "dimensionless"
         )
         gen_sresregions2nh_writable.set(tgen_sresregions2nh)
 
@@ -129,10 +120,17 @@ class TestMAGICCAdapter(_AdapterTester):
 
         magicc_config = test_adapter.magicc.update_config()
 
-        np.testing.assert_allclose(magicc_config["nml_allcfgs"]["core_climatesensitivity"], 3)
+        np.testing.assert_allclose(
+            magicc_config["nml_allcfgs"]["core_climatesensitivity"], 3
+        )
         np.testing.assert_allclose(magicc_config["nml_allcfgs"]["core_delq2xco2"], tf2x)
-        assert magicc_config["nml_allcfgs"]["co2_tempfeedback_switch"] == tco2_tempfeedback_switch
-        assert (magicc_config["nml_allcfgs"]["gen_sresregions2nh"] == tgen_sresregions2nh).all()
+        assert (
+            magicc_config["nml_allcfgs"]["co2_tempfeedback_switch"]
+            == tco2_tempfeedback_switch
+        )
+        assert (
+            magicc_config["nml_allcfgs"]["gen_sresregions2nh"] == tgen_sresregions2nh
+        ).all()
 
     # def test_run(self, test_adapter):
     #   test_adapter.initialize()
@@ -140,6 +138,7 @@ class TestMAGICCAdapter(_AdapterTester):
     #   test_adapter.run()
 
     #   assert on results
+
 
 class TestHectorAdapter(_AdapterTester):
     tadapter = Hector

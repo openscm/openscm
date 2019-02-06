@@ -174,9 +174,7 @@ class ParameterSet:
         parameter.attempt_write(ParameterType.SCALAR, unit)
         return WritableScalarView(parameter, unit)
 
-    def get_boolean_view(
-        self, name: Tuple[str], region: Tuple[str]
-    ) -> ScalarView:
+    def get_boolean_view(self, name: Tuple[str], region: Tuple[str]) -> ScalarView:
         """
         Get a read-only view to a boolean parameter.
 

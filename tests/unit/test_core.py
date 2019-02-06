@@ -242,7 +242,9 @@ def test_boolean_parameter_view(core):
     assert not cs.is_empty
     assert cs.get()
     with pytest.raises(ParameterTypeError):
-        parameterset.get_timeseries_view(("CO2 Temperature Feedback"), "World", "degC", 0, 1)
+        parameterset.get_timeseries_view(
+            ("CO2 Temperature Feedback"), "World", "degC", 0, 1
+        )
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("CO2 Temperature Feedback"), "World", "kg")
     with pytest.raises(ParameterTypeError):
@@ -264,7 +266,9 @@ def test_array_parameter_view(core):
     with pytest.raises(ArrayLengthError):
         cs_writable.set(np.array([1, 2, 3]))
     with pytest.raises(ParameterTypeError):
-        parameterset.get_timeseries_view(("NH SH split"), "World", "dimensionless", 0, 1)
+        parameterset.get_timeseries_view(
+            ("NH SH split"), "World", "dimensionless", 0, 1
+        )
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("NH SH split"), "World", "dimensionless")
     with pytest.raises(DimensionalityError):
@@ -273,8 +277,12 @@ def test_array_parameter_view(core):
 
 @pytest.fixture(
     params=[
-        (range(5 * 365), [0.24373829, 0.7325541, 1.22136991, 1.71018572, 2.19900153]),
+        # 365 * 44 / 12 / 1e-6 for conversion from ktC/d to GtCO2/a
         ([1] * 5 * 365, [365 * 44 / 12 / 1e6] * 5),
+        # (364 / 2 + np.arange(5) * 365) as outseries is midpoints of input series
+        # values at each year in this special case of a linearly increasing input
+        # series
+        (range(5 * 365), (364 / 2 + np.arange(5) * 365) * 365 * 44 / 12 / 1e6),
     ]
 )
 def series(request):
@@ -283,23 +291,56 @@ def series(request):
 
 def test_timeseries_parameter_view(core, start_time, series):
     parameterset = core.parameters
+
+    carbon_period_length = 365 * 24 * 3600
     carbon = parameterset.get_timeseries_view(
-        ("Emissions", "CO2"), ("World"), "GtCO2/a", start_time, 365 * 24 * 3600
+        ("Emissions", "CO2"), ("World"), "GtCO2/a", start_time, carbon_period_length
     )
+
     assert carbon.is_empty
     with pytest.raises(ParameterEmptyError):
         carbon.get_series()
+    with pytest.raises(ParameterEmptyError):
+        carbon.get_times()
 
+    carbon_writable_period_length = 24 * 3600
     carbon_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2"), ("World"), "ktC/d", start_time, 24 * 3600
+        ("Emissions", "CO2"),
+        ("World"),
+        "ktC/d",
+        start_time,
+        carbon_writable_period_length,
     )
+
     inseries = series[0]
     outseries = series[1]
+
+    # all this should pass but doesn't...
+    # instead is_empty is False before anything has been written and trying to
+    # get_series without writing returns a cryptic InsufficientDataError rather than a
+    # ParameterEmptyError
+    # assert not carbon_writable.is_empty
+    # with pytest.raises(ParameterEmptyError):
+    #     carbon_writable.get_series()
+    # with pytest.raises(ParameterEmptyError):
+    #     carbon_writable.get_times()
+
     carbon_writable.set_series(inseries)
+
     assert carbon_writable.length == len(inseries)
     np.testing.assert_allclose(carbon_writable.get_series(), inseries)
+    np.testing.assert_allclose(
+        carbon_writable.get_times(),
+        start_time + np.arange(len(inseries)) * carbon_writable_period_length,
+    )
+
     assert carbon.length == 5
     np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
+    np.testing.assert_allclose(
+        carbon.get_times(),
+        start_time + np.arange(len(outseries)) * carbon_period_length,
+    )
+
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
     with pytest.raises(ParameterTypeError):

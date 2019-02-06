@@ -185,7 +185,10 @@ class _Parameter:
             return self
 
     def attempt_read(
-        self, parameter_type: ParameterType, unit: str=None, timeframe: Timeframe = None
+        self,
+        parameter_type: ParameterType,
+        unit: str = None,
+        timeframe: Timeframe = None,
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -224,7 +227,10 @@ class _Parameter:
         self._has_been_read_from = True
 
     def attempt_write(
-        self, parameter_type: ParameterType, unit: str=None, timeframe: Timeframe = None
+        self,
+        parameter_type: ParameterType,
+        unit: str = None,
+        timeframe: Timeframe = None,
     ) -> None:
         """
         Tell parameter that its data will be written to.

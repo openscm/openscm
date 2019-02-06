@@ -77,4 +77,3 @@ def test_convert_datetime_to_openscm_time(input, expected):
     res = convert_datetime_to_openscm_time(input)
 
     np.testing.assert_allclose(res, expected)
-

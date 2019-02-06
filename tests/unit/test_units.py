@@ -93,7 +93,7 @@ def test_a():
 
 def test_forcing():
     uc = UnitConverter("kW/m^2", "W/m^2")
-    np.testing.assert_allclose(uc.convert_from(1), 10**3)
+    np.testing.assert_allclose(uc.convert_from(1), 10 ** 3)
     np.testing.assert_allclose(uc.convert_to(-600), -0.6)
 
 

@@ -2,6 +2,9 @@ from typing import Sequence
 from abc import ABCMeta, abstractmethod
 
 
+import numpy as np
+
+
 from .parameters import _Parameter
 from .timeframes import Timeframe, TimeframeConverter
 from .units import UnitConverter
@@ -325,6 +328,43 @@ class TimeseriesView(ParameterView):
             ``time`` is out of run time range.
         """
         raise NotImplementedError
+
+    def get_times(self) -> float:
+        """Get the time axis of the timeseries.
+
+        Parameters
+        ----------
+        year
+            Year to get data for
+        """
+        if self.is_empty:
+            if not self._parameter._children:
+                raise ParameterEmptyError
+
+            # move once #87 is closed
+            def get_child_data(para):
+                # where should this go?
+                for name, cp in para._children.items():
+                    if not cp._children:
+                        data_to_add = cp._data
+                    else:
+                        data_to_add = get_child_data(cp)
+                    data_to_add = self._timeframe_converter.convert_from(
+                        self._unit_converter.convert_from(data_to_add)
+                    )
+                    try:
+                        data += data_to_add
+                    except NameError:
+                        data = data_to_add
+
+                return data
+
+            self._parameter._data = get_child_data(self._parameter)
+
+        return self._timeframe_converter._target.start_time + (
+            self._timeframe_converter._target.period_length
+            * np.arange(len(self.get_series()))
+        )
 
     @property
     def length(self) -> int:

@@ -22,7 +22,18 @@ from pyam.utils import (
 )
 from xarray.core.resample import DataArrayResample
 
+
 logger = getLogger(__name__)
+
+
+# TODO: expose this in pyam somewhere
+DATA_HIERARCHY_SEPARATOR = "|"
+"""str: String used to define different levels in our data hierarchies.
+
+For example, "Emissions|CO2|Energy|Coal".
+
+We copy this straight from pyam [TODO: add pyam link] to maintain easy compatibility.
+"""
 
 
 def read_files(fnames, *args, **kwargs):
