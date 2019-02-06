@@ -4,6 +4,7 @@ import pymagicc
 from ..internal import Adapter
 from ..core import Core, ParameterSet
 from ..parameters import ParameterType
+from ..errors import NotAnScmParameterError
 
 
 # how to do this intelligently and scalably?
@@ -56,26 +57,34 @@ class MAGICC6(Adapter):
 
         config_dict = {}
         for pname, pval in parameters._root._parameters.items():
-            # TODO: add better region handling for parameters
-            # In MAGICC they're all World so doesn't matter yet (arrays are the
-            # regional parameters kind of...)
-            if pval.info._type == ParameterType.SCALAR:
-                pview = parameters.get_scalar_view(
-                    pname, (pval.info.region), parameters_magicc[pname]["unit"]
-                )
-                config_dict[parameters_magicc[pname]["name"]] = pview.get()
-            elif pval.info._type == ParameterType.ARRAY:
-                pview = parameters.get_array_view(
-                    pname, (pval.info.region), parameters_magicc[pname]["unit"]
-                )
-                config_dict[parameters_magicc[pname]["name"]] = list(pview.get())
-            elif pval.info._type == ParameterType.BOOLEAN:
-                pview = parameters.get_boolean_view(pname, (pval.info.region))
-                config_dict[parameters_magicc[pname]["name"]] = pview.get()
-            else:
-                raise NotImplementedError
+            try:
+                n, v = self._get_config_dict_name_value(parameters, pname, pval)
+                config_dict[n] = v
+            except KeyError:
+                msg = "{} is not a MAGICC6 parameter".format(pname)
+                raise NotAnScmParameterError(msg)
 
         self.magicc.set_config(**config_dict)
+
+    def _get_config_dict_name_value(self, parameters, pname, pval):
+        # TODO: add better region handling for parameters
+        # In MAGICC they're all World so doesn't matter yet (arrays are the
+        # regional parameters kind of...)
+        if pval.info._type == ParameterType.SCALAR:
+            pview = parameters.get_scalar_view(
+                pname, (pval.info.region), parameters_magicc[pname]["unit"]
+            )
+            return parameters_magicc[pname]["name"], pview.get()
+        elif pval.info._type == ParameterType.ARRAY:
+            pview = parameters.get_array_view(
+                pname, (pval.info.region), parameters_magicc[pname]["unit"]
+            )
+            return parameters_magicc[pname]["name"], list(pview.get())
+        elif pval.info._type == ParameterType.BOOLEAN:
+            pview = parameters.get_boolean_view(pname, (pval.info.region))
+            return parameters_magicc[pname]["name"], pview.get()
+        else:
+            raise NotImplementedError
 
     def run(self) -> Core:
         raise NotImplementedError

@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from unittest.mock import Mock, MagicMock
+import re
 
 
 import pytest
@@ -9,6 +10,9 @@ import numpy as np
 from openscm.adapters import MAGICC6, Hector
 from openscm.core import ParameterSet
 from openscm.errors import ModelNotInitialisedError
+from openscm.scenarios import rcps
+from openscm.highlevel import convert_scmdataframe_to_core
+from openscm.errors import NotAnScmParameterError
 
 
 @pytest.fixture(scope="function")
@@ -28,12 +32,11 @@ def test_config_paraset():
     yield parameters
 
 
-# @pytest.fixture(scope="function")
-# def test_drivers_paraset():
-#   parameters = ParameterSet()
-#   # convert e.g. scenario drivers to parameterset
+@pytest.fixture(scope="function")
+def test_drivers_core():
+  core = convert_scmdataframe_to_core(rcps.filter(scenario="RCP26"))
 
-#   yield parameters
+  yield core
 
 
 class _AdapterTester(object):
@@ -58,15 +61,18 @@ class _AdapterTester(object):
         test_adapter.initialize()
         test_adapter.set_config(test_config_paraset)
 
-    # def test_junk_config(self, test_adapter, test_config_paraset):
-    # test_adapter.initialize()
-    # what to do here
-    # with pytest.raises(Error):
-    #   test_adapter.set_config(junk para set)
+    def test_junk_config(self, test_adapter, test_config_paraset):
+        test_adapter.initialize()
+        tname = "junk"
+        junk_w = test_config_paraset.get_writable_scalar_view(tname, ("World",), "K")
+        junk_w.set(4)
+        error_msg = re.escape("{} is not a {} parameter".format(tname, self.tadapter.__name__))
+        with pytest.raises(NotAnScmParameterError, match=error_msg):
+            test_adapter.set_config(test_config_paraset)
 
-    # def test_run(self, test_adapter, test_drivers_paraset):
+    # def test_run(self, test_adapter, test_drivers_core):
     #   test_adapter.initialize()
-    #   test_adapter.set_drivers(test_drivers_paraset)
+    #   test_adapter.set_drivers(test_drivers_core)
     #   test_adapter.run()
 
 
