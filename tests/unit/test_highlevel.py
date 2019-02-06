@@ -1,13 +1,12 @@
 import copy
 import datetime
-import os
 import re
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy import testing as npt
-from pyam.core import require_variable, categorize, filter_by_meta, validate, META_IDX
+from pyam.core import require_variable, categorize, filter_by_meta, validate, META_IDX, IamDataFrame
 
 from openscm.highlevel import ScmDataFrame
 
@@ -49,11 +48,6 @@ def test_init_ts_with_index(test_pd_df):
     pd.testing.assert_frame_equal(
         df.timeseries().reset_index(), test_pd_df, check_like=True
     )
-
-
-def test_init_df_with_float_cols_raises(test_pd_df):
-    _test_scm_df = test_pd_df.rename(columns={2005: 2005.5, 2010: 2010.0})
-    pytest.raises(ValueError, ScmDataFrame, data=_test_scm_df)
 
 
 def test_init_df_with_float_cols(test_pd_df):
@@ -138,12 +132,13 @@ def test_init_iam(test_iam_df, test_pd_df):
     pd.testing.assert_frame_equal(a._data, b._data)
 
 
-def test_init_iam(test_iam_df, test_pd_df):
-    a = ScmDataFrame(test_iam_df.data)
-    b = ScmDataFrame(test_pd_df)
+def test_as_iam(test_iam_df, test_pd_df):
+    df = ScmDataFrame(test_pd_df).as_iam()
 
-    pd.testing.assert_frame_equal(a.meta, b.meta)
-    pd.testing.assert_frame_equal(a._data, b._data)
+    assert isinstance(df, IamDataFrame)
+
+    pd.testing.assert_frame_equal(test_iam_df.meta, df.meta)
+    pd.testing.assert_frame_equal(test_iam_df.data, df.data)
 
 
 def test_get_item(test_scm_df):

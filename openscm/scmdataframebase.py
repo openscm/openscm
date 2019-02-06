@@ -7,7 +7,7 @@ import dateutil
 import numpy as np
 import pandas as pd
 from dateutil import parser
-from pyam.core import _raise_filter_error
+from pyam.core import _raise_filter_error, IamDataFrame
 from pyam.utils import (
     isstr,
     IAMC_IDX,
@@ -105,7 +105,7 @@ def format_data(df, **kwargs):
 
         df = df[list(cols - set(extra_cols))].T
         if len(year_cols):
-            df.index = to_int(df.index).astype(int)
+            df.index = to_int(df.index.astype(int))
             df.index.name = "year"
         else:
             df.index.name = "time"
@@ -181,17 +181,12 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        data: ixmp.TimeSeries, ixmp.Scenario, pd.DataFrame or data file
-            an instance of an TimeSeries or Scenario (requires `ixmp`),
-            or pd.DataFrame or data file with IAMC-format data columns.
-            A pd.DataFrame can have the required data as columns or index.
-
-            Special support is provided for data files downloaded directly from
-            IIASA SSP and RCP databases. If you run into any problems loading
-            data, please make an issue at:
-            https://github.com/IAMconsortium/pyam/issues
+        data: pd.DataFrame, np.ndarray or data file
+            A pd.DataFrame or data file with IAMC-format data columns, or a numpy array of timeseries data if `columns` is specified.
+        columns: dict
+            dictionary containing the key-value pair of metadata for the timeseries being passed as a numpy array. The values must be
+            arrays of length 1 or length n where n is the number of timeseries.
         """
-        # import data from pd.DataFrame or read from source
         if columns is not None:
             _data = from_ts(data, **columns)
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
@@ -201,6 +196,25 @@ class ScmDataFrameBase(object):
         self.is_annual_timeseries = False
         self._data, self._meta = _data
         self._format_datetime_col()
+
+    def as_iam(self):
+        """Convert to  IamDataFrame instance
+
+        Returns
+        -------
+        An pyam.IamDataFrame instance containing the same data
+        """
+        return IamDataFrame(self.timeseries())
+
+    def to_csv(self, path, **kwargs):
+        """Write timeseries data to a csv file
+
+        Parameters
+        ----------
+        path: string
+            file path
+        """
+        self.as_iam().to_csv(path, **kwargs)
 
     def __getitem__(self, key):
         _key_check = [key] if isstr(key) else key
@@ -215,7 +229,7 @@ class ScmDataFrameBase(object):
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
         else:
-            return self.data.__getitem__(key)
+            return self._data.__getitem__(key)
 
     def __setitem__(self, key, value):
         _key_check = [key] if isstr(key) else key
@@ -416,22 +430,6 @@ class ScmDataFrameBase(object):
         if not inplace:
             return ret
 
-    def require_variable(self, variable, unit=None, year=None, exclude_on_fail=False):
-        """Check whether all scenarios have a required variable
-
-        Parameters
-        ----------
-        variable: str
-            required variable
-        unit: str, default None
-            name of unit (optional)
-        year: int or list, default None
-            years (optional)
-        exclude_on_fail: bool, default False
-            flag scenarios missing the required variables as `exclude: True`
-        """
-        raise NotImplementedError
-
     def append(self, other):
         """Appends additional timeseries from a castable object to the current dataframe
 
@@ -481,6 +479,6 @@ class ScmDataFrameBase(object):
             df = df.set_index(index.names)
         self._meta = (
             pd.merge(df, meta, left_index=True, right_index=True, how="outer")
-            .reset_index()
-            .set_index("index")
+                .reset_index()
+                .set_index("index")
         )

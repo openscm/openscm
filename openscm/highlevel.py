@@ -5,7 +5,6 @@ data, easy setting of parameters and stochastic ensemble runs.
 """
 from .core import Core
 from .scmdataframebase import ScmDataFrameBase
-from pyam import IamDataFrame
 
 
 class OpenSCM(Core):
@@ -21,12 +20,13 @@ class OpenSCM(Core):
 class ScmDataFrame(ScmDataFrameBase):
     """OpenSCM's custom DataFrame implementation.
 
-    The ScmDataFrame wraps around `pyam`'s IamDataFrame, which itself wraps around Pandas.
+    The ScmDataFrame implements a subset of the functionality provided by `pyam`'s
+    IamDataFrame, but is focused on the providing a performant way of storing
+    time series data and the metadata associated with those time series.
 
     The ScmDataFrame provides a number of diagnostic features (including validation
     of data, completeness of variables provided, running of simple climate models)
     as well as a number of visualization and plotting tools.
     """
 
-    def as_iam(self):
-        return IamDataFrame(self.data)
+    pass
