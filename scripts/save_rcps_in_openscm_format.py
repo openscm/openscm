@@ -1,6 +1,7 @@
 import os
 from os import listdir
 from os.path import join, dirname, realpath
+import datetime
 
 
 from pymagicc.io import MAGICCData
@@ -30,6 +31,8 @@ for file in listdir(INPUT_PATH):
         df["scenario"] = scenario
         df["model"] = models[scenario]
         df.drop("todo", axis="columns", inplace=True)
+        # temporary hack until we get Pymagicc following OpenSCM conventions
+        df["time"] = df["time"].apply(lambda x: datetime.datetime(x.year, 1, 1))
 
         outname = join(
             here,
