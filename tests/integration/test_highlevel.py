@@ -1,3 +1,7 @@
+import datetime
+from dateutil import relativedelta
+
+
 import pytest
 import pandas as pd
 import numpy as np
@@ -26,21 +30,30 @@ def test_init_df_datetime_error(test_pd_df):
         ScmDataFrame(tdf)
 
 
-def assert_parameterset(expected, paraset, name, region, unit, start, period_length):
+def assert_parameterset(expected, time, paraset, name, region, unit, start, period_length):
     pview = paraset.get_timeseries_view(name, region, unit, start, period_length)
-    # import pdb
-    # pdb.set_trace()
-    assert np.testing.all_close(pview.get(), expected)
+    relevant_idx = (np.abs(pview.get_times() - time)).argmin()
+    np.testing.assert_allclose(pview.get(relevant_idx), expected)
 
 
 def test_convert_scmdataframe_to_parameterset():
     tdata = rcps.filter(scenario="RCP26")
-    tstart = convert_datetime_to_openscm_time(tdata["time"].min())
-    tperiod_length = ONE_YEAR.to("s").magnitude
+
     res = convert_scmdataframe_to_parameterset(tdata)
 
+    tstart_dt = tdata["time"].min()
+    tstart = convert_datetime_to_openscm_time(tstart_dt)
+    tperiod_length = ONE_YEAR.to("s").magnitude
+
+    def get_comparison_time_for_year(yr):
+        return convert_datetime_to_openscm_time(
+            tstart_dt +
+            relativedelta.relativedelta(years=yr-tstart_dt.year)
+        )
+
     assert_parameterset(
-        3,
+        9.14781,
+        get_comparison_time_for_year(2017),
         res,
         ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
         "World",
@@ -50,13 +63,24 @@ def test_convert_scmdataframe_to_parameterset():
     )
 
     assert_parameterset(
-        3, res, ("Emissions", "N2O"), "World", "MtN2O / yr", tstart, tperiod_length
+        6.124 + 1.2981006,
+        get_comparison_time_for_year(1993),
+        res,
+        ("Emissions", "CO2"),
+        "World",
+        "GtC / yr",
+        tstart,
+        tperiod_length,
     )
 
     assert_parameterset(
-        3, res, ("Emissions", "OC"), "World", "MtOC / yr", tstart, tperiod_length
+        7.2168971, get_comparison_time_for_year(1983), res, ("Emissions", "N2O"), "World", "MtN2ON / yr", tstart, tperiod_length
     )
 
     assert_parameterset(
-        3, res, ("Emissions", "SF6"), "World", "ktSF6 / yr", tstart, tperiod_length
+        0.56591996, get_comparison_time_for_year(1766), res, ("Emissions", "OC"), "World", "MtOC / yr", tstart, tperiod_length
+    )
+
+    assert_parameterset(
+        0.22445, get_comparison_time_for_year(2087), res, ("Emissions", "SF6"), "World", "ktSF6 / yr", tstart, tperiod_length
     )

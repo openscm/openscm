@@ -61,16 +61,16 @@ class MAGICC6(Adapter):
             # regional parameters kind of...)
             if pval.info._type == ParameterType.SCALAR:
                 pview = parameters.get_scalar_view(
-                    pname, pval.info.region, parameters_magicc[pname]["unit"]
+                    pname, (pval.info.region), parameters_magicc[pname]["unit"]
                 )
                 config_dict[parameters_magicc[pname]["name"]] = pview.get()
             elif pval.info._type == ParameterType.ARRAY:
                 pview = parameters.get_array_view(
-                    pname, pval.info.region, parameters_magicc[pname]["unit"]
+                    pname, (pval.info.region), parameters_magicc[pname]["unit"]
                 )
                 config_dict[parameters_magicc[pname]["name"]] = list(pview.get())
             elif pval.info._type == ParameterType.BOOLEAN:
-                pview = parameters.get_boolean_view(pname, pval.info.region)
+                pview = parameters.get_boolean_view(pname, (pval.info.region))
                 config_dict[parameters_magicc[pname]["name"]] = pview.get()
             else:
                 raise NotImplementedError

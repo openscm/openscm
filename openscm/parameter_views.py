@@ -327,7 +327,10 @@ class TimeseriesView(ParameterView):
         IndexError
             ``time`` is out of run time range.
         """
-        raise NotImplementedError
+        return self._timeframe_converter.convert_from(
+            self._unit_converter.convert_from(self._parameter._data)
+        )[index]
+
 
     def get_times(self) -> float:
         """Get the time axis of the timeseries.

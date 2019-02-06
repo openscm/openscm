@@ -74,7 +74,7 @@ class Timeframe:
         np.ndarray
             Array of time points
         """
-        return np.linspace(self.start_time, self.get_stop_time(count - 1), count)
+        return np.linspace(self.start_time, self.get_stop_time(count - 1), int(count))
 
     def get_stop_time(self, count: int) -> int:
         """

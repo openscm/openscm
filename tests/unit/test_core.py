@@ -329,6 +329,7 @@ def test_timeseries_parameter_view(core, start_time, series):
 
     assert carbon_writable.length == len(inseries)
     np.testing.assert_allclose(carbon_writable.get_series(), inseries)
+    np.testing.assert_allclose(carbon_writable.get(1), inseries[1], rtol=1e-3)
     np.testing.assert_allclose(
         carbon_writable.get_times(),
         start_time + np.arange(len(inseries)) * carbon_writable_period_length,
@@ -336,6 +337,10 @@ def test_timeseries_parameter_view(core, start_time, series):
 
     assert carbon.length == 5
     np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
+    np.testing.assert_allclose(carbon.get(1), outseries[1], rtol=1e-3)
+    with pytest.raises(IndexError):
+        carbon.get(10)
+
     np.testing.assert_allclose(
         carbon.get_times(),
         start_time + np.arange(len(outseries)) * carbon_period_length,
