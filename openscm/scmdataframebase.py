@@ -1,5 +1,4 @@
 import copy
-import os
 from datetime import datetime
 from logging import getLogger
 
@@ -7,7 +6,7 @@ import dateutil
 import numpy as np
 import pandas as pd
 from dateutil import parser
-from pyam.core import _raise_filter_error, IamDataFrame, read_files
+from pyam.core import _raise_filter_error, IamDataFrame, read_pandas
 from pyam.utils import (
     isstr,
     IAMC_IDX,
@@ -21,6 +20,17 @@ from pyam.utils import (
 )
 
 logger = getLogger(__name__)
+
+
+def read_files(fnames, *args, **kwargs):
+    """Read data from a snapshot file saved in the standard IAMC format
+    or a table with year/value columns
+    """
+    if not isstr(fnames):
+        raise ValueError('reading multiple files not supported, '
+                         'please use `openscm.ScmDataFrame.append()`')
+    logger.info('Reading `{}`'.format(fnames))
+    return format_data(read_pandas(fnames, *args, **kwargs))
 
 
 def format_data(df):
@@ -438,7 +448,7 @@ class ScmDataFrameBase(object):
         if not isinstance(other, ScmDataFrameBase):
             other = ScmDataFrameBase(other, **kwargs)
 
-        return df_append([self, other], inplace=True)
+        return df_append([self, other], inplace=inplace)
 
     def set_meta(self, meta, name=None, index=None):
         """Add metadata columns as pd.Series, list or value (int/float/str)
@@ -490,7 +500,6 @@ class LongIamDataFrame(IamDataFrame):
 
     def _format_datetime_col(self):
         if isinstance(self.data["time"].iloc[0], str):
-
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
 
