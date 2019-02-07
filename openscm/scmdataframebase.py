@@ -215,6 +215,7 @@ class ScmDataFrameBase(object):
         # force index to be object to avoid unexpected loss of behaviour when
         # pandas can't convert to DateTimeIndex
         _df.index = _df.index.astype("object")
+        _df.index.name = "time"
         self._data, self._meta = (_df, _meta)
         self._sort_meta_cols()
         self._format_datetime_col()

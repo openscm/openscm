@@ -18,6 +18,7 @@ def test_init_df_long_timespan(test_pd_longtime_df):
         df.timeseries().reset_index(), test_pd_longtime_df, check_like=True
     )
     assert (df["year"].unique() == [1005, 3010]).all()
+    assert df._data.index.name == "time"
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
