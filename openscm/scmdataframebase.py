@@ -153,7 +153,6 @@ def df_append(dfs, inplace=False):
     -------
     ScmDataFrameBase-like object containing the merged data. The resultant class will be determined by the type of the first object
     in dfs
-
     """
     dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
@@ -254,7 +253,7 @@ class ScmDataFrameBase(object):
         # First columns are from IAMC_IDX and the remainder of the columns are alphabetically sorted
         self._meta = self._meta[
             IAMC_IDX + sorted(list(set(self._meta.columns) - set(IAMC_IDX)))
-            ]
+        ]
 
     def __len__(self):
         return len(self._meta)
@@ -313,7 +312,7 @@ class ScmDataFrameBase(object):
                 base = datetime(year, 1, 1)
                 return base + timedelta(
                     seconds=(base.replace(year=year + 1) - base).total_seconds()
-                            * fractional_part
+                    * fractional_part
                 )
 
             self["time"] = [convert_float_to_datetime(t) for t in time_srs]
@@ -764,6 +763,7 @@ class LongIamDataFrame(IamDataFrame):
 
     def _format_datetime_col(self):
         if isinstance(self.data["time"].iloc[0], str):
+
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
 
