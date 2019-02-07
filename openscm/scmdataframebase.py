@@ -289,6 +289,21 @@ class ScmDataFrameBase(object):
             raise ValueError(error_msg)
 
     def timeseries(self, meta=None):
+        """Return a pandas dataframe in the same format as pyam.IamDataFrame.timeseries
+        Parameters
+        ----------
+        meta: List of strings
+        The list of meta columns that will be included in the rows MultiIndex. If None (default), then all metadata will be used.
+
+        Returns
+        -------
+        pd.DataFrame with datetimes as columns and each row being a timeseries
+        Raises
+        ------
+        ValueError:
+        - if the metadata are not unique between timeseries
+
+        """
         d = self._data.copy()
         meta_subset = self._meta if meta is None else self._meta[meta]
         if meta_subset.duplicated().any():
