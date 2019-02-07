@@ -158,7 +158,10 @@ def df_append(dfs, inplace=False):
 class ScmDataFrameBase(object):
     """This base is the class other libraries can subclass
 
-    Having such a subclass avoids a potential circularity where e.g. openscm imports ScmDataFrame as well as Pymagicc, but Pymagicc wants to import ScmDataFrame and hence to try and import ScmDataFrame you have to import ScmDataFrame itself (hence the circularity).
+    Having such a subclass avoids a potential circularity where e.g. openscm imports
+    ScmDataFrame as well as Pymagicc, but Pymagicc wants to import ScmDataFrame and
+    hence to try and import ScmDataFrame you have to import ScmDataFrame itself (hence
+    the circularity).
     """
 
     def __init__(self, data, columns=None, **kwargs):
@@ -169,13 +172,15 @@ class ScmDataFrameBase(object):
         data: pd.DataFrame, np.ndarray or string
             A pd.DataFrame or data file with IAMC-format data columns, or a numpy array of timeseries data if `columns` is specified.
             If a string is passed, data will be attempted to be read from file.
+
         columns: dict
-            If a value for columns is provided, use this dict to generate the metadata for each timeseries. `columns `is dictionary
-            containing the metadata for the timeseries. For each metadata key, an array of values (one per time series) is expected.
-            Alternatively, an array of length 1 would set the same value for all time series. For example, if you had three
-            timeseries from 'rcp26' for 3 different models 'model', 'model2' and 'model3' the column dict could look like either `col_1` or `col_2`:
+            If None, ScmDataFrameBase will attempt to infer the values from the source.
+            Otherwise, use this dict to write the metadata for each timeseries in data. For each metadata key (e.g. "model", "scenario"), an array of values (one per time series) is expected.
+            Alternatively, providing an array of length 1 applies the same value to all timeseries in data. For example, if you had three
+            timeseries from 'rcp26' for 3 different models 'model', 'model2' and 'model3', the column dict would look like either `col_1` or `col_2`:
 
             .. code:: python
+
                 >>> col_1 = {
                     "scenario": ["rcp26"],
                     "model": ["model1", "model2", "model3"],
@@ -194,11 +199,11 @@ class ScmDataFrameBase(object):
                     ScmDataFrameBase(d, columns=col_1).meta,
                     ScmDataFrameBase(d, columns=col_2).meta
                 )
+
             Metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is required, otherwise a ValueError will be raised.
+
         kwargs:
             Additional parameters passed to `pyam.core.read_files` to read nonstandard files
-
-
         """
         if columns is not None:
             _data = from_ts(data, **columns)
