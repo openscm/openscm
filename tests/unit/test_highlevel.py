@@ -366,6 +366,25 @@ def test_filter_by_regexp(test_scm_df):
     assert obs["scenario"].unique() == "a_scenario"
 
 
+def test_filter_timeseries_different_length():
+    df = ScmDataFrame(
+        pd.DataFrame(np.array([[1.0, 2.0, 3.0], [4.0, 5.0, np.nan]]).T, index=[2000, 2001, 2002]),
+        columns={
+            'model': ['a_iam'],
+            'climate_model': ['a_model'],
+            'scenario': ['a_scenario', 'a_scenario2'],
+            'region': ['World'],
+            'variable': ['Primary Energy'],
+            'unit': ['EJ/y']
+        }
+    )
+
+    npt.assert_array_equal(df.filter(scenario='a_scenario2').timeseries().squeeze(), [4.0, 5.0])
+    npt.assert_array_equal(df.filter(year=2002).timeseries().values, [3.0])
+    pd.testing.assert_index_equal(df.filter(year=2002).timeseries(meta=['scenario']).index, pd.Index(['a_scenario']))
+    assert df.filter(scenario='a_scenario2', year=2002).timeseries().empty
+
+
 def test_timeseries(test_scm_df):
     dct = {
         "model": ["a_model"] * 2,
