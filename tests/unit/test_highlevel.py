@@ -17,6 +17,16 @@ def test_init_df_long_timespan(test_pd_longtime_df):
     pd.testing.assert_frame_equal(
         df.timeseries().reset_index(), test_pd_longtime_df, check_like=True
     )
+    assert (df["year"].unique() == [1000, 3000]).all()
+
+
+def test_init_df_year_converted_to_datetime(test_pd_df):
+    res = ScmDataFrame(test_pd_df)
+    assert (res["year"].unique() == [2005, 2010]).all()
+    assert (
+        res["time"].unique()
+        == [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1)]
+    ).all()
 
 
 def test_init_ts(test_ts, test_pd_df):
@@ -78,18 +88,6 @@ def test_init_datetime(test_pd_df):
     tdf = test_pd_df.copy()
     tmin = datetime.datetime(2005, 6, 17)
     tmax = datetime.datetime(2010, 6, 17)
-    tdf = tdf.rename({2005: tmin, 2010: tmax}, axis="columns")
-
-    df = ScmDataFrame(tdf)
-
-    assert df["time"].max() == tmax
-    assert df["time"].min() == tmin
-
-
-def test_init_datetime_long_timespan(test_pd_df):
-    tdf = test_pd_df.copy()
-    tmin = datetime.datetime(1005, 6, 17)
-    tmax = datetime.datetime(3005, 6, 17)
     tdf = tdf.rename({2005: tmin, 2010: tmax}, axis="columns")
 
     df = ScmDataFrame(tdf)
