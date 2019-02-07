@@ -66,12 +66,19 @@ def test_init_ts_with_index(test_pd_df):
     )
 
 
-def test_init_df_with_float_cols(test_pd_df):
-    _test_scm_df = test_pd_df.rename(columns={2005: 2005.0, 2010: 2010.0})
-    obs = ScmDataFrame(_test_scm_df).timeseries().reset_index()
-    obs = obs[datetime.datetime(2005, 1, 1)]
-    obs.name = test_pd_df[2005].name
-    pd.testing.assert_series_equal(obs, test_pd_df[2005])
+def test_init_with_decimal_years():
+    d = pd.Series([2.0, 1.2, 7.9], index=[1765., 1765.083, 1765.167])
+    cols = {
+        'model': ['a_model'],
+        'scenario': ['a_scenario'],
+        'region': ['World'],
+        'variable': ['Primary Energy'],
+        'unit': ['EJ/y']
+    }
+
+    error_msg = "All time values must be convertible to datetime. The following values are not"
+    with pytest.raises(ValueError, match=error_msg):
+        res = ScmDataFrame(d, columns=cols)
 
 
 def test_init_df_from_timeseries(test_scm_df):
