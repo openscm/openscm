@@ -206,6 +206,8 @@ class ScmDataFrameBase(object):
         """
         if columns is not None:
             (_df, _meta) = from_ts(data, **columns)
+        elif isinstance(data, IamDataFrame):
+            (_df, _meta) = format_data(data.data.copy())
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             (_df, _meta) = format_data(data.copy())
         else:

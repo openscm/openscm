@@ -113,7 +113,7 @@ def test_init_datetime_subclass_long_timespan(test_pd_df):
 
 
 def test_init_iam(test_iam_df, test_pd_df):
-    a = ScmDataFrame(test_iam_df.data)
+    a = ScmDataFrame(test_iam_df)
     b = ScmDataFrame(test_pd_df)
 
     pd.testing.assert_frame_equal(a.meta, b.meta)
