@@ -127,10 +127,10 @@ def test_adapter(request):
     return request.cls.tadapter()
 
 
-def assert_core(
-    expected, time, test_core, name, region, unit, start, period_length
-):
-    pview = test_core.parameters.get_timeseries_view(name, region, unit, start, period_length)
+def assert_core(expected, time, test_core, name, region, unit, start, period_length):
+    pview = test_core.parameters.get_timeseries_view(
+        name, region, unit, start, period_length
+    )
     relevant_idx = (np.abs(pview.get_times() - time)).argmin()
     np.testing.assert_allclose(pview.get(relevant_idx), expected)
 

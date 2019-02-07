@@ -10,7 +10,7 @@ import numpy as np
 import openscm.utils
 from openscm.utils import (
     convert_datetime_to_openscm_time,
-    convert_openscm_time_to_datetime
+    convert_openscm_time_to_datetime,
 )
 
 

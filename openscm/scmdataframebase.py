@@ -291,10 +291,7 @@ class ScmDataFrameBase(object):
         if key is "time":
             return pd.Series(self._data.index, dtype="object")
         elif key is "year":
-            return pd.Series([
-                v.year
-                for v in self._data.index
-            ])
+            return pd.Series([v.year for v in self._data.index])
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
         else:

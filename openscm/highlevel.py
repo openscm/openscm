@@ -11,12 +11,13 @@ import pandas as pd
 
 
 from .core import Core
-from .scmdataframebase import ScmDataFrameBase, DATA_HIERARCHY_SEPARATOR, df_append  # pylint: disable=unused-import
+from .scmdataframebase import (
+    ScmDataFrameBase,
+    DATA_HIERARCHY_SEPARATOR,
+    df_append,
+)  # pylint: disable=unused-import
 from .constants import ONE_YEAR_IN_S_INTEGER
-from .utils import (
-    convert_datetime_to_openscm_time,
-    convert_openscm_time_to_datetime,
-)
+from .utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
 from .parameters import ParameterType
 
 
@@ -45,7 +46,9 @@ class ScmDataFrame(ScmDataFrameBase):
     pass
 
 
-def convert_scmdataframe_to_core(scmdf: ScmDataFrame, climate_model: str = "unspecified") -> Core:
+def convert_scmdataframe_to_core(
+    scmdf: ScmDataFrame, climate_model: str = "unspecified"
+) -> Core:
     # TODO: move to method of scmdataframe
     tsdf = scmdf.timeseries()
 
@@ -75,7 +78,9 @@ def convert_scmdataframe_to_core(scmdf: ScmDataFrame, climate_model: str = "unsp
     ), (
         "have not considered cases other than the RCPs read in by pymagicc yet"
     )  # TODO: remove this restriction
-    tstep = ONE_YEAR_IN_S_INTEGER  # having passed all above, can safely assume this [TODO: remove this assumption]
+    tstep = (
+        ONE_YEAR_IN_S_INTEGER
+    )  # having passed all above, can safely assume this [TODO: remove this assumption]
 
     variable_idx = scmdf.timeseries().index.names.index("variable")
     region_idx = scmdf.timeseries().index.names.index("region")
@@ -116,12 +121,6 @@ def convert_core_to_scmdataframe(
     scenario: str = "unspecified",
     climate_model: str = "unspecified",
 ) -> ScmDataFrame:
-    metadata = {
-        "climate_model": climate_model,
-        "scenario": scenario,
-        "model": model,
-    }
-
     def get_metadata(c, para):
         md = {}
         if para._children:
@@ -139,50 +138,62 @@ def convert_core_to_scmdataframe(
 
         return metadata
 
+    def get_scmdataframe_timeseries_columns(core_in, metadata_in):
+        def get_ts_ch(core_here, para_here, ts_in, time_in, ch_in):
+            if para_here._children:
+                for _, child_para in para_here._children.items():
+                    ts_in, time_in, ch_in = get_ts_ch(
+                        core_here, child_para, ts_in, time_in, ch_in
+                    )
+            if not para_here._info._type == ParameterType.TIMESERIES:
+                return ts_in, time_in, ch_in
+
+            unit = para_here.info.unit
+            tview = core.parameters.get_timeseries_view(
+                para_here.full_name,
+                para_here.info.region,
+                unit,
+                core_here.start_time,
+                period_length,
+            )
+            values = tview.get_series()
+            time = np.array(
+                [convert_openscm_time_to_datetime(int(t)) for t in tview.get_times()]
+            )
+            if time_in is None:
+                time_in = time
+            else:
+                assert (time_in == time).all()
+
+            ts_in.append(values)
+            ch_in["unit"].append(unit)
+            ch_in["variable"].append(DATA_HIERARCHY_SEPARATOR.join(para_here.full_name))
+            ch_in["region"].append(DATA_HIERARCHY_SEPARATOR.join(para_here.info.region))
+
+            return ts_in, time_in, ch_in
+
+        ts = []
+        time_axis = None
+        column_headers = {"variable": [], "region": [], "unit": []}
+        for key, value in core_in.parameters._root._parameters.items():
+            ts, time_axis, column_headers = get_ts_ch(
+                core_in, value, ts, time_axis, column_headers
+            )
+
+        return (
+            pd.DataFrame(np.vstack(ts).T, pd.Index(time_axis)),
+            {**metadata, **column_headers},
+        )
+
+    metadata = {
+        "climate_model": [climate_model],
+        "scenario": [scenario],
+        "model": [model],
+    }
+
     for key, value in core.parameters._root._parameters.items():
         metadata.update(get_metadata(core, value))
 
-    def get_dataframes(c, para, metadata):
-        df = []
-        if para._children:
-            for _, child_para in para._children.items():
-                df += get_dataframes(c, child_para, metadata)
-        if not para._info._type == ParameterType.TIMESERIES:
-            return df
-
-        variable = DATA_HIERARCHY_SEPARATOR.join(para.full_name)
-        region = DATA_HIERARCHY_SEPARATOR.join(para.info.region)
-        unit = para.info.unit
-
-        tview = core.parameters.get_timeseries_view(
-            para.full_name,
-            para.info.region,
-            unit,
-            c.start_time,
-            period_length,
-        )
-        values = tview.get_series()
-        time = [
-            convert_openscm_time_to_datetime(int(t))
-            for t in tview.get_times()
-        ]
-        tdf = {
-            **metadata,
-            "variable": variable,
-            "unit": unit,
-            "region": region,
-            "time": time,
-            "value": values,
-        }
-
-        return [pd.DataFrame(tdf)]
-
-    dataframes = []
-    for key, value in core.parameters._root._parameters.items():
-        dfs = get_dataframes(core, value, metadata)
-        if dfs:
-            dataframes += dfs
-
-    result = ScmDataFrame(pd.concat(dataframes).reset_index(drop=True))
-
-    return result
+    timeseries, columns = get_scmdataframe_timeseries_columns(core, metadata)
+    # convert timeseries to dataframe with time index here
+    return ScmDataFrame(timeseries, columns=columns)

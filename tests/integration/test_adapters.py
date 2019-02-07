@@ -37,9 +37,9 @@ def test_config_paraset():
 
 @pytest.fixture(scope="function")
 def test_drivers_core():
-  core = convert_scmdataframe_to_core(rcps.filter(scenario="RCP26"))
+    core = convert_scmdataframe_to_core(rcps.filter(scenario="RCP26"))
 
-  yield core
+    yield core
 
 
 class _AdapterTester(object):
@@ -69,14 +69,16 @@ class _AdapterTester(object):
         tname = "junk"
         junk_w = test_config_paraset.get_writable_scalar_view(tname, ("World",), "K")
         junk_w.set(4)
-        error_msg = re.escape("{} is not a {} parameter".format(tname, self.tadapter.__name__))
+        error_msg = re.escape(
+            "{} is not a {} parameter".format(tname, self.tadapter.__name__)
+        )
         with pytest.raises(NotAnScmParameterError, match=error_msg):
             test_adapter.set_config(test_config_paraset)
 
     def test_run(self, test_adapter, test_drivers_core):
-      test_adapter.initialize()
-      test_adapter.set_drivers(test_drivers_core)
-      test_adapter.run()
+        test_adapter.initialize()
+        test_adapter.set_drivers(test_drivers_core)
+        test_adapter.run()
 
 
 class TestMAGICCAdapter(_AdapterTester):
@@ -148,6 +150,7 @@ class TestMAGICCAdapter(_AdapterTester):
         res = test_adapter.run()
 
         import pdb
+
         pdb.set_trace()
         test_drivers_core
 

@@ -20,18 +20,12 @@ from conftest import assert_core
 
 
 def test_init_df_long_timespan(test_pd_df):
-    tdf = test_pd_df.rename(
-        {2005: 1000, 2010: 3000},
-        axis="columns",
-    )
+    tdf = test_pd_df.rename({2005: 1000, 2010: 3000}, axis="columns")
     df = ScmDataFrame(tdf)
 
     assert_pd_df = tdf.rename(
-        {
-            1000: datetime.datetime(1000, 1, 1),
-            3000: datetime.datetime(3000, 1, 1)
-        },
-        axis="columns"
+        {1000: datetime.datetime(1000, 1, 1), 3000: datetime.datetime(3000, 1, 1)},
+        axis="columns",
     )
     pd.testing.assert_frame_equal(
         df.timeseries().reset_index(), assert_pd_df, check_like=True
@@ -42,7 +36,10 @@ def test_init_df_long_timespan(test_pd_df):
 def test_init_df_year_converted_to_datetime(test_pd_df):
     res = ScmDataFrame(test_pd_df)
     assert (res["year"].unique() == [2005, 2010]).all()
-    assert (res["time"].unique() == [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1)]).all()
+    assert (
+        res["time"].unique()
+        == [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1)]
+    ).all()
 
 
 def test_convert_scmdataframe_to_core():
@@ -132,12 +129,7 @@ def test_convert_core_to_scmdataframe():
         """thank you https://stackoverflow.com/a/48108115"""
         # worth moving to utils?
         dt_start_year = dtin.replace(
-            month=1,
-            day=1,
-            minute=0,
-            hour=0,
-            second=0,
-            microsecond=0
+            month=1, day=1, minute=0, hour=0, second=0, microsecond=0
         )
         dt_half_year = dtin.replace(month=6, day=17)
         if dtin > dt_half_year:
