@@ -380,8 +380,11 @@ def test_filter_timeseries_different_length():
     )
 
     npt.assert_array_equal(df.filter(scenario='a_scenario2').timeseries().squeeze(), [4.0, 5.0])
-    npt.assert_array_equal(df.filter(year=2002).timeseries().values, [3.0])
-    pd.testing.assert_index_equal(df.filter(year=2002).timeseries(meta=['scenario']).index, pd.Index(['a_scenario']))
+    npt.assert_array_equal(df.filter(year=2002).timeseries().squeeze(), 3.0)
+
+    exp = pd.Series(['a_scenario'], name='scenario')
+    obs = df.filter(year=2002)['scenario']
+    pd.testing.assert_series_equal(exp, obs)
     assert df.filter(scenario='a_scenario2', year=2002).timeseries().empty
 
 
