@@ -1,3 +1,6 @@
+from os.path import join
+
+
 import pymagicc
 
 
@@ -5,6 +8,8 @@ from ..internal import Adapter
 from ..core import Core, ParameterSet
 from ..parameters import ParameterType
 from ..errors import NotAnScmParameterError
+from ..highlevel import convert_core_to_scmdataframe
+from ..utils import round_to_nearest_year
 
 
 # how to do this intelligently and scalably?
@@ -49,8 +54,18 @@ class MAGICC6(Adapter):
         self.magicc.__enter__()
         super().initialize()
 
-    def set_drivers(self, parameters: ParameterSet) -> None:
-        raise NotImplementedError
+    def set_drivers(self, core: Core) -> None:
+        # fix once Jared has Pymagicc working with ScmDataFrame
+        scen = pymagicc.io.MAGICCData(
+            convert_core_to_scmdataframe(core).to_iamdataframe().data
+        )
+        import pdb
+        pdb.set_trace()
+        scen.data.loc[:, "time"] = scen["time"].apply(round_to_nearest_year)
+        scen.write(
+            join(self.magicc.run_dir, self.magicc._scen_file_name),
+            self.magicc.version
+        )
 
     def set_config(self, parameters: ParameterSet) -> None:
         super().set_config(parameters)

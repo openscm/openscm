@@ -5,7 +5,7 @@ model adapter.
 from abc import ABCMeta, abstractmethod
 
 
-from .core import ParameterSet
+from .core import Core, ParameterSet
 from .errors import ModelNotInitialisedError
 
 
@@ -31,7 +31,7 @@ class Adapter(metaclass=ABCMeta):
         self.initialized = True
 
     @abstractmethod
-    def set_drivers(self, parameters: ParameterSet) -> None:
+    def set_drivers(self, core: Core) -> None:
         """
         Set the drivers (emissions, concentrations etc.) for the model to run.
         """

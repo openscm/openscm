@@ -13,7 +13,10 @@ from openscm.highlevel import (
 )
 from openscm.scenarios import rcps
 from openscm.constants import ONE_YEAR_IN_S_INTEGER
-from openscm.utils import convert_datetime_to_openscm_time
+from openscm.utils import (
+    convert_datetime_to_openscm_time,
+    round_to_nearest_year
+)
 
 
 from conftest import assert_core
@@ -124,18 +127,6 @@ def test_convert_core_to_scmdataframe():
         scenario="RCP26",
         climate_model="unspecified",
     )
-
-    def round_to_nearest_year(dtin):
-        """thank you https://stackoverflow.com/a/48108115"""
-        # worth moving to utils?
-        dt_start_year = dtin.replace(
-            month=1, day=1, minute=0, hour=0, second=0, microsecond=0
-        )
-        dt_half_year = dtin.replace(month=6, day=17)
-        if dtin > dt_half_year:
-            return dt_start_year + relativedelta.relativedelta(years=1)
-        else:
-            return dt_start_year
 
     # necessary as moving from even timesteps in seconds does not match perfectly with
     # yearly timesteps (which are not always the same number of seconds apart due to
