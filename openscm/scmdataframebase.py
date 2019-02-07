@@ -288,12 +288,20 @@ class ScmDataFrameBase(object):
             )
             raise ValueError(error_msg)
 
-    def timeseries(self):
+    def timeseries(self, meta=None):
         d = self._data.copy()
+        meta_subset = self._meta if meta is None else self._meta[meta]
+        if meta_subset.duplicated().any():
+            raise ValueError('Duplicated meta values')
+
         d.columns = pd.MultiIndex.from_arrays(
-            self._meta.values.T, names=self._meta.columns
+            meta_subset.values.T, names=meta_subset.columns
         )
         return d.T
+
+    @property
+    def values(self):
+        return self.timeseries().values
 
     @property
     def meta(self):

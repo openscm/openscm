@@ -443,6 +443,16 @@ def test_timeseries(test_scm_df):
     npt.assert_array_equal(obs, exp)
 
 
+def test_timeseries_meta(test_scm_df):
+    obs = test_scm_df.filter(variable='Primary Energy').timeseries(meta=['scenario', 'model'])
+    npt.assert_array_equal(obs.index.names, ['scenario', 'model'])
+
+gl
+
+def test_timeseries_duplicated(test_scm_df):
+    pytest.raises(ValueError, test_scm_df.timeseries, meta=['scenario'])
+
+
 @pytest.mark.skip
 def test_require_variable(test_scm_df):
     obs = test_scm_df.require_variable(
