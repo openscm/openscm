@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- (`#100 <https://github.com/openclimatedata/openscm/pull/100>`_) Allow ScmDataFrame to handle data which do not cover the same time span
 - (`#99 <https://github.com/openclimatedata/openscm/pull/99>`_) Force ScmDataFrame time to always be a list of datetimes, prevent Pandas coercing to Pandas datetime
 - (`#98 <https://github.com/openclimatedata/openscm/pull/98>`_) Allow subsetting the metadata to be included in ``ScmDataFrame.timeseries``
 - (`#94 <https://github.com/openclimatedata/openscm/pull/94>`_) Refactor ScmDataFrame to be faster and more specific to SCM data
