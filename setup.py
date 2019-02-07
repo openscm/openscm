@@ -48,6 +48,12 @@ requirements_extras = {
     "dev": requirements_dev,
 }
 
+# for pip install . we need this on top of MANIFEST.IN,
+# see https://stackoverflow.com/a/3597263
+PACKAGE_DATA = {
+    "": [".csv"]
+}
+
 # Get the long description from the README file
 with open(README, "r", encoding="utf-8") as f:
     README_TEXT = f.read()
@@ -94,6 +100,8 @@ setup(
     packages=find_packages(exclude=["tests"]),
     install_requires=REQUIREMENTS,
     extras_require=requirements_extras,
+    package_data=PACKAGE_DATA,
+    include_package_data=True,
     cmdclass=cmdclass,
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
