@@ -17,7 +17,7 @@ def test_init_df_long_timespan(test_pd_longtime_df):
     pd.testing.assert_frame_equal(
         df.timeseries().reset_index(), test_pd_longtime_df, check_like=True
     )
-    assert (df["year"].unique() == [1000, 3000]).all()
+    assert (df["year"].unique() == [1005, 3010]).all()
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
@@ -28,6 +28,9 @@ def test_init_df_year_converted_to_datetime(test_pd_df):
         == [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1)]
     ).all()
 
+
+def get_test_pd_df_with_datetime_columns(tpdf):
+    return tpdf.rename({2005: datetime.datetime(2005, 1, 1), 2010: datetime.datetime(2010, 1, 1)}, axis="columns")
 
 def test_init_ts(test_ts, test_pd_df):
     df = ScmDataFrame(
@@ -43,8 +46,9 @@ def test_init_ts(test_ts, test_pd_df):
         },
     )
 
+    tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
     pd.testing.assert_frame_equal(
-        df.timeseries().reset_index(), test_pd_df, check_like=True
+        df.timeseries().reset_index(), tdf, check_like=True
     )
 
     b = ScmDataFrame(test_pd_df)
@@ -55,20 +59,23 @@ def test_init_ts(test_ts, test_pd_df):
 
 def test_init_ts_with_index(test_pd_df):
     df = ScmDataFrame(test_pd_df)
+    tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
     pd.testing.assert_frame_equal(
-        df.timeseries().reset_index(), test_pd_df, check_like=True
+        df.timeseries().reset_index(), tdf, check_like=True
     )
 
 
 def test_init_df_with_float_cols(test_pd_df):
     _test_scm_df = test_pd_df.rename(columns={2005: 2005.0, 2010: 2010.0})
     obs = ScmDataFrame(_test_scm_df).timeseries().reset_index()
-    pd.testing.assert_series_equal(obs[2005], test_pd_df[2005])
+    obs = obs[datetime.datetime(2005, 1, 1)]
+    obs.name = test_pd_df[2005].name
+    pd.testing.assert_series_equal(obs, test_pd_df[2005])
 
 
 def test_init_df_from_timeseries(test_scm_df):
     df = ScmDataFrame(test_scm_df.timeseries())
-    pd.testing.assert_frame_equal(df.timeseries(), test_scm_df.timeseries())
+    pd.testing.assert_frame_equal(df.timeseries(), test_scm_df.timeseries(), check_like=True)
 
 
 def test_init_df_with_extra_col(test_pd_df):
@@ -80,20 +87,9 @@ def test_init_df_with_extra_col(test_pd_df):
 
     df = ScmDataFrame(tdf)
 
+    tdf = get_test_pd_df_with_datetime_columns(tdf)
     assert extra_col in df.meta
     pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
-
-
-def test_init_datetime(test_pd_df):
-    tdf = test_pd_df.copy()
-    tmin = datetime.datetime(2005, 6, 17)
-    tmax = datetime.datetime(2010, 6, 17)
-    tdf = tdf.rename({2005: tmin, 2010: tmax}, axis="columns")
-
-    df = ScmDataFrame(tdf)
-
-    assert df["time"].max() == tmax
-    assert df["time"].min() == tmin
 
 
 def test_init_datetime_subclass_long_timespan(test_pd_df):
@@ -130,7 +126,11 @@ def test_as_iam(test_iam_df, test_pd_df):
     assert isinstance(df, IamDataFrame)
 
     pd.testing.assert_frame_equal(test_iam_df.meta, df.meta)
-    pd.testing.assert_frame_equal(test_iam_df.data, df.data)
+    # we don't provide year column, fine as pyam are considering dropping year too
+    tdf = df.data.copy()
+    tdf["year"] = tdf["time"].apply(lambda x: x.year)
+    tdf.drop("time", axis="columns", inplace=True)
+    pd.testing.assert_frame_equal(test_iam_df.data, tdf, check_like=True)
 
 
 def test_get_item(test_scm_df):
@@ -187,220 +187,142 @@ def test_filter_error(test_scm_df):
     pytest.raises(ValueError, test_scm_df.filter, foo="foo")
 
 
-def test_filter_year(test_scm_df):
-    obs = test_scm_df.filter(year=2005)
-    if test_scm_df.is_annual_timeseries:
-        npt.assert_equal(obs["year"].unique(), 2005)
-    else:
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+def test_filter_year(test_scm_datetime_df):
+    obs = test_scm_datetime_df.filter(year=2005)
+    expected = datetime.datetime(2005, 6, 17, 12)
+
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
 @pytest.mark.parametrize("test_month", [6, "June", "Jun", "jun", ["Jun", "jun"]])
-def test_filter_month(test_scm_df, test_month):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `month` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(month=test_month)
-    else:
-        obs = test_scm_df.filter(month=test_month)
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+def test_filter_month(test_scm_datetime_df, test_month):
+    obs = test_scm_datetime_df.filter(month=test_month)
+    expected = datetime.datetime(2005, 6, 17, 12)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
 @pytest.mark.parametrize("test_month", [6, "Jun", "jun", ["Jun", "jun"]])
-def test_filter_year_month(test_scm_df, test_month):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `month` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(year=2005, month=test_month)
-    else:
-        obs = test_scm_df.filter(year=2005, month=test_month)
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+def test_filter_year_month(test_scm_datetime_df, test_month):
+    obs = test_scm_datetime_df.filter(year=2005, month=test_month)
+    expected = datetime.datetime(2005, 6, 17, 12)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
 @pytest.mark.parametrize("test_day", [17, "Fri", "Friday", "friday", ["Fri", "fri"]])
-def test_filter_day(test_scm_df, test_day):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `day` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(day=test_day)
-    else:
-        obs = test_scm_df.filter(day=test_day)
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+def test_filter_day(test_scm_datetime_df, test_day):
+    obs = test_scm_datetime_df.filter(day=test_day)
+    expected = datetime.datetime(2005, 6, 17, 12)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
 @pytest.mark.parametrize("test_hour", [0, 12, [12, 13]])
-def test_filter_hour(test_scm_df, test_hour):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `hour` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(hour=test_hour)
-    else:
-        obs = test_scm_df.filter(hour=test_hour)
-        test_hour = [test_hour] if isinstance(test_hour, int) else test_hour
-        expected_rows = test_scm_df.data["time"].apply(lambda x: x.hour).isin(test_hour)
-        expected = test_scm_df.data["time"].loc[expected_rows].unique()
+def test_filter_hour(test_scm_datetime_df, test_hour):
+    obs = test_scm_datetime_df.filter(hour=test_hour)
+    test_hour = [test_hour] if isinstance(test_hour, int) else test_hour
+    expected_rows = test_scm_datetime_df["time"].apply(lambda x: x.hour).isin(test_hour)
+    expected = test_scm_datetime_df["time"].loc[expected_rows].unique()
 
-        unique_time = obs["time"].unique()
-        npt.assert_array_equal(unique_time, expected)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected[0]
 
 
-def test_filter_time_exact_match(test_scm_df):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("`year` can only be filtered with ints or lists of ints")
-        with pytest.raises(TypeError, match=error_msg):
-            test_scm_df.filter(year=datetime.datetime(2005, 6, 17))
-    else:
-        obs = test_scm_df.filter(time=datetime.datetime(2005, 6, 17))
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+def test_filter_time_exact_match(test_scm_datetime_df):
+    obs = test_scm_datetime_df.filter(time=datetime.datetime(2005, 6, 17, 12))
+    expected = datetime.datetime(2005, 6, 17, 12)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
-def test_filter_time_range(test_scm_df):
+def test_filter_time_range(test_scm_datetime_df):
     error_msg = r".*datetime.datetime.*"
     with pytest.raises(TypeError, match=error_msg):
-        test_scm_df.filter(
+        test_scm_datetime_df.filter(
             year=range(datetime.datetime(2000, 6, 17), datetime.datetime(2009, 6, 17))
         )
 
 
-def test_filter_time_range_year(test_scm_df):
-    obs = test_scm_df.filter(year=range(2000, 2008))
+def test_filter_time_range_year(test_scm_datetime_df):
+    obs = test_scm_datetime_df.filter(year=range(2000, 2008))
 
-    if test_scm_df.is_annual_timeseries:
-        unique_time = obs["year"].unique()
-        expected = np.array([2005])
-    else:
-        unique_time = obs["time"].unique()
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
+    unique_time = obs["time"].unique()
+    expected = datetime.datetime(2005, 6, 17, 12)
 
     assert len(unique_time) == 1
     assert unique_time[0] == expected
 
 
-@pytest.mark.parametrize("month_range", [range(1, 7), "Mar-Jun"])
-def test_filter_time_range_month(test_scm_df, month_range):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `month` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(month=month_range)
-    else:
-        obs = test_scm_df.filter(month=month_range)
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
+@pytest.mark.parametrize("month_range", [range(3, 7), "Mar-Jun"])
+def test_filter_time_range_month(test_scm_datetime_df, month_range):
+    obs = test_scm_datetime_df.filter(month=month_range)
+    expected = datetime.datetime(2005, 6, 17, 12)
 
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
 @pytest.mark.parametrize("month_range", [["Mar-Jun", "Nov-Feb"]])
-def test_filter_time_range_round_the_clock_error(test_scm_df, month_range):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `month` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            test_scm_df.filter(month=month_range)
-    else:
-        error_msg = re.escape(
-            "string ranges must lead to increasing integer ranges, "
-            "Nov-Feb becomes [11, 2]"
-        )
-        with pytest.raises(ValueError, match=error_msg):
-            test_scm_df.filter(month=month_range)
+def test_filter_time_range_round_the_clock_error(test_scm_datetime_df, month_range):
+    error_msg = re.escape(
+        "string ranges must lead to increasing integer ranges, "
+        "Nov-Feb becomes [11, 2]"
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        test_scm_datetime_df.filter(month=month_range)
 
 
 @pytest.mark.parametrize("day_range", [range(14, 20), "Thu-Sat"])
-def test_filter_time_range_day(test_scm_df, day_range):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `day` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(day=day_range)
-    else:
-        obs = test_scm_df.filter(day=day_range)
-        expected = np.array(
-            pd.to_datetime("2005-06-17T00:00:00.0"), dtype=np.datetime64
-        )
-        unique_time = obs["time"].unique()
-        assert len(unique_time) == 1
-        assert unique_time[0] == expected
+def test_filter_time_range_day(test_scm_datetime_df, day_range):
+    obs = test_scm_datetime_df.filter(day=day_range)
+    expected = datetime.datetime(2005, 6, 17, 12)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
 
 
 @pytest.mark.parametrize("hour_range", [range(10, 14)])
-def test_filter_time_range_hour(test_scm_df, hour_range):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("filter by `hour` not supported")
-        with pytest.raises(ValueError, match=error_msg):
-            obs = test_scm_df.filter(hour=hour_range)
-    else:
-        obs = test_scm_df.filter(hour=hour_range)
+def test_filter_time_range_hour(test_scm_datetime_df, hour_range):
+    obs = test_scm_datetime_df.filter(hour=hour_range)
 
-        expected_rows = (
-            test_scm_df.data["time"].apply(lambda x: x.hour).isin(hour_range)
-        )
-        expected = test_scm_df.data["time"].loc[expected_rows].unique()
+    expected_rows = (
+        test_scm_datetime_df["time"].apply(lambda x: x.hour).isin(hour_range)
+    )
+    expected = test_scm_datetime_df["time"].loc[expected_rows].unique()
 
-        unique_time = obs["time"].unique()
-        npt.assert_array_equal(unique_time, expected)
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected[0]
 
 
-def test_filter_time_no_match(test_scm_df):
-    if test_scm_df.is_annual_timeseries:
-        error_msg = re.escape("`year` can only be filtered with ints or lists of ints")
-        with pytest.raises(TypeError, match=error_msg):
-            test_scm_df.filter(year=datetime.datetime(2004, 6, 18))
-    else:
-        obs = test_scm_df.filter(time=datetime.datetime(2004, 6, 18))
-        assert obs.data.empty
+def test_filter_time_no_match(test_scm_datetime_df):
+    obs = test_scm_datetime_df.filter(time=datetime.datetime(2004, 6, 18))
+    assert obs._data.empty
 
 
-def test_filter_time_not_datetime_error(test_scm_df):
-    if test_scm_df.is_annual_timeseries:
-        with pytest.raises(ValueError, match="filter by `time` not supported"):
-            test_scm_df.filter(time=datetime.datetime(2004, 6, 18))
-    else:
-        error_msg = re.escape(
-            "`time` can only be filtered with datetimes or lists of datetimes"
-        )
-        with pytest.raises(TypeError, match=error_msg):
-            test_scm_df.filter(time=2005)
+def test_filter_time_not_datetime_error(test_scm_datetime_df):
+    error_msg = re.escape(
+        "`time` can only be filtered with datetimes or lists of datetimes"
+    )
+    with pytest.raises(TypeError, match=error_msg):
+        test_scm_datetime_df.filter(time=2005)
 
 
-def test_filter_time_not_datetime_range_error(test_scm_df):
-    if test_scm_df.is_annual_timeseries:
-        with pytest.raises(ValueError, match="filter by `time` not supported"):
-            test_scm_df.filter(time=range(2000, 2008))
-    else:
-        error_msg = re.escape(
-            "`time` can only be filtered with datetimes or lists of datetimes"
-        )
-        with pytest.raises(TypeError, match=error_msg):
-            test_scm_df.filter(time=range(2000, 2008))
+def test_filter_time_not_datetime_range_error(test_scm_datetime_df):
+    error_msg = re.escape(
+        "`time` can only be filtered with datetimes or lists of datetimes"
+    )
+    with pytest.raises(TypeError, match=error_msg):
+        test_scm_datetime_df.filter(time=range(2000, 2008))
 
 
 def test_filter_as_kwarg(test_scm_df):

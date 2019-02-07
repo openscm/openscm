@@ -70,6 +70,20 @@ def test_pd_df():
 
 
 @pytest.fixture(scope="function")
+def test_scm_datetime_df():
+    tdf = TEST_DF.copy()
+    tdf.rename(
+        {
+            2005: datetime(2005, 6, 17, 12),
+            2010: datetime(2010, 1,  3,  0),
+        },
+        axis="columns", inplace=True
+    )
+
+    yield ScmDataFrame(tdf)
+
+
+@pytest.fixture(scope="function")
 def test_pd_longtime_df():
     yield TEST_DF_LONG_TIMES
 

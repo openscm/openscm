@@ -205,13 +205,15 @@ class ScmDataFrameBase(object):
             Additional parameters passed to `pyam.core.read_files` to read nonstandard files
         """
         if columns is not None:
-            _data = from_ts(data, **columns)
+            (_df, _meta) = from_ts(data, **columns)
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
-            _data = format_data(data.copy())
+            (_df, _meta) = format_data(data.copy())
         else:
-            _data = read_files(data, **kwargs)
-        self.is_annual_timeseries = False
-        self._data, self._meta = _data
+            (_df, _meta) = read_files(data, **kwargs)
+        # force index to be object to avoid unexpected loss of behaviour when
+        # pandas can't convert to DateTimeIndex
+        _df.index = _df.index.astype("object")
+        self._data, self._meta = (_df, _meta)
         self._sort_meta_cols()
         self._format_datetime_col()
 
@@ -244,13 +246,9 @@ class ScmDataFrameBase(object):
     def __getitem__(self, key):
         _key_check = [key] if isstr(key) else key
         if key is "time":
-            return pd.Series(self._data.index)
+            return pd.Series(self._data.index, dtype="object")
         elif key is "year":
-            return (
-                pd.Series(self._data.index)
-                if self.is_annual_timeseries
-                else pd.Series(self._data.index.year)
-            )
+            return pd.Series([v.year for v in self._data.index])
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
         else:
@@ -260,7 +258,7 @@ class ScmDataFrameBase(object):
         _key_check = [key] if isstr(key) else key
 
         if key is "time":
-            self._data.index = value
+            self._data.index = pd.Index(value, dtype="object")
             return value
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__setitem__(key, value)
@@ -270,10 +268,8 @@ class ScmDataFrameBase(object):
 
         if isinstance(time_srs.iloc[0], datetime):
             pass
-        elif time_srs.dtype <= np.int:
-            self.is_annual_timeseries = True
-            self["time"] = to_int(time_srs)
-            return
+        elif isinstance(time_srs.iloc[0], int):
+            self["time"] = [datetime(y, 1, 1) for y in to_int(time_srs)]
         elif isinstance(self._data.index[0], str):
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
@@ -312,6 +308,7 @@ class ScmDataFrameBase(object):
         d.columns = pd.MultiIndex.from_arrays(
             meta_subset.values.T, names=meta_subset.columns
         )
+
         return d.T
 
     @property
@@ -385,23 +382,16 @@ class ScmDataFrameBase(object):
             elif col in self.meta.columns:
                 keep_col &= pattern_match(self.meta[col], values, regexp=regexp).values
             elif col == "year":
-                if not self.is_annual_timeseries:
-                    keep_ts &= years_match(
-                        pd.Series(self._data.index).apply(lambda x: x.year), values
-                    )
-                else:
-                    keep_ts &= years_match(self._data.index, values)
+                keep_ts &= years_match(
+                    self._data.index.to_series().apply(lambda x: x.year), values
+                )
 
             elif col == "month":
-                if self.is_annual_timeseries:
-                    _raise_filter_error(col)
                 keep_ts &= month_match(
-                    pd.Series(self._data.index).apply(lambda x: x.month), values
+                    self._data.index.to_series().apply(lambda x: x.month), values
                 )
 
             elif col == "day":
-                if self.is_annual_timeseries:
-                    _raise_filter_error(col)
                 if isinstance(values, str):
                     wday = True
                 elif isinstance(values, list) and isinstance(values[0], str):
@@ -410,20 +400,16 @@ class ScmDataFrameBase(object):
                     wday = False
 
                 if wday:
-                    days = pd.Series(self._data.index).apply(lambda x: x.weekday())
+                    days = self._data.index.to_series().apply(lambda x: x.weekday())
                 else:  # ints or list of ints
-                    days = pd.Series(self._data.index).apply(lambda x: x.day)
+                    days = self._data.index.to_series().apply(lambda x: x.day)
 
                 keep_ts &= day_match(days, values)
 
             elif col == "hour":
-                if self.is_annual_timeseries:
-                    _raise_filter_error(col)
-                keep_ts &= hour_match(pd.Series(self._data.index).apply(lambda x: x.hour), values)
+                keep_ts &= hour_match(self._data.index.to_series().apply(lambda x: x.hour), values)
 
             elif col == "time":
-                if self.is_annual_timeseries:
-                    _raise_filter_error(col)
                 keep_ts &= datetime_match(self._data.index, values)
 
             elif col == "level":
