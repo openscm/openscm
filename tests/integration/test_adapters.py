@@ -144,7 +144,8 @@ class TestMAGICCAdapter(_AdapterTester):
     def test_run(self, test_adapter, test_drivers_core):
         test_adapter.initialize()
         test_adapter.set_drivers(test_drivers_core)
-        results = test_adapter.run()
+        test_adapter.set_config(test_config_paraset)
+        res = test_adapter.run()
 
         import pdb
         pdb.set_trace()
@@ -166,6 +167,9 @@ class TestMAGICCAdapter(_AdapterTester):
             tperiod_length,
         )
         assert False
+        # assert on emissions output
+        # assert on temperature output
+        # assert on parameter output
 
 
 class TestHectorAdapter(_AdapterTester):

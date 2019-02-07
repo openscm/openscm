@@ -35,7 +35,12 @@ class Adapter(metaclass=ABCMeta):
         """
         Set the drivers (emissions, concentrations etc.) for the model to run.
         """
-        pass
+        # This, similar to set_config, should have all the timeseries pushed onto it.
+        # The adapter can then complain/log a warning if the model can't use a given
+        # timeseries and should also keep track of which gases have been used and log
+        # any assumptions the model makes for missing gases.
+        if not self.initialized:
+            raise ModelNotInitialisedError
 
     @abstractmethod
     def set_config(self, parameters: ParameterSet) -> None:
