@@ -133,7 +133,6 @@ def from_ts(df, index=None, **columns):
         columns[c_name] = col * num_ts
 
     meta = pd.DataFrame(columns, index=df.columns)
-    meta = meta[IAMC_IDX + list(set(meta.columns) - set(IAMC_IDX))]
     return df, meta
 
 
@@ -213,7 +212,15 @@ class ScmDataFrameBase(object):
             _data = read_files(data, **kwargs)
         self.is_annual_timeseries = False
         self._data, self._meta = _data
+        self._sort_meta_cols()
         self._format_datetime_col()
+
+    def _sort_meta_cols(self):
+        # First columns are from IAMC_IDX and the remainder of the columns are alphabetically sorted
+        self._meta = self._meta[IAMC_IDX + sorted(list(set(self._meta.columns) - set(IAMC_IDX)))]
+
+    def __len__(self):
+        return len(self._meta)
 
     def to_iamdataframe(self):
         """Convert to  IamDataFrame instance
@@ -268,7 +275,6 @@ class ScmDataFrameBase(object):
             self["time"] = to_int(time_srs)
             return
         elif isinstance(self._data.index[0], str):
-
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
 
@@ -497,6 +503,7 @@ class ScmDataFrameBase(object):
                 .reset_index()
                 .set_index("index")
         )
+        self._sort_meta_cols()
 
 
 class LongIamDataFrame(IamDataFrame):
