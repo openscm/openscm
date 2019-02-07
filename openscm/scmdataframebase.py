@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import getLogger
 
 import dateutil
@@ -71,27 +71,23 @@ def format_data(df):
     else:
         # if in wide format, check if columns are years (int) or datetime
         cols = set(df.columns) - set(IAMC_IDX)
-        year_cols, time_cols, extra_cols = [], [], []
+        time_cols, extra_cols = [], []
         for i in cols:
-            try:
-                int(i)  # this is a year
-                year_cols.append(i)
-            except (ValueError, TypeError):
+            if isinstance(i, (int, float)):
+                # a time
+                time_cols.append(i)
+            else:
                 try:
                     d = dateutil.parser.parse(str(i))  # this is datetime
                     time_cols.append(d)
                 except ValueError:
                     extra_cols.append(i)  # some other string
-        if year_cols and time_cols:
-            msg = "invalid column format, must be either years or `datetime`!"
+        if not time_cols:
+            msg = "invalid column format, must contain some time (int, float or datetime) columns!"
             raise ValueError(msg)
 
         df = df[list(cols - set(extra_cols))].T
-        if len(year_cols):
-            df.index = to_int(df.index.astype(int))
-            df.index.name = "year"
-        else:
-            df.index.name = "time"
+        df.index.name = "time"
         meta = orig[IAMC_IDX + extra_cols].set_index(df.columns)
 
     # cast value columns to numeric, drop NaN's, sort data
@@ -112,11 +108,7 @@ def from_ts(df, index=None, **columns):
         missing = list(set(IAMC_IDX) - set(columns.keys()))
         raise ValueError("missing required columns `{}`!".format(missing))
 
-    if df.index.dtype in [int, float]:
-        df.index.name = "year"
-        df.index = to_int(df.index).astype(int)
-    else:
-        df.index.name = "time"
+    df.index.name = "time"
 
     num_ts = len(df.columns)
     for c_name in columns:
@@ -261,7 +253,7 @@ class ScmDataFrameBase(object):
         _key_check = [key] if isstr(key) else key
 
         if key is "time":
-            self._data.index = pd.Index(value, dtype="object")
+            self._data.index = pd.Index(value, dtype="object", name="time")
             return value
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__setitem__(key, value)
@@ -273,6 +265,17 @@ class ScmDataFrameBase(object):
             pass
         elif isinstance(time_srs.iloc[0], int):
             self["time"] = [datetime(y, 1, 1) for y in to_int(time_srs)]
+        elif isinstance(time_srs.iloc[0], float):
+            def convert_float_to_datetime(inp):
+                year = int(inp)
+                fractional_part = inp - year
+                base = datetime(year, 1, 1)
+                return base + timedelta(
+                    seconds=(base.replace(year=year+1) - base).total_seconds() * fractional_part
+                )
+
+            self["time"] = [convert_float_to_datetime(t) for t in time_srs] 
+
         elif isinstance(self._data.index[0], str):
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)

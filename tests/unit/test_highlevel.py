@@ -67,7 +67,8 @@ def test_init_ts_with_index(test_pd_df):
 
 
 def test_init_with_decimal_years():
-    d = pd.Series([2.0, 1.2, 7.9], index=[1765., 1765.083, 1765.167])
+    inp_array = [2.0, 1.2, 7.9]
+    d = pd.Series(inp_array, index=[1765., 1765.083, 1765.167])
     cols = {
         'model': ['a_model'],
         'scenario': ['a_scenario'],
@@ -76,10 +77,16 @@ def test_init_with_decimal_years():
         'unit': ['EJ/y']
     }
 
-    error_msg = "All time values must be convertible to datetime. The following values are not"
-    with pytest.raises(ValueError, match=error_msg):
-        res = ScmDataFrame(d, columns=cols)
-
+    res = ScmDataFrame(d, columns=cols)
+    assert (
+        res["time"].unique()
+        == [
+            datetime.datetime(1765, 1, 1, 0, 0), 
+            datetime.datetime(1765, 1, 31, 7, 4, 48, 3), 
+            datetime.datetime(1765, 3, 2, 22, 55, 11, 999997),
+        ]
+    ).all()
+    npt.assert_array_equal(res._data.loc[:, 0].values, inp_array)
 
 def test_init_df_from_timeseries(test_scm_df):
     df = ScmDataFrame(test_scm_df.timeseries())
