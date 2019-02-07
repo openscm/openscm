@@ -219,12 +219,20 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     parameterset = core.parameters
 
     fossil_industry_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2", "Fossil", "Industry"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Fossil", "Industry"),
+        ("World"),
+        "GtC/yr",
+        start_time,
+        24 * 3600,
     )
     fossil_industry_writable.set_series(fossil_industry_emms)
 
     fossil_energy_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2", "Fossil", "Energy"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Fossil", "Energy"),
+        ("World"),
+        "GtC/yr",
+        start_time,
+        24 * 3600,
     )
     fossil_energy_writable.set_series(fossil_energy_emms)
 
@@ -234,19 +242,29 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     land_writable.set_series(land_emms)
 
     fossil_industry = parameterset.get_timeseries_view(
-        ("Emissions", "CO2", "Fossil", "Industry"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Fossil", "Industry"),
+        ("World"),
+        "GtC/yr",
+        start_time,
+        24 * 3600,
     )
     np.testing.assert_allclose(fossil_industry.get_series(), fossil_industry_emms)
 
     fossil_energy = parameterset.get_timeseries_view(
-        ("Emissions", "CO2", "Fossil", "Energy"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Fossil", "Energy"),
+        ("World"),
+        "GtC/yr",
+        start_time,
+        24 * 3600,
     )
     np.testing.assert_allclose(fossil_energy.get_series(), fossil_energy_emms)
 
     fossil = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil"), ("World"), "GtC/yr", start_time, 24 * 3600
     )
-    np.testing.assert_allclose(fossil.get_series(), fossil_industry_emms + fossil_energy_emms)
+    np.testing.assert_allclose(
+        fossil.get_series(), fossil_industry_emms + fossil_energy_emms
+    )
 
     land = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
@@ -261,4 +279,6 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     total = parameterset.get_timeseries_view(
         ("Emissions", "CO2"), ("World"), "GtC/yr", start_time, 24 * 3600
     )
-    np.testing.assert_allclose(total.get_series(), land_emms + fossil_energy_emms + fossil_industry_emms)
+    np.testing.assert_allclose(
+        total.get_series(), land_emms + fossil_energy_emms + fossil_industry_emms
+    )

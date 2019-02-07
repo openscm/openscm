@@ -27,9 +27,11 @@ def read_files(fnames, *args, **kwargs):
     or a table with year/value columns
     """
     if not isstr(fnames):
-        raise ValueError('reading multiple files not supported, '
-                         'please use `openscm.ScmDataFrame.append()`')
-    logger.info('Reading `{}`'.format(fnames))
+        raise ValueError(
+            "reading multiple files not supported, "
+            "please use `openscm.ScmDataFrame.append()`"
+        )
+    logger.info("Reading `{}`".format(fnames))
     return format_data(read_pandas(fnames, *args, **kwargs))
 
 
@@ -129,7 +131,9 @@ def from_ts(df, index=None, **columns):
 
 
 def df_append(dfs, inplace=False):
-    dfs = [df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs]
+    dfs = [
+        df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
+    ]
     ret = copy.deepcopy(dfs[0]) if not inplace else dfs[0]
 
     meta = pd.concat([d._meta for d in dfs], ignore_index=True, sort=False)
@@ -214,7 +218,9 @@ class ScmDataFrameBase(object):
 
     def _sort_meta_cols(self):
         # First columns are from IAMC_IDX and the remainder of the columns are alphabetically sorted
-        self._meta = self._meta[IAMC_IDX + sorted(list(set(self._meta.columns) - set(IAMC_IDX)))]
+        self._meta = self._meta[
+            IAMC_IDX + sorted(list(set(self._meta.columns) - set(IAMC_IDX)))
+        ]
 
     def __len__(self):
         return len(self._meta)
@@ -266,17 +272,20 @@ class ScmDataFrameBase(object):
         elif isinstance(time_srs.iloc[0], int):
             self["time"] = [datetime(y, 1, 1) for y in to_int(time_srs)]
         elif isinstance(time_srs.iloc[0], float):
+
             def convert_float_to_datetime(inp):
                 year = int(inp)
                 fractional_part = inp - year
                 base = datetime(year, 1, 1)
                 return base + timedelta(
-                    seconds=(base.replace(year=year+1) - base).total_seconds() * fractional_part
+                    seconds=(base.replace(year=year + 1) - base).total_seconds()
+                    * fractional_part
                 )
 
-            self["time"] = [convert_float_to_datetime(t) for t in time_srs] 
+            self["time"] = [convert_float_to_datetime(t) for t in time_srs]
 
         elif isinstance(self._data.index[0], str):
+
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
 
@@ -309,7 +318,7 @@ class ScmDataFrameBase(object):
         d = self._data.copy()
         meta_subset = self._meta if meta is None else self._meta[meta]
         if meta_subset.duplicated().any():
-            raise ValueError('Duplicated meta values')
+            raise ValueError("Duplicated meta values")
 
         d.columns = pd.MultiIndex.from_arrays(
             meta_subset.values.T, names=meta_subset.columns
@@ -413,7 +422,9 @@ class ScmDataFrameBase(object):
                 keep_ts &= day_match(days, values)
 
             elif col == "hour":
-                keep_ts &= hour_match(self._data.index.to_series().apply(lambda x: x.hour), values)
+                keep_ts &= hour_match(
+                    self._data.index.to_series().apply(lambda x: x.hour), values
+                )
 
             elif col == "time":
                 keep_ts &= datetime_match(self._data.index, values)
@@ -515,8 +526,8 @@ class ScmDataFrameBase(object):
             df = df.set_index(index.names)
         self._meta = (
             pd.merge(df, meta, left_index=True, right_index=True, how="outer")
-                .reset_index()
-                .set_index("index")
+            .reset_index()
+            .set_index("index")
         )
         self._sort_meta_cols()
 
@@ -528,6 +539,7 @@ class LongIamDataFrame(IamDataFrame):
 
     def _format_datetime_col(self):
         if isinstance(self.data["time"].iloc[0], str):
+
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
 

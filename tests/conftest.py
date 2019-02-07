@@ -73,11 +73,9 @@ def test_pd_df():
 def test_scm_datetime_df():
     tdf = TEST_DF.copy()
     tdf.rename(
-        {
-            2005: datetime(2005, 6, 17, 12),
-            2010: datetime(2010, 1,  3,  0),
-        },
-        axis="columns", inplace=True
+        {2005: datetime(2005, 6, 17, 12), 2010: datetime(2010, 1, 3, 0)},
+        axis="columns",
+        inplace=True,
     )
 
     yield ScmDataFrame(tdf)
@@ -104,15 +102,18 @@ def test_iam_df():
         {"data": TEST_DF},
         {"data": IamDataFrame(TEST_DF).data},
         {"data": IamDataFrame(TEST_DF).timeseries()},
-        {'data': TEST_TS, 'columns': {
-            'index': [2005, 2010],
-            'model': ['a_iam'],
-            'climate_model': ['a_model'],
-            'scenario': ['a_scenario', 'a_scenario', 'a_scenario2'],
-            'region': ['World'],
-            'variable': ['Primary Energy', 'Primary Energy|Coal', 'Primary Energy'],
-            'unit': ['EJ/y']
-        }}
+        {
+            "data": TEST_TS,
+            "columns": {
+                "index": [2005, 2010],
+                "model": ["a_iam"],
+                "climate_model": ["a_model"],
+                "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
+                "region": ["World"],
+                "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
+                "unit": ["EJ/y"],
+            },
+        },
     ],
 )
 def test_scm_df(request):

@@ -36,7 +36,7 @@ requirements_dev = [
     *REQUIREMENTS_TESTS,
     *REQUIREMENTS_DOCS,
     *REQUIREMENTS_DEPLOY,
-    *REQUIREMENTS_MODELS
+    *REQUIREMENTS_MODELS,
 ]
 
 requirements_extras = {
@@ -50,9 +50,7 @@ requirements_extras = {
 
 # for pip install . we need this on top of MANIFEST.IN,
 # see https://stackoverflow.com/a/3597263
-PACKAGE_DATA = {
-    "": [".csv"]
-}
+PACKAGE_DATA = {"": [".csv"]}
 
 # Get the long description from the README file
 with open(README, "r", encoding="utf-8") as f:

@@ -6,7 +6,14 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy import testing as npt
-from pyam.core import require_variable, categorize, filter_by_meta, validate, META_IDX, IamDataFrame
+from pyam.core import (
+    require_variable,
+    categorize,
+    filter_by_meta,
+    validate,
+    META_IDX,
+    IamDataFrame,
+)
 
 from openscm.highlevel import ScmDataFrame
 
@@ -31,7 +38,11 @@ def test_init_df_year_converted_to_datetime(test_pd_df):
 
 
 def get_test_pd_df_with_datetime_columns(tpdf):
-    return tpdf.rename({2005: datetime.datetime(2005, 1, 1), 2010: datetime.datetime(2010, 1, 1)}, axis="columns")
+    return tpdf.rename(
+        {2005: datetime.datetime(2005, 1, 1), 2010: datetime.datetime(2010, 1, 1)},
+        axis="columns",
+    )
+
 
 def test_init_ts(test_ts, test_pd_df):
     df = ScmDataFrame(
@@ -48,9 +59,7 @@ def test_init_ts(test_ts, test_pd_df):
     )
 
     tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
-    pd.testing.assert_frame_equal(
-        df.timeseries().reset_index(), tdf, check_like=True
-    )
+    pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
 
     b = ScmDataFrame(test_pd_df)
 
@@ -61,36 +70,37 @@ def test_init_ts(test_ts, test_pd_df):
 def test_init_ts_with_index(test_pd_df):
     df = ScmDataFrame(test_pd_df)
     tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
-    pd.testing.assert_frame_equal(
-        df.timeseries().reset_index(), tdf, check_like=True
-    )
+    pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
 
 
 def test_init_with_decimal_years():
     inp_array = [2.0, 1.2, 7.9]
-    d = pd.Series(inp_array, index=[1765., 1765.083, 1765.167])
+    d = pd.Series(inp_array, index=[1765.0, 1765.083, 1765.167])
     cols = {
-        'model': ['a_model'],
-        'scenario': ['a_scenario'],
-        'region': ['World'],
-        'variable': ['Primary Energy'],
-        'unit': ['EJ/y']
+        "model": ["a_model"],
+        "scenario": ["a_scenario"],
+        "region": ["World"],
+        "variable": ["Primary Energy"],
+        "unit": ["EJ/y"],
     }
 
     res = ScmDataFrame(d, columns=cols)
     assert (
         res["time"].unique()
         == [
-            datetime.datetime(1765, 1, 1, 0, 0), 
-            datetime.datetime(1765, 1, 31, 7, 4, 48, 3), 
+            datetime.datetime(1765, 1, 1, 0, 0),
+            datetime.datetime(1765, 1, 31, 7, 4, 48, 3),
             datetime.datetime(1765, 3, 2, 22, 55, 11, 999997),
         ]
     ).all()
     npt.assert_array_equal(res._data.loc[:, 0].values, inp_array)
 
+
 def test_init_df_from_timeseries(test_scm_df):
     df = ScmDataFrame(test_scm_df.timeseries())
-    pd.testing.assert_frame_equal(df.timeseries(), test_scm_df.timeseries(), check_like=True)
+    pd.testing.assert_frame_equal(
+        df.timeseries(), test_scm_df.timeseries(), check_like=True
+    )
 
 
 def test_init_df_with_extra_col(test_pd_df):
@@ -373,12 +383,14 @@ def test_timeseries(test_scm_df):
 
 
 def test_timeseries_meta(test_scm_df):
-    obs = test_scm_df.filter(variable='Primary Energy').timeseries(meta=['scenario', 'model'])
-    npt.assert_array_equal(obs.index.names, ['scenario', 'model'])
+    obs = test_scm_df.filter(variable="Primary Energy").timeseries(
+        meta=["scenario", "model"]
+    )
+    npt.assert_array_equal(obs.index.names, ["scenario", "model"])
 
 
 def test_timeseries_duplicated(test_scm_df):
-    pytest.raises(ValueError, test_scm_df.timeseries, meta=['scenario'])
+    pytest.raises(ValueError, test_scm_df.timeseries, meta=["scenario"])
 
 
 @pytest.mark.skip
