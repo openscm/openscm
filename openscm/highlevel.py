@@ -47,44 +47,55 @@ class ScmDataFrame(ScmDataFrameBase):
 
 def convert_scmdataframe_to_core(scmdf: ScmDataFrame, climate_model: str = "unspecified") -> Core:
     # TODO: move to method of scmdataframe
-    st = convert_datetime_to_openscm_time(scmdf["time"].min())
-    et = convert_datetime_to_openscm_time(scmdf["time"].max())
+    tsdf = scmdf.timeseries()
+
+    # columns are times when you call scmdataframe.timeseries()
+    stime = tsdf.columns.min()
+    etime = tsdf.columns.max()
+
+    st = convert_datetime_to_openscm_time(stime)
+    et = convert_datetime_to_openscm_time(etime)
     core = Core(climate_model, st, et)
-    for (variable, region), df in scmdf.data.groupby(["variable", "region"]):
-        df = df.sort_values("time")
+
+    syr = stime.year
+    eyr = etime.year
+    assert (
+        syr == 1765
+    ), (
+        "have not considered cases other than the RCPs yet"
+    )  # TODO: remove this restriction
+    eyr = scmdf["time"].max().year
+    assert (
+        eyr == 2500
+    ), (
+        "have not considered cases other than the RCPs yet"
+    )  # TODO: remove this restriction
+    assert (
+        len(scmdf["time"].unique()) == 736
+    ), (
+        "have not considered cases other than the RCPs read in by pymagicc yet"
+    )  # TODO: remove this restriction
+    tstep = ONE_YEAR_IN_S_INTEGER  # having passed all above, can safely assume this [TODO: remove this assumption]
+
+    variable_idx = scmdf.timeseries().index.names.index("variable")
+    region_idx = scmdf.timeseries().index.names.index("region")
+    unit_idx = scmdf.timeseries().index.names.index("unit")
+
+    assert len(scmdf["scenario"].unique()) == 1, "haven't thought about this yet"
+    assert len(scmdf["model"].unique()) == 1, "haven't thought about this yet"
+    assert len(scmdf["climate_model"].unique()) == 1, "haven't thought about this yet"
+
+    for i in tsdf.index:
+        variable = i[variable_idx]
+        region = i[region_idx]
+        unit = i[unit_idx]
+
         variable_openscm = tuple(variable.split(DATA_HIERARCHY_SEPARATOR))
 
         region_openscm = tuple(region.split(DATA_HIERARCHY_SEPARATOR))
         assert (
             region_openscm[0] == "World"
         ), "have not considered cases other than the RCPs yet"
-
-        unit = df.unit.unique()
-        assert (
-            len(unit) == 1
-        ), (
-            "emissions timeseries should all be in one unit"
-        )  # TODO: remove this restriction
-        unit = unit[0]
-
-        syr = df.time.min().year
-        assert (
-            syr == 1765
-        ), (
-            "have not considered cases other than the RCPs yet"
-        )  # TODO: remove this restriction
-        eyr = df.time.max().year
-        assert (
-            eyr == 2500
-        ), (
-            "have not considered cases other than the RCPs yet"
-        )  # TODO: remove this restriction
-        assert (
-            len(df) == 736
-        ), (
-            "have not considered cases other than the RCPs read in by pymagicc yet"
-        )  # TODO: remove this restriction
-        tstep = ONE_YEAR_IN_S_INTEGER  # having passed all above, can safely assume this [TODO: remove this assumption]
 
         emms_view = core.parameters.get_writable_timeseries_view(
             variable_openscm,
@@ -93,7 +104,7 @@ def convert_scmdataframe_to_core(scmdf: ScmDataFrame, climate_model: str = "unsp
             convert_datetime_to_openscm_time(datetime.datetime(syr, 1, 1, 0, 0, 0)),
             tstep,
         )
-        emms_view.set_series(df["value"].values)
+        emms_view.set_series(tsdf.loc[i, :].values)
 
     return core
 

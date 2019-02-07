@@ -245,8 +245,6 @@ class ScmDataFrameBase(object):
         """
         if columns is not None:
             (_df, _meta) = from_ts(data, **columns)
-        elif isinstance(data, IamDataFrame):
-            (_df, _meta) = format_data(data.data.copy())
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             (_df, _meta) = format_data(data.copy())
         else:
@@ -256,8 +254,8 @@ class ScmDataFrameBase(object):
         _df.index = _df.index.astype("object")
         _df.index.name = "time"
         _df = _df.astype(float)
+
         self._data, self._meta = (_df, _meta)
-        self._sort_meta_cols()
         self._format_datetime_col()
 
     def _sort_meta_cols(self):
@@ -293,7 +291,10 @@ class ScmDataFrameBase(object):
         if key is "time":
             return pd.Series(self._data.index, dtype="object")
         elif key is "year":
-            return pd.Series([v.year for v in self._data.index])
+            return pd.Series([
+                v.year
+                for v in self._data.index
+            ])
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
         else:
