@@ -86,15 +86,9 @@ def test_init_datetime(test_pd_df):
     assert df["time"].min() == tmin
 
 
-@pytest.mark.xfail(
-    reason=(
-        "pandas datetime is limited to the time period of ~1677-2262, see "
-        "https://stackoverflow.com/a/37226672"
-    )
-)
 def test_init_datetime_long_timespan(test_pd_df):
     tdf = test_pd_df.copy()
-    tmin = datetime.datetime(2005, 6, 17)
+    tmin = datetime.datetime(1005, 6, 17)
     tmax = datetime.datetime(3005, 6, 17)
     tdf = tdf.rename({2005: tmin, 2010: tmax}, axis="columns")
 
@@ -447,7 +441,6 @@ def test_timeseries_meta(test_scm_df):
     obs = test_scm_df.filter(variable='Primary Energy').timeseries(meta=['scenario', 'model'])
     npt.assert_array_equal(obs.index.names, ['scenario', 'model'])
 
-gl
 
 def test_timeseries_duplicated(test_scm_df):
     pytest.raises(ValueError, test_scm_df.timeseries, meta=['scenario'])
@@ -647,7 +640,7 @@ def test_interpolate(test_scm_df):
 def test_set_meta_no_name(test_scm_df):
     idx = pd.MultiIndex(
         levels=[["a_scenario"], ["a_iam"], ["World"]],
-        labels=[[0], [0], [0]],
+        codes=[[0], [0], [0]],
         names=["scenario", "model", "region"],
     )
     s = pd.Series(data=[0.3], index=idx)
@@ -657,7 +650,7 @@ def test_set_meta_no_name(test_scm_df):
 def test_set_meta_as_named_series(test_scm_df):
     idx = pd.MultiIndex(
         levels=[["a_scenario"], ["a_iam"], ["World"]],
-        labels=[[0], [0], [0]],
+        codes=[[0], [0], [0]],
         names=["scenario", "model", "region"],
     )
 
@@ -675,7 +668,7 @@ def test_set_meta_as_named_series(test_scm_df):
 def test_set_meta_as_unnamed_series(test_scm_df):
     idx = pd.MultiIndex(
         levels=[["a_scenario"], ["a_iam"], ["World"]],
-        labels=[[0], [0], [0]],
+        codes=[[0], [0], [0]],
         names=["scenario", "model", "region"],
     )
 
@@ -692,7 +685,7 @@ def test_set_meta_as_unnamed_series(test_scm_df):
 def test_set_meta_non_unique_index_fail(test_scm_df):
     idx = pd.MultiIndex(
         levels=[["a_iam"], ["a_scenario"], ["a", "b"]],
-        labels=[[0, 0], [0, 0], [0, 1]],
+        codes=[[0, 0], [0, 0], [0, 1]],
         names=["model", "scenario", "region"],
     )
     s = pd.Series([0.4, 0.5], idx)
@@ -702,7 +695,7 @@ def test_set_meta_non_unique_index_fail(test_scm_df):
 def test_set_meta_non_existing_index_fail(test_scm_df):
     idx = pd.MultiIndex(
         levels=[["a_iam", "fail_model"], ["a_scenario", "fail_scenario"]],
-        labels=[[0, 1], [0, 1]],
+        codes=[[0, 1], [0, 1]],
         names=["model", "scenario"],
     )
     s = pd.Series([0.4, 0.5], idx)
@@ -767,7 +760,7 @@ def test_set_meta_as_str_list(test_scm_df):
 def test_set_meta_as_str_by_index(test_scm_df):
     idx = pd.MultiIndex(
         levels=[["a_iam"], ["a_scenario"]],
-        labels=[[0], [0]],
+        codes=[[0], [0]],
         names=["model", "scenario"],
     )
 
