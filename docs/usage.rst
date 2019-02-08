@@ -117,8 +117,9 @@ property called ``parameters`` using one of the following functions:
 
 Each of these functions take the hierarchical name of the parameter
 (as described under :ref:`parameters`) and, in a similar fashion, the
-hierarchical name of the region it applies to or an empty tuple,
-``()``, in case the parameter applies to all regions.
+hierarchical name of the region it applies to. The "root" region, i.e.
+the region of which all others are subregions and which applies to
+parameters for all regions, is by default named ``"World"``.
 
 Values can be get and set using ``get`` and ``set`` (also,
 ``get_series`` and ``set_series`` for whole timeseries), respectively.
@@ -146,13 +147,13 @@ would create large overhead).
 .. code:: python
 
     climate_sensitivity = model_run.parameters.get_writable_scalar_view(
-        ("Equilibrium Climate Sensitivity"), (), "degC"
+        ("Equilibrium Climate Sensitivity",), ("World",), "degC"
     )
     climate_sensitivity.set(3)
 
     carbon_emissions_raw = [10 for _ in range(2100 - 2006)]
     carbon_emissions = model_run.parameters.get_writable_timeseries_view(
-        ("Emissions", "CO2"), (), "GtCO2/a", start_time, year_seconds
+        ("Emissions", "CO2"), ("World",), "GtCO2/a", start_time, year_seconds
     )
     carbon_emissions.set_series(carbon_emissions_raw)
 
@@ -185,7 +186,7 @@ read-only :class:`~openscm.core.ParameterView` objects:
 .. code:: python
 
     gmt = model_run.parameters.get_timeseries_view(
-        ("Temperature", "Surface"), (), "degC", start_time, year_seconds
+        ("Temperature", "Surface"), ("World",), "degC", start_time, year_seconds
     )
     print(gmt.get_series())
 
