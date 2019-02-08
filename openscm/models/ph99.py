@@ -18,8 +18,8 @@ Decisions as I write:
 class PH99Model(object):
     """Simple climate model first presented in Petschel-Held Climatic Change 1999
 
-    This one box model projects global-mean CO2 concentrations, global-mean radiative
-    forcing and global-mean temperatures from emissions of CO2 alone.
+    This one box model projects global-mean |CO2| concentrations, global-mean radiative
+    forcing and global-mean temperatures from emissions of |CO2| alone.
 
     Conventions:
 
@@ -41,70 +41,66 @@ class PH99Model(object):
         Parameters
         ----------
         time_start: :obj:`pint.Quantity`
-            Start time of run in seconds since 1970-1-1.
-
-        Side Effects
-        ------------
-        Sets `self.time_current` to `time_start`
+            Start time of run. `self.time_current` is set to this value.
         """
         self.time_start = time_start
         self.time_current = time_start
 
     _yr = 1 * unit_registry("yr")
+    """:obj:`pint.Quantity`: one year"""
+
     timestep = _yr.to("s")
-    """:obj:`pint.Quantity`: Size of timestep in seconds"""
-    # TODO: check if this is the right way to describe such a type
+    """:obj:`pint.Quantity`: Size of timestep"""
 
     emissions = np.array([np.nan]) * unit_registry("GtC/s")
-    """`pint.Quantity` array: Emissions of CO2 in GtC/s"""
+    """`pint.Quantity` array: Emissions of |CO2|"""
 
     cumulative_emissions = np.array([np.nan]) * unit_registry("GtC")
-    """`pint.Quantity` array: Cumulative emissions of CO2 in GtC"""
+    """`pint.Quantity` array: Cumulative emissions of |CO2|"""
 
     concentrations = np.array([np.nan]) * unit_registry("ppm")
-    """`pint.Quantity` array: Concentrations of CO2 in ppm"""
+    """`pint.Quantity` array: Concentrations of |CO2|"""
 
     temperatures = unit_registry.Quantity(np.array([np.nan]), "degC")
-    """`pint.Quantity` array: Global-mean temperatures in degrees C"""
+    """`pint.Quantity` array: Global-mean temperatures"""
 
     b = 1.51 * 10 ** -3 * unit_registry("ppm / (GtC * yr)")
-    """:obj:`pint.Quantity`: B parameter in ppm / (GtC yr)"""
+    """:obj:`pint.Quantity`: B parameter"""
 
     beta = 0.47 * unit_registry("ppm/GtC")
-    """:obj:`pint.Quantity`: beta parameter in ppm / GtC
+    """:obj:`pint.Quantity`: beta parameter
 
     This is the fraction of emissions which impact the carbon cycle.
     """
 
     sigma = 2.15 * 10 ** -2 * unit_registry("1/yr")
-    """:obj:`pint.Quantity`: sigma parameter in yr^-1
+    """:obj:`pint.Quantity`: sigma parameter
 
     The characteristic response time of the carbon cycle.
     """
-    # TODO: check if you can put latex in docstrings
 
     c1 = 290 * unit_registry("ppm")
-    """:obj:`pint.Quantity`: C1 parameter in ppm
+    """:obj:`pint.Quantity`: C1 parameter
 
-    The pre-industrial CO2 concentration.
+    The pre-industrial |CO2| concentration.
     """
 
     mu = unit_registry.Quantity(8.7 * 10 ** -2, "degC/yr")
-    """:obj:`pint.Quantity`: mu parameter in degrees C / yr
+    """:obj:`pint.Quantity`: mu parameter
 
-    This is like a scaling factor of the radiative forcing due to CO2 but has
+    This is like a scaling factor of the radiative forcing due to |CO2| but has
     different units as it is used directly in a temperature response equation rather
     than an energy balance equation.
     """
 
     alpha = 1.7 * 10 ** -2 * unit_registry("1/yr")
-    """:obj:`pint.Quantity`: alpha parameter in yr^-1
+    """:obj:`pint.Quantity`: alpha parameter
 
     The characteristic response time of global-mean temperatures.
     """
 
     t1 = unit_registry.Quantity(14.6, "degC")
-    """:obj:`pint.Quantity`: T1 parameter in degrees C
+    """:obj:`pint.Quantity`: T1 parameter
 
     The pre-industrial global-mean temperature.
     """
@@ -174,7 +170,7 @@ class PH99Model(object):
         self.time_current += self.timestep
 
     def _update_cumulative_emissions(self) -> None:
-        """Update the cumulative emissions"""
+        """Update the cumulative emissions to the current timestep"""
         self._check_update_overwrite("cumulative_emissions")
         self.cumulative_emissions[self.emissions_idx] = (
             self.cumulative_emissions[self.emissions_idx - 1]
@@ -182,7 +178,7 @@ class PH99Model(object):
         )
 
     def _update_concentrations(self) -> None:
-        """Update the concentrations"""
+        """Update the concentrations to the current timestep"""
         self._check_update_overwrite("concentrations")
         dcdt = (
             self.b * self.cumulative_emissions[self.emissions_idx - 1]
@@ -194,7 +190,7 @@ class PH99Model(object):
         )
 
     def _update_temperatures(self) -> None:
-        """Update the concentrations"""
+        """Update the temperatures to the current timestep"""
         self._check_update_overwrite("temperatures")
         dtdt = self.mu * np.log(
             self.concentrations[self.emissions_idx - 1] / self.c1

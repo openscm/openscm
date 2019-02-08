@@ -82,6 +82,14 @@ exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 
+# all of the substitutions we want available globally
+rst_epilog = """
+.. include:: <isonum.txt>
+
+.. |CO2| replace:: CO\ :sub:`2`\
+
+.. |degreesC| replace:: |deg|\C
+"""
 
 # -- Options for HTML output -------------------------------------------------
 
