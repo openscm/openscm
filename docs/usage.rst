@@ -36,7 +36,7 @@ parent parameter.
 
 For example, the parameter for industrial carbon emissions belongs to
 the parameter for carbon emissions, which in turn belongs to the root
-parameter emission. Thus, it is identified by
+parameter for emissions. Thus, it is identified by
 
     ``Emissions`` -> ``CO2`` -> ``Industrial``.
 
