@@ -34,6 +34,8 @@ def test_config_paraset():
     parameters = ParameterSet()
     ecs_writable = parameters.get_writable_scalar_view("ecs", ("World",), "K")
     ecs_writable.set(3)
+    rf2x_writable = parameters.get_writable_scalar_view("rf2xco2", ("World",), "W / m^2")
+    rf2x_writable.set(4.0)
 
     yield parameters
 
@@ -80,9 +82,23 @@ class _AdapterTester(object):
 
     def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
         test_adapter.initialize()
-        test_adapter.set_drivers(test_drivers_core)
         test_adapter.set_config(test_config_paraset)
-        test_adapter.run()
+        test_adapter.set_drivers(test_drivers_core)
+        res = test_adapter.run()
+
+        pview = res.parameters.get_scalar_view(
+            name=("ecs",),
+            region=("World",),
+            unit="K"
+        )
+        assert pview.get() == 3
+
+        pview = res.parameters.get_scalar_view(
+            name=("rf2xco2",),
+            region=("World",),
+            unit="W / m^2"
+        )
+        assert pview.get() == 4.0
 
 
 class TestMAGICCAdapter(_AdapterTester):
@@ -113,10 +129,10 @@ class TestMAGICCAdapter(_AdapterTester):
         super().test_set_config(test_adapter, test_config_paraset)
 
         tf2x = 3.8
-        f2x_writable = test_config_paraset.get_writable_scalar_view(
-            "f2xco2", ("World",), "mW / m^2"
+        rf2x_writable = test_config_paraset.get_writable_scalar_view(
+            "rf2xco2", ("World",), "mW / m^2"
         )
-        f2x_writable.set(tf2x * 1000)
+        rf2x_writable.set(tf2x * 1000)
 
         tco2_tempfeedback_switch = False
         co2_tempfeedback_switch_writable = test_config_paraset.get_writable_boolean_view(
@@ -148,9 +164,11 @@ class TestMAGICCAdapter(_AdapterTester):
         ).all()
 
     def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
+        super().test_run(test_adapter, test_config_paraset, test_drivers_core)
+
         test_adapter.initialize()
-        test_adapter.set_drivers(test_drivers_core)
         test_adapter.set_config(test_config_paraset)
+        test_adapter.set_drivers(test_drivers_core)
         res = test_adapter.run()
 
         def get_comparison_time_for_year(yr):
@@ -170,7 +188,7 @@ class TestMAGICCAdapter(_AdapterTester):
         )
 
         assert_core(
-            1.562174,
+            1.5863281999999999,  # MAGICC6 should be stabe
             get_comparison_time_for_year(2100),
             res,
             ("Surface Temperature"),
@@ -179,13 +197,6 @@ class TestMAGICCAdapter(_AdapterTester):
             res.start_time,
             ONE_YEAR_IN_S_INTEGER,
         )
-
-        pview = res.parameters.get_scalar_view(
-            name=("ecs",),
-            region=("World",),
-            unit="K"
-        )
-        assert pview.get() == 3
 
 
 class TestHectorAdapter(_AdapterTester):

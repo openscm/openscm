@@ -1,6 +1,7 @@
 from os.path import join
 
 
+import numpy as np
 import pymagicc
 
 
@@ -9,33 +10,27 @@ from ..core import Core, ParameterSet
 from ..parameters import ParameterType
 from ..errors import NotAnScmParameterError
 from ..highlevel import (
-    convert_core_to_scmdataframe, 
+    convert_core_to_scmdataframe,
     convert_scmdataframe_to_core
 )
 from ..utils import round_to_nearest_year
 
 
 # how to do this intelligently and scalably?
-core_climatesensitivity = {
-    "name": "core_climatesensitivity",
-    "type": ParameterType.SCALAR,
-    "unit": "K",
+_mapping = {
+    "ecs": "core_climatesensitivity",
+    "rf2xco2": "core_delq2xco2",
 }
-f2x_co2 = {"name": "core_delq2xco2", "type": ParameterType.SCALAR, "unit": "W / m^2"}
+openscm_para_magicc_mapping = {}
+for k, v in _mapping.items():
+    openscm_para_magicc_mapping[k] = v
+    openscm_para_magicc_mapping[v] = k
+
 parameters_magicc = {
-    "ecs": core_climatesensitivity,
-    "core_climatesensitivity": core_climatesensitivity,
-    "core_delq2xco2": f2x_co2,
-    "f2xco2": f2x_co2,
-    "co2_tempfeedback_switch": {
-        "name": "co2_tempfeedback_switch",
-        "type": ParameterType.BOOLEAN,
-    },
-    "gen_sresregions2nh": {
-        "name": "gen_sresregions2nh",
-        "type": ParameterType.ARRAY,
-        "unit": "dimensionless",
-    },
+    "core_climatesensitivity": {"type": ParameterType.SCALAR, "unit": "K",},
+    "core_delq2xco2": {"type": ParameterType.SCALAR, "unit": "W / m^2"},
+    "co2_tempfeedback_switch": {"type": ParameterType.BOOLEAN},
+    "gen_sresregions2nh": {"type": ParameterType.ARRAY, "unit": "dimensionless"},
 }
 
 
@@ -86,19 +81,24 @@ class MAGICC6(Adapter):
         # TODO: add better region handling for parameters
         # In MAGICC they're all World so doesn't matter yet (arrays are the
         # regional parameters kind of...)
+        if pname in parameters_magicc:
+            magicc_name = pname
+        else:
+            magicc_name = openscm_para_magicc_mapping[pname]
+
         if pval.info._type == ParameterType.SCALAR:
             pview = parameters.get_scalar_view(
-                pname, (pval.info.region), parameters_magicc[pname]["unit"]
+                pname, (pval.info.region), parameters_magicc[magicc_name]["unit"]
             )
-            return parameters_magicc[pname]["name"], pview.get()
+            return magicc_name, pview.get()
         elif pval.info._type == ParameterType.ARRAY:
             pview = parameters.get_array_view(
-                pname, (pval.info.region), parameters_magicc[pname]["unit"]
+                pname, (pval.info.region), parameters_magicc[magicc_name]["unit"]
             )
-            return parameters_magicc[pname]["name"], list(pview.get())
+            return magicc_name, list(pview.get())
         elif pval.info._type == ParameterType.BOOLEAN:
             pview = parameters.get_boolean_view(pname, (pval.info.region))
-            return parameters_magicc[pname]["name"], pview.get()
+            return magicc_name, pview.get()
         else:
             raise NotImplementedError
 
@@ -107,6 +107,41 @@ class MAGICC6(Adapter):
         results = convert_scmdataframe_to_core(
             res, climate_model=self.name
         )
+        for k, v in res.metadata["parameters"]["allcfgs"].items():
+            try:
+                if parameters_magicc[k]["type"] == ParameterType.SCALAR:
+                    set_val = v
+                    pview = results.parameters.get_writable_scalar_view(
+                        k, ("World",), parameters_magicc[k]["unit"]
+                    )
+                    pview.set(set_val)
+                    if k in openscm_para_magicc_mapping:
+                        other_view = results.parameters.get_writable_scalar_view(
+                            openscm_para_magicc_mapping[k], ("World",), parameters_magicc[k]["unit"]
+                        )
+                        other_view.set(set_val)
+                elif parameters_magicc[k]["type"] == ParameterType.ARRAY:
+                    set_val = np.array(v)
+                    pview = results.parameters.get_writable_array_view(
+                        k, ("World",), parameters_magicc[k]["unit"]
+                    )
+                    pview.set(set_val)
+                    if k in openscm_para_magicc_mapping:
+                        other_view = results.parameters.get_writable_array_view(
+                            openscm_para_magicc_mapping[k], ("World",), parameters_magicc[k]["unit"]
+                        )
+                        other_view.set(set_val)
+                elif parameters_magicc[k]["type"] == ParameterType.BOOLEAN:
+                    set_val = v
+                    pview = results.parameters.get_writable_boolean_view(k, ("World",))
+                    pview.set(set_val)
+                    if k in openscm_para_magicc_mapping:
+                        other_view = results.parameters.get_writable_boolean_view(openscm_para_magicc_mapping[k], ("World",))
+                        other_view.set(set_val)
+                else:
+                    raise NotImplementedError
+            except KeyError:
+                continue
         return results
 
     def step(self) -> None:
