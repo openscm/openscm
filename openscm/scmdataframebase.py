@@ -540,6 +540,13 @@ class ScmDataFrameBase(object):
         """
         return self.to_iamdataframe().line_plot(x, y, **kwargs)
 
+    def scatter(self, x, y, **kwargs):
+        """Plot a scatter chart using metadata columns
+
+        see pyam.plotting.scatter() for all available options
+        """
+        self.to_iamdataframe().scatter(x, y, **kwargs)
+
     def region_plot(self, **kwargs):
         """Plot regional data for a single model, scenario, variable, and year
 
