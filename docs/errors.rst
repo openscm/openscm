@@ -1,0 +1,4 @@
+Errors
+------
+
+.. automodule:: openscm.errors

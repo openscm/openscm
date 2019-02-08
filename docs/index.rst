@@ -36,6 +36,7 @@ Schema
     lowlevel
     highlevel
     adapters
+    errors
     timeframes
     units
 
