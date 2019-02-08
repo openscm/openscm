@@ -2,9 +2,11 @@ import copy
 from datetime import datetime, timedelta
 from logging import getLogger
 
+import cftime
 import dateutil
 import numpy as np
 import pandas as pd
+import xarray as xr
 from dateutil import parser
 from pyam.core import _raise_filter_error, IamDataFrame, read_pandas
 from pyam.utils import (
@@ -18,6 +20,7 @@ from pyam.utils import (
     pattern_match,
     to_int,
 )
+from xarray.core.resample import DataArrayResample
 
 logger = getLogger(__name__)
 
@@ -220,7 +223,7 @@ class ScmDataFrameBase(object):
         # First columns are from IAMC_IDX and the remainder of the columns are alphabetically sorted
         self._meta = self._meta[
             IAMC_IDX + sorted(list(set(self._meta.columns) - set(IAMC_IDX)))
-        ]
+            ]
 
     def __len__(self):
         return len(self._meta)
@@ -279,7 +282,7 @@ class ScmDataFrameBase(object):
                 base = datetime(year, 1, 1)
                 return base + timedelta(
                     seconds=(base.replace(year=year + 1) - base).total_seconds()
-                    * fractional_part
+                            * fractional_part
                 )
 
             self["time"] = [convert_float_to_datetime(t) for t in time_srs]
@@ -559,6 +562,169 @@ class ScmDataFrameBase(object):
         """
         return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
 
+    def resample(self, rule=None, datetime_cls=cftime.DatetimeGregorian, **kwargs):
+        """Resample the time index of the timeseries data
+
+        Under the hood the pandas DataFrame holding the data is converted to an xarray.DataArray which provides functionality for
+        using cftime arrays for dealing with timeseries spanning more than 292 years. The result is then cast back to a ScmDataFrame
+
+        Parameters
+        ----------
+        rule: string
+        See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>` for
+        a list of options
+        kwargs:
+        See pd.resample documentation for other possible arguments
+
+        Examples
+        --------
+
+            # resample a dataframe to annual values
+        >>> scm_df = ScmDataFrame(pd.Series([1, 10], index=(2000, 2009)), columns={
+            "model": ["a_iam"],
+            "scenario": ["a_scenario"],
+            "region": ["World"],
+            "variable": ["Primary Energy"],
+            "unit": ["EJ/y"],}
+        )
+        >>> scm_df.timeseries().T
+        model             a_iam
+        scenario     a_scenario
+        region            World
+        variable Primary Energy
+        unit               EJ/y
+        year
+        2000                  1
+        2010                 10
+
+        An annual timeseries can be the created by interpolating between to the start of years using the rule 'AS'.
+
+        >>> res = scm_df.resample('AS').interpolate()
+        >>> res.timeseries().T
+        model                        a_iam
+        scenario                a_scenario
+        region                       World
+        variable            Primary Energy
+        unit                          EJ/y
+        time
+        2000-01-01 00:00:00       1.000000
+        2001-01-01 00:00:00       2.001825
+        2002-01-01 00:00:00       3.000912
+        2003-01-01 00:00:00       4.000000
+        2004-01-01 00:00:00       4.999088
+        2005-01-01 00:00:00       6.000912
+        2006-01-01 00:00:00       7.000000
+        2007-01-01 00:00:00       7.999088
+        2008-01-01 00:00:00       8.998175
+        2009-01-01 00:00:00      10.00000
+
+        >>> m_df = scm_df.resample('MS').interpolate()
+        >>> m_df.timeseries().T
+        model                        a_iam
+        scenario                a_scenario
+        region                       World
+        variable            Primary Energy
+        unit                          EJ/y
+        time
+        2000-01-01 00:00:00       1.000000
+        2000-02-01 00:00:00       1.084854
+        2000-03-01 00:00:00       1.164234
+        2000-04-01 00:00:00       1.249088
+        2000-05-01 00:00:00       1.331204
+        2000-06-01 00:00:00       1.416058
+        2000-07-01 00:00:00       1.498175
+        2000-08-01 00:00:00       1.583029
+        2000-09-01 00:00:00       1.667883
+                                    ...
+        2008-05-01 00:00:00       9.329380
+        2008-06-01 00:00:00       9.414234
+        2008-07-01 00:00:00       9.496350
+        2008-08-01 00:00:00       9.581204
+        2008-09-01 00:00:00       9.666058
+        2008-10-01 00:00:00       9.748175
+        2008-11-01 00:00:00       9.833029
+        2008-12-01 00:00:00       9.915146
+        2009-01-01 00:00:00      10.000000
+        [109 rows x 1 columns]
+        >>> m_df.resample('AS').bfill().timeseries().T
+        2000-01-01 00:00:00       1.000000
+        2001-01-01 00:00:00       2.001825
+        2002-01-01 00:00:00       3.000912
+        2003-01-01 00:00:00       4.000000
+        2004-01-01 00:00:00       4.999088
+        2005-01-01 00:00:00       6.000912
+        2006-01-01 00:00:00       7.000000
+        2007-01-01 00:00:00       7.999088
+        2008-01-01 00:00:00       8.998175
+        2009-01-01 00:00:00      10.000000
+
+        Note that the values do not fall exactly on integer values due the period between years is not exactly the same
+
+        References
+        ----------
+        See the pandas documentation for
+        `resample <http://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.resample.html>` for more information about
+        possible arguments.
+
+        Returns
+        -------
+        Resampler which provides all the methods fo
+            - asfreq
+            - ffill
+            - bfill
+            - pad
+            - nearest
+            - interpolate
+        """
+
+        def get_resampler(scm_df):
+            scm_df = scm_df
+            class CustomDataArrayResample(object):
+                def __init__(self, *args, **kwargs):
+                    self._resampler = DataArrayResample(*args, **kwargs)
+                    self.target = self._resampler._full_index
+                    self.orig_index = self._resampler._obj.indexes['time']
+
+                    # To work around some limitations the maximum that can be interpolated over we are using a float index
+                    self._resampler._full_index = [(c - self.target[0]).total_seconds() for c in self.target]
+                    self._resampler._obj['time'] = [(c - self.target[0]).total_seconds() for c in self.orig_index]
+
+                def __getattr__(self, item):
+                    resampler = self._resampler
+                    def r(*args, **kwargs):
+                        # Perform the resampling
+                        res = getattr(resampler, item)(*args, **kwargs)
+
+                        # replace the index with the intended index
+                        res['time'] = self.target
+
+                        # Convert the result back to a ScmDataFrame
+                        res = res.to_pandas()
+                        res.columns.name = None
+
+                        df = copy.deepcopy(scm_df)
+                        df._data = res
+                        df._data.dropna(inplace=True)
+                        return df
+
+                    return r
+            return CustomDataArrayResample
+
+        if datetime_cls is not None:
+            dts = [datetime_cls(d.year, d.month, d.day, d.hour, d.minute, d.second) for d in self._data.index]
+        else:
+            dts = list(self._data.index)
+        df = self._data.copy()
+
+        # convert the dates to use cftime
+        df.index = dts
+        df.index.name = 'time'
+        x = xr.DataArray(df)
+
+        # Use a custom resample array to wrap the resampling while returning a ScmDataFrame
+        x._resample_cls = get_resampler(self)
+        return x.resample(time=rule, **kwargs)
+
 
 class LongIamDataFrame(IamDataFrame):
     """This baseclass is a custom implementation of the IamDataFrame which handles datetime data which spans longer than pd.to_datetime
@@ -567,7 +733,6 @@ class LongIamDataFrame(IamDataFrame):
 
     def _format_datetime_col(self):
         if isinstance(self.data["time"].iloc[0], str):
-
             def convert_str_to_datetime(inp):
                 return parser.parse(inp)
 

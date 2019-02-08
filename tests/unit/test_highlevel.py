@@ -869,3 +869,20 @@ def test_pd_join_by_meta_nonmatching_index(test_scm_df):
     exp["string"] = [np.nan, np.nan, "b"]
 
     pd.testing.assert_frame_equal(obs.sort_index(level=1), exp)
+
+
+def test_resample(test_scm_df):
+    res = test_scm_df.resample("AS").interpolate()
+
+    obs = res.filter(scenario='a_scenario', variable='Primary Energy').timeseries().T.squeeze()
+    exp = [1., 2., 3., 4., 5., 6.]
+    npt.assert_almost_equal(obs, exp, decimal=1)
+
+
+def test_resample_long_datetimes(test_pd_longtime_df):
+    from cftime import DatetimeGregorian
+    df = ScmDataFrame(test_pd_longtime_df)
+    res = df.resample("AS").interpolate()
+
+    assert res.timeseries().T.index[0] == DatetimeGregorian(1005, 1, 1)
+    assert res.timeseries().T.index[-1] == DatetimeGregorian(3010, 1, 1)
