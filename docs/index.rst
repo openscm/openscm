@@ -37,6 +37,7 @@ Schema
     highlevel
     adapters
     models
+    errors
     timeframes
     units
     scenarios
