@@ -1,3 +1,4 @@
+from __future__ import annotations
 from copy import copy
 from enum import Enum
 from typing import Any, Dict, Tuple
@@ -12,7 +13,6 @@ from .errors import (
 )
 from .timeframes import Timeframe
 from .utils import ensure_input_is_tuple
-
 
 class ParameterType(Enum):
     """
