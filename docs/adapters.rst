@@ -1,4 +1,2 @@
 Adapters
 --------
-
-.. automodule:: openscm.adapters
