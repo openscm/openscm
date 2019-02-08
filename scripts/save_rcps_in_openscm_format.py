@@ -23,7 +23,7 @@ models = {
 for file in listdir(INPUT_PATH):
     if file.endswith(".DAT"):
         inname = join(INPUT_PATH, file)
-        df = MAGICCData(inname).to_iamdataframe().data
+        df = MAGICCData(inname).to_iamdataframe().data.copy()
 
         scenario = file.split("_")[0]
         scenario = "historical" if scenario == "20THCENTURY" else scenario
