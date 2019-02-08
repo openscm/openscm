@@ -1,3 +1,4 @@
+from __future__ import annotations
 from copy import copy
 from enum import Enum
 import numpy as np
@@ -9,7 +10,6 @@ from .errors import (
     ParameterWrittenError,
 )
 from .timeframes import Timeframe
-
 
 class ParameterType(Enum):
     """
