@@ -1,3 +1,7 @@
+class AdapterNeedsModuleError(Exception):
+    """Exception raised when an adapter needs a module that is not installed."""
+
+
 class ParameterError(Exception):
     """
     Exception relating to a parameter. Used as super class.
