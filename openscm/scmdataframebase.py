@@ -364,9 +364,7 @@ class ScmDataFrameBase(object):
 
         ret = copy.deepcopy(self) if not inplace else self
         d = ret._data.where(idx)
-        ret._data = (
-            d.dropna(axis=1, how="all").dropna(axis=0, how="all")
-        )
+        ret._data = d.dropna(axis=1, how="all").dropna(axis=0, how="all")
         ret._meta = ret._meta[(~d.isna()).sum(axis=0) > 0]
 
         assert len(ret._data.columns) == len(ret._meta)

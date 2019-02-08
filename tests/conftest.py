@@ -146,4 +146,3 @@ def assert_pint_equal(a, b, **kwargs):
         )
 
         raise AssertionError(error_msg)
-        

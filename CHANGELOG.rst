@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- (`#101 <https://github.com/openclimatedata/openscm/pull/101>`_) Added PH99 model implementation
 - (`#102 <https://github.com/openclimatedata/openscm/pull/102>`_) Added a few plotting routines from pyam to ScmDataFrame for convenience
 - (`#100 <https://github.com/openclimatedata/openscm/pull/100>`_) Allow ScmDataFrame to handle data which do not cover the same time span
 - (`#99 <https://github.com/openclimatedata/openscm/pull/99>`_) Force ScmDataFrame time to always be a list of datetimes, prevent Pandas coercing to Pandas datetime
