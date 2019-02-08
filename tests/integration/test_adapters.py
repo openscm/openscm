@@ -177,7 +177,7 @@ class TestMAGICCAdapter(_AdapterTester):
             )
 
         assert_core(
-            9.14781,
+            9.1478,
             get_comparison_time_for_year(2017),
             res,
             ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
@@ -188,7 +188,7 @@ class TestMAGICCAdapter(_AdapterTester):
         )
 
         assert_core(
-            1.5863281999999999,  # MAGICC6 should be stabe
+            1.5833606,  # MAGICC6 should be stabe
             get_comparison_time_for_year(2100),
             res,
             ("Surface Temperature"),

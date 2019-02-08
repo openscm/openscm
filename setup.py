@@ -23,6 +23,7 @@ REQUIREMENTS = [
     "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master",
     "xarray @ git+https://github.com/pydata/xarray.git@master",  # Next release after 0.11.2
     "cftime"
+    "progressbar2",
 ]
 REQUIREMENTS_NOTEBOOKS = ["notebook", "seaborn"]
 REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]

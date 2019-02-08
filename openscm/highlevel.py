@@ -8,9 +8,10 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import progressbar
 
 
-from .core import Core
+from .core import Core, ParameterSet
 from .scmdataframebase import (
     ScmDataFrameBase,
     DATA_HIERARCHY_SEPARATOR,
@@ -19,6 +20,7 @@ from .scmdataframebase import (
 from .constants import ONE_YEAR_IN_S_INTEGER
 from .utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
 from .parameters import ParameterType
+# from .adapters import get_adapter
 
 
 class OpenSCM(Core):
@@ -130,12 +132,18 @@ def convert_core_to_scmdataframe(
         if (para._info._type is None) or is_time_data:
             return metadata
 
-        raise NotImplementedError
-        values = para._data
         variable = value.info.name
-        if isinstance(values, float):
-            metadata["{} ({})".format(variable, para.info.unit)] = values
+        if para._info._type == ParameterType.BOOLEAN:
+            values = para._data
+            label = "{}".format(variable)
+        elif para._info._type == ParameterType.ARRAY:
+            values = tuple(para._data)  # pandas indexes must be hashable
+            label = "{} ({})".format(variable, para.info.unit)
+        else:
+            values = para._data
+            label = "{} ({})".format(variable, para.info.unit)
 
+        metadata[label] = [values]
         return metadata
 
     def get_scmdataframe_timeseries_columns(core_in, metadata_in):
@@ -197,3 +205,17 @@ def convert_core_to_scmdataframe(
     timeseries, columns = get_scmdataframe_timeseries_columns(core, metadata)
     # convert timeseries to dataframe with time index here
     return ScmDataFrame(timeseries, columns=columns)
+
+
+def convert_config_dict_to_parameter_set(config):
+    assert isinstance(config, dict)
+    parameters = ParameterSet()
+    for key, (region, value) in config.items():
+        view = parameters.get_writable_scalar_view(
+            key,
+            region,
+            str(value.units),
+        )
+        view.set(value.magnitude)
+
+    return parameters

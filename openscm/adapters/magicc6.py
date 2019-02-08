@@ -66,7 +66,7 @@ class MAGICC6(Adapter):
     def set_config(self, parameters: ParameterSet) -> None:
         super().set_config(parameters)
 
-        config_dict = {}
+        config_dict = {"file_emisscen": self.magicc._scen_file_name}
         for pname, pval in parameters._root._parameters.items():
             try:
                 n, v = self._get_config_dict_name_value(parameters, pname, pval)
@@ -132,7 +132,7 @@ class MAGICC6(Adapter):
                         )
                         other_view.set(set_val)
                 elif parameters_magicc[k]["type"] == ParameterType.BOOLEAN:
-                    set_val = v
+                    set_val = bool(v)
                     pview = results.parameters.get_writable_boolean_view(k, ("World",))
                     pview.set(set_val)
                     if k in openscm_para_magicc_mapping:
