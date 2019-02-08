@@ -4,9 +4,6 @@
 import warnings
 
 
-import functools
-
-
 def ensure_input_is_tuple(inp):
     if isinstance(inp, str):
         if getattr(ensure_input_is_tuple, 'calls', 0) == 0:
