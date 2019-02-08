@@ -532,7 +532,7 @@ class ScmDataFrameBase(object):
         )
         self._sort_meta_cols()
 
-    def line_plot(self, x='year', y='value', **kwargs):
+    def line_plot(self, x='time', y='value', **kwargs):
         """Helper to generate line plots of timeseries
 
         See ``pyam.IamDataFrame.line_plot`` for more information
@@ -553,6 +553,13 @@ class ScmDataFrameBase(object):
         see ``pyam.plotting.region_plot()`` for all available options
         """
         return self.to_iamdataframe().region_plot(**kwargs)
+
+    def pivot_table(self, index, columns, **kwargs):
+        """Returns a pivot table
+    
+        see ``pyam.core.IamDataFrame.pivot_table()`` for all available options
+        """
+        return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
 
 
 class LongIamDataFrame(IamDataFrame):
