@@ -1,9 +1,11 @@
 OpenSCM
 =======
 
-+----------------+-----------+--------+
-| |Build Status| | |Codecov| | |Docs| |
-+----------------+-----------+--------+
++----------------+----------+
+| |Build Status| | |Docs|   |
++----------------+----------+
+| |Codecov|      | |Codacy| |
++----------------+----------+
 
 .. sec-begin-index
 
@@ -106,3 +108,5 @@ Current maintainers of OpenSCM are:
     :target: https://openscm.readthedocs.io/en/latest/
 .. |Codecov| image:: https://img.shields.io/codecov/c/github/openclimatedata/openscm.svg
     :target: https://codecov.io/gh/openclimatedata/openscm
+.. |Codacy| image:: https://img.shields.io/codacy/grade/37d3be5f62b34d048d704718219cfb4f.svg?style=flat
+    :target: https://www.codacy.com/app/openclimatedata/openscm
