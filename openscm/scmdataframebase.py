@@ -556,7 +556,7 @@ class ScmDataFrameBase(object):
 
     def pivot_table(self, index, columns, **kwargs):
         """Returns a pivot table
-    
+
         see ``pyam.core.IamDataFrame.pivot_table()`` for all available options
         """
         return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
