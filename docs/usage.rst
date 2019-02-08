@@ -97,8 +97,8 @@ up-to-date) "view" of the corresponding parameter giving the parameter
 values in a specific unit and, in the case of timeseries, a specific
 time frame.
 
-Unit and time frame have to be specified questing a
-:class:`~openscm.core.ParameterView` from
+Unit and time frame have to be specified when requesting a
+:class:`~openscm.core.ParameterView` from the
 :class:`~openscm.core.Core`'s :class:`~openscm.core.ParameterSet`
 property called ``parameters`` using one of the following functions:
 
@@ -132,7 +132,7 @@ units are not convertible, an error is raised.
 hierarchical levels if possible: a view to a higher level parameter
 yields the sum of its child parameters. This implies that, once a
 *writable* view to a parameter is requested, there cannot be a view to
-one of its children. Otherwise consostency cannot be guaranteed, so an
+one of its children. Otherwise consistency cannot be guaranteed, so an
 error is raised. The same holds if a child parameter has already been
 set and the user tries to set values for one of its parent parameters.
 A similar logic applies to the hierarchy of regions.
