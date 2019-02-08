@@ -207,7 +207,7 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        data: pd.DataFrame, np.ndarray or string
+        data: IamDataFrame, pd.DataFrame, np.ndarray or string
             A pd.DataFrame or data file with IAMC-format data columns, or a numpy array of timeseries data if `columns` is specified.
             If a string is passed, data will be attempted to be read from file.
 
@@ -245,6 +245,10 @@ class ScmDataFrameBase(object):
         """
         if columns is not None:
             (_df, _meta) = from_ts(data, **columns)
+        elif isinstance(data, IamDataFrame):
+            (_df, _meta) = format_data(data.data.copy())
+        elif isinstance(data, ScmDataFrameBase):
+            (_df, _meta) = (data._data.copy(), data._meta.copy())
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             (_df, _meta) = format_data(data.copy())
         else:
@@ -257,6 +261,9 @@ class ScmDataFrameBase(object):
 
         self._data, self._meta = (_df, _meta)
         self._format_datetime_col()
+
+    def copy(self):
+        return copy.deepcopy(self)
 
     def _sort_meta_cols(self):
         # First columns are from IAMC_IDX and the remainder of the columns are alphabetically sorted

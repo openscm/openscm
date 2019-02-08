@@ -1,3 +1,4 @@
+import datetime
 from abc import ABCMeta, abstractmethod
 from unittest.mock import Mock, MagicMock
 import re
@@ -13,6 +14,7 @@ from openscm.errors import ModelNotInitialisedError
 from openscm.scenarios import rcps
 from openscm.highlevel import convert_scmdataframe_to_core
 from openscm.errors import NotAnScmParameterError
+from openscm.utils import convert_datetime_to_openscm_time
 
 
 from conftest import assert_core
@@ -75,9 +77,10 @@ class _AdapterTester(object):
         with pytest.raises(NotAnScmParameterError, match=error_msg):
             test_adapter.set_config(test_config_paraset)
 
-    def test_run(self, test_adapter, test_drivers_core):
+    def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
         test_adapter.initialize()
         test_adapter.set_drivers(test_drivers_core)
+        test_adapter.set_config(test_config_paraset)
         test_adapter.run()
 
 
@@ -143,20 +146,15 @@ class TestMAGICCAdapter(_AdapterTester):
             magicc_config["nml_allcfgs"]["gen_sresregions2nh"] == tgen_sresregions2nh
         ).all()
 
-    def test_run(self, test_adapter, test_drivers_core):
+    def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
         test_adapter.initialize()
         test_adapter.set_drivers(test_drivers_core)
         test_adapter.set_config(test_config_paraset)
         res = test_adapter.run()
 
-        import pdb
-
-        pdb.set_trace()
-        test_drivers_core
-
         def get_comparison_time_for_year(yr):
             return convert_datetime_to_openscm_time(
-                tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
+                datetime.datetime(yr, 1, 1,)
             )
 
         assert_core(

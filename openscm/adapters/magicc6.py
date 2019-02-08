@@ -8,7 +8,10 @@ from ..internal import Adapter
 from ..core import Core, ParameterSet
 from ..parameters import ParameterType
 from ..errors import NotAnScmParameterError
-from ..highlevel import convert_core_to_scmdataframe
+from ..highlevel import (
+    convert_core_to_scmdataframe, 
+    convert_scmdataframe_to_core
+)
 from ..utils import round_to_nearest_year
 
 
@@ -40,6 +43,7 @@ class MAGICC6(Adapter):
     def __init__(self):
         self._magicc_class = pymagicc.MAGICC6
         self.magicc = None
+        self.name = "MAGICC{}".format(self._magicc_class.version)
         super().__init__()
 
     def initialize(self, **kwargs) -> None:
@@ -58,6 +62,7 @@ class MAGICC6(Adapter):
         # fix once Jared has Pymagicc working with ScmDataFrame
         scen = pymagicc.io.MAGICCData(convert_core_to_scmdataframe(core).timeseries())
         scen["time"] = scen["time"].apply(round_to_nearest_year)
+        scen.set_meta("SET", name="todo")
         scen.write(
             join(self.magicc.run_dir, self.magicc._scen_file_name),
             self.magicc.version
@@ -98,7 +103,11 @@ class MAGICC6(Adapter):
             raise NotImplementedError
 
     def run(self) -> Core:
-        raise NotImplementedError
+        res = self.magicc.run(startyear=1765, endyear=2500, only=["Emissions|CO2|MAGICC Fossil and Industrial", "Surface Temperature"])  # hard code for now
+        results = convert_scmdataframe_to_core(
+            res, climate_model=self.name
+        )
+        return results
 
     def step(self) -> None:
         raise NotImplementedError
