@@ -47,6 +47,8 @@ separated by ``|``, e.g. ``"Emissions|CO2|Industrial"``.
 See :ref:`parameter-hierarchy` for the standard parameters in OpenSCM.
 
 
+.. _timeframes:
+
 Time frames
 -----------
 
@@ -64,6 +66,8 @@ In the low-level API time points are given in seconds since
 seconds. The high-level API additionally accepts string values and
 ``datetime.datetime`` objects.
 
+
+.. _low-level-interface:
 
 Low-level interface
 -------------------
