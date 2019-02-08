@@ -532,6 +532,21 @@ class ScmDataFrameBase(object):
         )
         self._sort_meta_cols()
 
+    def line_plot(self, x='year', y='value', **kwargs):
+        """Helper to generate line plots of timeseries
+
+        See ``pyam.IamDataFrame.line_plot`` for more information
+
+        """
+        return self.to_iamdataframe().line_plot(x, y, **kwargs)
+
+    def region_plot(self, **kwargs):
+        """Plot regional data for a single model, scenario, variable, and year
+
+        see ``pyam.plotting.region_plot()`` for all available options
+        """
+        return self.to_iamdataframe().region_plot(**kwargs)
+
 
 class LongIamDataFrame(IamDataFrame):
     """This baseclass is a custom implementation of the IamDataFrame which handles datetime data which spans longer than pd.to_datetime
