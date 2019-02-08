@@ -1,3 +1,4 @@
+import warnings
 from math import isnan
 
 import pytest
@@ -46,7 +47,10 @@ def test_core(core, model, start_time, end_time):
 def test_region(core):
     parameterset = core.parameters
     for accessor in ["World", ("World"), ("World",), ["World"]]:
-        region_world = parameterset._get_or_create_region(accessor)
+        with warnings.catch_warnings():
+            # silence warning about conversion, that's tested elsewhere
+            warnings.simplefilter("ignore")
+            region_world = parameterset._get_or_create_region(accessor)
         assert region_world.full_name == ("World",)
         assert region_world.name == "World"
 
@@ -145,7 +149,7 @@ def test_parameter(core):
 def test_parameterset_default_initialisation():
     paraset = ParameterSet()
 
-    assert paraset._get_or_create_region("World") == paraset._root
+    assert paraset._get_or_create_region(("World",)) == paraset._root
     error_msg = (
         "Cannot access region Earth, root region for this parameter set is World"
     )
@@ -155,12 +159,12 @@ def test_parameterset_default_initialisation():
 
 def test_parameterset_named_initialisation():
     paraset_named = ParameterSet("Earth")
-    assert paraset_named._get_or_create_region("Earth") == paraset_named._root
+    assert paraset_named._get_or_create_region(("Earth",)) == paraset_named._root
 
 
 def test_scalar_parameter_view(core):
     parameterset = core.parameters
-    cs = parameterset.get_scalar_view(("Climate Sensitivity"), "World", "degC")
+    cs = parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "degC")
     assert isnan(cs.get())
     assert cs.is_empty
     cs_writable = parameterset.get_writable_scalar_view(
@@ -171,9 +175,9 @@ def test_scalar_parameter_view(core):
     assert not cs.is_empty
     np.testing.assert_allclose(cs.get(), 20)
     with pytest.raises(ParameterTypeError):
-        parameterset.get_timeseries_view(("Climate Sensitivity"), "World", "degC", 0, 1)
+        parameterset.get_timeseries_view(("Climate Sensitivity"), ("World",), "degC", 0, 1)
     with pytest.raises(DimensionalityError):
-        parameterset.get_scalar_view(("Climate Sensitivity"), "World", "kg")
+        parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "kg")
 
 
 @pytest.fixture(
@@ -206,7 +210,7 @@ def test_timeseries_parameter_view(core, start_time, series):
     assert carbon.length == 5
     np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
     with pytest.raises(ParameterTypeError):
-        parameterset.get_scalar_view(("Emissions", "CO2"), "World", "GtCO2/a")
+        parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
     with pytest.raises(DimensionalityError):
         parameterset.get_timeseries_view(("Emissions", "CO2"), "World", "kg", 0, 1)
 
