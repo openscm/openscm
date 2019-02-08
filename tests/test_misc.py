@@ -8,7 +8,7 @@ import pytest
 from openscm.units import unit_registry
 
 
-from .conftest import assert_pint_equal
+from conftest import assert_pint_equal
 
 
 def test_pint_array_comparison():
