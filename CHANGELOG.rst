@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- (`#103 <https://github.com/openclimatedata/openscm/pull/103>`_) Add resample method for `ScmDataFrame`
 - (`#101 <https://github.com/openclimatedata/openscm/pull/101>`_) Added PH99 model implementation
 - (`#102 <https://github.com/openclimatedata/openscm/pull/102>`_) Added a few plotting routines from pyam to ScmDataFrame for convenience
 - (`#100 <https://github.com/openclimatedata/openscm/pull/100>`_) Allow ScmDataFrame to handle data which do not cover the same time span

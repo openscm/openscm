@@ -668,7 +668,7 @@ class ScmDataFrameBase(object):
 
         Returns
         -------
-        Resampler which provides all the methods fo
+        Resampler which providing the following sampling methods:
             - asfreq
             - ffill
             - bfill
