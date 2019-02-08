@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 from .errors import RegionAggregatedError
-from .parameters import _Parameter
+from . import parameters
 from .utils import ensure_input_is_tuple
 
 
@@ -21,7 +21,7 @@ class _Region:
     _name: str
     """Name"""
 
-    _parameters: Dict[str, _Parameter]
+    _parameters: Dict[str, "parameters._Parameter"]
     """Parameters"""
 
     _parent: "_Region"
@@ -85,7 +85,7 @@ class _Region:
         else:
             return self
 
-    def get_or_create_parameter(self, name: str) -> _Parameter:
+    def get_or_create_parameter(self, name: str) -> "parameters._Parameter":
         """
         Get a root parameter for this region. Create and add it if not found.
 
@@ -96,11 +96,11 @@ class _Region:
         """
         res = self._parameters.get(name, None)
         if res is None:
-            res = _Parameter(name, self)
+            res = parameters._Parameter(name, self)
             self._parameters[name] = res
         return res
 
-    def get_parameter(self, name: Tuple[str]) -> _Parameter:
+    def get_parameter(self, name: Tuple[str]) -> "parameters._Parameter":
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
 

@@ -1,4 +1,3 @@
-from __future__ import annotations
 from copy import copy
 from enum import Enum
 from typing import Any, Dict, Tuple
@@ -11,6 +10,8 @@ from .errors import (
     ParameterTypeError,
     ParameterWrittenError,
 )
+import sys
+from . import regions
 from .timeframes import Timeframe
 from .utils import ensure_input_is_tuple
 
@@ -31,7 +32,7 @@ class ParameterInfo:
     _name: str
     """Name"""
 
-    _region: "_Region"
+    _region: "regions._Region"
     """Region this parameter belongs to"""
 
     _timeframe: Timeframe
@@ -43,7 +44,7 @@ class ParameterInfo:
     _unit: str
     """Unit"""
 
-    def __init__(self, name: str, region: "_Region"):
+    def __init__(self, name: str, region: "regions._Region"):
         """
         Initialize.
 
@@ -113,7 +114,7 @@ class _Parameter:
     _parent: "_Parameter"
     """Parent parameter"""
 
-    def __init__(self, name: str, region: "_Region"):
+    def __init__(self, name: str, region: "regions._Region"):
         """
         Initialize.
 
