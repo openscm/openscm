@@ -15,6 +15,7 @@ from openscm.scenarios import rcps
 from openscm.highlevel import convert_scmdataframe_to_core
 from openscm.errors import NotAnScmParameterError
 from openscm.utils import convert_datetime_to_openscm_time
+from openscm.constants import ONE_YEAR_IN_S_INTEGER
 
 
 from conftest import assert_core
@@ -164,13 +165,27 @@ class TestMAGICCAdapter(_AdapterTester):
             ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
             "World",
             "GtC / yr",
-            tstart,
-            tperiod_length,
+            res.start_time,
+            ONE_YEAR_IN_S_INTEGER,
         )
-        assert False
-        # assert on emissions output
-        # assert on temperature output
-        # assert on parameter output
+
+        assert_core(
+            1.562174,
+            get_comparison_time_for_year(2100),
+            res,
+            ("Surface Temperature"),
+            "World",
+            "K",
+            res.start_time,
+            ONE_YEAR_IN_S_INTEGER,
+        )
+
+        pview = res.parameters.get_scalar_view(
+            name=("ecs",),
+            region=("World",),
+            unit="K"
+        )
+        assert pview.get() == 3
 
 
 class TestHectorAdapter(_AdapterTester):
