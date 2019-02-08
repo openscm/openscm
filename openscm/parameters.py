@@ -8,9 +8,8 @@ from .errors import (
     ParameterTypeError,
     ParameterWrittenError,
 )
-import sys
-from . import regions
 from .timeframes import Timeframe
+from . import regions # needed for type annotations
 
 class ParameterType(Enum):
     """
