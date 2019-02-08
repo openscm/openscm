@@ -1,3 +1,8 @@
+"""
+All model adapters in OpenSCM are implemented as subclasses of the
+:class:`openscm.adapter.Adapter` base class.
+"""
+
 from .core import ParameterSet
 from abc import ABCMeta, abstractmethod
 
