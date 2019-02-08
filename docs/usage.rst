@@ -55,7 +55,7 @@ frame, which consists of a time point and a period length. The time
 point gives the start of the timeseries; the period length gives the
 length of the period between consecutive values in the timeseries.
 Each parameter value is assumed to be the **average value** for its
-corresponding period. This implies that additive values such as
+corresponding period. This implies that values that are not averages but, for instance, absolute values, such as
 emissions need to be given as a rate, e.g. ``tC/a`` rather than
 ``tC``.
 
