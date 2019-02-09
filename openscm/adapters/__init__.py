@@ -44,6 +44,6 @@ def load_adapter(name: str) -> Adapter:
 
         if adapter is None:
             raise KeyError("Unknown model '{}'".format(name))
-        else:
+        else: # pragma: no cover; TODO remove once we have at least one model
             _loaded_adapters[name] = adapter
             return adapter
