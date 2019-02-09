@@ -8,7 +8,7 @@ import pytest
 import numpy as np
 
 
-from openscm.adapters import MAGICC6, Hector
+from openscm.adapters import MAGICC6, Hector, PH99
 from openscm.core import ParameterSet
 from openscm.errors import ModelNotInitialisedError
 from openscm.scenarios import rcps
@@ -16,9 +16,10 @@ from openscm.highlevel import convert_scmdataframe_to_core
 from openscm.errors import NotAnScmParameterError
 from openscm.utils import convert_datetime_to_openscm_time
 from openscm.constants import ONE_YEAR_IN_S_INTEGER
+from openscm.units import unit_registry
 
 
-from conftest import assert_core
+from conftest import assert_core, assert_pint_equal
 
 
 @pytest.fixture(scope="function")
@@ -189,6 +190,63 @@ class TestMAGICCAdapter(_AdapterTester):
 
         assert_core(
             1.5833606,  # MAGICC6 should be stabe
+            get_comparison_time_for_year(2100),
+            res,
+            ("Surface Temperature"),
+            "World",
+            "K",
+            res.start_time,
+            ONE_YEAR_IN_S_INTEGER,
+        )
+
+
+class TestPH99Adapter(_AdapterTester):
+    tadapter = PH99
+
+    def test_initialize(self, test_adapter):
+        assert test_adapter.model is None
+        super().test_initialize(test_adapter)
+        assert test_adapter.model is not None
+
+    def test_set_config(self, test_adapter, test_config_paraset):
+        super().test_set_config(test_adapter, test_config_paraset)
+
+        tc1 = 3.8
+        test_config_paraset.get_writable_scalar_view(
+            "c1", ("World",), "ppb"
+        ).set(tc1 * 1000)
+
+        test_adapter.initialize()
+        test_adapter.set_config(test_config_paraset)
+
+        assert_pint_equal(test_adapter.model.c1, tc1 * unit_registry("ppm"))
+
+    def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
+        super().test_run(test_adapter, test_config_paraset, test_drivers_core)
+
+        test_adapter.initialize()
+        test_adapter.set_config(test_config_paraset)
+        test_adapter.set_drivers(test_drivers_core)
+        res = test_adapter.run()
+
+        def get_comparison_time_for_year(yr):
+            return convert_datetime_to_openscm_time(
+                datetime.datetime(yr, 1, 1,)
+            )
+
+        assert_core(
+            9.1478,
+            get_comparison_time_for_year(2017),
+            res,
+            ("Emissions", "CO2"),
+            "World",
+            "GtC / yr",
+            res.start_time,
+            ONE_YEAR_IN_S_INTEGER,
+        )
+
+        assert_core(
+            1.5833606,
             get_comparison_time_for_year(2100),
             res,
             ("Surface Temperature"),

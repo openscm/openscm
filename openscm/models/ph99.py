@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 import numpy as np
 
 
@@ -141,6 +144,35 @@ class PH99Model(object):
             raise OutOfBoundsError(error_msg)
 
         return res
+
+    def initialise_timeseries(self, driver="emissions"):
+        if driver != "emissions":
+            raise NotImplementedError("other run modes not implemented yet")
+
+        self.time_current = self.time_start
+
+        initialiser = np.nan * np.zeros_like(self.emissions.magnitude)
+
+        cumulative_emissions_init = deepcopy(initialiser)
+        cumulative_emissions_init[0] = 0
+        self.cumulative_emissions = unit_registry.Quantity(
+            cumulative_emissions_init,
+            "GtC"
+        )
+
+        concentrations_init = deepcopy(initialiser)
+        concentrations_init[0] = 290  # todo: remove hard coding
+        self.concentrations = unit_registry.Quantity(
+            concentrations_init,
+            "ppm"
+        )
+
+        temperatures_init = deepcopy(initialiser)
+        temperatures_init[0] = 14.6
+        self.temperatures = unit_registry.Quantity(
+            temperatures_init,
+            "degC"
+        )
 
     def run(self, restart=False) -> None:
         """Run the model

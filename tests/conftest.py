@@ -139,7 +139,7 @@ def assert_core(expected, time, test_core, name, region, unit, start, period_len
 def assert_pint_equal(a, b, **kwargs):
     c = b.to(a.units)
     try:
-        np.testing.assert_array_equal(a.magnitude, c.magnitude, **kwargs)
+        np.testing.assert_allclose(a.magnitude, c.magnitude, **kwargs)
 
     except AssertionError as e:
         original_msg = "{}".format(e)
