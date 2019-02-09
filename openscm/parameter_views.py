@@ -1,11 +1,14 @@
 from typing import Sequence
+from abc import ABCMeta, abstractmethod
+
+
 from .parameters import _Parameter
 from .timeframes import Timeframe, TimeframeConverter
 from .units import UnitConverter
 from .errors import ParameterEmptyError
 
 
-class ParameterView:
+class ParameterView(metaclass=ABCMeta):
     """
     Generic view to a :ref:`parameter <parameters>` (scalar or timeseries).
     """
@@ -30,6 +33,33 @@ class ParameterView:
         Check if parameter is empty, i.e. has not yet been written to.
         """
         return not self._parameter._has_been_written_to
+
+    def _attempt_aggregate(self) -> None:
+        """
+        Attempt to aggregate data in child parameters
+
+        Raises
+        ------
+        ParameterEmptyError
+            The parameter has no children to aggregate and hence is empty
+        """
+        if not self._parameter._children:
+            raise ParameterEmptyError
+
+        self._parameter._data = self.sum_child_data(self._parameter)
+
+    @abstractmethod
+    def sum_child_data(self, parameter: _Parameter):
+        """
+        Sum child data
+
+        Parameters
+        ----------
+        parameter
+            Parameter whose child data we want to sum
+        """
+        # the sum method will depend on the type of view
+        pass
 
 
 class ScalarView(ParameterView):
@@ -62,7 +92,32 @@ class ScalarView(ParameterView):
         the returned value will be the sum of the values of all of the child
         parameters.
         """
+        if self.is_empty:
+            self._attempt_aggregate()
+
         return self._unit_converter.convert_from(self._parameter._data)
+
+    def sum_child_data(self, parameter: _Parameter):
+        """
+        Sum child data
+
+        Parameters
+        ----------
+        parameter
+            Parameter whose child data we want to sum
+        """
+        for _, cp in parameter._children.items():
+            if not cp._children:
+                data_to_add = cp._data
+            else:
+                data_to_add = self.sum_child_data(cp)
+            data_to_add = self._unit_converter.convert_from(data_to_add)
+            try:
+                data += data_to_add
+            except NameError:
+                data = data_to_add
+
+        return data
 
 
 class WritableScalarView(ScalarView):
@@ -121,31 +176,37 @@ class TimeseriesView(ParameterView):
         parameters.
         """
         if self.is_empty:
-            if not self._parameter._children:
-                raise ParameterEmptyError
-
-            def get_child_data(para):
-                # where should this go?
-                for _, cp in para._children.items():
-                    if not cp._children:
-                        data_to_add = cp._data
-                    else:
-                        data_to_add = get_child_data(cp)
-                    data_to_add = self._timeframe_converter.convert_from(
-                        self._unit_converter.convert_from(data_to_add)
-                    )
-                    try:
-                        data += data_to_add
-                    except NameError:
-                        data = data_to_add
-
-                return data
-
-            self._parameter._data = get_child_data(self._parameter)
+            self._attempt_aggregate()
 
         return self._timeframe_converter.convert_from(
             self._unit_converter.convert_from(self._parameter._data)
         )
+
+    def sum_child_data(self, parameter: _Parameter):
+        """
+        Sum child data
+
+        As this is a timeseries view, we aggregate onto a single timeframe.
+
+        Parameters
+        ----------
+        parameter
+            Parameter whose child data we want to sum
+        """
+        for _, cp in parameter._children.items():
+            if not cp._children:
+                data_to_add = cp._data
+            else:
+                data_to_add = self.sum_child_data(cp)
+            data_to_add = self._timeframe_converter.convert_from(
+                self._unit_converter.convert_from(data_to_add)
+            )
+            try:
+                data += data_to_add
+            except NameError:
+                data = data_to_add
+
+        return data
 
     def get(self, index: int) -> float:
         """

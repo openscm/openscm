@@ -165,7 +165,8 @@ def test_parameterset_named_initialisation():
 def test_scalar_parameter_view(core):
     parameterset = core.parameters
     cs = parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "degC")
-    assert isnan(cs.get())
+    with pytest.raises(ParameterEmptyError):
+        cs.get()
     assert cs.is_empty
     cs_writable = parameterset.get_writable_scalar_view(
         ("Climate Sensitivity"), "World", "degF"
@@ -205,22 +206,22 @@ def test_scalar_parameter_view_aggregation(core, start_time):
     a_1 = parameterset.get_scalar_view(
         ("Top", "a", "1"), ("World"), "dimensionless"
     )
-    np.testing.assert_allclose(a_1.get_series(), ta_1)
+    np.testing.assert_allclose(a_1.get(), ta_1)
 
     a_2 = parameterset.get_scalar_view(
         ("Top", "a", "2"), ("World"), "dimensionless"
     )
-    np.testing.assert_allclose(a_2.get_series(), ta_2)
+    np.testing.assert_allclose(a_2.get(), ta_2)
 
     a = parameterset.get_scalar_view(
         ("Top", "a"), ("World"), "dimensionless"
     )
-    np.testing.assert_allclose(a.get_series(), ta_1 + ta_2)
+    np.testing.assert_allclose(a.get(), ta_1 + ta_2)
 
     b = parameterset.get_scalar_view(
         ("Top", "b"), ("World"), "dimensionless"
     )
-    np.testing.assert_allclose(b.get_series(), tb)
+    np.testing.assert_allclose(b.get(), tb)
 
     with pytest.raises(ParameterReadonlyError):
         parameterset.get_writable_scalar_view(
@@ -230,7 +231,7 @@ def test_scalar_parameter_view_aggregation(core, start_time):
     total = parameterset.get_scalar_view(
         ("Top"), ("World"), "dimensionless"
     )
-    np.testing.assert_allclose(total.get_series(), ta_1 + ta_2 + tb)
+    np.testing.assert_allclose(total.get(), ta_1 + ta_2 + tb)
 
 
 @pytest.fixture(
