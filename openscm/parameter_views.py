@@ -61,7 +61,6 @@ class ParameterView(metaclass=ABCMeta):
         -------
         Sum of child parameter data
         """
-        # the sum method will depend on the type of view
         for _, cp in parameter._children.items():
             data_raw = cp._data if not cp._children else self.sum_child_data(cp)
 
