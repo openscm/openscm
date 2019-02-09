@@ -285,9 +285,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     fossil_energy_writable.set_series(fossil_energy_emms)
 
     land_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Land"), ("World"), "MtC/yr", start_time, 24 * 3600
     )
-    land_writable.set_series(land_emms)
+    land_writable.set_series(land_emms * 1000)
 
     fossil_industry = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Industry"),
