@@ -5,6 +5,9 @@ from dateutil import relativedelta
 import warnings
 
 
+OPENSCM_REFERENCE_TIME = datetime.datetime(1970, 1, 1, 0, 0, 0)
+
+
 def ensure_input_is_tuple(inp):
     if isinstance(inp, str):
         if getattr(ensure_input_is_tuple, "calls", 0) == 0:

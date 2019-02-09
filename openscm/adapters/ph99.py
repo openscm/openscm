@@ -53,8 +53,6 @@ class PH99(Adapter):
                 self.model.timestep.to("s").magnitude
             )
             self.model.emissions = pview.get_series() * self.model.emissions.units
-            import pdb
-            pdb.set_trace()
         else:
             warnings.warn("PH99 does not use {}".format(parameter.full_name))
 
@@ -119,6 +117,11 @@ class PH99(Adapter):
                 magnitude = value.magnitude
 
                 if isinstance(magnitude, np.ndarray):
+                    if name == ("Surface Temperature"):
+                        # this is where reference period etc. is important
+                        value = value - self.model.t1
+                        magnitude = value.magnitude
+
                     results.parameters.get_writable_timeseries_view(
                         name,
                         ("World",),

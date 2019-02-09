@@ -187,6 +187,12 @@ class BooleanView(ParameterView):
         """
         return self._parameter._data
 
+    def _get_child_view(self, child_parameter: _Parameter) -> ParameterView:
+        return type(self)(child_parameter)
+
+    def _sum_child_data_views(self, child_data_views: list) -> float:
+        raise ValueError
+
 
 class WritableBooleanView(BooleanView):
     """
@@ -232,6 +238,16 @@ class ArrayView(ParameterView):
         Get current value of an array parameter.
         """
         return self._unit_converter.convert_from(self._parameter._data)
+
+    def _get_child_view(self, child_parameter: _Parameter) -> ParameterView:
+        return type(self)(child_parameter, self._unit_converter._target)
+
+    def _sum_child_data_views(self, child_data_views: list) -> float:
+        data = 0
+        for v in child_data_views:
+            data += v.get()
+
+        return data
 
 
 class WritableArrayView(ArrayView):

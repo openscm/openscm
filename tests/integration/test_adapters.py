@@ -235,7 +235,7 @@ class TestPH99Adapter(_AdapterTester):
             )
 
         assert_core(
-            9.1478,
+            10.1457206,
             get_comparison_time_for_year(2017),
             res,
             ("Emissions", "CO2"),
@@ -246,7 +246,7 @@ class TestPH99Adapter(_AdapterTester):
         )
 
         assert_core(
-            1.5833606,
+            1.632585,
             get_comparison_time_for_year(2100),
             res,
             ("Surface Temperature"),
