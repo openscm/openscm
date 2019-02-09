@@ -274,6 +274,12 @@ class UnitConverter:
 
     """
 
+    _source: str
+    """Source unit"""
+
+    _target: str
+    """Target unit"""
+
     _offset: float
     """Offset for units (e.g. for temperature units)"""
 
@@ -298,12 +304,18 @@ class UnitConverter:
         UndefinedUnitError
             Unit undefined.
         """
+        self._source = source
+        self._target = target
+
         source_unit = unit_registry.Unit(source)
         target_unit = unit_registry.Unit(target)
+
         s1 = unit_registry.Quantity(1, source_unit)
         s2 = unit_registry.Quantity(-1, source_unit)
+
         t1 = s1.to(target_unit)
         t2 = s2.to(target_unit)
+
         self._scaling = float(t2.m - t1.m) / float(s2.m - s1.m)
         self._offset = t1.m - self._scaling * s1.m
 
