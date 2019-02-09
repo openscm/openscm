@@ -116,8 +116,13 @@ class PH99Model(object):
             .magnitude
         )
         np.testing.assert_allclose(
-            res, round(res)
-        ), "somehow you have reached a point in time which isn't a multiple of your timeperiod..."
+            res,
+            round(res),
+            err_msg=(
+                "somehow you have reached a point in time which isn't a multiple "
+                "of your timeperiod..."
+            )
+        ),
         assert (
             res >= 0
         ), "somehow you have reached a point in time which is before your starting point..."
