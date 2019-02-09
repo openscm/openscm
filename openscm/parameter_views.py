@@ -34,7 +34,7 @@ class ParameterView(metaclass=ABCMeta):
         """
         return not self._parameter._has_been_written_to
 
-    def _attempt_aggregate(self) -> None:
+    def _attempt_aggregate_child_data(self) -> None:
         """
         Attempt to aggregate data in child parameters
 
@@ -46,46 +46,55 @@ class ParameterView(metaclass=ABCMeta):
         if not self._parameter._children:
             raise ParameterEmptyError
 
-        self._parameter._data = self.sum_child_data(self._parameter)
+        return self._sum_child_data_views(self._get_child_data_views())
 
-    def sum_child_data(self, parameter: _Parameter):
+    def _get_child_data_views(self) -> list:
         """
-        Sum child data
-
-        Parameters
-        ----------
-        parameter
-            Parameter whose child data we want to sum
+        Get a list of child views
 
         Returns
         -------
-        Sum of child parameter data
+        list
+            List of views into child parameters
         """
-        for _, cp in parameter._children.items():
-            data_raw = cp._data if not cp._children else self.sum_child_data(cp)
+        views = []
+        for cp in self._parameter._children.values():
+            views.append(self._get_child_view(cp))
 
-            data_to_add = self._format_data(data_raw)
+        return views
 
-            try:
-                data += data_to_add
-            except NameError:
-                data = data_to_add
+    # how do you type hints, return type is self...
+    @abstractmethod
+    def _get_child_view(self, child_parameter: _Parameter):
+        """
+        Get view of child data with desired units, timeframe etc.
 
-        return data
+        Parameters
+        ----------
+        child_parameter
+            Parameter to get a view into
+
+        Returns
+        -------
+        ParameterView
+            View of child parameter
+        """
+        pass
 
     @abstractmethod
-    def _format_data(self, data):
+    def _sum_child_data_views(self, child_data_views: list):
         """
-        Format data e.g. convert to desired units, desired timeframe
+        Sum child data views
 
         Parameters
         ----------
-        data
-            Data to format
+        child_data_views
+            List of child data views to sum
 
         Returns
         -------
-        Formatted data
+        float, Sequence[float]
+            Sum of child data
         """
         pass
 
@@ -121,12 +130,19 @@ class ScalarView(ParameterView):
         parameters.
         """
         if self.is_empty:
-            self._attempt_aggregate()
+            return self._attempt_aggregate_child_data()
 
         return self._unit_converter.convert_from(self._parameter._data)
 
-    def _format_data(self, data):
-        return self._unit_converter.convert_from(data)
+    def _get_child_view(self, child_parameter: _Parameter) -> ParameterView:
+        return type(self)(child_parameter, self._unit_converter._target)
+
+    def _sum_child_data_views(self, child_data_views: list) -> float:
+        data = 0
+        for v in child_data_views:
+            data += v.get()
+
+        return data
 
 
 class WritableScalarView(ScalarView):
@@ -185,16 +201,25 @@ class TimeseriesView(ParameterView):
         parameters.
         """
         if self.is_empty:
-            self._attempt_aggregate()
+            return self._attempt_aggregate_child_data()
 
         return self._timeframe_converter.convert_from(
             self._unit_converter.convert_from(self._parameter._data)
         )
 
-    def _format_data(self, data):
-        return self._timeframe_converter.convert_from(
-            self._unit_converter.convert_from(data)
+    def _get_child_view(self, child_parameter: _Parameter) -> ParameterView:
+        return type(self)(
+            child_parameter,
+            self._unit_converter._target,
+            self._timeframe_converter._target,
         )
+
+    def _sum_child_data_views(self, child_data_views: list) -> Sequence[float]:
+        data = 0
+        for v in child_data_views:
+            data += v.get_series()
+
+        return data
 
     def get(self, index: int) -> float:
         """
