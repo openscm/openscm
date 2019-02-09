@@ -57,6 +57,10 @@ class ScalarView(ParameterView):
     def get(self) -> float:
         """
         Get current value of scalar parameter.
+
+        If the parameter has child parameters (aka ``_children`` is not empty),
+        the returned value will be the sum of the values of all of the child
+        parameters.
         """
         return self._unit_converter.convert_from(self._parameter._data)
 
@@ -111,6 +115,10 @@ class TimeseriesView(ParameterView):
     def get_series(self) -> Sequence[float]:
         """
         Get values of the full timeseries.
+
+        If the parameter has child parameters (aka ``_children`` is not empty),
+        the returned value will be the sum of the values of all of the child
+        parameters.
         """
         if self.is_empty:
             if not self._parameter._children:
