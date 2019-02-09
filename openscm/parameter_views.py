@@ -48,7 +48,6 @@ class ParameterView(metaclass=ABCMeta):
 
         self._parameter._data = self.sum_child_data(self._parameter)
 
-    @abstractmethod
     def sum_child_data(self, parameter: _Parameter):
         """
         Sum child data
@@ -57,8 +56,38 @@ class ParameterView(metaclass=ABCMeta):
         ----------
         parameter
             Parameter whose child data we want to sum
+
+        Returns
+        -------
+        Sum of child parameter data
         """
         # the sum method will depend on the type of view
+        for _, cp in parameter._children.items():
+            data_raw = cp._data if not cp._children else self.sum_child_data(cp)
+
+            data_to_add = self._format_data(data_raw)
+
+            try:
+                data += data_to_add
+            except NameError:
+                data = data_to_add
+
+        return data
+
+    @abstractmethod
+    def _format_data(self, data):
+        """
+        Format data e.g. convert to desired units, desired timeframe
+
+        Parameters
+        ----------
+        data
+            Data to format
+
+        Returns
+        -------
+        Formatted data
+        """
         pass
 
 
@@ -97,27 +126,8 @@ class ScalarView(ParameterView):
 
         return self._unit_converter.convert_from(self._parameter._data)
 
-    def sum_child_data(self, parameter: _Parameter):
-        """
-        Sum child data
-
-        Parameters
-        ----------
-        parameter
-            Parameter whose child data we want to sum
-        """
-        for _, cp in parameter._children.items():
-            if not cp._children:
-                data_to_add = cp._data
-            else:
-                data_to_add = self.sum_child_data(cp)
-            data_to_add = self._unit_converter.convert_from(data_to_add)
-            try:
-                data += data_to_add
-            except NameError:
-                data = data_to_add
-
-        return data
+    def _format_data(self, data):
+        return self._unit_converter.convert_from(data)
 
 
 class WritableScalarView(ScalarView):
@@ -182,31 +192,10 @@ class TimeseriesView(ParameterView):
             self._unit_converter.convert_from(self._parameter._data)
         )
 
-    def sum_child_data(self, parameter: _Parameter):
-        """
-        Sum child data
-
-        As this is a timeseries view, we aggregate onto a single timeframe.
-
-        Parameters
-        ----------
-        parameter
-            Parameter whose child data we want to sum
-        """
-        for _, cp in parameter._children.items():
-            if not cp._children:
-                data_to_add = cp._data
-            else:
-                data_to_add = self.sum_child_data(cp)
-            data_to_add = self._timeframe_converter.convert_from(
-                self._unit_converter.convert_from(data_to_add)
-            )
-            try:
-                data += data_to_add
-            except NameError:
-                data = data_to_add
-
-        return data
+    def _format_data(self, data):
+        return self._timeframe_converter.convert_from(
+            self._unit_converter.convert_from(data)
+        )
 
     def get(self, index: int) -> float:
         """
