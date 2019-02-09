@@ -126,7 +126,7 @@ class TimeseriesView(ParameterView):
 
             def get_child_data(para):
                 # where should this go?
-                for name, cp in para._children.items():
+                for _, cp in para._children.items():
                     if not cp._children:
                         data_to_add = cp._data
                     else:
