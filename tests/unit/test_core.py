@@ -180,6 +180,59 @@ def test_scalar_parameter_view(core):
         parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "kg")
 
 
+def test_scalar_parameter_view_aggregation(core, start_time):
+    ta_1 = 0.6
+    ta_2 = 0.3
+    tb = 0.1
+
+    parameterset = core.parameters
+
+    a_1_writable = parameterset.get_writable_scalar_view(
+        ("Top", "a", "1"), ("World"), "dimensionless"
+    )
+    a_1_writable.set(ta_1)
+
+    a_2_writable = parameterset.get_writable_scalar_view(
+        ("Top", "a", "2"), ("World"), "dimensionless"
+    )
+    a_2_writable.set(ta_2)
+
+    b_writable = parameterset.get_writable_scalar_view(
+        ("Top", "b"), ("World"), "dimensionless"
+    )
+    b_writable.set(tb)
+
+    a_1 = parameterset.get_scalar_view(
+        ("Top", "a", "1"), ("World"), "dimensionless"
+    )
+    np.testing.assert_allclose(a_1.get_series(), ta_1)
+
+    a_2 = parameterset.get_scalar_view(
+        ("Top", "a", "2"), ("World"), "dimensionless"
+    )
+    np.testing.assert_allclose(a_2.get_series(), ta_2)
+
+    a = parameterset.get_scalar_view(
+        ("Top", "a"), ("World"), "dimensionless"
+    )
+    np.testing.assert_allclose(a.get_series(), ta_1 + ta_2)
+
+    b = parameterset.get_scalar_view(
+        ("Top", "b"), ("World"), "dimensionless"
+    )
+    np.testing.assert_allclose(b.get_series(), tb)
+
+    with pytest.raises(ParameterReadonlyError):
+        parameterset.get_writable_scalar_view(
+            ("Top", "a"), ("World"), "dimensionless"
+        )
+
+    total = parameterset.get_scalar_view(
+        ("Top"), ("World"), "dimensionless"
+    )
+    np.testing.assert_allclose(total.get_series(), ta_1 + ta_2 + tb)
+
+
 @pytest.fixture(
     params=[
         (range(5 * 365), [0.24373829, 0.7325541, 1.22136991, 1.71018572, 2.19900153]),
