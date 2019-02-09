@@ -12,7 +12,8 @@ from .errors import (
 )
 from .timeframes import Timeframe
 from .utils import ensure_input_is_tuple
-from . import regions # needed for type annotations
+from . import regions  # needed for type annotations
+
 
 class ParameterType(Enum):
     """
