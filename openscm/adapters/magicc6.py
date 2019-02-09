@@ -27,7 +27,7 @@ for k, v in _mapping.items():
     openscm_para_magicc_mapping[v] = k
 
 parameters_magicc = {
-    "core_climatesensitivity": {"type": ParameterType.SCALAR, "unit": "K",},
+    "core_climatesensitivity": {"type": ParameterType.SCALAR, "unit": "kelvin",},
     "core_delq2xco2": {"type": ParameterType.SCALAR, "unit": "W / m^2"},
     "co2_tempfeedback_switch": {"type": ParameterType.BOOLEAN},
     "gen_sresregions2nh": {"type": ParameterType.ARRAY, "unit": "dimensionless"},
