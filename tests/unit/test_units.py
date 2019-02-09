@@ -93,6 +93,8 @@ def test_a():
 
 def test_conversion_without_offset():
     uc = UnitConverter("kg", "t")
+    assert uc._source == "kg"
+    assert uc._source == "t"
     np.testing.assert_allclose(uc.convert_from(1000), 1)
     np.testing.assert_allclose(uc.convert_to(1), 1000)
 
