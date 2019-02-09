@@ -530,7 +530,7 @@ class ScmDataFrameBase(object):
         )
         self._sort_meta_cols()
 
-    def line_plot(self, x='time', y='value', **kwargs):
+    def line_plot(self, x="time", y="value", **kwargs):
         """Helper to generate line plots of timeseries
 
         See ``pyam.IamDataFrame.line_plot`` for more information
