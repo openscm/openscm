@@ -649,8 +649,58 @@ def test_append_inplace(test_scm_df):
     test_scm_df.append(other, inplace=True)
 
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
+    # is this averaging business really what we want
     exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2]
     npt.assert_almost_equal(obs, exp)
+
+
+def test_append_column_order_time_interpolation(test_scm_df):
+    other_2 = test_scm_df.filter(variable="Primary Energy|Coal")
+    test_scm_df.set_meta("co2_only", name="runmodus")
+    other = copy.deepcopy(test_scm_df)
+
+    tnew_var = "Primary Energy|Gas"
+    other._meta = other._meta[sorted(other._meta.columns.values)]
+    other._meta.loc[1, "variable"] = tnew_var
+
+    tdata = other._data.copy().reset_index()
+    tdata["time"] = [
+        datetime.datetime(2002, 1, 1, 0, 0),
+        datetime.datetime(2008, 1, 1, 0, 0),
+    ]
+    tdata = tdata.set_index("time")
+    tdata.index = tdata.index.astype("object")
+
+    other._data = tdata
+
+    other_2._meta["ecs"] = 3.0
+    other_2._meta["climate_model"] = "a_model2"
+
+    res = test_scm_df.append(other).append(other_2)
+    exp = ScmDataFrame(
+        pd.DataFrame(
+            np.array([
+                [1.0, 1.0, 1.0, 6.0],
+                [np.nan, 0.5, 2.0, 3.0],
+                [0.5, 2.0, 3.0, np.nan],
+                [2.0, 2.0, 7.0, 7.0],
+                [np.nan, 0.5, np.nan, 3.0],
+            ]).T,
+            index=[2002, 2005, 2008, 2010]
+        ),
+        columns={
+            "model": ["a_iam"],
+            "climate_model": ["a_model", "a_model", "a_model", "a_model", "a_model2"],
+            "scenario": ["a_scenario", "a_scenario", "a_scenario", "a_scenario2", "a_scenario"],
+            "region": ["World"],
+            "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy|Gas", "Primary Energy", "Primary Energy|Coal"],
+            "unit": ["EJ/y"],
+            "runmodus": ["co2_only", "co2_only", "co2_only", "co2_only", np.nan],
+            "ecs": [np.nan, np.nan, np.nan, np.nan, 3.0],
+        },
+    )
+
+    pd.testing.assert_frame_equal(res.timeseries(), exp.timeseries(), check_like=True)
 
 
 @pytest.mark.skip
