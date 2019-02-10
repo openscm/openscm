@@ -237,7 +237,9 @@ def test_time_current(ph99):
 
     ph99.time_current = 10 * unit_registry("s")
 
-    np.testing.assert_allclose(ph99.time_current.magnitude, 10 / unit_registry("yr").to("s").magnitude)
+    np.testing.assert_allclose(
+        ph99.time_current.magnitude, 10 / unit_registry("yr").to("s").magnitude
+    )
     assert ph99.time_current.units == unit_registry("yr")
 
 

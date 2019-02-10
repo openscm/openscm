@@ -9,25 +9,19 @@ from ..internal import Adapter
 from ..core import Core, ParameterSet
 from ..parameters import ParameterType
 from ..errors import NotAnScmParameterError
-from ..highlevel import (
-    convert_core_to_scmdataframe,
-    convert_scmdataframe_to_core
-)
+from ..highlevel import convert_core_to_scmdataframe, convert_scmdataframe_to_core
 from ..utils import round_to_nearest_year
 
 
 # how to do this intelligently and scalably?
-_mapping = {
-    "ecs": "core_climatesensitivity",
-    "rf2xco2": "core_delq2xco2",
-}
+_mapping = {"ecs": "core_climatesensitivity", "rf2xco2": "core_delq2xco2"}
 openscm_para_magicc_mapping = {}
 for k, v in _mapping.items():
     openscm_para_magicc_mapping[k] = v
     openscm_para_magicc_mapping[v] = k
 
 parameters_magicc = {
-    "core_climatesensitivity": {"type": ParameterType.SCALAR, "unit": "kelvin",},
+    "core_climatesensitivity": {"type": ParameterType.SCALAR, "unit": "kelvin"},
     "core_delq2xco2": {"type": ParameterType.SCALAR, "unit": "W / m^2"},
     "co2_tempfeedback_switch": {"type": ParameterType.BOOLEAN},
     "gen_sresregions2nh": {"type": ParameterType.ARRAY, "unit": "dimensionless"},
@@ -59,8 +53,7 @@ class MAGICC6(Adapter):
         scen["time"] = scen["time"].apply(round_to_nearest_year)
         scen.set_meta("SET", name="todo")
         scen.write(
-            join(self.magicc.run_dir, self.magicc._scen_file_name),
-            self.magicc.version
+            join(self.magicc.run_dir, self.magicc._scen_file_name), self.magicc.version
         )
 
     def set_config(self, parameters: ParameterSet) -> None:
@@ -103,10 +96,12 @@ class MAGICC6(Adapter):
             raise NotImplementedError
 
     def run(self) -> Core:
-        res = self.magicc.run(startyear=1765, endyear=2500, only=["Emissions|CO2|MAGICC Fossil and Industrial", "Surface Temperature"])  # hard code for now
-        results = convert_scmdataframe_to_core(
-            res, climate_model=self.name
-        )
+        res = self.magicc.run(
+            startyear=1765,
+            endyear=2500,
+            only=["Emissions|CO2|MAGICC Fossil and Industrial", "Surface Temperature"],
+        )  # hard code for now
+        results = convert_scmdataframe_to_core(res, climate_model=self.name)
         for k, v in res.metadata["parameters"]["allcfgs"].items():
             try:
                 if parameters_magicc[k]["type"] == ParameterType.SCALAR:
@@ -117,7 +112,9 @@ class MAGICC6(Adapter):
                     pview.set(set_val)
                     if k in openscm_para_magicc_mapping:
                         other_view = results.parameters.get_writable_scalar_view(
-                            openscm_para_magicc_mapping[k], ("World",), parameters_magicc[k]["unit"]
+                            openscm_para_magicc_mapping[k],
+                            ("World",),
+                            parameters_magicc[k]["unit"],
                         )
                         other_view.set(set_val)
                 elif parameters_magicc[k]["type"] == ParameterType.ARRAY:
@@ -128,7 +125,9 @@ class MAGICC6(Adapter):
                     pview.set(set_val)
                     if k in openscm_para_magicc_mapping:
                         other_view = results.parameters.get_writable_array_view(
-                            openscm_para_magicc_mapping[k], ("World",), parameters_magicc[k]["unit"]
+                            openscm_para_magicc_mapping[k],
+                            ("World",),
+                            parameters_magicc[k]["unit"],
                         )
                         other_view.set(set_val)
                 elif parameters_magicc[k]["type"] == ParameterType.BOOLEAN:
@@ -136,7 +135,9 @@ class MAGICC6(Adapter):
                     pview = results.parameters.get_writable_boolean_view(k, ("World",))
                     pview.set(set_val)
                     if k in openscm_para_magicc_mapping:
-                        other_view = results.parameters.get_writable_boolean_view(openscm_para_magicc_mapping[k], ("World",))
+                        other_view = results.parameters.get_writable_boolean_view(
+                            openscm_para_magicc_mapping[k], ("World",)
+                        )
                         other_view.set(set_val)
                 else:
                     raise NotImplementedError

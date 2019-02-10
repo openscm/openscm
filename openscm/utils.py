@@ -29,14 +29,14 @@ def convert_openscm_time_to_datetime(oscm_in: int) -> datetime.datetime:
 
 
 def round_to_nearest_year(dtin):
-        """Round a datetime to Jan 1st 00:00:00 of the nearest year
+    """Round a datetime to Jan 1st 00:00:00 of the nearest year
 
         thank you https://stackoverflow.com/a/48108115"""
-        dt_start_year = dtin.replace(
-            month=1, day=1, minute=0, hour=0, second=0, microsecond=0
-        )
-        dt_half_year = dtin.replace(month=6, day=17)
-        if dtin > dt_half_year:
-            return dt_start_year + relativedelta.relativedelta(years=1)
-        else:
-            return dt_start_year
+    dt_start_year = dtin.replace(
+        month=1, day=1, minute=0, hour=0, second=0, microsecond=0
+    )
+    dt_half_year = dtin.replace(month=6, day=17)
+    if dtin > dt_half_year:
+        return dt_start_year + relativedelta.relativedelta(years=1)
+    else:
+        return dt_start_year

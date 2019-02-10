@@ -20,6 +20,7 @@ from .scmdataframebase import (
 from .constants import ONE_YEAR_IN_S_INTEGER
 from .utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
 from .parameters import ParameterType
+
 # from .adapters import get_adapter
 
 
@@ -211,11 +212,7 @@ def convert_config_dict_to_parameter_set(config):
     assert isinstance(config, dict)
     parameters = ParameterSet()
     for key, (region, value) in config.items():
-        view = parameters.get_writable_scalar_view(
-            key,
-            region,
-            str(value.units),
-        )
+        view = parameters.get_writable_scalar_view(key, region, str(value.units))
         view.set(value.magnitude)
 
     return parameters

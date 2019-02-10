@@ -20,16 +20,20 @@ del get_versions
 
 
 def run(drivers, model_configurations):
-    assert isinstance(model_configurations, dict), "model_configurations must be a dictionary"
-    for climate_model, configurations in progressbar.progressbar(model_configurations.items()):
+    assert isinstance(
+        model_configurations, dict
+    ), "model_configurations must be a dictionary"
+    for climate_model, configurations in progressbar.progressbar(
+        model_configurations.items()
+    ):
         print("running {}\n".format(climate_model))
         runner = get_adapter(climate_model)()
         runner.initialize()
-        for (scenario, model), sdf in progressbar.progressbar(drivers.timeseries().groupby(["scenario", "model"])):
+        for (scenario, model), sdf in progressbar.progressbar(
+            drivers.timeseries().groupby(["scenario", "model"])
+        ):
             print("running {}".format(scenario))
-            parameter_set_scenario = convert_scmdataframe_to_core(
-                ScmDataFrame(sdf)
-            )
+            parameter_set_scenario = convert_scmdataframe_to_core(ScmDataFrame(sdf))
             runner.set_drivers(parameter_set_scenario)
             for i, config in progressbar.progressbar(enumerate(configurations)):
                 parameter_set_config = convert_config_dict_to_parameter_set(config)

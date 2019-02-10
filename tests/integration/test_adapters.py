@@ -35,7 +35,9 @@ def test_config_paraset():
     parameters = ParameterSet()
     ecs_writable = parameters.get_writable_scalar_view("ecs", ("World",), "K")
     ecs_writable.set(3)
-    rf2x_writable = parameters.get_writable_scalar_view("rf2xco2", ("World",), "W / m^2")
+    rf2x_writable = parameters.get_writable_scalar_view(
+        "rf2xco2", ("World",), "W / m^2"
+    )
     rf2x_writable.set(4.0)
 
     yield parameters
@@ -88,16 +90,12 @@ class _AdapterTester(object):
         res = test_adapter.run()
 
         pview = res.parameters.get_scalar_view(
-            name=("ecs",),
-            region=("World",),
-            unit="K"
+            name=("ecs",), region=("World",), unit="K"
         )
         assert pview.get() == 3
 
         pview = res.parameters.get_scalar_view(
-            name=("rf2xco2",),
-            region=("World",),
-            unit="W / m^2"
+            name=("rf2xco2",), region=("World",), unit="W / m^2"
         )
         assert pview.get() == 4.0
 
@@ -173,9 +171,7 @@ class TestMAGICCAdapter(_AdapterTester):
         res = test_adapter.run()
 
         def get_comparison_time_for_year(yr):
-            return convert_datetime_to_openscm_time(
-                datetime.datetime(yr, 1, 1,)
-            )
+            return convert_datetime_to_openscm_time(datetime.datetime(yr, 1, 1))
 
         assert_core(
             9.1478,
@@ -212,9 +208,9 @@ class TestPH99Adapter(_AdapterTester):
         super().test_set_config(test_adapter, test_config_paraset)
 
         tc1 = 3.8
-        test_config_paraset.get_writable_scalar_view(
-            "c1", ("World",), "ppb"
-        ).set(tc1 * 1000)
+        test_config_paraset.get_writable_scalar_view("c1", ("World",), "ppb").set(
+            tc1 * 1000
+        )
 
         test_adapter.initialize()
         test_adapter.set_config(test_config_paraset)
@@ -230,9 +226,7 @@ class TestPH99Adapter(_AdapterTester):
         res = test_adapter.run()
 
         def get_comparison_time_for_year(yr):
-            return convert_datetime_to_openscm_time(
-                datetime.datetime(yr, 1, 1,)
-            )
+            return convert_datetime_to_openscm_time(datetime.datetime(yr, 1, 1))
 
         assert_core(
             10.1457206,

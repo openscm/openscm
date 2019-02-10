@@ -103,7 +103,9 @@ class PH99Model(object):
 
     @cumulative_emissions.setter
     def cumulative_emissions(self, value):
-        self._cumulative_emissions = value.to(self._cumulative_emissions_units).magnitude
+        self._cumulative_emissions = value.to(
+            self._cumulative_emissions_units
+        ).magnitude
 
     _cumulative_emissions_units = unit_registry("GtC")
     _cumulative_emissions = np.array([np.nan])
@@ -250,12 +252,12 @@ class PH99Model(object):
             raise ValueError("emissions have not been set yet or contain nan's")
 
         res = (self._time_current - self._time_start) / self._timestep
-        err_msg=(
+        err_msg = (
             "somehow you have reached a point in time which isn't a multiple "
             "of your timeperiod..."
         )
         # assert (res == 0) or (np.abs((res - round(res)) / res) < 10**-5), err_msg
-        assert (res == 0) or (-10**-5 < (res - round(res)) < 10**-5)
+        assert (res == 0) or (-10 ** -5 < (res - round(res)) < 10 ** -5)
         assert (
             res >= 0
         ), "somehow you have reached a point in time which is before your starting point..."
@@ -286,23 +288,16 @@ class PH99Model(object):
         cumulative_emissions_init = deepcopy(initialiser)
         cumulative_emissions_init[0] = 0
         self.cumulative_emissions = unit_registry.Quantity(
-            cumulative_emissions_init,
-            "GtC"
+            cumulative_emissions_init, "GtC"
         )
 
         concentrations_init = deepcopy(initialiser)
         concentrations_init[0] = 290  # todo: remove hard coding
-        self.concentrations = unit_registry.Quantity(
-            concentrations_init,
-            "ppm"
-        )
+        self.concentrations = unit_registry.Quantity(concentrations_init, "ppm")
 
         temperatures_init = deepcopy(initialiser)
         temperatures_init[0] = 14.6
-        self.temperatures = unit_registry.Quantity(
-            temperatures_init,
-            "degC"
-        )
+        self.temperatures = unit_registry.Quantity(temperatures_init, "degC")
 
     def run(self, restart=False) -> None:
         """Run the model

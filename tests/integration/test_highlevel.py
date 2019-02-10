@@ -25,10 +25,7 @@ from openscm.highlevel import (
 )
 from openscm.scenarios import rcps
 from openscm.constants import ONE_YEAR_IN_S_INTEGER
-from openscm.utils import (
-    convert_datetime_to_openscm_time,
-    round_to_nearest_year
-)
+from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_year
 
 
 from conftest import assert_core
@@ -115,7 +112,9 @@ def test_init_with_decimal_years():
 def test_init_df_from_timeseries(test_scm_df):
     df = ScmDataFrame(test_scm_df.timeseries())
     pd.testing.assert_frame_equal(
-        df.timeseries().reset_index(), test_scm_df.timeseries().reset_index(), check_like=True
+        df.timeseries().reset_index(),
+        test_scm_df.timeseries().reset_index(),
+        check_like=True,
     )
 
 
@@ -392,24 +391,28 @@ def test_filter_by_regexp(test_scm_df):
 
 def test_filter_timeseries_different_length():
     df = ScmDataFrame(
-        pd.DataFrame(np.array([[1.0, 2.0, 3.0], [4.0, 5.0, np.nan]]).T, index=[2000, 2001, 2002]),
+        pd.DataFrame(
+            np.array([[1.0, 2.0, 3.0], [4.0, 5.0, np.nan]]).T, index=[2000, 2001, 2002]
+        ),
         columns={
-            'model': ['a_iam'],
-            'climate_model': ['a_model'],
-            'scenario': ['a_scenario', 'a_scenario2'],
-            'region': ['World'],
-            'variable': ['Primary Energy'],
-            'unit': ['EJ/y']
-        }
+            "model": ["a_iam"],
+            "climate_model": ["a_model"],
+            "scenario": ["a_scenario", "a_scenario2"],
+            "region": ["World"],
+            "variable": ["Primary Energy"],
+            "unit": ["EJ/y"],
+        },
     )
 
-    npt.assert_array_equal(df.filter(scenario='a_scenario2').timeseries().squeeze(), [4.0, 5.0])
+    npt.assert_array_equal(
+        df.filter(scenario="a_scenario2").timeseries().squeeze(), [4.0, 5.0]
+    )
     npt.assert_array_equal(df.filter(year=2002).timeseries().squeeze(), 3.0)
 
-    exp = pd.Series(['a_scenario'], name='scenario')
-    obs = df.filter(year=2002)['scenario']
+    exp = pd.Series(["a_scenario"], name="scenario")
+    obs = df.filter(year=2002)["scenario"]
     pd.testing.assert_series_equal(exp, obs)
-    assert df.filter(scenario='a_scenario2', year=2002).timeseries().empty
+    assert df.filter(scenario="a_scenario2", year=2002).timeseries().empty
 
 
 def test_timeseries(test_scm_df):
@@ -589,6 +592,7 @@ def test_append(test_scm_df):
     other.set_meta("b", name="col2")
 
     df = test_scm_df.append(other)
+    assert isinstance(df, ScmDataFrame)
 
     # check that the new meta.index is updated, but not the original one
     assert "col1" in test_scm_df.meta
@@ -604,9 +608,49 @@ def test_append(test_scm_df):
     npt.assert_array_equal(ts.iloc[2], ts.iloc[3])
 
 
+@pytest.mark.xfail(reason="not sure how to handle this best")
+def test_append_exact_duplicates(test_scm_df):
+    other = copy.deepcopy(test_scm_df)
+    test_scm_df.append(other).timeseries()
+    pytest.raises(ValueError, test_scm_df.append, other=other)
+
+
 def test_append_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
-    pytest.raises(ValueError, test_scm_df.append, other=other)
+    other["time"] = [2020, 2030]
+    other._format_datetime_col()
+
+    res = test_scm_df.append(other)
+
+    obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
+    exp = [2.0, 7.0, 2.0, 7.0]
+    npt.assert_almost_equal(obs, exp)
+
+
+def test_append_duplicate_times(test_scm_df):
+    other = copy.deepcopy(test_scm_df)
+    other._data *= 2
+
+    res = test_scm_df.append(other)
+
+    obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
+    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2]
+    npt.assert_almost_equal(obs, exp)
+
+
+def test_append_inplace(test_scm_df):
+    other = copy.deepcopy(test_scm_df)
+    other._data *= 2
+
+    obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
+    exp = [2, 7]
+    npt.assert_almost_equal(obs, exp)
+
+    test_scm_df.append(other, inplace=True)
+
+    obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
+    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2]
+    npt.assert_almost_equal(obs, exp)
 
 
 @pytest.mark.skip
@@ -980,4 +1024,30 @@ def test_convert_core_to_scmdataframe():
     tdata["time"] = tdata["time"].apply(round_to_nearest_year)
     res["time"] = res["time"].apply(round_to_nearest_year)
 
-    pd.testing.assert_frame_equal(tdata.timeseries().reset_index(), res.timeseries().reset_index(), check_like=True)
+    pd.testing.assert_frame_equal(
+        tdata.timeseries().reset_index(),
+        res.timeseries().reset_index(),
+        check_like=True,
+    )
+
+
+def test_resample(test_scm_df):
+    res = test_scm_df.resample("AS").interpolate()
+
+    obs = (
+        res.filter(scenario="a_scenario", variable="Primary Energy")
+        .timeseries()
+        .T.squeeze()
+    )
+    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    npt.assert_almost_equal(obs, exp, decimal=1)
+
+
+def test_resample_long_datetimes(test_pd_longtime_df):
+    from cftime import DatetimeGregorian
+
+    df = ScmDataFrame(test_pd_longtime_df)
+    res = df.resample("AS").interpolate()
+
+    assert res.timeseries().T.index[0] == DatetimeGregorian(1005, 1, 1)
+    assert res.timeseries().T.index[-1] == DatetimeGregorian(3010, 1, 1)

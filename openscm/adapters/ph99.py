@@ -26,7 +26,7 @@ class PH99(Adapter):
         self.model = None
         self.name = "PH99"
         self._ecs = None
-        self._hc_per_m2_approx = 30**6 * unit_registry("J / kelvin / m^2")
+        self._hc_per_m2_approx = 30 ** 6 * unit_registry("J / kelvin / m^2")
         super().__init__()
 
     def initialize(self):
@@ -50,7 +50,7 @@ class PH99(Adapter):
                 ("World",),
                 self.model.emissions.units,
                 self.model.time_start.to("s").magnitude,
-                self.model.timestep.to("s").magnitude
+                self.model.timestep.to("s").magnitude,
             )
             self.model.emissions = pview.get_series() * self.model.emissions.units
         else:
@@ -65,9 +65,7 @@ class PH99(Adapter):
         try:
             modval = value._data * unit_registry(value.info.unit)
             setattr(
-                self.model,
-                para_name,
-                modval.to(getattr(self.model, para_name).units)
+                self.model, para_name, modval.to(getattr(self.model, para_name).units)
             )
         except AttributeError:
             if para_name == "ecs":
@@ -88,19 +86,14 @@ class PH99(Adapter):
                     self.model.alpha = alpha_val.to(self.model.alpha.units)
                 return
 
-            raise NotAnScmParameterError(
-                "{} is not a PH99 parameter".format(para_name)
-            )
+            raise NotAnScmParameterError("{} is not a PH99 parameter".format(para_name))
 
     def run(self) -> None:
         self.model.initialise_timeseries()
         self.model.run()
 
         st = self._run_start
-        et_raw = (
-            self.model.time_current
-            - self.model.time_start
-        ).to("s").magnitude
+        et_raw = (self.model.time_current - self.model.time_start).to("s").magnitude
         et = int(st + et_raw)
 
         results = Core("PH99", st, et)
@@ -130,24 +123,17 @@ class PH99(Adapter):
                     ).set_series(magnitude)
                 else:
                     results.parameters.get_writable_scalar_view(
-                        name,
-                        ("World"),
-                        str(value.units)
+                        name, ("World"), str(value.units)
                     ).set(magnitude)
 
         ecs = (self.model.mu * np.log(2) / self.model.alpha).to("K")
         results.parameters.get_writable_scalar_view(
-            ("ecs",),
-            ("World"),
-            str(ecs.units)
+            ("ecs",), ("World"), str(ecs.units)
         ).set(ecs.magnitude)
-
 
         rf2xco2 = self.model.mu * self._hc_per_m2_approx
         results.parameters.get_writable_scalar_view(
-            ("rf2xco2",),
-            ("World"),
-            str(rf2xco2.units)
+            ("rf2xco2",), ("World"), str(rf2xco2.units)
         ).set(rf2xco2.magnitude)
 
         return results

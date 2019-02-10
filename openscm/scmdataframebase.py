@@ -150,7 +150,7 @@ def df_append(dfs, inplace=False):
 
     When appending many dataframes it may be more efficient to call this routine once with a list of ScmDataFrames, then using
     `ScmDataFrame.append`. If timeseries with duplicate metadata are found, the timeseries are appended. For duplicate timeseries,
-    values fallings on the same timestep are averaged.
+    values fallings on the same timestep are averaged. ZN: Is this really what we want?
 
     Parameters
     ----------
@@ -165,29 +165,23 @@ def df_append(dfs, inplace=False):
     ScmDataFrameBase-like object containing the merged data. The resultant class will be determined by the type of the first object
     in dfs
     """
+    # ZN: I've had to revert this as something is going wrong with the new
+    # implementation's concatenation handling and multi indexing (plus it's much
+    # slower), talk tomorrow
     dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
     ]
+    ret = copy.deepcopy(dfs[0]) if not inplace else dfs[0]
 
-    data = pd.concat([d.timeseries() for d in dfs])
-    data = data.groupby(data.index.names).mean()
+    meta = pd.concat([d._meta for d in dfs], ignore_index=True, sort=False)
+    data = pd.concat([d._data for d in dfs], axis=1, ignore_index=True, sort=False)
+    data.columns = meta.index
 
-    all_meta = pd.concat([d._meta for d in dfs])
+    ret._meta = meta
+    ret._data = data
 
-    if not inplace:
-        ret = dfs[0].__class__(data)
-    else:
-        ret = dfs[0]
-        ret._data, ret._meta = format_data(data.copy())
-
-        ret._data.index = ret._data.index.astype("object")
-        ret._data.index.name = "time"
-        ret._data = ret._data.astype(float)
-
-    # Merge in any extra meta fields
-    if any([n not in data.index.names for n in all_meta.columns]):
-        ret._meta = pd.merge(ret._meta, all_meta, left_on=data.index.names, right_on=data.index.names,)
-    ret._sort_meta_cols()
+    if meta.duplicated().any():
+        raise ValueError("Duplicate timeseries")
 
     if not inplace:
         return ret
@@ -340,7 +334,9 @@ class ScmDataFrameBase(object):
 
             self["time"] = time_srs.apply(convert_str_to_datetime)
 
-        not_datetime = [not isinstance(x, (datetime, cftime.datetime)) for x in self["time"]]
+        not_datetime = [
+            not isinstance(x, (datetime, cftime.datetime)) for x in self["time"]
+        ]
         if any(not_datetime):
             bad_values = self["time"][not_datetime]
             error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
@@ -725,25 +721,33 @@ class ScmDataFrameBase(object):
 
         def get_resampler(scm_df):
             scm_df = scm_df
+
             class CustomDataArrayResample(object):
                 def __init__(self, *args, **kwargs):
                     self._resampler = DataArrayResample(*args, **kwargs)
                     self.target = self._resampler._full_index
-                    self.orig_index = self._resampler._obj.indexes['time']
+                    self.orig_index = self._resampler._obj.indexes["time"]
 
                     # To work around some limitations the maximum that can be interpolated over we are using a float index
-                    self._resampler._full_index = [(c - self.target[0]).total_seconds() for c in self.target]
-                    self._resampler._obj['time'] = [(c - self.target[0]).total_seconds() for c in self.orig_index]
-                    self._resampler._unique_coord = xr.IndexVariable(data=self._resampler._full_index, dims=['__resample_dim__'])
+                    self._resampler._full_index = [
+                        (c - self.target[0]).total_seconds() for c in self.target
+                    ]
+                    self._resampler._obj["time"] = [
+                        (c - self.target[0]).total_seconds() for c in self.orig_index
+                    ]
+                    self._resampler._unique_coord = xr.IndexVariable(
+                        data=self._resampler._full_index, dims=["__resample_dim__"]
+                    )
 
                 def __getattr__(self, item):
                     resampler = self._resampler
+
                     def r(*args, **kwargs):
                         # Perform the resampling
                         res = getattr(resampler, item)(*args, **kwargs)
 
                         # replace the index with the intended index
-                        res['time'] = self.target
+                        res["time"] = self.target
 
                         # Convert the result back to a ScmDataFrame
                         res = res.to_pandas()
@@ -755,17 +759,21 @@ class ScmDataFrameBase(object):
                         return df
 
                     return r
+
             return CustomDataArrayResample
 
         if datetime_cls is not None:
-            dts = [datetime_cls(d.year, d.month, d.day, d.hour, d.minute, d.second) for d in self._data.index]
+            dts = [
+                datetime_cls(d.year, d.month, d.day, d.hour, d.minute, d.second)
+                for d in self._data.index
+            ]
         else:
             dts = list(self._data.index)
         df = self._data.copy()
 
         # convert the dates to use cftime
         df.index = dts
-        df.index.name = 'time'
+        df.index.name = "time"
         x = xr.DataArray(df)
         # Use a custom resample array to wrap the resampling while returning a ScmDataFrame
         x._resample_cls = get_resampler(self)
@@ -792,4 +800,3 @@ class LongIamDataFrame(IamDataFrame):
                 bad_values
             )
             raise ValueError(error_msg)
-
