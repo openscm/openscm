@@ -11,13 +11,13 @@ Creating an :class:`~openscm.adapter.Adapter` subclass
 ******************************************************
 
 - Create your adapter source file in ``openscm/adapters/``, e.g.
-  ``MyAdapter.py``
+  ``myadpater.py``
 
 - Do not add additional dependencies to OpenSCM (such as in
   ``setup.py``), but make sure that you throw an
   :class:`~openscm.errors.AdapterNeedsModuleError` when a module you
   depend on is not installed on the user's system (please include a
-  message how to install the missing module):
+  message which describes how to install the missing module):
 
   .. code:: python
 
@@ -28,8 +28,8 @@ Creating an :class:`~openscm.adapter.Adapter` subclass
       except ImportError:
           raise AdapterNeedsModuleError(
               """
-              To run MyModel the 'MyExternalModule' is needed.
-              Please install it using `pip install myexternalmodule`.
+              To run My Model 'my_external_module' is needed.
+              Please install it using `pip install myexternalmodule`, see www.awesomemodule.com.
               """
           )
 
@@ -193,7 +193,7 @@ write the relevant output parameters. Refer to the
 Adding the adapter to the model registry
 ****************************************
 
-Eventually, add a lookup for your adapter in
+Once ready, add a lookup for your adapter in
 ``openscm/adapters/__init__.py`` (where marked in the file) according
 to:
 

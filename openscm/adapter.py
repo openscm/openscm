@@ -2,7 +2,7 @@
 All model adapters in OpenSCM are implemented as subclasses of the
 :class:`openscm.adapter.Adapter` base class.
 
-:ref:`writing-adapters` provides a howto on implementing an adapter.
+:ref:`writing-adapters` provides a how-to on implementing an adapter.
 """
 
 from .core import ParameterSet
