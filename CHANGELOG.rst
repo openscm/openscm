@@ -4,6 +4,7 @@ Changelog
 master
 ------
 
+- (`#88 <https://github.com/openclimatedata/openscm/pull/88>`_) Added demos of MAGICC and PH99 adapters
 - (`#103 <https://github.com/openclimatedata/openscm/pull/103>`_) Add resample method for `ScmDataFrame`
 - (`#101 <https://github.com/openclimatedata/openscm/pull/101>`_) Added PH99 model implementation
 - (`#102 <https://github.com/openclimatedata/openscm/pull/102>`_) Added a few plotting routines from pyam to ScmDataFrame for convenience
