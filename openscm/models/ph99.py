@@ -109,6 +109,7 @@ class PH99Model(object):
     """
 
     @property
+    # @profile
     def emissions_idx(self):
         if any(np.isnan(self.emissions)):
             raise ValueError("emissions have not been set yet or contain nan's")
@@ -118,14 +119,11 @@ class PH99Model(object):
             .to_base_units()
             .magnitude
         )
-        np.testing.assert_allclose(
-            res,
-            round(res),
-            err_msg=(
-                "somehow you have reached a point in time which isn't a multiple "
-                "of your timeperiod..."
-            )
-        ),
+        err_msg=(
+            "somehow you have reached a point in time which isn't a multiple "
+            "of your timeperiod..."
+        )
+        assert (res == 0) or (np.abs((res - round(res)) / res) < 10**-5), err_msg
         assert (
             res >= 0
         ), "somehow you have reached a point in time which is before your starting point..."
