@@ -115,7 +115,6 @@ class PH99(Adapter):
 
                 name = self._get_openscm_name(att)
                 magnitude = value.magnitude
-
                 if isinstance(magnitude, np.ndarray):
                     if name == ("Surface Temperature"):
                         # this is where reference period etc. is important
@@ -126,8 +125,8 @@ class PH99(Adapter):
                         name,
                         ("World",),
                         str(value.units),
-                        self.model.time_start.magnitude,
-                        self.model.timestep.magnitude,
+                        self.model.time_start.to("s").magnitude,
+                        self.model.timestep.to("s").magnitude,
                     ).set_series(magnitude)
                 else:
                     results.parameters.get_writable_scalar_view(

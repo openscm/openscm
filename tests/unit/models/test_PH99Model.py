@@ -92,7 +92,7 @@ def test_update_cumulative_emissions():
 
         assert_pint_equal(ph99.cumulative_emissions, expected)
 
-        ph99._check_update_overwrite.assert_called_with("cumulative_emissions")
+        ph99._check_update_overwrite.assert_called_with("_cumulative_emissions")
 
 
 def test_update_concentrations():
@@ -148,7 +148,7 @@ def test_update_concentrations():
         ) * unit_registry("ppm")
         assert_pint_equal(ph99.concentrations, expected)
 
-        ph99._check_update_overwrite.assert_called_with("concentrations")
+        ph99._check_update_overwrite.assert_called_with("_concentrations")
 
 
 def test_update_temperatures():
@@ -194,7 +194,7 @@ def test_update_temperatures():
         ) * unit_registry("degC")
         assert_pint_equal(ph99.temperatures, expected)
 
-        ph99._check_update_overwrite.assert_called_with("temperatures")
+        ph99._check_update_overwrite.assert_called_with("_temperatures")
 
 
 def test_check_update_overwrite():
@@ -233,12 +233,12 @@ def test_step(ph99):
 
 def test_time_current(ph99):
     assert ph99.time_current.magnitude == 0
-    assert ph99.time_current.units == unit_registry("s")
+    assert ph99.time_current.units == unit_registry("yr")
 
     ph99.time_current = 10 * unit_registry("s")
 
-    assert ph99.time_current.magnitude == 10
-    assert ph99.time_current.units == unit_registry("s")
+    np.testing.assert_allclose(ph99.time_current.magnitude, 10 / unit_registry("yr").to("s").magnitude)
+    assert ph99.time_current.units == unit_registry("yr")
 
 
 def test_run_no_emissions(ph99):

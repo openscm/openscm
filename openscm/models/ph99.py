@@ -38,7 +38,7 @@ class PH99Model(object):
     foundations, Climatic Change, 41, 303–331, 1999.
     """
 
-    def __init__(self, time_start=0 * unit_registry("s")):
+    def __init__(self, time_start=0 * unit_registry("yr")):
         """Initialise an instance of PH99Model
 
         Parameters
@@ -79,7 +79,7 @@ class PH99Model(object):
     def time_current(self, value):
         self._time_current = value.to(self._timestep_units).magnitude
 
-    _timestep_units = unit_registry("s")
+    _timestep_units = unit_registry("yr")
     _timestep = _yr.to(_timestep_units).magnitude
 
     @property
@@ -92,59 +92,157 @@ class PH99Model(object):
         self._emissions = value.to(self._emissions_units).magnitude
         self._emissions_nan = np.isnan(np.sum(self._emissions))
 
-    _emissions_units = unit_registry("GtC / s")
+    _emissions_units = unit_registry("GtC / yr")
     _emissions = np.array([np.nan])
+    _emissions_nan = True
 
+    @property
+    def cumulative_emissions(self):
+        """`pint.Quantity` array: Cumulative emissions of |CO2|"""
+        return self._cumulative_emissions * self._cumulative_emissions_units
 
-    cumulative_emissions = np.array([np.nan]) * unit_registry("GtC")
-    """`pint.Quantity` array: Cumulative emissions of |CO2|"""
+    @cumulative_emissions.setter
+    def cumulative_emissions(self, value):
+        self._cumulative_emissions = value.to(self._cumulative_emissions_units).magnitude
 
-    concentrations = np.array([np.nan]) * unit_registry("ppm")
-    """`pint.Quantity` array: Concentrations of |CO2|"""
+    _cumulative_emissions_units = unit_registry("GtC")
+    _cumulative_emissions = np.array([np.nan])
 
-    temperatures = unit_registry.Quantity(np.array([np.nan]), "degC")
-    """`pint.Quantity` array: Global-mean temperatures"""
+    @property
+    def concentrations(self):
+        """`pint.Quantity` array: Concentrations of |CO2|"""
+        return self._concentrations * self._concentrations_units
 
-    b = 1.51 * 10 ** -3 * unit_registry("ppm / (GtC * yr)")
-    """:obj:`pint.Quantity`: B parameter"""
+    @concentrations.setter
+    def concentrations(self, value):
+        self._concentrations = value.to(self._concentrations_units).magnitude
 
-    beta = 0.47 * unit_registry("ppm/GtC")
-    """:obj:`pint.Quantity`: beta parameter
+    _concentrations_units = unit_registry("ppm")
+    _concentrations = np.array([np.nan])
 
-    This is the fraction of emissions which impact the carbon cycle.
-    """
+    @property
+    def temperatures(self):
+        """`pint.Quantity` array: Global-mean temperatures"""
+        return unit_registry.Quantity(self._temperatures, str(self._temperatures_units))
 
-    sigma = 2.15 * 10 ** -2 * unit_registry("1/yr")
-    """:obj:`pint.Quantity`: sigma parameter
+    @temperatures.setter
+    def temperatures(self, value):
+        self._temperatures = value.to(self._temperatures_units).magnitude
 
-    The characteristic response time of the carbon cycle.
-    """
+    # have to initialise like this to avoid ambiguity...
+    _temperatures_tmp = unit_registry.Quantity(np.array([np.nan]), "degC")
+    _temperatures_units = _temperatures_tmp.units
+    _temperatures = _temperatures_tmp.magnitude
 
-    c1 = 290 * unit_registry("ppm")
-    """:obj:`pint.Quantity`: C1 parameter
+    @property
+    def b(self):
+        """:obj:`pint.Quantity`: B parameter"""
+        return self._b * self._b_units
 
-    The pre-industrial |CO2| concentration.
-    """
+    @b.setter
+    def b(self, value):
+        self._b = value.to(self._b_units).magnitude
 
-    mu = unit_registry.Quantity(8.7 * 10 ** -2, "degC/yr")
-    """:obj:`pint.Quantity`: mu parameter
+    _b_units = unit_registry("ppm / (GtC * yr)")
+    _b = 1.51 * 10 ** -3
 
-    This is like a scaling factor of the radiative forcing due to |CO2| but has
-    different units as it is used directly in a temperature response equation rather
-    than an energy balance equation.
-    """
+    @property
+    def beta(self):
+        """:obj:`pint.Quantity`: beta parameter
 
-    alpha = 1.7 * 10 ** -2 * unit_registry("1/yr")
-    """:obj:`pint.Quantity`: alpha parameter
+        This is the fraction of emissions which impact the carbon cycle.
+        """
+        return self._beta * self._beta_units
 
-    The characteristic response time of global-mean temperatures.
-    """
+    @beta.setter
+    def beta(self, value):
+        self._beta = value.to(self._beta_units).magnitude
 
-    t1 = unit_registry.Quantity(14.6, "degC")
-    """:obj:`pint.Quantity`: T1 parameter
+    _beta_units = unit_registry("ppm/GtC")
+    _beta = 0.47
 
-    The pre-industrial global-mean temperature.
-    """
+    @property
+    def sigma(self):
+        """:obj:`pint.Quantity`: sigma parameter
+
+        The characteristic response time of the carbon cycle.
+        """
+        return self._sigma * self._sigma_units
+
+    @sigma.setter
+    def sigma(self, value):
+        self._sigma = value.to(self._sigma_units).magnitude
+
+    _sigma_units = unit_registry("1/yr")
+    _sigma = 2.15 * 10 ** -2
+
+    @property
+    def c1(self):
+        """:obj:`pint.Quantity`: C1 parameter
+
+        The pre-industrial |CO2| concentration.
+        """
+        return self._c1 * self._c1_units
+
+    @c1.setter
+    def c1(self, value):
+        self._c1 = value.to(self._c1_units).magnitude
+
+    _c1_units = unit_registry("ppm")
+    _c1 = 290
+
+    @property
+    def mu(self):
+        """:obj:`pint.Quantity`: mu parameter
+
+        This is like a scaling factor of the radiative forcing due to |CO2| but has
+        different units as it is used directly in a temperature response equation rather
+        than an energy balance equation.
+        """
+        return self._mu * self._mu_units
+
+    @mu.setter
+    def mu(self, value):
+        self._mu = value.to(self._mu_units).magnitude
+
+    # have to initialise like this to avoid ambiguity...
+    _mu_tmp = unit_registry.Quantity(8.7 * 10 ** -2, "degC/yr")
+    _mu_units = _mu_tmp.units
+    _mu = _mu_tmp.magnitude
+
+    @property
+    def alpha(self):
+        """:obj:`pint.Quantity`: alpha parameter
+
+        The characteristic response time of global-mean temperatures.
+        """
+        return self._alpha * self._alpha_units
+
+    @alpha.setter
+    def alpha(self, value):
+        self._alpha = value.to(self._alpha_units).magnitude
+
+    _alpha_units = unit_registry("1/yr")
+    _alpha = 1.7 * 10 ** -2
+
+    @property
+    def t1(self):
+        """:obj:`pint.Quantity`: T1 parameter
+
+        The pre-industrial global-mean temperature.
+        """
+        # need to better understand
+        # pint.errors.OffsetUnitCalculusError: Ambiguous operation with offset unit (degC).
+        return unit_registry.Quantity(self._t1, str(self._t1_units))
+
+    @t1.setter
+    def t1(self, value):
+        self._t1 = value.to(self._t1_units).magnitude
+
+    # have to initialise like this to avoid ambiguity...
+    _t1_tmp = unit_registry.Quantity(14.6, "degC")
+    _t1_units = _t1_tmp.units
+    _t1 = _t1_tmp.magnitude
 
     @property
     def emissions_idx(self):
@@ -206,7 +304,6 @@ class PH99Model(object):
             "degC"
         )
 
-    @profile
     def run(self, restart=False) -> None:
         """Run the model
 
@@ -237,37 +334,36 @@ class PH99Model(object):
         self._update_temperatures()
 
     def _step_time(self) -> None:
-        self.time_current += self.timestep
+        self._time_current += self._timestep
 
     def _update_cumulative_emissions(self) -> None:
         """Update the cumulative emissions to the current timestep"""
-        self._check_update_overwrite("cumulative_emissions")
-        self.cumulative_emissions[self.emissions_idx] = (
-            self.cumulative_emissions[self.emissions_idx - 1]
-            + self.emissions[self.emissions_idx - 1] * self.timestep
+        self._check_update_overwrite("_cumulative_emissions")
+        self._cumulative_emissions[self.emissions_idx] = (
+            self._cumulative_emissions[self.emissions_idx - 1]
+            + self._emissions[self.emissions_idx - 1] * self._timestep
         )
 
-    @profile
     def _update_concentrations(self) -> None:
         """Update the concentrations to the current timestep"""
-        self._check_update_overwrite("concentrations")
+        self._check_update_overwrite("_concentrations")
         dcdt = (
-            self.b * self.cumulative_emissions[self.emissions_idx - 1]
-            + self.beta * self.emissions[self.emissions_idx - 1]
-            - self.sigma * (self.concentrations[self.emissions_idx - 1] - self.c1)
+            self._b * self._cumulative_emissions[self.emissions_idx - 1]
+            + self._beta * self._emissions[self.emissions_idx - 1]
+            - self._sigma * (self._concentrations[self.emissions_idx - 1] - self._c1)
         )
-        self.concentrations[self.emissions_idx] = (
-            self.concentrations[self.emissions_idx - 1] + dcdt * self.timestep
+        self._concentrations[self.emissions_idx] = (
+            self._concentrations[self.emissions_idx - 1] + dcdt * self._timestep
         )
 
     def _update_temperatures(self) -> None:
         """Update the temperatures to the current timestep"""
-        self._check_update_overwrite("temperatures")
-        dtdt = self.mu * np.log(
-            self.concentrations[self.emissions_idx - 1] / self.c1
-        ) - self.alpha * (self.temperatures[self.emissions_idx - 1] - self.t1)
-        self.temperatures[self.emissions_idx] = (
-            self.temperatures[self.emissions_idx - 1] + dtdt * self.timestep
+        self._check_update_overwrite("_temperatures")
+        dtdt = self._mu * np.log(
+            self._concentrations[self.emissions_idx - 1] / self._c1
+        ) - self._alpha * (self._temperatures[self.emissions_idx - 1] - self._t1)
+        self._temperatures[self.emissions_idx] = (
+            self._temperatures[self.emissions_idx - 1] + dtdt * self._timestep
         )
 
     def _check_update_overwrite(self, attribute_to_check) -> None:
