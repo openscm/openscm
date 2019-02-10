@@ -52,8 +52,41 @@ class PH99Model(object):
     _yr = 1 * unit_registry("yr")
     """:obj:`pint.Quantity`: one year"""
 
-    timestep = _yr.to("s")
-    """:obj:`pint.Quantity`: Size of timestep"""
+    @property
+    def timestep(self):
+        """:obj:`pint.Quantity`: Size of timestep"""
+        return self._timestep * self._timestep_units
+
+    @timestep.setter
+    def timestep(self, value):
+        value = value.to(self._timestep_units)
+        self._timestep = value.magnitude
+        self._timestep_units = value.units
+
+    @property
+    def time_start(self):
+        """:obj:`pint.Quantity`: Size of timestep"""
+        return self._time_start * self._timestep_units
+
+    @time_start.setter
+    def time_start(self, value):
+        value = value.to(self._timestep_units)
+        self._time_start = value.magnitude
+        self._timestep_units = value.units
+
+    @property
+    def time_current(self):
+        """:obj:`pint.Quantity`: Size of timestep"""
+        return self._time_current * self._timestep_units
+
+    @time_current.setter
+    def time_current(self, value):
+        value = value.to(self._timestep_units)
+        self._time_current = value.magnitude
+        self._timestep_units = value.units
+
+    _timestep_units = unit_registry("s")
+    _timestep = _yr.to(_timestep_units).magnitude
 
     emissions = np.array([np.nan]) * unit_registry("GtC/s")
     """`pint.Quantity` array: Emissions of |CO2|"""
@@ -114,11 +147,7 @@ class PH99Model(object):
         if any(np.isnan(self.emissions)):
             raise ValueError("emissions have not been set yet or contain nan's")
 
-        res = (
-            ((self.time_current - self.time_start) / self.timestep)
-            .to_base_units()
-            .magnitude
-        )
+        res = (self._time_current - self._time_start) / self._timestep
         err_msg=(
             "somehow you have reached a point in time which isn't a multiple "
             "of your timeperiod..."
@@ -172,6 +201,7 @@ class PH99Model(object):
             "degC"
         )
 
+    # @profile
     def run(self, restart=False) -> None:
         """Run the model
 
