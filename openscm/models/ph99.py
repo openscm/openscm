@@ -59,9 +59,7 @@ class PH99Model(object):
 
     @timestep.setter
     def timestep(self, value):
-        value = value.to(self._timestep_units)
-        self._timestep = value.magnitude
-        self._timestep_units = value.units
+        self._timestep = value.to(self._timestep_units).magnitude
 
     @property
     def time_start(self):
@@ -70,9 +68,7 @@ class PH99Model(object):
 
     @time_start.setter
     def time_start(self, value):
-        value = value.to(self._timestep_units)
-        self._time_start = value.magnitude
-        self._timestep_units = value.units
+        self._time_start = value.to(self._timestep_units).magnitude
 
     @property
     def time_current(self):
@@ -81,15 +77,24 @@ class PH99Model(object):
 
     @time_current.setter
     def time_current(self, value):
-        value = value.to(self._timestep_units)
-        self._time_current = value.magnitude
-        self._timestep_units = value.units
+        self._time_current = value.to(self._timestep_units).magnitude
 
     _timestep_units = unit_registry("s")
     _timestep = _yr.to(_timestep_units).magnitude
 
-    emissions = np.array([np.nan]) * unit_registry("GtC/s")
-    """`pint.Quantity` array: Emissions of |CO2|"""
+    @property
+    def emissions(self):
+        """`pint.Quantity` array: Emissions of |CO2|"""
+        return self._emissions * self._emissions_units
+
+    @emissions.setter
+    def emissions(self, value):
+        self._emissions = value.to(self._emissions_units).magnitude
+        self._emissions_nan = np.isnan(np.sum(self._emissions))
+
+    _emissions_units = unit_registry("GtC / s")
+    _emissions = np.array([np.nan])
+
 
     cumulative_emissions = np.array([np.nan]) * unit_registry("GtC")
     """`pint.Quantity` array: Cumulative emissions of |CO2|"""
@@ -142,9 +147,8 @@ class PH99Model(object):
     """
 
     @property
-    # @profile
     def emissions_idx(self):
-        if any(np.isnan(self.emissions)):
+        if self._emissions_nan:
             raise ValueError("emissions have not been set yet or contain nan's")
 
         res = (self._time_current - self._time_start) / self._timestep
@@ -152,13 +156,14 @@ class PH99Model(object):
             "somehow you have reached a point in time which isn't a multiple "
             "of your timeperiod..."
         )
-        assert (res == 0) or (np.abs((res - round(res)) / res) < 10**-5), err_msg
+        # assert (res == 0) or (np.abs((res - round(res)) / res) < 10**-5), err_msg
+        assert (res == 0) or (-10**-5 < (res - round(res)) < 10**-5)
         assert (
             res >= 0
         ), "somehow you have reached a point in time which is before your starting point..."
         res = round(res)
         try:
-            self.emissions[res]
+            self._emissions[res]
         except IndexError:
             error_msg = (
                 "No emissions data available for requested timestep.\n"
@@ -201,7 +206,7 @@ class PH99Model(object):
             "degC"
         )
 
-    # @profile
+    @profile
     def run(self, restart=False) -> None:
         """Run the model
 
@@ -242,6 +247,7 @@ class PH99Model(object):
             + self.emissions[self.emissions_idx - 1] * self.timestep
         )
 
+    @profile
     def _update_concentrations(self) -> None:
         """Update the concentrations to the current timestep"""
         self._check_update_overwrite("concentrations")
