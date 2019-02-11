@@ -48,7 +48,7 @@ def read_files(fnames, *args, **kwargs):
     logger.info("Reading `{}`".format(fnames))
     return format_data(read_pandas(fnames, *args, **kwargs))
 
-
+# @profile
 def format_data(df):
     """Convert an imported dataframe and check all required columns"""
     if isinstance(df, pd.Series):
@@ -92,8 +92,11 @@ def format_data(df):
             if isinstance(i, (int, float)):
                 # a time
                 time_cols.append(i)
+            elif isinstance(i, datetime):
+                time_cols.append(i)
             else:
                 try:
+                    # this is super slow so avoid if possible
                     d = dateutil.parser.parse(str(i))  # this is datetime
                     time_cols.append(d)
                 except ValueError:
