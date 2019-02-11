@@ -22,6 +22,7 @@ from openscm.highlevel import (
     ScmDataFrame,
     convert_scmdataframe_to_core,
     convert_core_to_scmdataframe,
+    df_append,
 )
 from openscm.scenarios import rcps
 from openscm.constants import ONE_YEAR_IN_S_INTEGER
@@ -676,13 +677,13 @@ def test_append_column_order_time_interpolation(test_scm_df):
     other_2._meta["ecs"] = 3.0
     other_2._meta["climate_model"] = "a_model2"
 
-    res = test_scm_df.append(other).append(other_2)
+    res = df_append([test_scm_df, other, other_2])
     exp = ScmDataFrame(
         pd.DataFrame(
             np.array([
-                [1.0, 1.0, 1.0, 6.0],
-                [np.nan, 0.5, 2.0, 3.0],
-                [0.5, 2.0, 3.0, np.nan],
+                [1.0, 1.0, 6.0, 6.0],
+                [np.nan, 0.5, np.nan, 3.0],
+                [0.5, np.nan, 3.0, np.nan],
                 [2.0, 2.0, 7.0, 7.0],
                 [np.nan, 0.5, np.nan, 3.0],
             ]).T,
@@ -700,7 +701,7 @@ def test_append_column_order_time_interpolation(test_scm_df):
         },
     )
 
-    pd.testing.assert_frame_equal(res.timeseries(), exp.timeseries(), check_like=True)
+    pd.testing.assert_frame_equal( res.timeseries().sort_index(), exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(), check_like=True)
 
 
 @pytest.mark.skip

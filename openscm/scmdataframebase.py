@@ -162,13 +162,28 @@ def df_append(dfs, inplace=False):
     in dfs
     """
     dfs = [
-        df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
+        df
+        if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df)
+        for df in dfs
     ]
+    joint_meta = []
+    for df in dfs:
+        joint_meta += df.meta.columns.tolist()
 
-    data = pd.concat([d.timeseries() for d in dfs])
-    data = data.groupby(data.index.names).mean()
+    joint_meta = set(joint_meta)
 
-    all_meta = pd.concat([d._meta for d in dfs])
+    # should probably solve this https://github.com/pandas-dev/pandas/issues/3729
+    na_fill_value = -999
+    for i, _ in enumerate(dfs):
+        for col in joint_meta:
+            if col not in dfs[i].meta:
+                dfs[i].set_meta(na_fill_value, name=col)
+
+    data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in dfs])
+    data = data.groupby(data.index.names).mean().reset_index().replace(
+        to_replace=na_fill_value,
+        value=np.nan,
+    ).set_index(list(joint_meta))
 
     if not inplace:
         ret = dfs[0].__class__(data)
@@ -180,9 +195,6 @@ def df_append(dfs, inplace=False):
         ret._data.index.name = "time"
         ret._data = ret._data.astype(float)
 
-    # Merge in any extra meta fields
-    if any([n not in data.index.names for n in all_meta.columns]):
-        ret._meta = pd.merge(ret._meta, all_meta, left_on=data.index.names, right_on=data.index.names,)
     ret._sort_meta_cols()
 
     if not inplace:
