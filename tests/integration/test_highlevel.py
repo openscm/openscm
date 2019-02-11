@@ -599,13 +599,11 @@ def test_append(test_scm_df):
     assert "col1" in test_scm_df.meta
 
     # assert that merging of meta works as expected
-    npt.assert_array_equal(df.meta["col1"].values, [5, 6, 7, 2])
-    pd.testing.assert_series_equal(
-        df.meta["col2"], pd.Series([np.nan, np.nan, np.nan, "b"]), check_names=False
-    )
+    npt.assert_array_equal(df.meta.sort_values(["scenario", "variable"])["col1"].values, [5, 6, 7, 2])
+    pd.testing.assert_series_equal(df.meta.sort_values(["scenario", "variable"])["col2"].reset_index(drop=True), pd.Series([np.nan, np.nan, np.nan, "b"]), check_names=False)
 
     # assert that appending data works as expected
-    ts = df.timeseries()
+    ts = df.timeseries().sort_index()
     npt.assert_array_equal(ts.iloc[2], ts.iloc[3])
 
 

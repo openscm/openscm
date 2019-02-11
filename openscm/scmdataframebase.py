@@ -179,7 +179,7 @@ def df_append(dfs, inplace=False):
             if col not in dfs[i].meta:
                 dfs[i].set_meta(na_fill_value, name=col)
 
-    data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in dfs])
+    data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in dfs], sort=False)
     data = data.groupby(data.index.names).mean().reset_index().replace(
         to_replace=na_fill_value,
         value=np.nan,
