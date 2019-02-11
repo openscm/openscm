@@ -181,10 +181,19 @@ def df_append(dfs, inplace=False):
                 joint_dfs[i].set_meta(na_fill_value, name=col)
 
     data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in joint_dfs], sort=False)
-    data = data.groupby(data.index.names).mean().reset_index().replace(
+
+    data = data.reset_index()
+    data[list(joint_meta)] = data[joint_meta].replace(to_replace=np.nan, value=na_fill_value)
+    data = data.set_index(list(joint_meta))
+
+    data = data.groupby(data.index.names).mean()
+
+    data = data.reset_index()
+    data[list(joint_meta)] = data[joint_meta].replace(
         to_replace=na_fill_value,
-        value=np.nan,
-    ).set_index(list(joint_meta))
+        value=np.nan
+    )
+    data = data.set_index(list(joint_meta))
 
     if not inplace:
         ret = dfs[0].__class__(data)

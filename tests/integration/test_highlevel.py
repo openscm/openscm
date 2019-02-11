@@ -729,8 +729,6 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
     other.set_meta(np.nan, name="junk")
 
     original_ts = test_scm_df.timeseries().copy()
-    import pdb
-    pdb.set_trace()
     res = test_scm_df.append(other)
 
     # make sure underlying hasn't changed when not appending inplace
@@ -740,7 +738,7 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
     exp["junk"] = np.nan
     exp.set_index("junk", append=True, inplace=True)
 
-    pd.testing.assert_frame_equal(res.timeseries(), exp, check_like=True)
+    pd.testing.assert_frame_equal(res.timeseries().reorder_levels(exp.index.names), exp, check_like=True)
 
 
 @pytest.mark.skip
