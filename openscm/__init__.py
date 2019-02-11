@@ -18,7 +18,7 @@ from ._version import get_versions
 __version__ = get_versions()["version"]
 del get_versions
 
-# @profile
+
 def run(drivers, model_configurations):
     assert isinstance(
         model_configurations, dict

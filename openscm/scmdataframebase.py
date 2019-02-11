@@ -48,7 +48,7 @@ def read_files(fnames, *args, **kwargs):
     logger.info("Reading `{}`".format(fnames))
     return format_data(read_pandas(fnames, *args, **kwargs))
 
-# @profile
+
 def format_data(df):
     """Convert an imported dataframe and check all required columns"""
     if isinstance(df, pd.Series):
@@ -60,6 +60,7 @@ def format_data(df):
 
     # reset the index if meaningful entries are included there
     if not list(df.index.names) == [None]:
+        # why is this so slow?
         df.reset_index(inplace=True)
 
     # format columns to lower-case and check that all required columns exist
@@ -87,25 +88,30 @@ def format_data(df):
     else:
         # if in wide format, check if columns are years (int) or datetime
         cols = set(df.columns) - set(IAMC_IDX)
-        time_cols, extra_cols = [], []
+        time_cols, extra_cols = False, []
         for i in cols:
             if isinstance(i, (int, float)):
                 # a time
-                time_cols.append(i)
+                time_cols = True
             elif isinstance(i, datetime):
-                time_cols.append(i)
+                time_cols = True
             else:
                 try:
-                    # this is super slow so avoid if possible
-                    d = dateutil.parser.parse(str(i))  # this is datetime
-                    time_cols.append(d)
+                    try:
+                        # most common format
+                        d = datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
+                        time_cols = True
+                    except ValueError:
+                        # this is super slow so avoid if possible
+                        d = dateutil.parser.parse(str(i))  # this is datetime
+                        time_cols = True
                 except ValueError:
                     extra_cols.append(i)  # some other string
         if not time_cols:
             msg = "invalid column format, must contain some time (int, float or datetime) columns!"
             raise ValueError(msg)
 
-        df = df[list(cols - set(extra_cols))].T
+        df = df.drop(IAMC_IDX + extra_cols, axis="columns").T
         df.index.name = "time"
         meta = orig[IAMC_IDX + extra_cols].set_index(df.columns)
 
