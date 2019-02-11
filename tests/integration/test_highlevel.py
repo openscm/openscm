@@ -653,10 +653,10 @@ def test_append_inplace(test_scm_df):
     npt.assert_almost_equal(obs, exp)
 
 
-def test_append_column_order_time_interpolation(test_scm_df):
-    other_2 = test_scm_df.filter(variable="Primary Energy|Coal")
-    test_scm_df.set_meta("co2_only", name="runmodus")
-    other = copy.deepcopy(test_scm_df)
+def get_append_col_order_time_dfs(base):
+    other_2 = base.filter(variable="Primary Energy|Coal")
+    base.set_meta("co2_only", name="runmodus")
+    other = copy.deepcopy(base)
 
     tnew_var = "Primary Energy|Gas"
     other._meta = other._meta[sorted(other._meta.columns.values)]
@@ -675,7 +675,6 @@ def test_append_column_order_time_interpolation(test_scm_df):
     other_2._meta["ecs"] = 3.0
     other_2._meta["climate_model"] = "a_model2"
 
-    res = df_append([test_scm_df, other, other_2])
     exp = ScmDataFrame(
         pd.DataFrame(
             np.array([
@@ -699,7 +698,49 @@ def test_append_column_order_time_interpolation(test_scm_df):
         },
     )
 
+    return base, other, other_2, exp
+
+def test_append_column_order_time_interpolation(test_scm_df):
+    base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
+
+    res = df_append([test_scm_df, other, other_2])
+
     pd.testing.assert_frame_equal( res.timeseries().sort_index(), exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(), check_like=True)
+
+def test_append_chain_column_order_time_interpolation(test_scm_df):
+    base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
+
+    res = test_scm_df.append(other).append(other_2)
+
+    pd.testing.assert_frame_equal( res.timeseries().sort_index(), exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(), check_like=True)
+
+def test_append_inplace_column_order_time_interpolation(test_scm_df):
+    base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
+
+    test_scm_df.append(other, inplace=True)
+    test_scm_df.append(other_2, inplace=True)
+
+    pd.testing.assert_frame_equal(test_scm_df.timeseries().sort_index(), exp.timeseries().reorder_levels(test_scm_df.timeseries().index.names).sort_index(), check_like=True)
+
+def test_append_inplace_preexisinting_nan(test_scm_df):
+    other = copy.deepcopy(test_scm_df)
+    other._data *= 2
+    other._meta["climate_model"] = "a_model2"
+    other.set_meta(np.nan, name="junk")
+
+    original_ts = test_scm_df.timeseries().copy()
+    import pdb
+    pdb.set_trace()
+    res = test_scm_df.append(other)
+
+    # make sure underlying hasn't changed when not appending inplace
+    pd.testing.assert_frame_equal(original_ts, test_scm_df.timeseries())
+
+    exp = pd.concat([test_scm_df.timeseries(), other.timeseries()])
+    exp["junk"] = np.nan
+    exp.set_index("junk", append=True, inplace=True)
+
+    pd.testing.assert_frame_equal(res.timeseries(), exp, check_like=True)
 
 
 @pytest.mark.skip

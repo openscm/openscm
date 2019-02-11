@@ -166,20 +166,21 @@ def df_append(dfs, inplace=False):
         if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df)
         for df in dfs
     ]
+    joint_dfs = [copy.deepcopy(df) for df in dfs]
     joint_meta = []
-    for df in dfs:
+    for df in joint_dfs:
         joint_meta += df.meta.columns.tolist()
 
     joint_meta = set(joint_meta)
 
     # should probably solve this https://github.com/pandas-dev/pandas/issues/3729
     na_fill_value = -999
-    for i, _ in enumerate(dfs):
+    for i, _ in enumerate(joint_dfs):
         for col in joint_meta:
-            if col not in dfs[i].meta:
-                dfs[i].set_meta(na_fill_value, name=col)
+            if col not in joint_dfs[i].meta:
+                joint_dfs[i].set_meta(na_fill_value, name=col)
 
-    data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in dfs], sort=False)
+    data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in joint_dfs], sort=False)
     data = data.groupby(data.index.names).mean().reset_index().replace(
         to_replace=na_fill_value,
         value=np.nan,

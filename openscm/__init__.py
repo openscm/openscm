@@ -47,6 +47,8 @@ def run(drivers, model_configurations):
                     climate_model=climate_model,
                 )
                 try:
+                    import pdb
+                    pdb.set_trace()
                     results.append(config_results, inplace=True)
                 except NameError:
                     results = config_results
