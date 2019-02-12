@@ -314,6 +314,17 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         fossil.get_series(), fossil_industry_emms + fossil_energy_emms
     )
 
+    # ensure that you can't write extra children once you've got a parent view, this
+    # avoids ever having the child views become out of date
+    with pytest.raises(ParameterReadError):
+        parameterset.get_writable_timeseries_view(
+            ("Emissions", "CO2", "Fossil", "Transport"),
+            ("World"),
+            "GtC/yr",
+            start_time,
+            24 * 3600,
+        )
+
     land = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
     )
