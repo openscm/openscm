@@ -171,9 +171,7 @@ def df_append(dfs, inplace=False):
     in dfs
     """
     dfs = [
-        df
-        if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df)
-        for df in dfs
+        df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
     ]
     joint_dfs = [copy.deepcopy(df) for df in dfs]
     joint_meta = []
@@ -190,10 +188,14 @@ def df_append(dfs, inplace=False):
                 joint_dfs[i].set_meta(na_fill_value, name=col)
 
     # we want to put data into timeseries format and pass into format_ts instead of format_data
-    data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in joint_dfs], sort=False)
+    data = pd.concat(
+        [d.timeseries().reorder_levels(joint_meta) for d in joint_dfs], sort=False
+    )
 
     data = data.reset_index()
-    data[list(joint_meta)] = data[joint_meta].replace(to_replace=np.nan, value=na_fill_value)
+    data[list(joint_meta)] = data[joint_meta].replace(
+        to_replace=np.nan, value=na_fill_value
+    )
     data = data.set_index(list(joint_meta))
 
     data = data.groupby(data.index.names).mean()
@@ -208,7 +210,11 @@ def df_append(dfs, inplace=False):
     ret._data.index.name = "time"
     ret._data = ret._data.astype(float)
 
-    ret._meta = data.index.to_frame().reset_index(drop=True).replace(to_replace=na_fill_value, value=np.nan)
+    ret._meta = (
+        data.index.to_frame()
+        .reset_index(drop=True)
+        .replace(to_replace=na_fill_value, value=np.nan)
+    )
     ret._sort_meta_cols()
 
     if not inplace:

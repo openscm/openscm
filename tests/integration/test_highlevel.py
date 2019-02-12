@@ -599,19 +599,25 @@ def test_append(test_scm_df):
     assert "col1" in test_scm_df.meta
 
     # assert that merging of meta works as expected
-    npt.assert_array_equal(df.meta.sort_values(["scenario", "variable"])["col1"].values, [5, 6, 7, 2])
-    pd.testing.assert_series_equal(df.meta.sort_values(["scenario", "variable"])["col2"].reset_index(drop=True), pd.Series([np.nan, np.nan, np.nan, "b"]), check_names=False)
+    npt.assert_array_equal(
+        df.meta.sort_values(["scenario", "variable"])["col1"].values, [5, 6, 7, 2]
+    )
+    pd.testing.assert_series_equal(
+        df.meta.sort_values(["scenario", "variable"])["col2"].reset_index(drop=True),
+        pd.Series([np.nan, np.nan, np.nan, "b"]),
+        check_names=False,
+    )
 
     # assert that appending data works as expected
     ts = df.timeseries().sort_index()
     npt.assert_array_equal(ts.iloc[2], ts.iloc[3])
 
 
-@pytest.mark.xfail(reason="not sure how to handle this best")
 def test_append_exact_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     test_scm_df.append(other).timeseries()
-    pytest.raises(ValueError, test_scm_df.append, other=other)
+
+    pd.testing.assert_frame_equal(test_scm_df.timeseries(), other.timeseries())
 
 
 def test_append_duplicates(test_scm_df):
@@ -677,21 +683,35 @@ def get_append_col_order_time_dfs(base):
 
     exp = ScmDataFrame(
         pd.DataFrame(
-            np.array([
-                [1.0, 1.0, 6.0, 6.0],
-                [np.nan, 0.5, np.nan, 3.0],
-                [0.5, np.nan, 3.0, np.nan],
-                [2.0, 2.0, 7.0, 7.0],
-                [np.nan, 0.5, np.nan, 3.0],
-            ]).T,
-            index=[2002, 2005, 2008, 2010]
+            np.array(
+                [
+                    [1.0, 1.0, 6.0, 6.0],
+                    [np.nan, 0.5, np.nan, 3.0],
+                    [0.5, np.nan, 3.0, np.nan],
+                    [2.0, 2.0, 7.0, 7.0],
+                    [np.nan, 0.5, np.nan, 3.0],
+                ]
+            ).T,
+            index=[2002, 2005, 2008, 2010],
         ),
         columns={
             "model": ["a_iam"],
             "climate_model": ["a_model", "a_model", "a_model", "a_model", "a_model2"],
-            "scenario": ["a_scenario", "a_scenario", "a_scenario", "a_scenario2", "a_scenario"],
+            "scenario": [
+                "a_scenario",
+                "a_scenario",
+                "a_scenario",
+                "a_scenario2",
+                "a_scenario",
+            ],
             "region": ["World"],
-            "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy|Gas", "Primary Energy", "Primary Energy|Coal"],
+            "variable": [
+                "Primary Energy",
+                "Primary Energy|Coal",
+                "Primary Energy|Gas",
+                "Primary Energy",
+                "Primary Energy|Coal",
+            ],
             "unit": ["EJ/y"],
             "runmodus": ["co2_only", "co2_only", "co2_only", "co2_only", np.nan],
             "ecs": [np.nan, np.nan, np.nan, np.nan, 3.0],
@@ -700,19 +720,30 @@ def get_append_col_order_time_dfs(base):
 
     return base, other, other_2, exp
 
+
 def test_append_column_order_time_interpolation(test_scm_df):
     base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
 
     res = df_append([test_scm_df, other, other_2])
 
-    pd.testing.assert_frame_equal( res.timeseries().sort_index(), exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(), check_like=True)
+    pd.testing.assert_frame_equal(
+        res.timeseries().sort_index(),
+        exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(),
+        check_like=True,
+    )
+
 
 def test_append_chain_column_order_time_interpolation(test_scm_df):
     base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
 
     res = test_scm_df.append(other).append(other_2)
 
-    pd.testing.assert_frame_equal( res.timeseries().sort_index(), exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(), check_like=True)
+    pd.testing.assert_frame_equal(
+        res.timeseries().sort_index(),
+        exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(),
+        check_like=True,
+    )
+
 
 def test_append_inplace_column_order_time_interpolation(test_scm_df):
     base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
@@ -720,7 +751,14 @@ def test_append_inplace_column_order_time_interpolation(test_scm_df):
     test_scm_df.append(other, inplace=True)
     test_scm_df.append(other_2, inplace=True)
 
-    pd.testing.assert_frame_equal(test_scm_df.timeseries().sort_index(), exp.timeseries().reorder_levels(test_scm_df.timeseries().index.names).sort_index(), check_like=True)
+    pd.testing.assert_frame_equal(
+        test_scm_df.timeseries().sort_index(),
+        exp.timeseries()
+        .reorder_levels(test_scm_df.timeseries().index.names)
+        .sort_index(),
+        check_like=True,
+    )
+
 
 def test_append_inplace_preexisinting_nan(test_scm_df):
     other = copy.deepcopy(test_scm_df)
@@ -738,7 +776,11 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
     exp["junk"] = np.nan
     exp.set_index("junk", append=True, inplace=True)
 
-    pd.testing.assert_frame_equal(res.timeseries().reorder_levels(exp.index.names), exp, check_like=True)
+    pd.testing.assert_frame_equal(
+        res.timeseries().reorder_levels(exp.index.names).sort_index().reset_index(),
+        exp.sort_index().reset_index(),
+        check_like=True,
+    )
 
 
 @pytest.mark.skip
