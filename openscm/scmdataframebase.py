@@ -116,7 +116,7 @@ def format_data(df):
         meta = orig[IAMC_IDX + extra_cols].set_index(df.columns)
 
     # cast value columns to numeric, drop NaN's, sort data
-    df.dropna(inplace=True, how="all")
+    # df.dropna(inplace=True, how="all")
     df.sort_index(inplace=True)
 
     return df, meta
@@ -189,6 +189,7 @@ def df_append(dfs, inplace=False):
             if col not in joint_dfs[i].meta:
                 joint_dfs[i].set_meta(na_fill_value, name=col)
 
+    # we want to put data into timeseries format and pass into format_ts instead of format_data
     data = pd.concat([d.timeseries().reorder_levels(joint_meta) for d in joint_dfs], sort=False)
 
     data = data.reset_index()
@@ -197,23 +198,17 @@ def df_append(dfs, inplace=False):
 
     data = data.groupby(data.index.names).mean()
 
-    data = data.reset_index()
-    data[list(joint_meta)] = data[joint_meta].replace(
-        to_replace=na_fill_value,
-        value=np.nan
-    )
-    data = data.set_index(list(joint_meta))
-
     if not inplace:
-        ret = dfs[0].__class__(data)
+        ret = copy.deepcopy(dfs[0])
     else:
         ret = dfs[0]
-        ret._data, ret._meta = format_data(data.copy())
 
-        ret._data.index = ret._data.index.astype("object")
-        ret._data.index.name = "time"
-        ret._data = ret._data.astype(float)
+    ret._data = data.reset_index(drop=True).T
+    ret._data.index = ret._data.index.astype("object")
+    ret._data.index.name = "time"
+    ret._data = ret._data.astype(float)
 
+    ret._meta = data.index.to_frame().reset_index(drop=True).replace(to_replace=na_fill_value, value=np.nan)
     ret._sort_meta_cols()
 
     if not inplace:
