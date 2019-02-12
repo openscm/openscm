@@ -56,10 +56,26 @@ class ScalarView(ParameterView):
         unit
             Unit for the values in the view
         """
+
+        def get_data_views_for_children_or_parameter(
+            parameter: _Parameter
+        ) -> Sequence["ScalarView"]:
+            if parameter._children:
+                return sum(
+                    (
+                        get_data_views_for_children_or_parameter(p)
+                        for p in parameter._children.values()
+                    ),
+                    [],
+                )
+            return [ScalarView(parameter, self._unit_converter._target)]
+
         super().__init__(parameter)
         self._unit_converter = UnitConverter(parameter._info._unit, unit)
         if self._parameter._children:
-            self._child_data_views = self._get_child_data_views(self._parameter)
+            self._child_data_views = get_data_views_for_children_or_parameter(
+                self._parameter
+            )
 
     def get(self) -> float:
         """
@@ -80,14 +96,6 @@ class ScalarView(ParameterView):
             raise ParameterEmptyError
 
         return self._unit_converter.convert_from(self._parameter._data)
-
-    def _get_child_data_views(self, parameter: _Parameter) -> Sequence["ScalarView"]:
-        if parameter._children:
-            return sum(
-                (self._get_child_data_views(p) for p in parameter._children.values()),
-                [],
-            )
-        return [ScalarView(parameter, self._unit_converter._target)]
 
 
 class WritableScalarView(ScalarView):
@@ -134,13 +142,35 @@ class TimeseriesView(ParameterView):
         timeframe
             Timeframe
         """
+
+        def get_data_views_for_children_or_parameter(
+            parameter: _Parameter
+        ) -> Sequence["TimeseriesView"]:
+            if parameter._children:
+                return sum(
+                    (
+                        get_data_views_for_children_or_parameter(p)
+                        for p in parameter._children.values()
+                    ),
+                    [],
+                )
+            return [
+                TimeseriesView(
+                    parameter,
+                    self._unit_converter._target,
+                    self._timeframe_converter._target,
+                )
+            ]
+
         super().__init__(parameter)
         self._unit_converter = UnitConverter(parameter._info._unit, unit)
         self._timeframe_converter = TimeframeConverter(
             parameter._info._timeframe, timeframe
         )
         if self._parameter._children:
-            self._child_data_views = self._get_child_data_views(self._parameter)
+            self._child_data_views = get_data_views_for_children_or_parameter(
+                self._parameter
+            )
 
     def get_series(self) -> Sequence[float]:
         """
@@ -163,22 +193,6 @@ class TimeseriesView(ParameterView):
         return self._timeframe_converter.convert_from(
             self._unit_converter.convert_from(self._parameter._data)
         )
-
-    def _get_child_data_views(
-        self, parameter: _Parameter
-    ) -> Sequence["TimeseriesView"]:
-        if parameter._children:
-            return sum(
-                (self._get_child_data_views(p) for p in parameter._children.values()),
-                [],
-            )
-        return [
-            TimeseriesView(
-                parameter,
-                self._unit_converter._target,
-                self._timeframe_converter._target,
-            )
-        ]
 
     def get(self, index: int) -> float:
         """
