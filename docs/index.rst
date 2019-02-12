@@ -20,6 +20,7 @@ Schema
     tool
     quickstart
     usage
+    models
     development
 
 .. toctree::
@@ -35,7 +36,7 @@ Schema
 
     lowlevel
     highlevel
-    adapters
+    adapter
     errors
     timeframes
     units
