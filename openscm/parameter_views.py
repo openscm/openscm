@@ -81,7 +81,7 @@ class ScalarView(ParameterView):
         """
         Get current value of scalar parameter.
 
-        If the parameter has child parameters (aka ``_children`` is not empty),
+        If the parameter has child parameters (i.e. ``_children`` is not empty),
         the returned value will be the sum of the values of all of the child
         parameters.
 
@@ -176,7 +176,7 @@ class TimeseriesView(ParameterView):
         """
         Get values of the full timeseries.
 
-        If the parameter has child parameters (aka ``_children`` is not empty),
+        If the parameter has child parameters (i.e. ``_children`` is not empty),
         the returned value will be the sum of the values of all of the child
         parameters.
 
