@@ -42,7 +42,7 @@ requirements_extras = {
     "dev": requirements_dev,
 }
 
-requirements_models = {"MODELNAME": ["MODULEA"]}
+requirements_models = {"MODELNAME": []}
 """
 When implementing an additional adapter, include your adapter NAME here as:
 ```
