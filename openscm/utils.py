@@ -1,4 +1,5 @@
-"""Utility functions for openscm.
+"""
+Utility functions for openscm.
 """
 
 import warnings
