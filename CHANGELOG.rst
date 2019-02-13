@@ -2,7 +2,7 @@ Changelog
 ---------
 
 master
-------
+******
 
 - (`#87 <https://github.com/openclimatedata/openscm/pull/87>`_) Added aggregated read of parameter
 - (`#86 <https://github.com/openclimatedata/openscm/pull/86>`_) Made top level of region explicit, rather than allowing access via ``()`` and made requests robust to string inputs
