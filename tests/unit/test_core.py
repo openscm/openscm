@@ -46,6 +46,10 @@ def test_core(core, model, start_time, end_time):
 
 def test_region(core):
     parameterset = core.parameters
+
+    with pytest.raises(ValueError, match="No region name given"):
+        parameterset._get_or_create_region(())
+
     for accessor in ["World", ("World"), ("World",), ["World"]]:
         with warnings.catch_warnings():
             # silence warning about conversion, that's tested elsewhere
@@ -67,6 +71,8 @@ def test_region(core):
     region_deu.attempt_aggregate()
     with pytest.raises(RegionAggregatedError):
         parameterset._get_or_create_region(("World", "DEU", "BRB"))
+
+    assert parameterset._get_region(("INVALID", "DEU", "BER")) == None
 
 
 def test_parameter(core):
