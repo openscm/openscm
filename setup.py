@@ -6,7 +6,6 @@ import versioneer
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-
 PACKAGE_NAME = "openscm"
 AUTHOR = "Robert Gieseke"
 EMAIL = "robert.gieseke@pik-potsdam.de"
@@ -42,6 +41,17 @@ requirements_extras = {
     "deploy": REQUIREMENTS_DEPLOY,
     "dev": requirements_dev,
 }
+
+requirements_models = {"MODELNAME": ["MODULEA"]}
+"""
+When implementing an additional adapter, include your adapter NAME here as:
+```
+"NAME": [ ... additional pip modules you need ... ],
+```
+"""
+
+for k, v in requirements_models.items():
+    requirements_extras["model_{}".format(k)] = v
 
 # Get the long description from the README file
 with open(README, "r", encoding="utf-8") as f:
