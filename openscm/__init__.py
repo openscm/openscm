@@ -1,5 +1,5 @@
 from .core import Core
-from .highlevel import OpenSCM
+from .openscm import OpenSCM
 
 from ._version import get_versions
 
