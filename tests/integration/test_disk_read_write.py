@@ -1,4 +1,4 @@
-from openscm.highlevel import ScmDataFrame
+from openscm.scmdataframe import ScmDataFrame
 
 
 def test_write_read_datafile(test_pd_df, tmp_path):

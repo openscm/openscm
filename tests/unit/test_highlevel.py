@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 
 
-from openscm.highlevel import ScmDataFrame
+from openscm.scmdataframe import ScmDataFrame
 
 
 def test_init_df_long_timespan(test_pd_df):
