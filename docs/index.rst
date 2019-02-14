@@ -34,8 +34,8 @@ Schema
     :maxdepth: 2
     :caption: API reference
 
-    lowlevel
-    highlevel
+    core
+    openscm
     adapter
     errors
     timeframes

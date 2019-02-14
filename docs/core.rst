@@ -1,7 +1,7 @@
-.. _low-level-reference:
+.. _core-reference:
 
-Low-level API
--------------
+OpenSCM Core API
+----------------
 
 Core
 ****

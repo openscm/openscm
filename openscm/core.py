@@ -1,8 +1,8 @@
 """
-The OpenSCM low-level API includes the basic functionality to run a particular
-simple climate model with OpenSCM as well as setting/getting its :ref:`parameter
-<parameters>` values. Mapping of :ref:`parameter names <parameter-hierarchy>` and
-:ref:`units <units>` is done internally.
+The OpenSCM Core API includes the basic functionality to run a particular simple
+climate model with OpenSCM as well as setting/getting its :ref:`parameter <parameters>`
+values. Mapping of :ref:`parameter names <parameter-hierarchy>` and :ref:`units <units>`
+is done internally.
 
 Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
