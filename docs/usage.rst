@@ -3,18 +3,18 @@ Usage
 
 OpenSCM defines and provides three interfaces for its users.
 
-Its **low-level** interface is targeted to users who want to include
+Its **Core** interface is targeted to users who want to include
 OpenSCM in their model, e.g. integrated assessment modellers. This
 interface provides the basic functionality necessary to run all SCMs
 included in OpenSCM. It includes functions for getting and setting
 parameters as well as to run and reset the model.
 
-The **high-level** interface adds several convinience functions on top
-of the low-level interface. It allows for reading and writing
-parameters from and to a standardized and other file formats,
-including whole scenario definitions. Also, it provides functions for
-running ensembles of model runs and doing stochastic analyses and
-model tuning.
+The **Pythonic** interface adds several convenience functions on top
+of the core interface. It allows for reading and writing parameters
+from and to a standardized and other file formats, including whole
+scenario definitions. Also, it provides functions for running
+ensembles of model runs and doing stochastic analyses and model
+tuning.
 
 The **command line** interface lets users run models with specified
 parameters and model input directly from the command line without
@@ -36,14 +36,14 @@ parameter ("level 0") or belongs to a parent parameter.
 
 For example, the parameter for industrial carbon emissions belongs to
 the parameter for carbon emissions, which in turn belongs to the root
-parameter for emissions. Thus, it is identified by
+parameter emission. Thus, it is identified by
 
     ``Emissions`` -> ``CO2`` -> ``Industrial``.
 
-In the low-level API parameters are expected to be identified by
-tuples of strings describing their position in the hierarchy, i.e. in
-this example ``("Emissions", "CO2", "Industrial")``. The high-level
-API also allows for giving it as a string with the hierarchical levels
+In the core API parameters are expected to be identified by tuples of
+strings describing their position in the hierarchy, i.e. in this
+example ``("Emissions", "CO2", "Industrial")``. The ScmDataFrame API
+also allows for giving it as a string with the hierarchical levels
 separated by ``|``, e.g. ``"Emissions|CO2|Industrial"``.
 
 See :ref:`standard-parameters` for the standard parameters in OpenSCM.
@@ -63,18 +63,16 @@ corresponding period. This implies that values that are not averages but, for in
 emissions need to be given as a rate, e.g. ``tC/a`` rather than
 ``tC``.
 
-In the low-level API time points are given in seconds since
+In the core and pythonic API time points are given in seconds since
 ``1970-01-01 00:00:00``, while time period lengths are specified in
-seconds. The high-level API additionally accepts string values and
+seconds. The pythonic API additionally accepts string values and
 ``datetime.datetime`` objects.
 
 
-.. _low-level-interface:
+Core interface
+--------------
 
-Low-level interface
--------------------
-
-(see :ref:`low-level-reference` for an API reference)
+(see :ref:`core-reference` for an API reference)
 
 Setting up a model run
 **********************
@@ -98,12 +96,11 @@ specifying the underlying SCM and start and end time:
 Setting input parameters
 ************************
 
-In the low-level API parameters are get and set through of subclasses
-of :class:`ParameterView`. While the values of the parameters are
-stored internaly, a :class:`ParameterView` provides an (always
-up-to-date) "view" of the corresponding parameter giving the parameter
-values in a specific unit and, in the case of timeseries, a specific
-time frame.
+In the core API parameters are get and set through of subclasses of
+:class:`ParameterView`. While the values of the parameters are stored
+internaly, a :class:`ParameterView` provides an (always up-to-date)
+"view" of the corresponding parameter giving the parameter values in a
+specific unit and, in the case of timeseries, a specific time frame.
 
 Unit and time frame have to be specified when requesting a
 :class:`~openscm.core.ParameterView` from the
@@ -199,7 +196,7 @@ read-only :class:`~openscm.core.ParameterView` objects:
     print(gmt.get_series())
 
 
-High-level interface
---------------------
+Pythonic interface
+------------------
 
-(see :ref:`high-level-reference` for an API reference)
+(see :ref:`openscm-reference` for an API reference)
