@@ -1,12 +1,11 @@
 from openscm.adapter import Adapter
-import pytest
 
 
 def test_adapter_base_class():
     parametersstub = "Parameters"
     outputstub = "Parameters"
     Adapter.__abstractmethods__ = set()
-    adapter = Adapter(parametersstub, outputstub)
+    adapter = Adapter(parametersstub, outputstub)  # noqa
     assert adapter._parameters == parametersstub
     assert adapter._output == outputstub
     start_time = 0
