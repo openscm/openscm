@@ -1,4 +1,9 @@
-"""OpenSCM
+"""
+OpenSCM
+-------
+
+A unifying interface for Simple Climate Models.
+
 """
 
 import versioneer
@@ -6,19 +11,12 @@ import versioneer
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-PACKAGE_NAME = "openscm"
-AUTHOR = "Robert Gieseke"
-EMAIL = "robert.gieseke@pik-potsdam.de"
-URL = "https://github.com/openclimatedata/openscm"
-
-DESCRIPTION = "A unifying interface for Simple Climate Models"
-README = "README.rst"
 
 REQUIREMENTS = [
     "numpy",
     "pint",
     "pandas",
-    # can be moved into notebooks dependencies once Jared's new backend is in place
+    # TODO can be moved into notebooks dependencies once Jared's new backend is in place
     "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master",
 ]
 REQUIREMENTS_NOTEBOOKS = ["notebook", "seaborn"]
@@ -26,20 +24,18 @@ REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 
-requirements_dev = [
-    *["flake8", "black"],
-    *REQUIREMENTS_NOTEBOOKS,
-    *REQUIREMENTS_TESTS,
-    *REQUIREMENTS_DOCS,
-    *REQUIREMENTS_DEPLOY,
-]
-
-requirements_extras = {
+REQUIREMENTS_EXTRAS = {
     "notebooks": REQUIREMENTS_NOTEBOOKS,
     "docs": REQUIREMENTS_DOCS,
     "tests": REQUIREMENTS_TESTS,
     "deploy": REQUIREMENTS_DEPLOY,
-    "dev": requirements_dev,
+    "dev": [
+        *["flake8", "black"],
+        *REQUIREMENTS_NOTEBOOKS,
+        *REQUIREMENTS_TESTS,
+        *REQUIREMENTS_DOCS,
+        *REQUIREMENTS_DEPLOY,
+    ],
 }
 
 REQUIREMENTS_MODELS = {}
@@ -55,8 +51,16 @@ for k, v in REQUIREMENTS_MODELS.items():
     REQUIREMENTS_TESTS += v
 
 # Get the long description from the README file
-with open(README, "r", encoding="utf-8") as f:
-    README_TEXT = f.read()
+with open("README.rst", "r", encoding="utf-8") as f:
+    README_LINES = ["OpenSCM", "=======", ""]
+    add_line = False
+    for line in f:
+        if line == ".. sec-begin-long-description":
+            add_line = True
+        elif line == ".. sec-end-long-description":
+            break
+        elif add_line:
+            README_LINES.append(line)
 
 
 class OpenSCMTest(TestCommand):
@@ -71,18 +75,18 @@ class OpenSCMTest(TestCommand):
         pytest.main(self.test_args)
 
 
-cmdclass = versioneer.get_cmdclass()
-cmdclass.update({"test": OpenSCMTest})
+CMDCLASS = versioneer.get_cmdclass()
+CMDCLASS.update({"test": OpenSCMTest})
 
 setup(
-    name=PACKAGE_NAME,
+    name="openscm",
     version=versioneer.get_version(),
-    description=DESCRIPTION,
-    long_description=README_TEXT,
+    description="A unifying interface for Simple Climate Models",
+    long_description="\n".join(README_LINES),
     long_description_content_type="text/x-rst",
-    author=AUTHOR,
-    author_email=EMAIL,
-    url=URL,
+    author="Robert Gieseke, Jared Lewis, Zeb Nicholls, Sven Willner",
+    author_email="robert.gieseke@pik-potsdam.de, jared.lewis@climate-energy-college.org, zebedee.nicholls@climate-energy-college.org, sven.willner@pik-potsdam.de",
+    url="https://github.com/openclimatedata/openscm",
     license="GNU Affero General Public License v3.0 or later",
     classifiers=[
         #   3 - Alpha
@@ -97,12 +101,12 @@ setup(
         "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     ],
     keywords=["simple climate model"],
-    packages=find_packages(exclude=["tests"]),
+    packages=["openscm"],
     install_requires=REQUIREMENTS,
-    extras_require=requirements_extras,
-    cmdclass=cmdclass,
+    extras_require=REQUIREMENTS_EXTRAS,
+    cmdclass=CMDCLASS,
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
-        "Source": "https://github.com/openclimatedata/openscm/",
+        "Source": "https://github.com/openclimatedata/openscm",
     },
 )
