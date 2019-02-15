@@ -26,6 +26,8 @@ coding themselves. Please see :ref:`tool` for its usage documentation.
 Parameters
 ----------
 
+.. _parameter-hierarchy:
+
 **Parameter** here refers to any named input or output variable of a
 model. A parameter can be either scalar (i.e. a single number) or a
 timeseries and has a unique name in a hierarchy of arbitrary depth.
@@ -34,7 +36,7 @@ parameter ("level 0") or belongs to a parent parameter.
 
 For example, the parameter for industrial carbon emissions belongs to
 the parameter for carbon emissions, which in turn belongs to the root
-parameter emission. Thus, it is identified by
+parameter for emissions. Thus, it is identified by
 
     ``Emissions`` -> ``CO2`` -> ``Industrial``.
 
@@ -44,7 +46,7 @@ this example ``("Emissions", "CO2", "Industrial")``. The high-level
 API also allows for giving it as a string with the hierarchical levels
 separated by ``|``, e.g. ``"Emissions|CO2|Industrial"``.
 
-See :ref:`parameter-hierarchy` for the standard parameters in OpenSCM.
+See :ref:`standard-parameters` for the standard parameters in OpenSCM.
 
 
 .. _timeframes:
