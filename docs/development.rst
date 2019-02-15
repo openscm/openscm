@@ -13,10 +13,6 @@ Creating an :class:`~openscm.adapter.Adapter` subclass
 - Create your adapter source file in ``openscm/adapters/``, e.g.
   ``myadapter.py``
 
-- If your adapter needs additional dependencies add them to the
-  ``requirements_extras`` dictionary in ``setup.py`` (see comment
-  there).
-
 - Subclass the :class:`openscm.adapter.Adapter` class:
 
   .. code:: python
@@ -178,3 +174,11 @@ to:
 .. _code_of_conduct:
 
 .. include:: ../CODE_OF_CONDUCT.rst
+
+
+Additional module dependencies
+******************************
+
+If your adapter needs additional dependencies add them to the
+``REQUIREMENTS_MODELS`` dictionary in ``setup.py`` (see comment
+there).

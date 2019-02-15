@@ -42,7 +42,7 @@ requirements_extras = {
     "dev": requirements_dev,
 }
 
-requirements_models = {"MODELNAME": []}
+REQUIREMENTS_MODELS = {}
 """
 When implementing an additional adapter, include your adapter NAME here as:
 ```
@@ -50,7 +50,7 @@ When implementing an additional adapter, include your adapter NAME here as:
 ```
 """
 
-for k, v in requirements_models.items():
+for k, v in REQUIREMENTS_MODELS.items():
     requirements_extras["model_{}".format(k)] = v
     REQUIREMENTS_TESTS += v
 
