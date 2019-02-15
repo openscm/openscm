@@ -18,3 +18,5 @@ class AdapterTester():
 
     def test_initialize(self, test_adapter):
         test_adapter.initialize()
+
+    # TODO add standard tests

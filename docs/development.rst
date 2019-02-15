@@ -166,14 +166,33 @@ to:
 
     elif name == "MyAdapter":
         from .MyAdapter import MyAdapter
+
         adapter = MyAdapter
 
 
-.. include:: ../CONTRIBUTING.rst
+Writing adapter tests
+*********************
 
-.. _code_of_conduct:
+To ensure your adapter is properly tested, create a file
+``test_myadapter.py`` in ``tests/adapters/`` and subclass the
+``AdapterTester`` (this ensures that some standard tests are run on
+your adapter). Tests are done using `pytest
+<https://docs.pytest.org/en/latest>`__ on all methods starting
+with ``test_``. Only pull requests with adapters with full test
+coverage will be merged (see, for instance, the coverage on the end
+of the PR page).
 
-.. include:: ../CODE_OF_CONDUCT.rst
+.. code:: python
+
+    from . import AdapterTester
+    from openscm.adapters.myadapter import MyAdapter
+
+
+    class TestMyAdapter(AdapterTester):
+        tadapter = MyAdapter
+        
+        test_my_special_feature(self, test_adapter):
+            # TODO do tests on ``test_adapter``
 
 
 Additional module dependencies
@@ -182,3 +201,10 @@ Additional module dependencies
 If your adapter needs additional dependencies add them to the
 ``REQUIREMENTS_MODELS`` dictionary in ``setup.py`` (see comment
 there).
+
+
+.. include:: ../CONTRIBUTING.rst
+
+.. _code_of_conduct:
+
+.. include:: ../CODE_OF_CONDUCT.rst
