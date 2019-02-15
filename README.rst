@@ -7,6 +7,7 @@ OpenSCM
 | |Codecov|      | |Codacy| |
 +----------------+----------+
 
+.. sec-begin-long-description
 .. sec-begin-index
 
 The **Open Simple Climate Model framework** unifies access to several
@@ -31,6 +32,8 @@ Documentation
 
 Detailed documentation is given on `ReadTheDocs
 <https://openscm.readthedocs.io/en/latest/>`_.
+
+.. sec-end-long-description
 
 Schema
 ------
