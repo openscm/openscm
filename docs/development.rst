@@ -10,131 +10,132 @@ Writing a model adapter
 Creating an :class:`~openscm.adapter.Adapter` subclass
 ******************************************************
 
-- Create your adapter source file in ``openscm/adapters/``, e.g.
-  ``myadapter.py``
+Create your adapter source file in ``openscm/adapters/``, e.g.
+``myadapter.py``, and subclass the :class:`openscm.adapter.Adapter`
+class:
 
-- Subclass the :class:`openscm.adapter.Adapter` class:
+.. code:: python
+
+    from ..adapter import Adapter
+
+    class MyAdapter(Adapter):
+
+Implement the relevant methods (or just do ``pass`` if you do not
+need to do anything in the particular method). An adapter should not
+use parts of OpenSCM other than ``ParameterSet``.
+
+- The :func:`~openscm.adapter.Adapter._initialize_model` method
+  initializes the adapter and is called only once. It should set the
+  default values of mandatory *model-specific* (not :ref:`standard
+  OpenSCM parameters <standard-parameters>`!) parameters in the in the
+  :class:`~openscm.core.ParameterSet`
+  :attr:`~openscm.adapter.Adapter._parameter`. The :ref:`hierarchical
+  names <parameter-hierarchy>` of these model-specific parameters should
+  start with the model/adapter name (as you set it in the model registry,
+  see below).
 
   .. code:: python
 
-      from ..adapter import Adapter
+      def _initialize_model(self) -> None:
+          # TODO Initialize the model
+          # TODO Set default parameter values:
+          self._parameters.get_writable_scalar_view(
+              ("MyModel", "Specific Parameter"), ("World",), "Unit"
+          ).set(DEFAULT_VALUE)
 
-      class MyAdapter(Adapter):
+- The :func:`~openscm.adapter.Adapter._initialize_run_parameters`
+  method initializes a particular run. It is called before the
+  adapter is used in any way and at most once before a call to
+  :func:`~openscm.adapter.Adapter.run` or
+  :func:`~openscm.adapter.Adapter.step`.
 
-- Implement the relevant methods (or just do ``pass`` if you do not
-  need to do anything in the particular method). An adapter should not
-  use parts of OpenSCM other than ``ParameterSet``.
+  .. code:: python
 
-  - The :func:`~openscm.adapter.Adapter._initialize_model` method
-    initializes the adapter and is called only once. It should set the
-    default values of mandatory *model-specific* (not :ref:`standard
-    OpenSCM parameters <standard-parameters>`!) parameters in the
-    :class:`~openscm.core.ParameterSet`. Their :ref:`hierarchical
-    names <parameter-hierarchy>` should start with the model/adapter
-    name.
+      def _initialize_run_parameters(self) -> None:
+          """
+          TODO Initialize run parameters by reading model parameters
+          from `self._parameters` (see below).
+          """
 
-    .. code:: python
+  You should later use the start and stop time of the run using the
+  :attr:`self._start_time <openscm.adapter.Adapter._start_time>` and
+  :attr:`self._stop_time <openscm.adapter.Adapter._stop_time>`
+  attributes.
 
-        def _initialize_model(self) -> None:
-            # TODO Initialize the model
-            # TODO Set default parameter values:
-            self._parameters.get_writable_scalar_view(
-                ("MyModel", "Specific Parameter"), ("World",), "Unit"
-            ).set(DEFAULT_VALUE)
+- The :func:`~openscm.adapter.Adapter._initialize_model_input` method
+  initializes the input and model parameters of a particular run. It
+  is also called before the adapter is used in any way and at most
+  once before a call to :func:`~openscm.adapter.Adapter.run` or
+  :func:`~openscm.adapter.Adapter.step`.
 
-  - The :func:`~openscm.adapter.Adapter._initialize_run_parameters`
-    method initializes a particular run. It is called before the
-    adapter is used in any way and at most once before a call to
-    :func:`~openscm.adapter.Adapter.run` or
-    :func:`~openscm.adapter.Adapter.step`.
+  This and the
+  :func:`~openscm.adapter.Adapter._initialize_run_parameters` method
+  are separated for higher efficiency when doing ensemble runs for
+  models that have additional overhead for changing run parameters.
 
-    .. code:: python
+  .. code:: python
 
-        def _initialize_run_parameters(self) -> None:
-            """
-            TODO Initialize run parameters by reading model parameters
-            from `self._parameters` (see below).
-            """
+      def _initialize_model_input(self) -> None:
+          """
+          TODO Initialize model input by reading input parameters
+          from ``self._parameters`` (see below).
+          """
 
-    You should later use the start and stop time of the run using the
-    :attr:`self._start_time <openscm.adapter.Adapter._start_time>` and
-    :attr:`self._stop_time <openscm.adapter.Adapter._stop_time>`
-    attributes.
+- The :func:`~openscm.adapter.Adapter._reset` method resets the model
+  to prepare for a new run. It is called once after each call of
+  :func:`~openscm.adapter.Adapter.run` and to reset the model after
+  several calls to :func:`~openscm.adapter.Adapter.step`.
 
-  - The :func:`~openscm.adapter.Adapter._initialize_model_input` method
-    initializes the input and model parameters of a particular run. It
-    is also called before the adapter is used in any way and at most
-    once before a call to :func:`~openscm.adapter.Adapter.run` or
-    :func:`~openscm.adapter.Adapter.step`.
+  .. code:: python
 
-    This and the
-    :func:`~openscm.adapter.Adapter._initialize_run_parameters` method
-    are separated for higher efficiency when doing ensemble runs for
-    models that have additional overhead for changing run parameters.
+      def _reset(self) -> None:
+          # TODO Reset the model
 
-    .. code:: python
+- The :func:`~openscm.adapter.Adapter._run` method runs the model
+  over the full time range (as given by the times set by the
+  previous call to
+  :func:`~openscm.adapter.Adapter._initialize_run_parameters`). You
+  should at least implement this function.
 
-        def _initialize_model_input(self) -> None:
-            """
-            TODO Initialize model input by reading input parameters
-            from ``self._parameters`` (see below).
-            """
+  .. code:: python
 
-  - The :func:`~openscm.adapter.Adapter._reset` method resets the model
-    to prepare for a new run. It is called once after each call of
-    :func:`~openscm.adapter.Adapter.run` and to reset the model after
-    several calls to :func:`~openscm.adapter.Adapter.step`.
+      def _run(self) -> None:
+          """
+          TODO Run the model and write output parameters to
+          `self._parameters` (see below).
+          """
 
-    .. code:: python
+- The :func:`~openscm.adapter.Adapter._step` method does a single
+  time step. You can get the current time from
+  :attr:`self._current_time
+  <openscm.adapter.Adapter._current_time>`, which you should
+  increase by the time step length and return its value. If your
+  model does not support stepping just do ``raise NotImplementedError``
+  here.
 
-        def _reset(self) -> None:
-            # TODO Reset the model
+  .. code:: python
 
-  - The :func:`~openscm.adapter.Adapter._run` method runs the model
-    over the full time range (as given by the times set by the
-    previous call to
-    :func:`~openscm.adapter.Adapter._initialize_run_parameters`). You
-    should at least implement this function.
+      def _step(self) -> None:
+          """
+          TODO Do a single time step and write corresponding output
+          parameters to ``self._parameters`` (see below).
+          """
+          self._current_time += YEAR
 
-    .. code:: python
+- The :func:`~openscm.adapter.Adapter._shutdown` method cleans up the
+  adapter.
 
-        def _run(self) -> None:
-            """
-            TODO Run the model and write output parameters to
-            `self._parameters` (see below).
-            """
+  .. code:: python
 
-  - The :func:`~openscm.adapter.Adapter._step` method does a single
-    time step. You can get the current time from
-    :attr:`self._current_time
-    <openscm.adapter.Adapter._current_time>`, which you should
-    increase by the time step length and return its value. If your
-    model does not support stepping just do ``raise
-    NotImplementedError`` here.
-
-    .. code:: python
-
-        def _step(self) -> None:
-            """
-            TODO Do a single time step and write corresponding output
-            parameters to ``self._parameters`` (see below).
-            """
-            self._current_time += YEAR
-
-  - The :func:`~openscm.adapter.Adapter._shutdown` method cleans up the
-    adapter.
-
-    .. code:: python
-
-        def _shutdown(self) -> None:
-            # TODO Shut down model
+      def _shutdown(self) -> None:
+          # TODO Shut down model
 
 
 Reading model and input parameters
 **********************************
 
 Model parameters and input data (referred to as general "parameters"
-in OpenSCM) are **pulled** from the :func:`~openscm.core.ParameterSet`
+in OpenSCM) are **pulled** from the :class:`~openscm.core.ParameterSet`
 provided by the OpenSCM Core. From this, you read the parameters in
 the :ref:`time frame <timeframes>` and :ref:`unit <units>` as needed
 by the specific model; conversion is done interally if possible.
@@ -150,7 +151,7 @@ Writing output parameters
 *************************
 
 In the :func:`~openscm.adapter.Adapter.run` and
-:func:`~openscm.adapter.Adapter.step` function you should directly
+:func:`~openscm.adapter.Adapter.step` methods you should directly
 write the relevant output parameters. Refer to the
 :ref:`low-level-interface` documentation on how to do so.
 
