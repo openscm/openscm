@@ -17,6 +17,8 @@ class:
 .. code:: python
 
     from ..adapter import Adapter
+    
+    YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
     class MyAdapter(Adapter):
 
