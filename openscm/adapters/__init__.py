@@ -45,12 +45,8 @@ def load_adapter(name: str) -> type:
             """
         except ImportError:  # pragma: no cover
             raise AdapterNeedsModuleError(
-                """
-                To run '{}' you need to install additional dependencies. Please install
-                them using `pip install openscm[model-{}]`.
-                """.format(
-                    name, name
-                )
+                "To run '{}' you need to install additional dependencies. Please "
+                "install them using `pip install openscm[model-{}]`.".format(name, name)
             )
 
         if adapter is None:
