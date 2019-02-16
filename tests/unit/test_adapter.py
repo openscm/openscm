@@ -5,7 +5,7 @@ def test_adapter_base_class():
     parametersstub = "Parameters"
     outputstub = "Parameters"
     Adapter.__abstractmethods__ = set()
-    adapter = Adapter(parametersstub, outputstub)  # noqa
+    adapter = Adapter(parametersstub, outputstub)  # pylint: disable=abstract-class-instantiated
     assert adapter._parameters == parametersstub
     assert adapter._output == outputstub
     start_time = 0
