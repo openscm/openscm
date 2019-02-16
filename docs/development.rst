@@ -23,8 +23,8 @@ class:
     class MyAdapter(Adapter):
 
 Implement the relevant methods (or just do ``pass`` if you do not
-need to do anything in the particular method). An adapter should not
-use parts of OpenSCM other than ``ParameterSet``.
+need to do anything in the particular method). The only part of OpenSCM with
+which adapters should interact is ``ParameterSet``.
 
 - The :func:`~openscm.adapter.Adapter._initialize_model` method
   initializes the adapter and is called only once. It should set the
@@ -144,8 +144,9 @@ the :ref:`time frame <timeframes>` and :ref:`unit <units>` as needed
 by the specific model; conversion is done interally if possible.
 
 OpenSCM defines a :ref:`set of standard parameters
-<standard-parameters>` to be shared between different SCMs. You should
-use these where appropriate.
+<standard-parameters>` to be shared between different SCMs. As far as
+possible, adapters should be able to take all of them as input and should
+write their values to the output ``ParameterSet``.
 
 Refer to the :ref:`low-level-interface` documentation on how to do so.
 
