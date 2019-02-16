@@ -51,7 +51,7 @@ When implementing an additional adapter, include your adapter NAME here as:
 """
 
 for k, v in REQUIREMENTS_MODELS.items():
-    requirements_extras["model_{}".format(k)] = v
+    requirements_extras["model-{}".format(k)] = v
     REQUIREMENTS_TESTS += v
 
 # Get the long description from the README file

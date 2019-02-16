@@ -166,7 +166,7 @@ to:
 .. code:: python
 
     elif name == "MyAdapter":
-        from .MyAdapter import MyAdapter
+        from .myadapter import MyAdapter
 
         adapter = MyAdapter
 
