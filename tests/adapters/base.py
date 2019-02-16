@@ -1,40 +1,3 @@
-from abc import abstractmethod
-
-
-import pytest
-
-
-from openscm.core import ParameterSet
-
-
-@pytest.fixture(scope="function")
-def test_adapter(request):
-    """
-    Get an initialised instance of an the requesting classes ``tadapter`` property.
-    """
-    try:
-        yield request.cls.tadapter(ParameterSet(), ParameterSet())
-    except TypeError:
-        pytest.skip("{} cannot be instantiated".format(str(request.cls.tadapter)))
-
-
-@pytest.fixture(scope="function")
-def test_config_paraset():
-    parameters = ParameterSet()
-    parameters.get_writable_scalar_view("ecs", ("World",), "K").set(3)
-    parameters.get_writable_scalar_view("rf2xco2", ("World",), "W / m^2").set(4.0)
-
-    yield parameters
-
-
-@pytest.fixture(scope="function")
-def test_drivers_core():
-    # doesn't exist yet but we'd want something like this for testing
-    core = rcp_26_core
-
-    yield core
-
-
 class _AdapterTester(object):
     """
     Base class for adapter testing.
@@ -83,7 +46,9 @@ class _AdapterTester(object):
         # specific I think).
 
     @classmethod
-    def test_initialise_model_input_non_model_parameter(cls, test_adapter, test_config_paraset):
+    def test_initialise_model_input_non_model_parameter(
+        cls, test_adapter, test_config_paraset
+    ):
         tname = "junk"
         test_config_paraset.get_writable_scalar_view(tname, ("World",), "K").set(4)
         # What should happen here when we try to write a parameter which the model
@@ -99,7 +64,9 @@ class _AdapterTester(object):
         test_adapter.initialize_run_parameters(test_config_paraset)
 
     @classmethod
-    def test_initialise_run_parameters_non_model_parameter(cls, test_adapter, test_config_paraset):
+    def test_initialise_run_parameters_non_model_parameter(
+        cls, test_adapter, test_config_paraset
+    ):
         # blocked by questions about initialize_model_input above
         tname = "junk"
         test_config_paraset.get_writable_scalar_view(tname, ("World",), "K").set(4)
@@ -114,10 +81,16 @@ class _AdapterTester(object):
 
         res = test_adapter.run()
 
-        assert res.parameters.get_scalar_view(
-            name=("ecs",), region=("World",), unit="K"
-        ).get() == 3
+        assert (
+            res.parameters.get_scalar_view(
+                name=("ecs",), region=("World",), unit="K"
+            ).get()
+            == 3
+        )
 
-        assert res.parameters.get_scalar_view(
-            name=("rf2xco2",), region=("World",), unit="W / m^2"
-        ).get() == 4.0
+        assert (
+            res.parameters.get_scalar_view(
+                name=("rf2xco2",), region=("World",), unit="W / m^2"
+            ).get()
+            == 4.0
+        )

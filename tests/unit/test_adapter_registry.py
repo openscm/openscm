@@ -15,6 +15,10 @@ def test_adapter_registry():
 
 
 def test_adapter_registry_unknown_model():
+    # make sure we didn't break _loaded_adapters in previous test
+    with pytest.raises(KeyError, match="Unknown model 'stub'"):
+        load_adapter("stub")
+
     with pytest.raises(KeyError, match="Unknown model 'unknown'"):
         load_adapter("unknown")
 

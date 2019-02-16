@@ -6,14 +6,18 @@ def test_adapter_base_class_init():
     parametersstub = "Parameters"
     outputstub = "Parameters"
     Adapter.__abstractmethods__ = set()
-    adapter = Adapter(parametersstub, outputstub)  # pylint: disable=abstract-class-instantiated
+    adapter = Adapter(  # pylint: disable=abstract-class-instantiated
+        parametersstub, outputstub
+    )
     assert adapter._parameters == parametersstub
     assert adapter._output == outputstub
 
 
 def test_adapter_base_class_initialise_run_parameters():
     Adapter.__abstractmethods__ = set()
-    adapter = Adapter(ParameterSet(), ParameterSet())  # pylint: disable=abstract-class-instantiated
+    adapter = Adapter(  # pylint: disable=abstract-class-instantiated
+        ParameterSet(), ParameterSet()
+    )
 
     start_time = 0
     stop_time = 1
@@ -24,7 +28,9 @@ def test_adapter_base_class_initialise_run_parameters():
 
 def test_adapter_base_class_run():
     Adapter.__abstractmethods__ = set()
-    adapter = Adapter(ParameterSet(), ParameterSet())  # pylint: disable=abstract-class-instantiated
+    adapter = Adapter(  # pylint: disable=abstract-class-instantiated
+        ParameterSet(), ParameterSet()
+    )
     start_time = 0
     adapter.initialize_run_parameters(start_time, 1)
     adapter.initialize_model_input()

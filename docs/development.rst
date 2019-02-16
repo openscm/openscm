@@ -7,6 +7,39 @@
 Writing a model adapter
 =======================
 
+Writing adapter tests
+*********************
+
+To help ensure your adapter works as intended, we provide a number
+of standard tests. To run these, create a file
+``test_myadapter.py`` in ``tests/adapters/`` and subclass the
+``AdapterTester`` (this ensures that the standard tests are run on
+your adapter). Tests are done using `pytest
+<https://docs.pytest.org/en/latest>`__ on all methods starting
+with ``test_``. Only pull requests with adapters with full test
+coverage will be merged (see, for instance, the coverage on the end
+of the PR page).
+
+.. code:: python
+
+    # tests/adapters/test_myadapter.py
+
+    from openscm.adapters.myadapter import MyAdapter
+
+    from .base import _AdapterTester
+
+    class TestMyAdapter(_AdapterTester):
+        tadapter = MyAdapter
+
+        # if necessary, you can extend the tests e.g.
+        def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
+            super().test_run(test_adapter, test_config_paraset, test_drivers_core)
+            # some specific test of your adapter here
+
+        def test_my_special_feature(self, test_adapter):
+            # test some special feature of your adapter class
+
+
 Creating an :class:`~openscm.adapter.Adapter` subclass
 ******************************************************
 
@@ -17,7 +50,7 @@ class:
 .. code:: python
 
     from ..adapter import Adapter
-    
+
     YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
     class MyAdapter(Adapter):
@@ -30,8 +63,8 @@ which adapters should interact is ``ParameterSet``.
   initializes the adapter and is called only once. It should set the
   default values of mandatory *model-specific* (not :ref:`standard
   OpenSCM parameters <standard-parameters>`!) parameters in the in the
-  :class:`~openscm.core.ParameterSet`
-  :attr:`~openscm.adapter.Adapter._parameter`. The :ref:`hierarchical
+  :class:`~openscm.core.ParameterSet` stored in the adapter's
+  :attr:`~openscm.adapter.Adapter._parameter` attribute. The :ref:`hierarchical
   names <parameter-hierarchy>` of these model-specific parameters should
   start with the model/adapter name (as you set it in the model registry,
   see below).
@@ -175,31 +208,6 @@ to:
         from .myadapter import MyAdapter
 
         adapter = MyAdapter
-
-
-Writing adapter tests
-*********************
-
-To ensure your adapter is properly tested, create a file
-``test_myadapter.py`` in ``tests/adapters/`` and subclass the
-``AdapterTester`` (this ensures that some standard tests are run on
-your adapter). Tests are done using `pytest
-<https://docs.pytest.org/en/latest>`__ on all methods starting
-with ``test_``. Only pull requests with adapters with full test
-coverage will be merged (see, for instance, the coverage on the end
-of the PR page).
-
-.. code:: python
-
-    from . import AdapterTester
-    from openscm.adapters.myadapter import MyAdapter
-
-
-    class TestMyAdapter(AdapterTester):
-        tadapter = MyAdapter
-        
-        test_my_special_feature(self, test_adapter):
-            # TODO do tests on ``test_adapter``
 
 
 Additional module dependencies
