@@ -1,7 +1,12 @@
+---
 engines:
   bandit:
+    enabled: true
     exclude_paths:
       - "tests/**"
       - "versioneer.py"
+  pylint:
+    enabled: true
+    disable: pointless-string-statement
 exclude_paths:
   - ".github/**"
