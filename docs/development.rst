@@ -57,7 +57,8 @@ use parts of OpenSCM other than ``ParameterSet``.
           from `self._parameters` (see below).
           """
 
-  You should later use the start and stop time of the run using the
+  The adapter should later use the start and stop time of the run as
+  stored in the
   :attr:`self._start_time <openscm.adapter.Adapter._start_time>` and
   :attr:`self._stop_time <openscm.adapter.Adapter._stop_time>`
   attributes.
@@ -71,7 +72,7 @@ use parts of OpenSCM other than ``ParameterSet``.
   This and the
   :func:`~openscm.adapter.Adapter._initialize_run_parameters` method
   are separated for higher efficiency when doing ensemble runs for
-  models that have additional overhead for changing run parameters.
+  models that have additional overhead for changing drivers/scenario setup.
 
   .. code:: python
 
