@@ -1,1 +1,7 @@
-engines:   bandit:     exclude_paths:       - "tests/**"
+engines:
+  bandit:
+    exclude_paths:
+      - "tests/**"
+      - "versioneer.py"
+exclude_paths:
+  - ".github/**"
