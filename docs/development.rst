@@ -146,7 +146,9 @@ by the specific model; conversion is done interally if possible.
 OpenSCM defines a :ref:`set of standard parameters
 <standard-parameters>` to be shared between different SCMs. As far as
 possible, adapters should be able to take all of them as input and should
-write their values to the output ``ParameterSet``.
+write their values to the output ``ParameterSet``. Conversion of specific
+forms of these (aggregation, unit conversion, and time frame adjustment)
+is ensured by the ``ParameterSet`` class.
 
 Refer to the :ref:`low-level-interface` documentation on how to do so.
 
