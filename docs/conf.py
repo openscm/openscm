@@ -19,7 +19,7 @@ from _version import get_versions
 # -- Project information -----------------------------------------------------
 
 project = "OpenSCM"
-copyright = "2018, Robert Gieseke, Zebedee Nicholls, Sven Willner"
+copyright = "2018, Robert Gieseke, Zebedee Nicholls, Sven Willner"  # pylint: disable=redefined-builtin
 author = "Robert Gieseke, Zebedee Nicholls, Sven Willner"
 
 

@@ -3,6 +3,7 @@ engines:
   bandit:
     enabled: true
     exclude_paths:
+      - "openscm/_version.py"
       - "tests/**"
       - "versioneer.py"
 exclude_paths:
