@@ -1,5 +1,4 @@
 import warnings
-from math import isnan
 
 import pytest
 import numpy as np
