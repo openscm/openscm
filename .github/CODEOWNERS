@@ -1,0 +1,30 @@
+# documentation: https://github.blog/2017-07-06-introducing-code-owners/
+.coveragerc @swillner
+.editorconfig @rgieseke @swillner @znicholls
+.readthedocs.yml @swillner
+.travis.yml @rgieseke
+CODE_OF_CONDUCT.rst @rgieseke @swillner @znicholls
+CONTRIBUTING.rst @rgieseke @swillner @znicholls
+LICENSE @rgieseke @swillner @znicholls
+MANIFEST.in @rgieseke @swillner @znicholls
+Makefile @rgieseke
+README.rst @rgieseke @swillner @znicholls
+docs/sources/schema.tex @swillner
+notebooks/emissions-units-with-pint.ipynb @znicholls
+notebooks/pyam-integration.ipynb @znicholls
+notebooks/tests_sanitize.cfg @znicholls
+notebooks/timeframes.ipynb @swillner
+openscm/__init__.py @rgieseke
+openscm/_version.py @rgieseke
+openscm/adapters/__init__.py @swillner
+openscm/core.py @swillner
+openscm/parameter_views.py @swillner
+openscm/parameters.py @swillner
+openscm/regions.py @swillner
+openscm/scmdataframe.py @lewisjared @znicholls
+openscm/timeframes.py @swillner
+openscm/units.py @swillner
+setup.cfg @rgieseke @swillner @znicholls
+tests/__init__.py @rgieseke @swillner @znicholls
+tests/conftest.py @znicholls
+versioneer.py @rgieseke
