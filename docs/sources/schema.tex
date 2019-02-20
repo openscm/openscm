@@ -105,15 +105,24 @@ babel
     fill=tableaulightblue,
     minimum width=\componentwidth,
     minimum height=100pt,
+    align=center
     ] (core) {
-      \begin{minipage}{0.5\componentwidth}
+      \begin{minipage}{0.9\componentwidth}
         \centering
         \vspace{20pt}
-        \texttt{openscm.core}\\[0.25em]
-        Provides the basic functionality to run a particular simple
+        \texttt{openscm.core},
+        \texttt{openscm.parameters},
+        \texttt{openscm.parameter\_views},\\
+        \texttt{openscm.regions},
+        \texttt{openscm.units}
+      \end{minipage}
+      \\[0.5em]
+      \begin{minipage}{0.75\componentwidth}
+        \centering
+        Provides the actual functionality to run a particular simple
         climate model as well as getting and setting its parameter
-        values. Mapping of parameter names and units is done
-        internally.
+        values. Mapping of parameter names as well as conversion of
+        time frames and units is done internally.
       \end{minipage}
     };
 
@@ -121,11 +130,11 @@ babel
     interface,
     anchor=north,
     minimum width=\componentwidth,
-    ] at (core.north) {\texttt{openscm.Core} -- low-level interface};
+    ] at (core.north) {Core interface};
   \end{scope}
   \node[outline,fit=(core)] {};
 
-  \setlength{\componentwidth}{120pt}
+  \setlength{\componentwidth}{130pt}
   \begin{scope}
     \node[
     component,
@@ -139,7 +148,7 @@ babel
     interface,
     anchor=north,
     minimum width=\componentwidth,
-    ] at (magiccadapter.north) {\texttt{openscm.model.Adapter}};
+    ] at (magiccadapter.north) {\texttt{openscm.adapter.Adapter}};
 
     \node[
     anchor=south,
@@ -159,7 +168,7 @@ babel
   \end{scope}
   \node[outline,fit=(magiccadapter)] {};
 
-  \setlength{\componentwidth}{120pt}
+  \setlength{\componentwidth}{130pt}
   \begin{scope}
     \node[
     component,
@@ -173,7 +182,7 @@ babel
     interface,
     anchor=north,
     minimum width=\componentwidth,
-    ] at (hectoradapter.north) {\texttt{openscm.model.Adapter}};
+    ] at (hectoradapter.north) {\texttt{openscm.adapter.Adapter}};
 
     \node[
     anchor=south,
@@ -193,7 +202,7 @@ babel
   \end{scope}
   \node[outline,fit=(hectoradapter)] {};
 
-  \setlength{\componentwidth}{120pt}
+  \setlength{\componentwidth}{130pt}
   \begin{scope}
     \node[
     component,
@@ -207,7 +216,7 @@ babel
     interface,
     anchor=north,
     minimum width=\componentwidth,
-    ] at (fairadapter.north) {\texttt{openscm.model.Adapter}};
+    ] at (fairadapter.north) {\texttt{openscm.adapter.Adapter}};
 
     \node[
     anchor=south,
@@ -227,27 +236,27 @@ babel
   \end{scope}
   \node[outline,fit=(fairadapter)] {};
 
-  \node[box,right=2\distancex of fairadapter] {\Huge ...};
+  \node[box,right=\distancex of fairadapter] (modeldots) {\Huge ...};
 
   \draw[connect] let \p1=(core.south), \p2=(magiccadapter.north) in (\x2,\y1) -- (\x2,\y2);
   \draw[connect] let \p1=(core.south), \p2=(hectoradapter.north) in (\x2,\y1) -- (\x2,\y2);
   \draw[connect] let \p1=(core.south), \p2=(fairadapter.north) in (\x2,\y1) -- (\x2,\y2);
 
-  \setlength{\componentwidth}{250pt}
+  \setlength{\componentwidth}{130pt}
   \begin{scope}
     \node[
     component,
     fill=tableaulightred,
     minimum width=\componentwidth,
     minimum height=100pt,
-    above left=\distancey and 0pt of core.north east,
-    ] (library) {};
+    above right=\distancey and 0pt of core.north west,
+    ] (pythonic) {};
 
     \node[
     interface,
     anchor=north,
     minimum width=\componentwidth,
-    ] at (library.north) {\texttt{openscm.OpenSCM} -- high-level interface};
+    ] at (pythonic.north) {\texttt{openscm.openscm}};
 
     \node[
     interface,
@@ -257,18 +266,87 @@ babel
     yshift=10pt,
     anchor=south,
     minimum width=\componentwidth,
-    ] at (library.south) {
-      \begin{minipage}{0.8\componentwidth}
+    ] at (pythonic.south) {
+      \begin{minipage}{0.9\componentwidth}
         \centering
-        \texttt{openscm.highlevel}\\[0.25em]
-        Provides high-level functionality around single model runs.
-        This includes reading/writing input and output data, easy setting of parameters and stochastic ensemble runs.
+        Provides pythonic convenience functions for single model runs
+        including I/O and easy setting of parameters.
       \end{minipage}
     };
   \end{scope}
-  \node[outline,fit=(library)] {};
+  \node[outline,fit=(pythonic)] {};
+  \draw[connect] let \p1=(core.north), \p2=(pythonic.south) in (\x2,\y1) -- (\x2,\y2);
 
-  \draw[connect] let \p1=(core.north), \p2=(library.south) in (\x2,\y1) -- (\x2,\y2);
+  \setlength{\componentwidth}{130pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightred,
+    minimum width=\componentwidth,
+    minimum height=100pt,
+    right=\distancex of pythonic,
+    ] (dataframe) {};
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (dataframe.north) {\texttt{openscm.scmdataframe}};
+
+    \node[
+    interface,
+    fill=none,
+    text=black,
+    opacity=1,
+    yshift=10pt,
+    anchor=south,
+    minimum width=\componentwidth,
+    ] at (dataframe.south) {
+      \begin{minipage}{0.9\componentwidth}
+        \centering
+        Provides a tabular view to input and output parameters
+        including methods to read and write a standardized file
+        format.
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(dataframe)] {};
+  \draw[connect] let \p1=(core.north), \p2=(dataframe.south) in (\x2,\y1) -- (\x2,\y2);
+
+  \setlength{\componentwidth}{130pt}
+  \begin{scope}
+    \node[
+    component,
+    fill=tableaulightred,
+    minimum width=\componentwidth,
+    minimum height=100pt,
+    right=\distancex of dataframe,
+    ] (ensemble) {};
+
+    \node[
+    interface,
+    anchor=north,
+    minimum width=\componentwidth,
+    ] at (ensemble.north) {\texttt{openscm.ensemble}};
+
+    \node[
+    interface,
+    fill=none,
+    text=black,
+    opacity=1,
+    yshift=17pt,
+    anchor=south,
+    minimum width=\componentwidth,
+    ] at (ensemble.south) {
+      \begin{minipage}{0.9\componentwidth}
+        \centering
+        Provides functions for ensemble runs including statistical
+        analysis and model calibration.
+      \end{minipage}
+    };
+  \end{scope}
+  \node[outline,fit=(ensemble)] {};
+  \draw[connect] let \p1=(core.north), \p2=(ensemble.south) in (\x2,\y1) -- (\x2,\y2);
 
   \setlength{\componentwidth}{450pt}
   \begin{scope}
@@ -277,22 +355,22 @@ babel
     fill=tableaulightgreen,
     minimum width=\componentwidth,
     minimum height=50pt,
-    above left=\distancey and 0pt of library.north east,
+    above right=\distancey and 0pt of pythonic.north west,
     ] (users) {};
 
     \node[
     anchor=west,
-    minimum width=115pt,
     xshift=5pt,
+    minimum width=115pt,
     minimum height=40pt,
     rounded corners=\roundedcorners,
     draw=black,
     fill=tableaugreen,
-    text=white
-    ] (endusers) at (users.west) {
+    text=white,
+    ] (tool) at (users.west) {
       \begin{minipage}{210pt}
         \centering
-        Other libraries\\{\small IAMs, ...}
+        OpenSCM Tool\\{\small Command line interface}
       \end{minipage}
     };
 
@@ -303,18 +381,20 @@ babel
     draw=black,
     fill=tableaugreen,
     text=white,
+    right=\distancex of tool,
     xshift=-4pt,
-    right=\distancex of endusers,
-    ] {
+    ] (endusers) {
       \begin{minipage}{210pt}
         \centering
-        OpenSCM Tool\\{\small Command line interface}
+        Other libraries\\{\small IAMs, ...}
       \end{minipage}
     };
   \end{scope}
   \node[outline,fit=(users)] {};
 
-  \draw[connect] let \p1=(users.south), \p2=($(core.north)!.5!(core.north west)$) in (\x2,\y1) -- (\x2,\y2);
-  \draw[connect] let \p1=(users.south), \p2=(library.north) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(core.north), \p3=(modeldots.north) in (\x3,\y1) -- (\x3,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(pythonic.north) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(dataframe.north) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(ensemble.north) in (\x2,\y1) -- (\x2,\y2);
 \end{tikzpicture}
 \end{document}
