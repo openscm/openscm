@@ -147,7 +147,7 @@ set and the user tries to set values for one of its parent parameters.
 A similar logic applies to the hierarchy of regions.
 
 Using :class:`~openscm.core.ParameterView` as proxy objects rather
-than directly setting/returning parameter valus allows for efficient
+than directly setting/returning parameter values allows for efficient
 parameter handling in the expected units and time frames without
 specifying these for each value (e.g. seeting a timeseries step-wise
 would create large overhead).
