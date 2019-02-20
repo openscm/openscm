@@ -60,14 +60,15 @@ need to do anything in the particular method). The only part of OpenSCM with
 which adapters should interact is ``ParameterSet``.
 
 - The :func:`~openscm.adapter.Adapter._initialize_model` method
-  initializes the adapter and is called only once. It should set the
-  default values of mandatory *model-specific* (not :ref:`standard
-  OpenSCM parameters <standard-parameters>`!) parameters in the in the
-  :class:`~openscm.core.ParameterSet` stored in the adapter's
-  :attr:`~openscm.adapter.Adapter._parameter` attribute. The :ref:`hierarchical
-  names <parameter-hierarchy>` of these model-specific parameters should
-  start with the model/adapter name (as you set it in the model registry,
-  see below).
+  initializes the adapter and is called only once just before the
+  first call to the functions below initializing the first run. It
+  should set the default values of mandatory *model-specific* (not
+  :ref:`standard OpenSCM parameters <standard-parameters>`!)
+  parameters in the in the :class:`~openscm.core.ParameterSet` stored
+  in the adapter's :attr:`~openscm.adapter.Adapter._parameter`
+  attribute. The :ref:`hierarchical names <parameter-hierarchy>` of
+  these model-specific parameters should start with the model/adapter
+  name (as you set it in the model registry, see below).
 
   .. code:: python
 

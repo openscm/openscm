@@ -32,6 +32,9 @@ class Adapter(metaclass=ABCMeta):
     ``1970-01-01 00:00:00``)
     """
 
+    _initialized: bool
+    """True if model has been initialized via :func:`_initialize_model`"""
+
     _output: ParameterSet
     """Output parameter set"""
 
@@ -57,7 +60,7 @@ class Adapter(metaclass=ABCMeta):
         """
         self._parameters = parameters
         self._output = output
-        self._initialize_model()
+        self._initialized = False
 
     def __del__(self):
         """
@@ -72,6 +75,9 @@ class Adapter(metaclass=ABCMeta):
         Called before the adapter is used in any way and at most once before a call to
         `run` or `step`.
         """
+        if not self._initialized:
+            self._initialize_model()
+            self._initialized = True
         self._initialize_model_input()
 
     def initialize_run_parameters(self, start_time: int, stop_time: int) -> None:
@@ -90,6 +96,9 @@ class Adapter(metaclass=ABCMeta):
             End of the time range to run over (including; seconds since
             ``1970-01-01 00:00:00``)
         """
+        if not self._initialized:
+            self._initialize_model()
+            self._initialized = True
         self._start_time = start_time
         self._stop_time = stop_time
         self._initialize_run_parameters()
