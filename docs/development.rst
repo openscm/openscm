@@ -168,32 +168,36 @@ which adapters should interact is ``ParameterSet``.
           # TODO Shut down model
 
 
-Reading model and input parameters
-**********************************
+Reading model and input parameters and writing output parameters
+****************************************************************
 
 Model parameters and input data (referred to as general "parameters"
-in OpenSCM) are **pulled** from the :class:`~openscm.core.ParameterSet`
-provided by the OpenSCM Core. From this, you read the parameters in
-the :ref:`time frame <timeframes>` and :ref:`unit <units>` as needed
-by the specific model; conversion is done interally if possible.
-
+in OpenSCM) are **pulled** from the
+:class:`~openscm.core.ParameterSet` provided by the OpenSCM Core.
 OpenSCM defines a :ref:`set of standard parameters
 <standard-parameters>` to be shared between different SCMs. As far as
-possible, adapters should be able to take all of them as input and should
-write their values to the output ``ParameterSet``. Conversion of specific
-forms of these (aggregation, unit conversion, and time frame adjustment)
-is ensured by the ``ParameterSet`` class.
+possible, adapters should be able to take all of them as input from
+:attr:`~openscm.adapter.Adapter._parameters` and should write their
+values to :attr:`~openscm.adapter.Adapter._output_parameters`.
 
-Refer to the :ref:`low-level-interface` documentation on how to do so.
+For efficiency, the OpenSCM Core interface provides subclasses of
+:class:`~openscm.core.ParameterView` that provide a view into a
+parameter with a requested :ref:`time frame <timeframes>` and
+:ref:`unit <units>`. Conversion (aggregation, unit conversion, and
+time frame adjustment) is done interally if possible. Subclasses
+implement functionality for scalar and time series values, each for
+read-only as well as writable views, which you can get from the
+relevant :class:`~openscm.core.ParameterSet` (see
+:ref:`get-set-parameters`).
 
-
-Writing output parameters
-*************************
-
-In the :func:`~openscm.adapter.Adapter.run` and
-:func:`~openscm.adapter.Adapter.step` methods you should directly
-write the relevant output parameters. Refer to the
-:ref:`low-level-interface` documentation on how to do so.
+Accordingly, you should establish the views you need in the
+:func:`~openscm.adapter.Adapter._initialize_model` method and save
+them as protected attributes of your adapter class. Then, get their
+values in the :func:`~openscm.adapter.Adapter._initialize_model_input`
+and :func:`~openscm.adapter.Adapter._initialize_run_parameters`
+methods. In the :func:`~openscm.adapter.Adapter._run` and
+:func:`~openscm.adapter.Adapter._step` methods you should write the
+relevant output parameters.
 
 
 Adding the adapter to the model registry

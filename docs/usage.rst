@@ -93,6 +93,8 @@ specifying the underlying SCM and start and end time:
     end_time = start_time + (2100 - 2006) * year_seconds
     model_run = ModelRun("DICE", start_time, end_time)
 
+.. _get-set-parameters:
+
 Setting input parameters
 ************************
 
