@@ -9,13 +9,28 @@ dedicated `Jupyter Notebook
 """
 
 from copy import copy
+from enum import Enum
 from errors import InsufficientDataError
 import numpy as np
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Sequence, Tuple
 
 
+class InterpolationType(Enum):
     """
+    Interpolation type.
     """
+
+    LINEAR = 1
+    CUBIC = 3
+
+
+class TimeSeriesType(Enum):
+    """
+    Time series type.
+    """
+
+    POINT = 1
+    AVERAGE = 2
 
 
 class Timeframe:
@@ -24,15 +39,52 @@ class Timeframe:
     length.
     """
 
-    start_time: int
-    """Start time (seconds since :literal:`1970-01-01 00:00:00`)"""
+    interpolation_type: InterpolationType
+    """
+    Type of interpolation to be used when a time series with this timeframe needs to be
+    converted.
+    """
 
-    period_length: int
-    """Period length in seconds"""
+    points: Sequence[int]
+    """Time points (seconds since :literal:`1970-01-01 00:00:00`)"""
 
-    def __init__(self, start_time, period_length):
+    time_series_type: TimeSeriesType
+    """Type of time series associated with this timeframe."""
+
+    def __init__(
+        self,
+        points: Sequence[int],
+        time_series_type: TimeSeriesType,
+        interpolation_type: InterpolationType,
+    ):
         """
         Initialize.
+
+        Parameters
+        ----------
+        points
+            Time points (seconds since :literal:`1970-01-01 00:00:00`)
+        time_series_type
+            Type of time series associated with this timeframe.
+        interpolation_type
+            Type of interpolation to be used when a time series with this timeframe
+            needs to be converted.
+        """
+        self.points = points
+        self.time_series_type = time_series_type
+        self.interpolation_type = interpolation_type
+
+    @classmethods
+    def from_equidistant(
+        self,
+        start_time: int,
+        period_length: int,
+        point_count: int,
+        time_series_type: TimeSeriesType,
+        interpolation_type: InterpolationType,
+    ) -> "Timeframe":
+        """
+        Create a timeframe with equidistant time points.
 
         Parameters
         ----------
@@ -40,9 +92,16 @@ class Timeframe:
             Start time (seconds since ``1970-01-01 00:00:00``)
         period_length
             Period length (in seconds)
+        point_count
+            Number of time points
+        time_series_type
+            Type of time series associated with this timeframe.
+        interpolation_type
+            Type of interpolation to be used when a time series with this timeframe
+            needs to be converted.
         """
-        self.start_time = start_time
-        self.period_length = period_length
+        # TODO implement
+        raise NotImplementedError
 
     def __repr__(self) -> str:
         """
