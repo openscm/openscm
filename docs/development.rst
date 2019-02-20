@@ -82,8 +82,8 @@ with which adapters should interact is
 - The :func:`~openscm.adapter.Adapter._initialize_run_parameters`
   method initializes a particular run. It is called before the adapter
   is used in any way and at most once before a call to
-  :func:`~openscm.adapter.Adapter.run` or
-  :func:`~openscm.adapter.Adapter.step`.
+  :func:`~openscm.adapter.Adapter._run` or
+  :func:`~openscm.adapter.Adapter._step`.
 
   .. code:: python
 
@@ -101,8 +101,8 @@ with which adapters should interact is
 - The :func:`~openscm.adapter.Adapter._initialize_model_input` method
   initializes the input and model parameters of a particular run. It
   is also called before the adapter is used in any way and at most
-  once before a call to :func:`~openscm.adapter.Adapter.run` or
-  :func:`~openscm.adapter.Adapter.step`.
+  once before a call to :func:`~openscm.adapter.Adapter._run` or
+  :func:`~openscm.adapter.Adapter._step`.
 
   This and the
   :func:`~openscm.adapter.Adapter._initialize_run_parameters` method
@@ -121,8 +121,8 @@ with which adapters should interact is
 
 - The :func:`~openscm.adapter.Adapter._reset` method resets the model
   to prepare for a new run. It is called once after each call of
-  :func:`~openscm.adapter.Adapter.run` and to reset the model after
-  several calls to :func:`~openscm.adapter.Adapter.step`.
+  :func:`~openscm.adapter.Adapter._run` and to reset the model after
+  several calls to :func:`~openscm.adapter.Adapter._step`.
 
   .. code:: python
 
