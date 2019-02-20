@@ -2,6 +2,14 @@ class AdapterNeedsModuleError(Exception):
     """Exception raised when an adapter needs a module that is not installed."""
 
 
+class InsufficientDataError(ValueError):
+    """
+    Exception raised when not enough data overlap is available when converting from one
+    timeframe to another (e.g. when the target timeframe is outside the range of the
+    source timeframe) or when data is too short (less than 3 data points).
+    """
+
+
 class ParameterError(Exception):
     """
     Exception relating to a parameter. Used as super class.

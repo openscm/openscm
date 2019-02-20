@@ -1,5 +1,6 @@
 import numpy as np
 from openscm import timeframes
+from openscm.errors import InsufficientDataError
 import pytest
 
 possible_source_values = [[1, 5, 3, 5, 7, 3, 2, 9]]
@@ -87,7 +88,7 @@ def test_conversion_to_same_timeframe(source, source_values_index):
 
 
 def test_insufficient_overlap(source, target):
-    with pytest.raises(timeframes.InsufficientDataError):
+    with pytest.raises(InsufficientDataError):
         timeframes.TimeframeConverter(
             source, timeframes.Timeframe(-1000, target.period_length)
         )
@@ -95,7 +96,7 @@ def test_insufficient_overlap(source, target):
 
 def test_short_data(source, target):
     for a in [[], [0], [0, 1]]:
-        with pytest.raises(timeframes.InsufficientDataError):
+        with pytest.raises(InsufficientDataError):
             timeframes._convert_cached(np.array(a), source, target, None)
 
 
