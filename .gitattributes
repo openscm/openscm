@@ -1,1 +1,3 @@
 openscm/_version.py export-subst
+docs/* linguist-documentation
+*.ipynb linguist-documentation
