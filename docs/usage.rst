@@ -196,4 +196,4 @@ read-only :class:`~openscm.core.ParameterView` objects:
 Pythonic interface
 ------------------
 
-(see :ref:`openscm-reference` for an API reference)
+(see :ref:`openscm-python-reference` for an API reference)
