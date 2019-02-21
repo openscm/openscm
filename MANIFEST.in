@@ -1,2 +1,1 @@
-include versioneer.py
-include openscm/_version.py
+include LICENSE
