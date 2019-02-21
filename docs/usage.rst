@@ -12,9 +12,8 @@ parameters as well as to run and reset the model.
 The **Pythonic** interface adds several convenience functions on top
 of the core interface. It allows for reading and writing parameters
 from and to standardized and other file formats, including whole
-scenario definitions. It also provides functions for running
-ensembles of model runs.
-tuning.
+scenario definitions. It also provides functions for running ensembles
+of model runs.
 
 The **command line** interface lets users run models with specified
 parameters and model input directly from the command line without
@@ -42,9 +41,7 @@ parameter emission. Thus, it is identified by
 
 In the core API parameters are expected to be identified by tuples of
 strings describing their position in the hierarchy, i.e. in this
-example ``("Emissions", "CO2", "Industrial")``. The ScmDataFrame API
-also allows for giving it as a string with the hierarchical levels
-separated by ``|``, e.g. ``"Emissions|CO2|Industrial"``.
+example ``("Emissions", "CO2", "Industrial")``.
 
 See :ref:`standard-parameters` for the standard parameters in OpenSCM.
 
