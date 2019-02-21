@@ -11,9 +11,9 @@ parameters as well as to run and reset the model.
 
 The **Pythonic** interface adds several convenience functions on top
 of the core interface. It allows for reading and writing parameters
-from and to a standardized and other file formats, including whole
-scenario definitions. Also, it provides functions for running
-ensembles of model runs and doing stochastic analyses and model
+from and to standardized and other file formats, including whole
+scenario definitions. It also provides functions for running
+ensembles of model runs.
 tuning.
 
 The **command line** interface lets users run models with specified
@@ -96,10 +96,10 @@ specifying the underlying SCM and start and end time:
 Setting input parameters
 ************************
 
-In the core API parameters are get and set through of subclasses of
+In the core API parameters are get and set through subclasses of
 :class:`ParameterView`. While the values of the parameters are stored
 internaly, a :class:`ParameterView` provides an (always up-to-date)
-"view" of the corresponding parameter giving the parameter values in a
+"view" of the corresponding parameter and will always return the parameter values in a
 specific unit and, in the case of timeseries, a specific time frame.
 
 Unit and time frame have to be specified when requesting a

@@ -16,7 +16,7 @@ getting and setting model parameters, input and output data as well as
 for running the models. Additionally, OpenSCM provides a standardized
 file format for these parameters and scenarios including functions for
 reading and writing such files. It further adds convenience functions
-and easily enables stochastic ensemble runs, e.g. for model tuning.
+and easily enables ensemble runs, e.g. for scenario assessment or model tuning.
 
 Being designed as a programming-language agnostic interface and
 standard in mind, this will be the reference implementation in
