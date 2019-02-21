@@ -21,7 +21,8 @@ getting and setting model parameters, input and output data as well as
 for running the models. Additionally, OpenSCM provides a standardized
 file format for these parameters and scenarios including functions for
 reading and writing such files. It further adds convenience functions
-and easily enables ensemble runs, e.g. for scenario assessment or model tuning.
+and easily enables ensemble runs, e.g. for scenario assessment or
+model tuning.
 
 Being designed as a programming-language agnostic interface and
 standard in mind, this will be the reference implementation in
@@ -51,23 +52,23 @@ Schema
 Installation
 ------------
 
-To install OpenSCM and all the dependencies required to run the example 
-notebooks
-
-.. code:: bash
-
-    pip install openscm[notebooks]
-
-To install only the minimum requirements to run OpenSCM
-
+To install OpenSCM run
 
 .. code:: bash
 
     pip install openscm
 
+If you also want to run the example notebooks install additional
+dependencies using
+
+.. code:: bash
+
+    pip install openscm[notebooks]
+
 OpenSCM comes with model adapters only for some very simple SCMs. If
 you want to run other models, you will also need to install their
-corresponding OpenSCM adapters [TODO: write/link to these instructions].
+dependencies (see `ReadTheDocs
+<https://openscm.readthedocs.io/en/latest/models.html>`_ for a list).
 
 .. sec-end-installation
 .. sec-begin-quickstart
