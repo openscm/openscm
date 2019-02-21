@@ -13,7 +13,7 @@ def test_adapter_base_class_init():
     assert adapter._output == outputstub
 
 
-def test_adapter_base_class_initialise_model_input():
+def test_adapter_base_class_initialize_model_input():
     Adapter.__abstractmethods__ = set()
     adapter = Adapter(  # pylint: disable=abstract-class-instantiated
         ParameterSet(), ParameterSet()
@@ -22,7 +22,7 @@ def test_adapter_base_class_initialise_model_input():
     adapter.initialize_model_input()
 
 
-def test_adapter_base_class_initialise_run_parameters():
+def test_adapter_base_class_initialize_run_parameters():
     Adapter.__abstractmethods__ = set()
     adapter = Adapter(  # pylint: disable=abstract-class-instantiated
         ParameterSet(), ParameterSet()

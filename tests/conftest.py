@@ -44,7 +44,7 @@ def test_pd_df():
 @pytest.fixture(scope="function")
 def test_adapter(request):
     """
-    Get an initialised instance of an the requesting classes ``tadapter`` property.
+    Get an initialized instance of an the requesting classes ``tadapter`` property.
     """
     try:
         yield request.cls.tadapter(ParameterSet(), ParameterSet())

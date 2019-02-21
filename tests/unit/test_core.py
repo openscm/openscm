@@ -151,7 +151,7 @@ def test_parameter(core):
         )
 
 
-def test_parameterset_default_initialisation():
+def test_parameterset_default_initialization():
     paraset = ParameterSet()
 
     assert paraset._get_or_create_region(("World",)) == paraset._root
@@ -162,7 +162,7 @@ def test_parameterset_default_initialisation():
         paraset._get_or_create_region("Earth")
 
 
-def test_parameterset_named_initialisation():
+def test_parameterset_named_initialization():
     paraset_named = ParameterSet("Earth")
     assert paraset_named._get_or_create_region(("Earth",)) == paraset_named._root
 
