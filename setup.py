@@ -8,7 +8,7 @@ A unifying interface for Simple Climate Models.
 
 import versioneer
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
 
@@ -19,7 +19,7 @@ REQUIREMENTS = [
     # TODO can be moved into notebooks dependencies once Jared's new backend is in place
     "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master",
 ]
-REQUIREMENTS_NOTEBOOKS = ["notebook", "seaborn"]
+REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn"]
 REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
@@ -47,7 +47,7 @@ When implementing an additional adapter, include your adapter NAME here as:
 """
 
 for k, v in REQUIREMENTS_MODELS.items():
-    requirements_extras["model-{}".format(k)] = v
+    REQUIREMENTS_EXTRAS["model-{}".format(k)] = v
     REQUIREMENTS_TESTS += v
 
 # Get the long description from the README file
@@ -107,6 +107,7 @@ setup(
     cmdclass=CMDCLASS,
     project_urls={
         "Bug Reports": "https://github.com/openclimatedata/openscm/issues",
+        "Documentation": "https://openscm.readthedocs.io/en/latest",
         "Source": "https://github.com/openclimatedata/openscm",
     },
 )
