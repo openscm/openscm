@@ -33,13 +33,14 @@ def load_adapter(name: str) -> type:
             if name == "MODELNAME":  # pragma: no cover
                 from .modelname import MODELNAME
 
-                adapter = MODELNAME(parameters)
+                adapter = MODELNAME
 
             """
             When implementing an additional adapter, include your adapter NAME here as:
             ```
             elif name == "NAME":
                 from .NAME import NAME
+
                 adapter = NAME
             ```
             """

@@ -25,18 +25,21 @@ the PR page).
 
     from openscm.adapters.myadapter import MyAdapter
 
-    from .base import _AdapterTester
+    from base import _AdapterTester
+
 
     class TestMyAdapter(_AdapterTester):
         tadapter = MyAdapter
 
         # if necessary, you can extend the tests e.g.
-        def test_run(self, test_adapter, test_config_paraset, test_drivers_core):
+        @classmethod
+        def test_run(cls, test_adapter, test_config_paraset, test_drivers_core):
             super().test_run(test_adapter, test_config_paraset, test_drivers_core)
-            # some specific test of your adapter here
+            # TODO some specific test of your adapter here
 
-        def test_my_special_feature(self, test_adapter):
-            # test some special feature of your adapter class
+        @classmethod
+        def test_my_special_feature(cls, test_adapter):
+            # TODO test some special feature of your adapter class
 
 
 Creating an :class:`~openscm.adapter.Adapter` subclass
@@ -47,6 +50,8 @@ Create your adapter source file in ``openscm/adapters/``, e.g.
 class:
 
 .. code:: python
+
+    # openscm/adapters/myadapter.py
 
     from ..adapter import Adapter
 
@@ -214,6 +219,8 @@ to:
 
         adapter = MyAdapter
 
+(make sure to set ``adapter`` to your *class* not an instance of your
+adapter)
 
 Additional module dependencies
 ******************************
