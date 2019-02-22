@@ -144,8 +144,8 @@ with which adapters should interact is
       def _run(self) -> None:
           """
           TODO Run the model and write output parameters to
-          :class:`self._output_parameters
-          <~openscm.adapter.Adapter._output_parameters>` (see below).
+          :class:`self._output <~openscm.adapter.Adapter._output>`
+          (see below).
           """
 
 - The :func:`~openscm.adapter.Adapter._step` method does a single time
@@ -159,8 +159,8 @@ with which adapters should interact is
       def _step(self) -> None:
           """
           TODO Do a single time step and write corresponding output
-          parameters to :class:`self._output_parameters
-          <~openscm.adapter.Adapter._output_parameters>` (see below).
+          parameters to :class:`self._output
+          <~openscm.adapter.Adapter._output>` (see below).
           """
           self._current_time += YEAR
 
@@ -183,7 +183,7 @@ OpenSCM defines a :ref:`set of standard parameters
 <standard-parameters>` to be shared between different SCMs. As far as
 possible, adapters should be able to take all of them as input from
 :attr:`~openscm.adapter.Adapter._parameters` and should write their
-values to :attr:`~openscm.adapter.Adapter._output_parameters`.
+values to :attr:`~openscm.adapter.Adapter._output`.
 
 For efficiency, the OpenSCM Core interface provides subclasses of
 :class:`~openscm.core.ParameterView` that provide a view into a

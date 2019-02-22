@@ -3,7 +3,7 @@ class _AdapterTester(object):
     Base class for adapter testing.
 
     At minimum, a new adapter should define a subclass of this class called,
-    ``AdapterXTester`` which has ``tadapter`` equal to the adapter to be tested. This
+    ``AdapterXTester`` which has ``tadapter`` set to the adapter to be tested. This
     ensures that the new adapter is subject to all of OpenSCM's minimum requirements
     whilst giving authors the ability to tweak the tests as necessary for their specific
     adapter.
