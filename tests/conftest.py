@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import datetime
 
 
@@ -46,24 +47,20 @@ def test_adapter(request):
     """
     Get an initialized instance of an the requesting classes ``tadapter`` property.
     """
+    parameters = ParameterSet()
+    parameters.get_writable_scalar_view("ecs", ("World",), "K").set(3)
+    parameters.get_writable_scalar_view("rf2xco2", ("World",), "W / m^2").set(4.0)
+    output_parameters = ParameterSet()
     try:
-        yield request.cls.tadapter(ParameterSet(), ParameterSet())
+        yield request.cls.tadapter(parameters, output_parameters)
     except TypeError:
         pytest.skip("{} cannot be instantiated".format(str(request.cls.tadapter)))
 
 
 @pytest.fixture(scope="function")
-def test_config_paraset():
-    parameters = ParameterSet()
-    parameters.get_writable_scalar_view("ecs", ("World",), "K").set(3)
-    parameters.get_writable_scalar_view("rf2xco2", ("World",), "W / m^2").set(4.0)
+def test_run_parameters():
 
-    yield parameters
-
-
-@pytest.fixture(scope="function")
-def test_drivers_core():
-    # doesn't exist yet but we'd want something like this for testing
-    core = rcp_26_core
-
-    yield core
+    run_parameters = namedtuple("RunParameters", ["start_time", "stop_time"])
+    setattr(run_parameters, "start_time", 0)
+    setattr(run_parameters, "stop_time", 1)
+    yield run_parameters

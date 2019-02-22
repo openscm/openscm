@@ -1,4 +1,4 @@
-class _AdapterTester(object):
+class _AdapterTester:
     """
     Base class for adapter testing.
 
@@ -14,61 +14,59 @@ class _AdapterTester(object):
     Adapter to test
     """
 
-    @classmethod
-    def test_initialize(cls):
-        tadapter = cls.tadapter
-        assert not tadapter.initialized
-        tadapter._initialize_model()
-        assert tadapter.initialized
+    def test_initialize(self, test_adapter):
+        test_adapter._initialize_model()
 
-    @classmethod
-    def test_shutdown(cls, test_adapter):
+    def test_shutdown(self, test_adapter):
         """
         Test the adapter can be shutdown.
 
         Extra tests can be adapted depending on what the adapter should actually
         do on shutdown.
         """
-        test_adapter.shutdown()
+        del test_adapter
 
-    @classmethod
-    def test_initialize_model_input(cls, test_adapter, test_config_paraset):
+    def test_initialize_model_input(self, test_adapter):
         """
         Test that initalizing model input does as intended.
         """
+        assert not test_adapter._initialized
         # TODO test for missing but mandatory parameter
-        test_adapter.initialize_model_input(test_config_paraset)
+        test_adapter.initialize_model_input()
+        assert test_adapter._initialized
 
-    @classmethod
-    def test_initialize_model_input_non_model_parameter(
-        cls, test_adapter, test_config_paraset
-    ):
+    def test_initialize_model_input_non_model_parameter(self, test_adapter):
         tname = "junk"
-        test_config_paraset.get_writable_scalar_view(tname, ("World",), "K").set(4)
-        test_adapter.initialize_model_input(test_config_paraset)
+        test_adapter._parameters.get_writable_scalar_view(tname, ("World",), "K").set(4)
+        test_adapter.initialize_model_input()
         # TODO test that "junk" has not been used
 
-    @classmethod
-    def test_initialize_run_parameters(cls, test_adapter, test_config_paraset):
+    def test_initialize_run_parameters(self, test_adapter, test_run_parameters):
         """
         Test that initalizing run parameters does as intended.
         """
+        assert not test_adapter._initialized
         # TODO see test_initialize_model_input
-        test_adapter.initialize_run_parameters(test_config_paraset)
+        test_adapter.initialize_run_parameters(
+            test_run_parameters.start_time, test_run_parameters.stop_time
+        )
+        assert test_adapter._initialized
 
-    @classmethod
     def test_initialize_run_parameters_non_model_parameter(
-        cls, test_adapter, test_config_paraset
+        self, test_adapter, test_run_parameters
     ):
         tname = "junk"
-        test_config_paraset.get_writable_scalar_view(tname, ("World",), "K").set(4)
-        test_adapter.initialize_run_parameters(test_config_paraset)
+        test_adapter._parameters.get_writable_scalar_view(tname, ("World",), "K").set(4)
+        test_adapter.initialize_run_parameters(
+            test_run_parameters.start_time, test_run_parameters.stop_time
+        )
         # TODO see test_initialize_model_input_non_model_parameter
 
-    @classmethod
-    def test_run(cls, test_adapter, test_config_paraset, test_drivers_core):
-        test_adapter.initialize_model_input(test_drivers_core)
-        test_adapter.initialize_run_parameters(test_config_paraset)
+    def test_run(self, test_adapter, test_run_parameters):
+        test_adapter.initialize_model_input()
+        test_adapter.initialize_run_parameters(
+            test_run_parameters.start_time, test_run_parameters.stop_time
+        )
 
         res = test_adapter.run()
 
