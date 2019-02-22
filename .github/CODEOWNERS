@@ -22,6 +22,7 @@ openscm/parameter_views.py @swillner
 openscm/parameters.py @swillner
 openscm/regions.py @swillner
 openscm/scmdataframe.py @lewisjared @znicholls
+openscm/scmdataframebase.py @lewisjared @znicholls
 openscm/timeframes.py @swillner
 openscm/units.py @swillner
 setup.cfg @rgieseke @swillner @znicholls
