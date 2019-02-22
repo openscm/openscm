@@ -85,8 +85,8 @@ specifying the underlying SCM and start and end time:
     start_time = datetime(2006, 1, 1).timestamp()
     year_seconds = timedelta(365).total_seconds()
     # use year_seconds since models do not account for leap years
-    end_time = start_time + (2100 - 2006) * year_seconds
-    model_run = ModelRun("DICE", start_time, end_time)
+    stop_time = start_time + (2100 - 2006) * year_seconds
+    model_run = ModelRun("DICE", start_time, stop_time)
 
 .. _get-set-parameters:
 

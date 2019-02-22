@@ -183,7 +183,7 @@ class ParameterSet:
 
         The parameter is created as a timeseries if not viewed so far.
         The length of the returned ParameterView's timeseries is adjusted such
-        that its last value corresponds to a time not exceeding the ``end_time``
+        that its last value corresponds to a time not exceeding the ``stop_time``
         of the underlying run (i.e. ``Core`` object).
 
         Parameters
@@ -291,12 +291,6 @@ class Core:
     Represents a model run with a particular simple climate model.
     """
 
-    _end_time: int
-    """
-    End of the time range to run over (including; seconds since
-    ``1970-01-01 00:00:00``)
-    """
-
     _model: str
     """Name of the SCM to run"""
 
@@ -309,7 +303,13 @@ class Core:
     ``1970-01-01 00:00:00``)
     """
 
-    def __init__(self, model: str, start_time: int, end_time: int):
+    _stop_time: int
+    """
+    End of the time range to run over (including; seconds since
+    ``1970-01-01 00:00:00``)
+    """
+
+    def __init__(self, model: str, start_time: int, stop_time: int):
         """
         Initialize.
 
@@ -320,7 +320,7 @@ class Core:
         start_time
             Beginning of the time range to run over (seconds since
             ``1970-01-01 00:00:00``)
-        end_time
+        stop_time
             End of the time range to run over (including; seconds since
             ``1970-01-01 00:00:00``)
 
@@ -329,20 +329,20 @@ class Core:
         KeyError
             No adapter for SCM named ``model`` found
         ValueError
-            ``end_time`` before ``start_time``
+            ``stop_time`` before ``start_time``
         """
         self._model = model
         self._start_time = start_time
-        self._end_time = end_time
+        self._stop_time = stop_time
         self._parameters = ParameterSet()
 
     @property
-    def end_time(self) -> int:
+    def stop_time(self) -> int:
         """
         End of the time range to run over (including; seconds since
         ``1970-01-01 00:00:00``)
         """
-        return self._end_time
+        return self._stop_time
 
     @property
     def model(self) -> str:

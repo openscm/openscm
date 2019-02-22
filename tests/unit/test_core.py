@@ -26,20 +26,20 @@ def start_time():
 
 
 @pytest.fixture
-def end_time():
+def stop_time():
     return 130 * 365 * 24 * 3600
 
 
 @pytest.fixture
-def core(model, start_time, end_time):
-    core = Core(model, start_time, end_time)
+def core(model, start_time, stop_time):
+    core = Core(model, start_time, stop_time)
     core.parameters._get_or_create_region(("World", "DEU", "BER"))
     return core
 
 
-def test_core(core, model, start_time, end_time):
+def test_core(core, model, start_time, stop_time):
     assert core.start_time == start_time
-    assert core.end_time == end_time
+    assert core.stop_time == stop_time
     assert core.model == model
 
 

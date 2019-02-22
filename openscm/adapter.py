@@ -26,12 +26,6 @@ class Adapter(metaclass=ABCMeta):
     ``1970-01-01 00:00:00``)
     """
 
-    _end_time: int
-    """
-    End of the time range to run over (including; seconds since
-    ``1970-01-01 00:00:00``)
-    """
-
     _initialized: bool
     """True if model has been initialized via :func:`_initialize_model`"""
 
@@ -44,6 +38,12 @@ class Adapter(metaclass=ABCMeta):
     _start_time: int
     """
     Beginning of the time range to run over (seconds since
+    ``1970-01-01 00:00:00``)
+    """
+
+    _stop_time: int
+    """
+    End of the time range to run over (including; seconds since
     ``1970-01-01 00:00:00``)
     """
 
@@ -92,7 +92,7 @@ class Adapter(metaclass=ABCMeta):
         start_time
             Beginning of the time range to run over (seconds since
             ``1970-01-01 00:00:00``)
-        end_time
+        stop_time
             End of the time range to run over (including; seconds since
             ``1970-01-01 00:00:00``)
         """
