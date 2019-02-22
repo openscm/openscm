@@ -13,7 +13,7 @@ OpenSCM
 **Warning: OpenSCM is still work in progress and cannot be fully used
 yet! However, we are very grateful for suggestions and critique on how
 you would like to use this framework. Please have a look at the issues
-and feel free to create new ones.**
+and feel free to create new ones/upvote ones that would really help you.**
 
 The **Open Simple Climate Model framework** unifies access to several
 simple climate models (SCMs). It defines a standard interface for
