@@ -1,7 +1,9 @@
-from .. import constants
 from ..adapter import Adapter
+
 from datetime import datetime
 from math import log2
+
+YEAR = 365 * 24 * 60 * 60
 
 
 class DICE(Adapter):
@@ -98,17 +100,12 @@ class DICE(Adapter):
     _year2100: int
     """Timestamp of 2100-01-01"""
 
-    @abstractmethod
-    def initialize(self) -> None:
+    def _initialize_model(self) -> None:
         """
         Initialize the model.
         """
 
-        self._period_length = constants.YEAR
-        self._timestep = 0
-        self._timestep_count = (
-            self._stop_time - self._start_time
-        ) // self._period_length
+        self._period_length = YEAR
         self._year2100 = datetime(2100, 1, 1).timestamp()
 
         # Read model parameters
@@ -132,23 +129,23 @@ class DICE(Adapter):
             # Lower bound for concentration in upper strata 2010 (GtC)
             "M_u_lower": (100, "GtC/a"),
             # Initial atmospheric temp change (°C from 1900)
-            "T_atm0": (0.8, "°C"),
+            "T_atm0": (0.8, "degC"),
             # Upper bound for atmospheric temp change (°C from 1900)
-            "T_atm_upper": (40, "°C"),
+            "T_atm_upper": (40, "degC"),
             # Initial lower stratum temp change (°C from 1900)
-            "T_ocean0": (0.0068, "°C"),
+            "T_ocean0": (0.0068, "degC"),
             # Lower bound for lower stratum temp change (°C from 1900)
-            "T_ocean_lower": (-1, "°C"),
+            "T_ocean_lower": (-1, "degC"),
             # Upper bound for lower stratum temp change (°C from 1900)
-            "T_ocean_upper": (20, "°C"),
+            "T_ocean_upper": (20, "degC"),
             # Carbon cycle transition matrix
             "b12": (0.0181, ""),
             # Carbon cycle transition matrix
             "b23": (0.00071, ""),
             # Climate equation coefficient for upper level
-            "c1": (0.0222, "°C*m^2/W"),
+            "c1": (0.0222, "degC*m^2/W"),
             # Transfer coefficient upper to lower stratum
-            "c3": (0.09175, "W/m^2/°C"),
+            "c3": (0.09175, "W/m^2/degC"),
             # Transfer coefficient for lower level
             "c4": (0.00487, ""),
             # Forcings of equilibrium CO2 doubling (Wm-2)
@@ -163,11 +160,15 @@ class DICE(Adapter):
 
         for n, v in model_parameter_defaults.items():
             default, unit = v
+            setattr(self, "_{}".format(n), default)
+            self._parameters.get_writable_scalar_view(
+                ("DICE", n), ("World",), unit
+            ).set(default)
             setattr(
                 self,
-                "_{}".format(n),
-                self._parameterset.get_scalar_view(("DICE", n), (), unit).get(default),
-            )
+                "_view_{}".format(n),
+                self._parameters.get_scalar_view(("DICE", n), ("World",), unit),
+            )  # TODO use these views later
 
         # Carbon cycle transition matrix
         self._b11 = 1 - self._b12
@@ -176,15 +177,28 @@ class DICE(Adapter):
         self._b32 = self._b23 * self._M_u_eq / self._M_l_eq
         self._b33 = 1 - self._b32
 
+    def _initialize_model_input(self) -> None:
+        pass
+
+    def _initialize_run_parameters(self) -> None:
+        self._timestep = 0
+        self._timestep_count = (
+            self._stop_time - self._start_time
+        ) // self._period_length
+
         # Total CO2 emissions (GtCO2 per year)
-        self._E = self._parameterset.get_writable_timeseries_view(
-            ("Emissions", "CO2"), (), "GtCO2/a", self._start_time, self._period_length
+        self._E = self._output.get_writable_timeseries_view(
+            ("Emissions", "CO2"),
+            ("World",),
+            "GtCO2/a",
+            self._start_time,
+            self._period_length,
         )
 
         # Concentration in atmosphere (GtC)
-        self._M_atm = self._parameterset.get_writable_timeseries_view(
+        self._M_atm = self._output.get_writable_timeseries_view(
             ("Concentration", "Atmosphere"),
-            (),
+            ("World",),
             "GtC",
             self._start_time,
             self._period_length,
@@ -192,9 +206,9 @@ class DICE(Adapter):
         self._M_atm.set(0, self._M_atm0)
 
         # Carbon concentration increase in lower oceans (GtC from 1750)
-        self._M_l = self._parameterset.get_writable_timeseries_view(
+        self._M_l = self._output.get_writable_timeseries_view(
             ("Concentration", "Ocean", "lower"),
-            (),
+            ("World",),
             "GtC",
             self._start_time,
             self._period_length,
@@ -202,9 +216,9 @@ class DICE(Adapter):
         self._M_l.set(0, self._M_l0)
 
         # Carbon concentration increase in shallow oceans (GtC from 1750)
-        self._M_u = self._parameterset.get_writable_timeseries_view(
+        self._M_u = self._output.get_writable_timeseries_view(
             ("Concentration", "Ocean", "shallow"),
-            (),
+            ("World",),
             "GtC",
             self._start_time,
             self._period_length,
@@ -212,30 +226,40 @@ class DICE(Adapter):
         self._M_u.set(0, self._M_u0)
 
         # Increase in temperature of lower oceans (°C from 1900)
-        self._T_ocean = self._parameterset.get_writable_timeseries_view(
+        self._T_ocean = self._output.get_writable_timeseries_view(
             ("Temperature Increase", "Ocean", "lower"),
-            (),
-            "°C",
+            ("World",),
+            "degC",
             self._start_time,
             self._period_length,
         )
         self._T_ocean.set(0, self._T_ocean0)
 
-        # Increase in radiative forcing (watts per m2 from 1900)
-        self._force = self._parameterset.get_writable_timeseries_view(
-            ("Radiative forcing",), (), "W/m^2", self._start_time, self._period_length
-        )
-
-        # Increase temperature of atmosphere (°C from 1900)
-        self._T_atm = self._parameterset.get_writable_timeseries_view(
-            ("Temperature Increase", "Atmosphere"),
-            (),
-            "°C",
+        # Increase in radiative forcing (watts per m^2 from 1900)
+        self._force = self._output.get_writable_timeseries_view(
+            ("Radiative forcing",),
+            ("World",),
+            "W/m^2",
             self._start_time,
             self._period_length,
         )
 
-    def run(self) -> None:
+        # Increase temperature of atmosphere (°C from 1900)
+        self._T_atm = self._output.get_writable_timeseries_view(
+            ("Temperature Increase", "Atmosphere"),
+            ("World",),
+            "degC",
+            self._start_time,
+            self._period_length,
+        )
+
+    def _reset(self) -> None:
+        pass
+
+    def _shutdown(self) -> None:
+        pass
+
+    def _run(self) -> None:
         """
         Run the model over the full time range.
         """
@@ -243,25 +267,25 @@ class DICE(Adapter):
         for _ in range(self._timestep_count):
             self.step()
 
-    def step(self) -> None:
+    def _step(self) -> None:
         """
         Do a single time step.
         """
 
         self._timestep += 1
 
-        # Atmospheric pool size
+        # Atmospheric pool size (GtC)
         this_M_atm = max(
             self._M_atm_lower,
             last_M_atm * self._b11
             + last_M_u * self._b21
-            + E[self._timestep - 1] * self._period_length / constants.YEAR / 3.666,
+            + E[self._timestep - 1] * self._period_length / YEAR / 3.666,
         )
 
-        # Lower ocean pool size
+        # Lower ocean pool size (GtC from 1750)
         this_M_l = max(self._M_l_lower, last_M_l * self._b33 + last_M_u * self._b23)
 
-        # Shallow ocean pool size
+        # Shallow ocean pool size (GtC from 1750)
         this_M_u = max(
             self._M_u_lower,
             last_M_atm * self._b12 + last_M_u * self._b22 + last_M_l * self._b32,
@@ -283,11 +307,11 @@ class DICE(Adapter):
             forcoth = (
                 self._fex0
                 + (self._fex1 - self._fex0)
-                * (self._period_length / constants.YEAR * 0.2 * self._timestep)
+                * (self._period_length / YEAR * 0.2 * self._timestep)
                 / 18
             )
 
-        # Increase in radiative forcing (watts per m2 from 1900)
+        # Increase in radiative forcing (watts per m^2 from 1900)
         this_force = self._fco22x * log2(this_M_atm / self._M_atm_eq) + forcoth
 
         # Increase temperature of atmosphere (°C from 1900)
