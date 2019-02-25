@@ -31,7 +31,7 @@ def load_adapter(name: str) -> type:
 
         try:
             # TODO remove once we have at least one real adapter in here
-            if name == "MODELNAME":  # pragma: no cover
+            if name == "MODELNAME":
                 from .modelname import MODELNAME
 
                 adapter = MODELNAME
@@ -53,7 +53,6 @@ def load_adapter(name: str) -> type:
 
         if adapter is None:
             raise KeyError("Unknown model '{}'".format(name))
-        else:  # pragma: no cover
-            # TODO remove pragma once we have at least one real adapter in here
+        else:
             _loaded_adapters[name] = adapter
             return adapter
