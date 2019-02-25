@@ -157,7 +157,7 @@ class DICE(Adapter):
             "fex0": (0.25, "W/m^2"),
             # 2100 forcings of non-CO2 GHG (Wm-2)
             "fex1": (0.7, "W/m^2"),
-            # Equilibrium temp impact (°C per doubling CO2)
+            # Equilibrium temp impact (aka ECS) (°C per doubling CO2)
             "t2xco2": (2.9, "°C"),
         }
 
@@ -250,7 +250,7 @@ class DICE(Adapter):
 
         self._timestep += 1
 
-        # Concentration in atmosphere (GtC)
+        # Atmospheric pool size
         this_M_atm = max(
             self._M_atm_lower,
             last_M_atm * self._b11
@@ -258,10 +258,10 @@ class DICE(Adapter):
             + E[self._timestep - 1] * self._period_length / constants.YEAR / 3.666,
         )
 
-        # Carbon concentration increase in lower oceans (GtC from 1750)
+        # Lower ocean pool size
         this_M_l = max(self._M_l_lower, last_M_l * self._b33 + last_M_u * self._b23)
 
-        # Carbon concentration increase in shallow oceans (GtC from 1750)
+        # Shallow ocean pool size
         this_M_u = max(
             self._M_u_lower,
             last_M_atm * self._b12 + last_M_u * self._b22 + last_M_l * self._b32,
