@@ -181,10 +181,9 @@ class ParameterSet:
         """
         Get a read-only view to a timeseries parameter.
 
-        The parameter is created as a timeseries if not viewed so far.
-        The length of the returned ParameterView's timeseries is adjusted such
-        that its last value corresponds to a time not exceeding the ``stop_time``
-        of the underlying run (i.e. ``Core`` object).
+        The parameter is created as a timeseries if not viewed so far. The length of the
+        returned ParameterView's timeseries is adjusted such that its last value is
+        equal to or less than ``stop_time``.
 
         Parameters
         ----------
