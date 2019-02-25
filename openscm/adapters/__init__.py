@@ -30,6 +30,7 @@ def load_adapter(name: str) -> type:
         adapter = None
 
         try:
+            # TODO remove once we have at least one real adapter in here
             if name == "MODELNAME":  # pragma: no cover
                 from .modelname import MODELNAME
 
@@ -44,7 +45,7 @@ def load_adapter(name: str) -> type:
                 adapter = NAME
             ```
             """
-        except ImportError:  # pragma: no cover
+        except ImportError:
             raise AdapterNeedsModuleError(
                 "To run '{}' you need to install additional dependencies. Please "
                 "install them using `pip install openscm[model-{}]`.".format(name, name)
@@ -53,5 +54,6 @@ def load_adapter(name: str) -> type:
         if adapter is None:
             raise KeyError("Unknown model '{}'".format(name))
         else:  # pragma: no cover
+            # TODO remove pragma once we have at least one real adapter in here
             _loaded_adapters[name] = adapter
             return adapter
