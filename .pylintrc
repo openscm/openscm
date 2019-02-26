@@ -1,2 +1,11 @@
+[MASTER]
+ignore=_version.py
+
 [MESSAGES CONTROL]
-disable=pointless-string-statement
+disable=
+    invalid-name,
+    too-many-locals,
+    fixme,
+    pointless-string-statement,
+    # handled by black
+    format
