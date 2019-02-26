@@ -6,7 +6,7 @@ workflow "Continuous Integration" {
 action "Bandit" {
   uses = "./.github/actions/run"
   args = [
-    "bandit -c .bandit.yml -r ."
+    "bandit -c .bandit.yml -r openscm"
   ]
   env = {
     PYTHON_VERSION = "3.7"
