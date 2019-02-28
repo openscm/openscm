@@ -22,7 +22,7 @@ class InsufficientDataError(ValueError):
     """
 
 
-class Timeframe:
+class Timeseries:
     """
     Convenience class representing a timeframe consisting of a start time and a period
     length.
@@ -57,7 +57,7 @@ class Timeframe:
         str
             String representation
         """
-        return "<openscm.timeseries.Timeframe(start_time={}, period_length={})>".format(
+        return "<openscm.timeseries.Timeseries(start_time={}, period_length={})>".format(
             self.start_time, self.period_length
         )
 
@@ -152,7 +152,7 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
 
 
 def _calc_linearization(
-    values: np.ndarray, timeframe: Timeframe
+    values: np.ndarray, timeframe: Timeseries
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculate the "linearization" time points and values (see
@@ -164,7 +164,7 @@ def _calc_linearization(
     values
         Timeseries values of period averages
     timeframe
-        Timeframe
+        Timeseries
 
     Returns
     -------
@@ -220,7 +220,7 @@ class _Interpolation(NamedTuple):
 
 
 def _calc_interpolation_points(
-    source_len: int, source: Timeframe, target: Timeframe
+    source_len: int, source: Timeseries, target: Timeseries
 ) -> _Interpolation:
     """
     Calculate the "interpolation" time points that correspond to edges of the target
@@ -245,8 +245,8 @@ def _calc_interpolation_points(
     # For in-between steps periods in the source timeframe need to be halved. To stick
     # calculations to integer calculations, rather than devide source period length by 2
     # double all other times/period lengths and devide at the end:
-    source = Timeframe(2 * source.start_time, 1 * source.period_length)
-    target = Timeframe(2 * target.start_time, 2 * target.period_length)
+    source = Timeseries(2 * source.start_time, 1 * source.period_length)
+    target = Timeseries(2 * target.start_time, 2 * target.period_length)
 
     if target.start_time >= source.start_time:
         skip_len = 1 + (target.start_time - source.start_time) // source.period_length
@@ -337,8 +337,8 @@ def _calc_interval_averages(
 
 def _convert(
     values: np.ndarray,
-    source: Timeframe,
-    target: Timeframe,
+    source: Timeseries,
+    target: Timeseries,
     interpolation: _Interpolation = None,
 ) -> np.ndarray:
     """
@@ -376,8 +376,8 @@ def _convert(
 
 def _convert_cached(
     values: np.ndarray,
-    source: Timeframe,
-    target: Timeframe,
+    source: Timeseries,
+    target: Timeseries,
     interpolation: _Interpolation,
 ) -> Tuple[np.ndarray, _Interpolation]:
     """
@@ -411,16 +411,16 @@ def _convert_cached(
     return _convert(values, source, target, interpolation), interpolation
 
 
-class TimeframeConverter:
+class TimeseriesConverter:
     """
     Converts timeseries and their points between two timeframes (each defined by a time
     of the first point and a period length).
     """
 
-    _source: Timeframe
+    _source: Timeseries
     """Source timeframe"""
 
-    _target: Timeframe
+    _target: Timeseries
     """Target timeframe"""
 
     _convert_from_interpolation: _Interpolation = None
@@ -437,7 +437,7 @@ class TimeframeConverter:
     source
     """
 
-    def __init__(self, source: Timeframe, target: Timeframe):
+    def __init__(self, source: Timeseries, target: Timeseries):
         """
         Initialize.
 
@@ -515,14 +515,14 @@ class TimeframeConverter:
         return self._target.get_length_until(self._source.get_stop_time(source_len))
 
     @property
-    def source(self) -> Timeframe:
+    def source(self) -> Timeseries:
         """
         Source timeframe
         """
         return self._source
 
     @property
-    def target(self) -> Timeframe:
+    def target(self) -> Timeseries:
         """
         Target timeframe
         """
