@@ -214,9 +214,9 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        timeframe = Timeseries(start_time, period_length)
-        parameter.attempt_read(unit, ParameterType.TIMESERIES, timeframe)
-        return TimeseriesView(parameter, unit, timeframe)
+        timeseries = Timeseries(start_time, period_length)
+        parameter.attempt_read(unit, ParameterType.TIMESERIES, timeseries)
+        return TimeseriesView(parameter, unit, timeseries)
 
     def get_writable_timeseries_view(
         self,
@@ -256,9 +256,9 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        timeframe = Timeseries(start_time, period_length)
-        parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
-        return WritableTimeseriesView(parameter, unit, timeframe)
+        timeseries = Timeseries(start_time, period_length)
+        parameter.attempt_write(unit, ParameterType.TIMESERIES, timeseries)
+        return WritableTimeseriesView(parameter, unit, timeseries)
 
     def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """

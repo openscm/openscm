@@ -41,7 +41,7 @@ class ParameterInfo:
     _region: "regions._Region"
     """Region this parameter belongs to"""
 
-    _timeframe: Timeseries
+    _timeseries: Timeseries
     """Timeseries; only for timeseries parameters"""
 
     _type: ParameterType
@@ -63,7 +63,7 @@ class ParameterInfo:
         """
         self._name = name
         self._region = region
-        self._timeframe = None
+        self._timeseries = None
         self._type = None
         self._unit = None
 
@@ -189,7 +189,7 @@ class _Parameter:
         return self
 
     def attempt_read(
-        self, unit: str, parameter_type: ParameterType, timeframe: Timeseries = None
+        self, unit: str, parameter_type: ParameterType, timeseries: Timeseries = None
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -202,7 +202,7 @@ class _Parameter:
             Unit to be read
         parameter_type
             Parameter type to be read
-        timeframe
+        timeseries
             Timeseries; only for timeseries parameters
 
         Raises
@@ -220,11 +220,11 @@ class _Parameter:
                 self._data = float("NaN")
             else:  # parameter_type == ParameterType.TIMESERIES
                 self._data = np.array([])
-                self._info._timeframe = copy(timeframe)
+                self._info._timeseries = copy(timeseries)
         self._has_been_read_from = True
 
     def attempt_write(
-        self, unit: str, parameter_type: ParameterType, timeframe: Timeseries = None
+        self, unit: str, parameter_type: ParameterType, timeseries: Timeseries = None
     ) -> None:
         """
         Tell parameter that its data will be written to.
@@ -235,7 +235,7 @@ class _Parameter:
             Unit to be written
         parameter_type
             Parameter type to be written
-        timeframe
+        timeseries
             Timeseries; only for timeseries parameters
 
         Raises
@@ -245,7 +245,7 @@ class _Parameter:
         """
         if self._children:
             raise ParameterReadonlyError
-        self.attempt_read(unit, parameter_type, timeframe)
+        self.attempt_read(unit, parameter_type, timeseries)
         self._has_been_written_to = True
 
     @property

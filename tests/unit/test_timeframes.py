@@ -80,7 +80,7 @@ def get_test_values(source, target, source_values_index):
         return get_source_values(source_values_index), np.array(result)
 
 
-def test_conversion_to_same_timeframe(source, source_values_index):
+def test_conversion_to_same_timeseries(source, source_values_index):
     source_values = get_source_values(source_values_index)
     target_values = timeseries._convert(source_values, source, source)
     np.testing.assert_array_equal(target_values, source_values)
@@ -109,38 +109,38 @@ def test_conversion(source, target, source_values_index):
         )
 
 
-def test_timeframeconverter(source, target, source_values_index):
+def test_timeseriesconverter(source, target, source_values_index):
     source_values, target_values = get_test_values(source, target, source_values_index)
     if target_values is not None:
-        timeframeconverter = timeseries.TimeseriesConverter(source, target)
-        assert timeframeconverter.get_target_len(len(source_values)) == len(
+        timeseriesconverter = timeseries.TimeseriesConverter(source, target)
+        assert timeseriesconverter.get_target_len(len(source_values)) == len(
             target_values
         )
-        values = timeframeconverter.convert_from(source_values)
+        values = timeseriesconverter.convert_from(source_values)
         np.testing.assert_allclose(values, target_values)
 
-        timeframeconverter = timeseries.TimeseriesConverter(target, source)
-        assert timeframeconverter.get_source_len(len(source_values)) == len(
+        timeseriesconverter = timeseries.TimeseriesConverter(target, source)
+        assert timeseriesconverter.get_source_len(len(source_values)) == len(
             target_values
         )
-        values = timeframeconverter.convert_to(source_values)
+        values = timeseriesconverter.convert_to(source_values)
         np.testing.assert_allclose(values, target_values)
 
 
 def test_cache(source, target):
-    timeframeconverter = timeseries.TimeseriesConverter(source, target)
+    timeseriesconverter = timeseries.TimeseriesConverter(source, target)
     for source_values_index in range(len(possible_source_values)):
         source_values, target_values = get_test_values(
-            timeframeconverter.source, timeframeconverter.target, source_values_index
+            timeseriesconverter.source, timeseriesconverter.target, source_values_index
         )
         if target_values is not None:
-            values = timeframeconverter.convert_from(source_values)
+            values = timeseriesconverter.convert_from(source_values)
             np.testing.assert_allclose(values, target_values)
-            values = timeframeconverter.convert_from(source_values)
+            values = timeseriesconverter.convert_from(source_values)
             np.testing.assert_allclose(values, target_values)
 
 
-def test_timeframe_repr(source):
+def test_timeseries_repr(source):
     assert repr(
         source
     ) == "<openscm.timeseries.Timeseries(start_time={}, period_length={})>".format(

@@ -2,10 +2,10 @@
 Different climate models often use different time frames for their input and output
 data. This includes different 'meanings' of time steps (e.g. beginning vs middle of year) and
 different lengths of the time steps (e.g. years vs months). Accordingly, OpenSCM
-supports the conversion of timeseries data between such timeframes, which is handled in
+supports the conversion of timeseries data between such timeseriess, which is handled in
 this module. A thorough explaination of the procedure used is given in a dedicated
 `Jupyter Notebook
-<https://github.com/openclimatedata/openscm/blob/master/notebooks/timeframes.ipynb>`_.
+<https://github.com/openclimatedata/openscm/blob/master/notebooks/timeseriess.ipynb>`_.
 """
 
 from copy import copy
@@ -17,14 +17,14 @@ import numpy as np
 class InsufficientDataError(ValueError):
     """
     Exception raised when not enough data overlap is available when converting from one
-    timeframe to another (e.g. when the target timeframe is outside the range of the
-    source timeframe) or when data is too short (less than 3 data points).
+    timeseries to another (e.g. when the target timeseries is outside the range of the
+    source timeseries) or when data is too short (less than 3 data points).
     """
 
 
 class Timeseries:
     """
-    Convenience class representing a timeframe consisting of a start time and a period
+    Convenience class representing a timeseries consisting of a start time and a period
     length.
     """
 
@@ -63,7 +63,7 @@ class Timeseries:
 
     def get_points(self, count: int) -> np.ndarray:
         """
-        Get the ``count`` first points in time corresponding to the timeframe.
+        Get the ``count`` first points in time corresponding to the timeseries.
 
         Parameters
         ----------
@@ -80,7 +80,7 @@ class Timeseries:
     def get_stop_time(self, count: int) -> int:
         """
         Get the point in time at which a timeseries of ``count`` points stops according
-        to this timeframe.
+        to this timeseries.
 
         Parameters
         ----------
@@ -96,7 +96,7 @@ class Timeseries:
 
     def get_length_until(self, stop_time: int) -> int:
         """
-        Get the number of time points in this timeframe until ``stop_time`` (including).
+        Get the number of time points in this timeseries until ``stop_time`` (including).
 
         Parameters
         ----------
@@ -152,18 +152,18 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
 
 
 def _calc_linearization(
-    values: np.ndarray, timeframe: Timeseries
+    values: np.ndarray, timeseries: Timeseries
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculate the "linearization" time points and values (see
-    :func:`openscm.timeframes._calc_linearization_values`) of the array ``values``
-    according to timeframe ``timeframe``.
+    :func:`openscm.timeseriess._calc_linearization_values`) of the array ``values``
+    according to timeseries ``timeseries``.
 
     Parameters
     ----------
     values
         Timeseries values of period averages
-    timeframe
+    timeseries
         Timeseries
 
     Returns
@@ -173,9 +173,9 @@ def _calc_linearization(
     linearization_values
         Linearization values ("y-values")
     """
-    stop_time = timeframe.start_time + len(values) * timeframe.period_length
+    stop_time = timeseries.start_time + len(values) * timeseries.period_length
     linearization_points = np.linspace(
-        timeframe.start_time, stop_time, 2 * len(values) + 1
+        timeseries.start_time, stop_time, 2 * len(values) + 1
     )
     linearization_values = _calc_linearization_values(values)
     return linearization_points, linearization_values
@@ -232,9 +232,9 @@ def _calc_interpolation_points(
     source_len
         Length of source data values
     source
-        Source timeframe
+        Source timeseries
     target
-        Target timeframe
+        Target timeseries
 
     Returns
     -------
@@ -242,7 +242,7 @@ def _calc_interpolation_points(
         Object wrapping the actual interpolation points and additional information
     """
     linearization_points_len = 2 * source_len + 1
-    # For in-between steps periods in the source timeframe need to be halved. To stick
+    # For in-between steps periods in the source timeseries need to be halved. To stick
     # calculations to integer calculations, rather than devide source period length by 2
     # double all other times/period lengths and devide at the end:
     source = Timeseries(2 * source.start_time, 1 * source.period_length)
@@ -297,7 +297,7 @@ def _calc_interval_averages(
     """
     Calculate the average value for each period (i.e. integral over the period divided
     by the period length) for the "interpolated" values (see
-    :func:`openscm.timeframes._calc_interpolation_points`) array
+    :func:`openscm.timeseriess._calc_interpolation_points`) array
     ``interpolation_values`` at the time points ``interpolation_points``.
 
     Parameters
@@ -315,7 +315,7 @@ def _calc_interval_averages(
     """
     # Use trapezium rule to determine the integral over each period in the interpolated
     # timeseries, i.e. # interval_sum = (y2 + y1) * (x2 - x1) / 2
-    # and use np.add.reduceat to sum these according to the target timeframe:
+    # and use np.add.reduceat to sum these according to the target timeseries:
     interval_sums = (
         np.add.reduceat(
             (interpolation_values[1:] + interpolation_values[:-1])  # (y2 + y1)
@@ -342,17 +342,17 @@ def _convert(
     interpolation: _Interpolation = None,
 ) -> np.ndarray:
     """
-    Convert time period average data ``values`` for timeframe ``source`` to the
-    timeframe ``target``.
+    Convert time period average data ``values`` for timeseries ``source`` to the
+    timeseries ``target``.
 
     Parameters
     ----------
     values
         Array of data to convert
     source
-        Source timeframe
+        Source timeseries
     target
-        Target timeframe
+        Target timeseries
     interpolation
         Interpolation data. Used for caching and is newly calculated when not given,
         i.e. ``None`` (default).
@@ -360,7 +360,7 @@ def _convert(
     Returns
     -------
     np.ndarray
-        Converted time period average data for timeframe ``target``
+        Converted time period average data for timeseries ``target``
     """
     if interpolation is None:
         interpolation = _calc_interpolation_points(len(values), source, target)
@@ -381,25 +381,25 @@ def _convert_cached(
     interpolation: _Interpolation,
 ) -> Tuple[np.ndarray, _Interpolation]:
     """
-    Convert time period average data ``values`` for timeframe ``source`` to the
-    timeframe ``target`` using and updating cache.
+    Convert time period average data ``values`` for timeseries ``source`` to the
+    timeseries ``target`` using and updating cache.
 
     Parameters
     ----------
     values
         Array of data to convert
     source
-        Source timeframe
+        Source timeseries
     target
-        Target timeframe
+        Target timeseries
     interpolation
         Interpolation data (as resulting from
-        :func:`openscm.timeframes._calc_interpolation_points`)
+        :func:`openscm.timeseriess._calc_interpolation_points`)
 
     Returns
     -------
     result
-        Converted time period average data for timeframe ``target``
+        Converted time period average data for timeseries ``target``
     interpolation
         (Possibly) updated interpolation
     """
@@ -413,27 +413,27 @@ def _convert_cached(
 
 class TimeseriesConverter:
     """
-    Converts timeseries and their points between two timeframes (each defined by a time
+    Converts timeseries and their points between two timeseriess (each defined by a time
     of the first point and a period length).
     """
 
     _source: Timeseries
-    """Source timeframe"""
+    """Source timeseries"""
 
     _target: Timeseries
-    """Target timeframe"""
+    """Target timeseries"""
 
     _convert_from_interpolation: _Interpolation = None
     """
     Cached interpolation data as resulting from
-    :func:`openscm.timeframes._calc_interpolation_points` for conversion from source to
+    :func:`openscm.timeseriess._calc_interpolation_points` for conversion from source to
     target
     """
 
     _convert_to_interpolation: _Interpolation = None
     """
     Cached interpolation data as resulting from
-    :func:`openscm.timeframes._calc_interpolation_points` for conversion from target to
+    :func:`openscm.timeseriess._calc_interpolation_points` for conversion from target to
     source
     """
 
@@ -444,9 +444,9 @@ class TimeseriesConverter:
         Parameters
         ----------
         source
-            Source timeframe
+            Source timeseries
         target
-            Target timeframe
+            Target timeseries
         """
         self._source = copy(source)
         self._target = copy(target)
@@ -456,7 +456,7 @@ class TimeseriesConverter:
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
         """
-        Convert value **from** source timeframe to target timeframe.
+        Convert value **from** source timeseries to target timeseries.
 
         Parameters
         ----------
@@ -475,7 +475,7 @@ class TimeseriesConverter:
 
     def convert_to(self, values: np.ndarray) -> np.ndarray:
         """
-        Convert value from target timeframe **to** source timeframe.
+        Convert value from target timeseries **to** source timeseries.
 
         Parameters
         ----------
@@ -494,36 +494,36 @@ class TimeseriesConverter:
 
     def get_source_len(self, target_len: int) -> int:
         """
-        Get length of timeseries in source timeframe.
+        Get length of timeseries in source timeseries.
 
         Parameters
         ----------
         target_len
-            Length of timeseries in target timeframe.
+            Length of timeseries in target timeseries.
         """
         return self._source.get_length_until(self._target.get_stop_time(target_len))
 
     def get_target_len(self, source_len: int) -> int:
         """
-        Get length of timeseries in target timeframe.
+        Get length of timeseries in target timeseries.
 
         Parameters
         ----------
         source_len
-            Length of timeseries in source timeframe.
+            Length of timeseries in source timeseries.
         """
         return self._target.get_length_until(self._source.get_stop_time(source_len))
 
     @property
     def source(self) -> Timeseries:
         """
-        Source timeframe
+        Source timeseries
         """
         return self._source
 
     @property
     def target(self) -> Timeseries:
         """
-        Target timeframe
+        Target timeseries
         """
         return self._target
