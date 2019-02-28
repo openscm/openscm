@@ -130,13 +130,13 @@ class TimeseriesView(ParameterView):
     _child_data_views: Sequence["TimeseriesView"]
     """List of views to the child parameters for aggregated reads"""
 
-    _timeframe_converter: TimeseriesConverter
+    _timeseries_converter: TimeseriesConverter
     """Timeseries converter"""
 
     _unit_converter: UnitConverter
     """Unit converter"""
 
-    def __init__(self, parameter: _Parameter, unit: str, timeframe: Timeseries):
+    def __init__(self, parameter: _Parameter, unit: str, timeseries: Timeseries):
         """
         Initialize.
 
@@ -146,7 +146,7 @@ class TimeseriesView(ParameterView):
             Parameter
         unit
             Unit for the values in the view
-        timeframe
+        timeseries
             Timeseries
         """
 
@@ -165,14 +165,14 @@ class TimeseriesView(ParameterView):
                 TimeseriesView(
                     parameter,
                     self._unit_converter._target,
-                    self._timeframe_converter._target,
+                    self._timeseries_converter._target,
                 )
             ]
 
         super().__init__(parameter)
         self._unit_converter = UnitConverter(parameter._info._unit, unit)
-        self._timeframe_converter = TimeseriesConverter(
-            parameter._info._timeframe, timeframe
+        self._timeseries_converter = TimeseriesConverter(
+            parameter._info._timeseries, timeseries
         )
         if self._parameter._children:
             self._child_data_views = get_data_views_for_children_or_parameter(
@@ -197,7 +197,7 @@ class TimeseriesView(ParameterView):
         if self.is_empty:
             raise ParameterEmptyError
 
-        return self._timeframe_converter.convert_from(
+        return self._timeseries_converter.convert_from(
             self._unit_converter.convert_from(self._parameter._data)
         )
 
@@ -224,7 +224,7 @@ class TimeseriesView(ParameterView):
         """
         Length of timeseries.
         """
-        return self._timeframe_converter.get_target_len(len(self._parameter._data))
+        return self._timeseries_converter.get_target_len(len(self._parameter._data))
 
 
 class WritableTimeseriesView(TimeseriesView):
@@ -241,7 +241,7 @@ class WritableTimeseriesView(TimeseriesView):
         values
             Values to set.
         """
-        self._parameter._data = self._timeframe_converter.convert_to(
+        self._parameter._data = self._timeseries_converter.convert_to(
             self._unit_converter.convert_to(values)
         )
 
