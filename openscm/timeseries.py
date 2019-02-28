@@ -9,9 +9,11 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 """
 
 from copy import copy
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, Callable
+
 
 import numpy as np
+import scipy as sp
 
 
 class InsufficientDataError(ValueError):
@@ -151,12 +153,12 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
     )
 
 
-def _calc_linearization(
+def _calc_continuous(
     values: np.ndarray, timeseries: Timeseries
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Calculate the "linearization" time points and values (see
-    :func:`openscm.timeseriess._calc_linearization_values`) of the array ``values``
+    Calculate the "continuous" time points and values (see
+    :func:`openscm.timeseries._calc_linearization_values`) of the array ``values``
     according to timeseries ``timeseries``.
 
     Parameters
@@ -168,17 +170,23 @@ def _calc_linearization(
 
     Returns
     -------
-    linearization_points
-        Linearization time points ("x-values")
-    linearization_values
-        Linearization values ("y-values")
+    func
+        Function which, represents the interpolated timeseries. It takes a single argument,
+        time ("x-value"), and returns a single float, the value of the interpolated
+        timeseries at that point in time ("y-value").
     """
     stop_time = timeseries.start_time + len(values) * timeseries.period_length
     linearization_points = np.linspace(
         timeseries.start_time, stop_time, 2 * len(values) + 1
     )
     linearization_values = _calc_linearization_values(values)
-    return linearization_points, linearization_values
+    # I'm not happy about extrapolation by default but only way to make things
+    # work at the moment
+    return sp.interpolate.interp1d(
+    	linearization_points,
+    	linearization_values,
+    	fill_value="extrapolate"
+    )
 
 
 class _Interpolation(NamedTuple):
@@ -335,6 +343,36 @@ def _calc_interval_averages(
     )
 
 
+def _calc_interval_averages_from_func(
+    continuous: Callable[[float], float], target_intervals: np.ndarray
+) -> np.ndarray:
+    """
+    Calculate the interval averages of a continuous function.
+
+    Here interval average is calculated as the integral over the period divided by
+    the period length.
+
+    Parameters
+    ----------
+    continuous
+        Continuous function from which to calculate the interval averages. Should be
+        calculated using :func:`openscm.timeseries._calc_continuous`.
+    target_intervals
+        Intervals to calculate the average of.
+
+    Returns
+    -------
+    np.ndarray
+        Array of the interval/period averages
+    """
+    averages = np.zeros_like(target_intervals[:-1])
+    for i, l in enumerate(target_intervals[:-1]):
+    	u = target_intervals[i+1]
+    	y, err = sp.integrate.quad(continuous, l, u)
+    	averages[i] = y / (u - l)
+
+    return averages
+
 def _convert(
     values: np.ndarray,
     source: Timeseries,
@@ -365,11 +403,9 @@ def _convert(
     if interpolation is None:
         interpolation = _calc_interpolation_points(len(values), source, target)
 
-    linearization_points, linearization_values = _calc_linearization(values, source)
+    continuous = _calc_continuous(values, source)
 
-    interpolation_values = np.interp(
-        interpolation.points, linearization_points, linearization_values
-    )
+    interpolation_values = continuous(interpolation.points)
 
     return _calc_interval_averages(interpolation, interpolation_values)
 
