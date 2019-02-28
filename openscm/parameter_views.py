@@ -7,7 +7,7 @@ from typing import Sequence
 
 
 from .parameters import _Parameter
-from .timeframes import Timeframe, TimeframeConverter
+from .timeseries import Timeframe, TimeframeConverter
 from .units import UnitConverter
 from .errors import ParameterEmptyError
 

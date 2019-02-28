@@ -16,7 +16,7 @@ from .errors import (
     ParameterTypeError,
     ParameterWrittenError,
 )
-from .timeframes import Timeframe
+from .timeseries import Timeframe
 from .utils import ensure_input_is_tuple
 from . import regions  # needed for type annotations
 

@@ -1,5 +1,5 @@
 import numpy as np
-from openscm import timeframes
+from openscm import timeseries
 import pytest
 
 possible_source_values = [[1, 5, 3, 5, 7, 3, 2, 9]]
@@ -42,14 +42,14 @@ possible_target_values = {
 
 @pytest.fixture(params=[(0, 10), (3, 3)])
 def source(request):
-    return timeframes.Timeframe(
+    return timeseries.Timeframe(
         start_time=request.param[0], period_length=request.param[1]
     )
 
 
 @pytest.fixture(params=[(4, 7), (0, 5)])
 def target(request):
-    return timeframes.Timeframe(
+    return timeseries.Timeframe(
         start_time=request.param[0], period_length=request.param[1]
     )
 
@@ -82,27 +82,27 @@ def get_test_values(source, target, source_values_index):
 
 def test_conversion_to_same_timeframe(source, source_values_index):
     source_values = get_source_values(source_values_index)
-    target_values = timeframes._convert(source_values, source, source)
+    target_values = timeseries._convert(source_values, source, source)
     np.testing.assert_array_equal(target_values, source_values)
 
 
 def test_insufficient_overlap(source, target):
-    with pytest.raises(timeframes.InsufficientDataError):
-        timeframes.TimeframeConverter(
-            source, timeframes.Timeframe(-1000, target.period_length)
+    with pytest.raises(timeseries.InsufficientDataError):
+        timeseries.TimeframeConverter(
+            source, timeseries.Timeframe(-1000, target.period_length)
         )
 
 
 def test_short_data(source, target):
     for a in [[], [0], [0, 1]]:
-        with pytest.raises(timeframes.InsufficientDataError):
-            timeframes._convert_cached(np.array(a), source, target, None)
+        with pytest.raises(timeseries.InsufficientDataError):
+            timeseries._convert_cached(np.array(a), source, target, None)
 
 
 def test_conversion(source, target, source_values_index):
     source_values, target_values = get_test_values(source, target, source_values_index)
     if target_values is not None:
-        values = timeframes._convert(source_values, source, target)
+        values = timeseries._convert(source_values, source, target)
         np.testing.assert_allclose(values, target_values)
         assert len(values) == target.get_length_until(
             source.get_stop_time(len(source_values))
@@ -112,14 +112,14 @@ def test_conversion(source, target, source_values_index):
 def test_timeframeconverter(source, target, source_values_index):
     source_values, target_values = get_test_values(source, target, source_values_index)
     if target_values is not None:
-        timeframeconverter = timeframes.TimeframeConverter(source, target)
+        timeframeconverter = timeseries.TimeframeConverter(source, target)
         assert timeframeconverter.get_target_len(len(source_values)) == len(
             target_values
         )
         values = timeframeconverter.convert_from(source_values)
         np.testing.assert_allclose(values, target_values)
 
-        timeframeconverter = timeframes.TimeframeConverter(target, source)
+        timeframeconverter = timeseries.TimeframeConverter(target, source)
         assert timeframeconverter.get_source_len(len(source_values)) == len(
             target_values
         )
@@ -128,7 +128,7 @@ def test_timeframeconverter(source, target, source_values_index):
 
 
 def test_cache(source, target):
-    timeframeconverter = timeframes.TimeframeConverter(source, target)
+    timeframeconverter = timeseries.TimeframeConverter(source, target)
     for source_values_index in range(len(possible_source_values)):
         source_values, target_values = get_test_values(
             timeframeconverter.source, timeframeconverter.target, source_values_index
@@ -143,6 +143,6 @@ def test_cache(source, target):
 def test_timeframe_repr(source):
     assert repr(
         source
-    ) == "<openscm.timeframes.Timeframe(start_time={}, period_length={})>".format(
+    ) == "<openscm.timeseries.Timeframe(start_time={}, period_length={})>".format(
         source.start_time, source.period_length
     )
