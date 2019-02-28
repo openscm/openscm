@@ -17,7 +17,7 @@ from .parameter_views import (
 )
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
-from .timeseries import Timeframe
+from .timeseries import Timeseries
 from .utils import ensure_input_is_tuple
 
 # pylint: disable=too-many-arguments
@@ -214,7 +214,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        timeframe = Timeframe(start_time, period_length)
+        timeframe = Timeseries(start_time, period_length)
         parameter.attempt_read(unit, ParameterType.TIMESERIES, timeframe)
         return TimeseriesView(parameter, unit, timeframe)
 
@@ -256,7 +256,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        timeframe = Timeframe(start_time, period_length)
+        timeframe = Timeseries(start_time, period_length)
         parameter.attempt_write(unit, ParameterType.TIMESERIES, timeframe)
         return WritableTimeseriesView(parameter, unit, timeframe)
 

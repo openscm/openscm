@@ -16,7 +16,7 @@ from .errors import (
     ParameterTypeError,
     ParameterWrittenError,
 )
-from .timeseries import Timeframe
+from .timeseries import Timeseries
 from .utils import ensure_input_is_tuple
 from . import regions  # needed for type annotations
 
@@ -41,8 +41,8 @@ class ParameterInfo:
     _region: "regions._Region"
     """Region this parameter belongs to"""
 
-    _timeframe: Timeframe
-    """Timeframe; only for timeseries parameters"""
+    _timeframe: Timeseries
+    """Timeseries; only for timeseries parameters"""
 
     _type: ParameterType
     """Parameter type"""
@@ -189,7 +189,7 @@ class _Parameter:
         return self
 
     def attempt_read(
-        self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
+        self, unit: str, parameter_type: ParameterType, timeframe: Timeseries = None
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -203,7 +203,7 @@ class _Parameter:
         parameter_type
             Parameter type to be read
         timeframe
-            Timeframe; only for timeseries parameters
+            Timeseries; only for timeseries parameters
 
         Raises
         ------
@@ -224,7 +224,7 @@ class _Parameter:
         self._has_been_read_from = True
 
     def attempt_write(
-        self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
+        self, unit: str, parameter_type: ParameterType, timeframe: Timeseries = None
     ) -> None:
         """
         Tell parameter that its data will be written to.
@@ -236,7 +236,7 @@ class _Parameter:
         parameter_type
             Parameter type to be written
         timeframe
-            Timeframe; only for timeseries parameters
+            Timeseries; only for timeseries parameters
 
         Raises
         ------

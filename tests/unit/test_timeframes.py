@@ -42,14 +42,14 @@ possible_target_values = {
 
 @pytest.fixture(params=[(0, 10), (3, 3)])
 def source(request):
-    return timeseries.Timeframe(
+    return timeseries.Timeseries(
         start_time=request.param[0], period_length=request.param[1]
     )
 
 
 @pytest.fixture(params=[(4, 7), (0, 5)])
 def target(request):
-    return timeseries.Timeframe(
+    return timeseries.Timeseries(
         start_time=request.param[0], period_length=request.param[1]
     )
 
@@ -88,8 +88,8 @@ def test_conversion_to_same_timeframe(source, source_values_index):
 
 def test_insufficient_overlap(source, target):
     with pytest.raises(timeseries.InsufficientDataError):
-        timeseries.TimeframeConverter(
-            source, timeseries.Timeframe(-1000, target.period_length)
+        timeseries.TimeseriesConverter(
+            source, timeseries.Timeseries(-1000, target.period_length)
         )
 
 
@@ -112,14 +112,14 @@ def test_conversion(source, target, source_values_index):
 def test_timeframeconverter(source, target, source_values_index):
     source_values, target_values = get_test_values(source, target, source_values_index)
     if target_values is not None:
-        timeframeconverter = timeseries.TimeframeConverter(source, target)
+        timeframeconverter = timeseries.TimeseriesConverter(source, target)
         assert timeframeconverter.get_target_len(len(source_values)) == len(
             target_values
         )
         values = timeframeconverter.convert_from(source_values)
         np.testing.assert_allclose(values, target_values)
 
-        timeframeconverter = timeseries.TimeframeConverter(target, source)
+        timeframeconverter = timeseries.TimeseriesConverter(target, source)
         assert timeframeconverter.get_source_len(len(source_values)) == len(
             target_values
         )
@@ -128,7 +128,7 @@ def test_timeframeconverter(source, target, source_values_index):
 
 
 def test_cache(source, target):
-    timeframeconverter = timeseries.TimeframeConverter(source, target)
+    timeframeconverter = timeseries.TimeseriesConverter(source, target)
     for source_values_index in range(len(possible_source_values)):
         source_values, target_values = get_test_values(
             timeframeconverter.source, timeframeconverter.target, source_values_index
@@ -143,6 +143,6 @@ def test_cache(source, target):
 def test_timeframe_repr(source):
     assert repr(
         source
-    ) == "<openscm.timeseries.Timeframe(start_time={}, period_length={})>".format(
+    ) == "<openscm.timeseries.Timeseries(start_time={}, period_length={})>".format(
         source.start_time, source.period_length
     )

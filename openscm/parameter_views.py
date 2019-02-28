@@ -7,7 +7,7 @@ from typing import Sequence
 
 
 from .parameters import _Parameter
-from .timeseries import Timeframe, TimeframeConverter
+from .timeseries import Timeseries, TimeseriesConverter
 from .units import UnitConverter
 from .errors import ParameterEmptyError
 
@@ -130,13 +130,13 @@ class TimeseriesView(ParameterView):
     _child_data_views: Sequence["TimeseriesView"]
     """List of views to the child parameters for aggregated reads"""
 
-    _timeframe_converter: TimeframeConverter
-    """Timeframe converter"""
+    _timeframe_converter: TimeseriesConverter
+    """Timeseries converter"""
 
     _unit_converter: UnitConverter
     """Unit converter"""
 
-    def __init__(self, parameter: _Parameter, unit: str, timeframe: Timeframe):
+    def __init__(self, parameter: _Parameter, unit: str, timeframe: Timeseries):
         """
         Initialize.
 
@@ -147,7 +147,7 @@ class TimeseriesView(ParameterView):
         unit
             Unit for the values in the view
         timeframe
-            Timeframe
+            Timeseries
         """
 
         def get_data_views_for_children_or_parameter(
@@ -171,7 +171,7 @@ class TimeseriesView(ParameterView):
 
         super().__init__(parameter)
         self._unit_converter = UnitConverter(parameter._info._unit, unit)
-        self._timeframe_converter = TimeframeConverter(
+        self._timeframe_converter = TimeseriesConverter(
             parameter._info._timeframe, timeframe
         )
         if self._parameter._children:
