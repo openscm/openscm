@@ -57,7 +57,7 @@ class Timeframe:
         str
             String representation
         """
-        return "<openscm.timeframes.Timeframe(start_time={}, period_length={})>".format(
+        return "<openscm.timeseries.Timeframe(start_time={}, period_length={})>".format(
             self.start_time, self.period_length
         )
 

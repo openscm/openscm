@@ -17,7 +17,7 @@ from .parameter_views import (
 )
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
-from .timeframes import Timeframe
+from .timeseries import Timeframe
 from .utils import ensure_input_is_tuple
 
 # pylint: disable=too-many-arguments
