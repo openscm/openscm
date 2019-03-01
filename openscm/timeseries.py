@@ -303,50 +303,6 @@ def _calc_interpolation_points(
 
 
 def _calc_interval_averages(
-    interpolation: _Interpolation, interpolation_values: np.ndarray
-) -> np.ndarray:
-    """
-    Calculate the average value for each period (i.e. integral over the period divided
-    by the period length) for the "interpolated" values (see
-    :func:`openscm.timeseriess._calc_interpolation_points`) array
-    ``interpolation_values`` at the time points ``interpolation_points``.
-
-    Parameters
-    ----------
-    interpolation
-        Object wrapping the interpolation points in time ("x-values" corresponding to
-        ``interpolation_values``) and additional information
-    interpolation_values
-        Interpolation values ("y-values")
-
-    Returns
-    -------
-    np.ndarray
-        Array of the interval/period averages
-    """
-    # Use trapezium rule to determine the integral over each period in the interpolated
-    # timeseries, i.e. # interval_sum = (y2 + y1) * (x2 - x1) / 2
-    # and use np.add.reduceat to sum these according to the target timeseries:
-    interval_sums = (
-        np.add.reduceat(
-            (interpolation_values[1:] + interpolation_values[:-1])  # (y2 + y1)
-            * (interpolation.points[1:] - interpolation.points[:-1]),  # (x2 - x1)
-            np.concatenate(([0], interpolation.target_indices))
-            if interpolation.target_indices[0] != 0
-            else interpolation.target_indices,
-        )
-        / 2
-    )
-    return np.concatenate(
-        (
-            [interval_sums[0] / interpolation.first_interval_length],
-            interval_sums[1:-1] / interpolation.period_length,
-            [interval_sums[-1] / interpolation.last_interval_length],
-        )
-    )
-
-
-def _calc_interval_averages_from_func(
     continuous: Callable[[float], float], target_intervals: np.ndarray
 ) -> np.ndarray:
     """
@@ -412,7 +368,7 @@ def _convert(
     	[target_times[-1] + target.period_length]
     ])
 
-    return _calc_interval_averages_from_func(continuous, target_intervals)
+    return _calc_interval_averages(continuous, target_intervals)
 
 
 def _convert_cached(
