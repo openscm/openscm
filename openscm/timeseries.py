@@ -327,11 +327,12 @@ def _calc_interval_averages(
     """
     averages = np.zeros_like(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
-    	u = target_intervals[i+1]
-    	y, err = integrate.quad(continuous, l, u)
-    	averages[i] = y / (u - l)
+        u = target_intervals[i + 1]
+        y, err = integrate.quad(continuous, l, u)
+        averages[i] = y / (u - l)
 
     return averages
+
 
 def _convert(
     values: np.ndarray,
@@ -364,10 +365,9 @@ def _convert(
 
     target_len = target.get_length_until(source.get_stop_time(len(values)))
     target_times = target.get_points(target_len)
-    target_intervals = np.concatenate([
-    	target_times,
-    	[target_times[-1] + target.period_length]
-    ])
+    target_intervals = np.concatenate(
+        [target_times, [target_times[-1] + target.period_length]]
+    )
 
     return _calc_interval_averages(continuous, target_intervals)
 

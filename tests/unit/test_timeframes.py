@@ -36,7 +36,7 @@ possible_target_values = {
         7.25,
         10.75,
     ],
-    (3, 3, 0, 5, 0): [-1.66666667,  4.13333333,  4.13333333,  5.51666667,  3.01666667],
+    (3, 3, 0, 5, 0): [-1.66666667, 4.13333333, 4.13333333, 5.51666667, 3.01666667],
 }
 
 
@@ -103,8 +103,10 @@ def test_conversion(source, target, source_values_index):
     source_values, target_values = get_test_values(source, target, source_values_index)
     if target_values is not None:
         values = timeseries._convert(source_values, source, target)
-        np.testing.assert_allclose(values, target_values, atol=1e-10*values.max())
-        assert len(values) == target.get_length_until(source.get_stop_time(len(source_values)))
+        np.testing.assert_allclose(values, target_values, atol=1e-10 * values.max())
+        assert len(values) == target.get_length_until(
+            source.get_stop_time(len(source_values))
+        )
 
 
 def test_timeseriesconverter(source, target, source_values_index):
@@ -115,14 +117,14 @@ def test_timeseriesconverter(source, target, source_values_index):
             target_values
         )
         values = timeseriesconverter.convert_from(source_values)
-        np.testing.assert_allclose(values, target_values, atol=1e-10*values.max())
+        np.testing.assert_allclose(values, target_values, atol=1e-10 * values.max())
 
         timeseriesconverter = timeseries.TimeseriesConverter(target, source)
         assert timeseriesconverter.get_source_len(len(source_values)) == len(
             target_values
         )
         values = timeseriesconverter.convert_to(source_values)
-        np.testing.assert_allclose(values, target_values, atol=1e-10*values.max())
+        np.testing.assert_allclose(values, target_values, atol=1e-10 * values.max())
 
 
 def test_cache(source, target):
@@ -133,9 +135,9 @@ def test_cache(source, target):
         )
         if target_values is not None:
             values = timeseriesconverter.convert_from(source_values)
-            np.testing.assert_allclose(values, target_values, atol=1e-10*values.max())
+            np.testing.assert_allclose(values, target_values, atol=1e-10 * values.max())
             values = timeseriesconverter.convert_from(source_values)
-            np.testing.assert_allclose(values, target_values, atol=1e-10*values.max())
+            np.testing.assert_allclose(values, target_values, atol=1e-10 * values.max())
 
 
 def test_timeseries_repr(source):
