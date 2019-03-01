@@ -255,7 +255,7 @@ def test_timeseries_parameter_view(core, start_time, series):
     outseries = series[1]
     carbon_writable.set_series(inseries)
     assert carbon_writable.length == len(inseries)
-    np.testing.assert_allclose(carbon_writable.get_series(), inseries)
+    np.testing.assert_allclose(carbon_writable.get_series(), inseries, atol=inseries.max()*1e-10)
     assert carbon.length == 5
     np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
     with pytest.raises(ParameterTypeError):
@@ -301,7 +301,11 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         start_time,
         24 * 3600,
     )
-    np.testing.assert_allclose(fossil_industry.get_series(), fossil_industry_emms)
+    np.testing.assert_allclose(
+        fossil_industry.get_series(), 
+        fossil_industry_emms,
+        atol=fossil_industry_emms.max()*1e-10
+    )
 
     fossil_energy = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Energy"),

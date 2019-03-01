@@ -100,6 +100,9 @@ class Timeseries:
         """
         Get the number of time points in this timeseries until ``stop_time`` (including).
 
+		Note that this excludes the start time as a point so
+		``self.get_length_until(self.start_time)`` will be ``0``.
+
         Parameters
         ----------
         stop_time
@@ -400,14 +403,16 @@ def _convert(
     np.ndarray
         Converted time period average data for timeseries ``target``
     """
-    if interpolation is None:
-        interpolation = _calc_interpolation_points(len(values), source, target)
-
     continuous = _calc_continuous(values, source)
 
-    interpolation_values = continuous(interpolation.points)
+    target_len = target.get_length_until(source.get_stop_time(len(values)))
+    target_times = target.get_points(target_len)
+    target_intervals = np.concatenate([
+    	target_times,
+    	[target_times[-1] + target.period_length]
+    ])
 
-    return _calc_interval_averages(interpolation, interpolation_values)
+    return _calc_interval_averages_from_func(continuous, target_intervals)
 
 
 def _convert_cached(
