@@ -13,7 +13,8 @@ from typing import NamedTuple, Tuple, Callable
 
 
 import numpy as np
-import scipy as sp
+import scipy.interpolate as interpolate
+import scipy.integrate as integrate
 
 
 class InsufficientDataError(ValueError):
@@ -327,7 +328,7 @@ def _calc_interval_averages(
     averages = np.zeros_like(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
     	u = target_intervals[i+1]
-    	y, err = sp.integrate.quad(continuous, l, u)
+    	y, err = integrate.quad(continuous, l, u)
     	averages[i] = y / (u - l)
 
     return averages
