@@ -328,7 +328,7 @@ def _calc_interval_averages(
     averages = np.zeros_like(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
         u = target_intervals[i + 1]
-        y, err = integrate.quad(continuous, l, u)
+        y, _ = integrate.quad(continuous, l, u)
         averages[i] = y / (u - l)
 
     return averages
