@@ -32,7 +32,7 @@ action "Pylint" {
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "pylint .[tests]"
+    PIP_PACKAGES = "pylint ."
   }
   needs = ["Bandit", "Black"]
 }
