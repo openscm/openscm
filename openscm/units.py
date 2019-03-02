@@ -85,6 +85,7 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
     >>> NOx.to("N2O", "NOx_conversions")
     <Quantity(0.9565217391304348, 'N2O')>
 """
+# pylint: disable=unused-import
 
 from pint import Context, UnitRegistry
 from pint.errors import DimensionalityError, UndefinedUnitError
@@ -179,11 +180,11 @@ def _add_mass_emissions_joint_version(symbol: str):
     symbol
         The unit to add a joint version for.
     """
-    unit_registry.define("g{} = g * {}".format(symbol, symbol))
-    unit_registry.define("t{} = t * {}".format(symbol, symbol))
+    unit_registry.define("g{symbol} = g * {symbol}".format(symbol=symbol))
+    unit_registry.define("t{symbol} = t * {symbol}".format(symbol=symbol))
 
 
-def _add_gases_to_unit_registry(unit_registry, gases):
+def _add_gases_to_unit_registry(gases):
     for symbol, value in gases.items():
         if isinstance(value, str):
             # symbol is base unit
@@ -204,7 +205,7 @@ def _add_gases_to_unit_registry(unit_registry, gases):
             _add_mass_emissions_joint_version(symbol.upper())
 
 
-_add_gases_to_unit_registry(unit_registry, _gases)
+_add_gases_to_unit_registry(_gases)
 
 # Other definitions:
 

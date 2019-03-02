@@ -1,8 +1,13 @@
+"""
+OpenSCM's custom DataFrame implementation.
+"""
+
 from .scmdataframebase import ScmDataFrameBase
 
 
 class ScmDataFrame(ScmDataFrameBase):
-    """OpenSCM's custom DataFrame implementation.
+    """
+    OpenSCM's custom DataFrame implementation.
 
     The ScmDataFrame wraps around `pyam`'s IamDataFrame, which itself wraps around Pandas.
 
@@ -10,5 +15,3 @@ class ScmDataFrame(ScmDataFrameBase):
     of data, completeness of variables provided, running of simple climate models)
     as well as a number of visualization and plotting tools.
     """
-
-    pass

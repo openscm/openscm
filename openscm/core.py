@@ -20,6 +20,8 @@ from .regions import _Region
 from .timeframes import Timeframe
 from .utils import ensure_input_is_tuple
 
+# pylint: disable=too-many-arguments
+
 
 class ParameterSet:
     """
@@ -53,9 +55,10 @@ class ParameterSet:
         if len(name) > 1:
             p = self._get_or_create_region(name[:-1])
             return p.get_or_create_subregion(name[-1])
-        elif len(name) == 1:
+
+        if len(name) == 1:
             name_str = name[0]
-            root_name = self._root._name
+            root_name = self._root._name  # pylint: disable=protected-access
             if name_str != root_name:
                 error_msg = (
                     "Cannot access region {}, root region for this parameter set "
@@ -64,8 +67,9 @@ class ParameterSet:
                 raise ValueError(error_msg)
 
             return self._root
-        else:  # len(name) == 0
-            raise ValueError("No region name given")
+
+        # len(name) == 0
+        raise ValueError("No region name given")
 
     def _get_region(self, name: Tuple[str]) -> _Region:
         """
@@ -79,8 +83,8 @@ class ParameterSet:
         name = ensure_input_is_tuple(name)
         if name[0] != self._root.name:
             return None
-        else:
-            return self._root.get_subregion(name[1:])
+
+        return self._root.get_subregion(name[1:])
 
     def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
         """
@@ -103,10 +107,12 @@ class ParameterSet:
         if len(name) > 1:
             p = self._get_or_create_parameter(name[:-1], region)
             return p.get_or_create_child_parameter(name[-1])
-        elif len(name) == 1:
+
+        if len(name) == 1:
             return region.get_or_create_parameter(name[0])
-        else:  # len(name) == 0
-            raise ValueError("No parameter name given")
+
+        # len(name) == 0
+        raise ValueError("No parameter name given")
 
     def get_scalar_view(
         self, name: Tuple[str], region: Tuple[str], unit: str

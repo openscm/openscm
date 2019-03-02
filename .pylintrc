@@ -3,9 +3,10 @@ ignore=_version.py
 
 [MESSAGES CONTROL]
 disable=
-    invalid-name,
-    too-many-locals,
     fixme,
+    invalid-name,
     pointless-string-statement,
+    too-few-public-methods,
+    too-many-locals,
     # handled by black
     format

@@ -1,7 +1,13 @@
+"""
+Handling of region information.
+"""
+
 from typing import Dict, Tuple
 from .errors import RegionAggregatedError
-from . import parameters
+from . import parameters  # pylint: disable=cyclic-import
 from .utils import ensure_input_is_tuple
+
+# pylint: disable=protected-access
 
 
 class _Region:
@@ -77,13 +83,13 @@ class _Region:
             Hierarchical name of the region below this region or ``()`` for this region.
         """
         name = ensure_input_is_tuple(name)
-        if len(name) > 0:
+        if name:
             res = self._children.get(name[0], None)
             if res is not None:
                 res = res.get_subregion(name[1:])
             return res
-        else:
-            return self
+
+        return self
 
     def get_or_create_parameter(self, name: str) -> "parameters._Parameter":
         """
@@ -115,7 +121,7 @@ class _Region:
             Name not given
         """
         name = ensure_input_is_tuple(name)
-        if name is None or len(name) == 0:
+        if not name:
             raise ValueError("No parameter name given")
         root_parameter = self._parameters.get(name[0], None)
         if root_parameter is not None and len(name) > 1:
