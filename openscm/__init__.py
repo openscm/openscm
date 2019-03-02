@@ -1,3 +1,7 @@
+"""
+OpenSCM - unified access to simple climate models.
+"""
+
 from .core import Core
 from .openscm import OpenSCM
 

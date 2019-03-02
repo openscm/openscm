@@ -1,3 +1,8 @@
+"""
+Parameter views provide ways to read and write parameter data with a defined unit
+and time information.
+"""
+
 from typing import Sequence
 
 
@@ -5,6 +10,8 @@ from .parameters import _Parameter
 from .timeframes import Timeframe, TimeframeConverter
 from .units import UnitConverter
 from .errors import ParameterEmptyError
+
+# pylint: disable=protected-access
 
 
 class ParameterView:
@@ -92,7 +99,7 @@ class ScalarView(ParameterView):
         """
         if self._parameter._children:
             return sum(v.get() for v in self._child_data_views)
-        elif self.is_empty:
+        if self.is_empty:
             raise ParameterEmptyError
 
         return self._unit_converter.convert_from(self._parameter._data)
@@ -187,7 +194,7 @@ class TimeseriesView(ParameterView):
         """
         if self._parameter._children:
             return sum(v.get_series() for v in self._child_data_views)
-        elif self.is_empty:
+        if self.is_empty:
             raise ParameterEmptyError
 
         return self._timeframe_converter.convert_from(

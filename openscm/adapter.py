@@ -134,34 +134,27 @@ class Adapter(metaclass=ABCMeta):
     @abstractmethod
     def _initialize_model(self) -> None:
         """To be implemented by specific adapters"""
-        pass
 
     @abstractmethod
     def _initialize_model_input(self) -> None:
         """To be implemented by specific adapters"""
-        pass
 
     @abstractmethod
     def _initialize_run_parameters(self) -> None:
         """To be implemented by specific adapters"""
-        pass
 
     @abstractmethod
     def _reset(self) -> None:
         """To be implemented by specific adapters"""
-        pass
 
     @abstractmethod
     def _run(self) -> None:
         """To be implemented by specific adapters"""
-        pass
 
     @abstractmethod
     def _shutdown(self) -> None:
         """To be implemented by specific adapters"""
-        pass
 
     @abstractmethod
     def _step(self) -> None:
         """To be implemented by specific adapters"""
-        pass

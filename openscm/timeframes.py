@@ -9,8 +9,9 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 """
 
 from copy import copy
-import numpy as np
 from typing import NamedTuple, Tuple
+
+import numpy as np
 
 
 class InsufficientDataError(ValueError):

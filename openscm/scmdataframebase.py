@@ -1,3 +1,7 @@
+"""
+OpenSCM's custom DataFrame implementation base class.
+"""
+
 from datetime import datetime
 from dateutil import parser
 

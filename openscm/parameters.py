@@ -1,3 +1,9 @@
+"""
+Parameter handling.
+"""
+
+# pylint: disable=unused-import,protected-access
+
 from copy import copy
 from enum import Enum
 from typing import Any, Dict, Tuple
@@ -174,13 +180,13 @@ class _Parameter:
             parameter or ``()`` for this parameter
         """
         name = ensure_input_is_tuple(name)
-        if len(name) > 0:
+        if name:
             res = self._children.get(name[0], None)
             if res is not None:
                 res = res.get_subparameter(name[1:])
             return res
-        else:
-            return self
+
+        return self
 
     def attempt_read(
         self, unit: str, parameter_type: ParameterType, timeframe: Timeframe = None
