@@ -1,7 +1,7 @@
 OpenSCM
 =======
 
-|Docs|
+|WIP| |Docs|
 
 .. sec-begin-long-description
 .. sec-begin-index
@@ -109,3 +109,4 @@ Current maintainers of OpenSCM are:
 
 .. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
     :target: https://openscm.readthedocs.io/en/latest/
+.. |WIP| image:: https://img.shields.io/badge/state-work%20in%20progress-red.svg?style=flat
