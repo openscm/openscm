@@ -59,7 +59,7 @@ action "Test coverage" {
 
 
 workflow "Deployment" {
-  on = "release"
+  on = "create"
   resolves = ["Create release"]
 }
 
