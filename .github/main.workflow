@@ -4,7 +4,7 @@ workflow "Continuous Integration" {
 }
 
 action "Bandit" {
-  uses = "./.github/actions/run"
+  uses = "swillner/actions/python-run@master"
   args = [
     "bandit -c .bandit.yml -r openscm"
   ]
@@ -15,7 +15,7 @@ action "Bandit" {
 }
 
 action "Black" {
-  uses = "./.github/actions/run"
+  uses = "swillner/actions/python-run@master"
   args = [
     "black --check openscm tests setup.py --exclude openscm/_version.py"
   ]
@@ -26,7 +26,7 @@ action "Black" {
 }
 
 action "Pylint" {
-  uses = "./.github/actions/run"
+  uses = "swillner/actions/python-run@master"
   args = [
     "pylint openscm"
   ]
@@ -37,7 +37,7 @@ action "Pylint" {
 }
 
 action "Test coverage" {
-  uses = "./.github/actions/run"
+  uses = "swillner/actions/python-run@master"
   args = [
     "pytest -rfsxEX --cov=openscm tests --cov-report term-missing",
     "pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg",
@@ -67,7 +67,7 @@ action "Filter tag" {
 }
 
 action "Publish on PyPi" {
-  uses = "./.github/actions/run"
+  uses = "swillner/actions/python-run@master"
   args = [
     "rm -rf build dist",
     "python setup.py sdist",
@@ -82,7 +82,7 @@ action "Publish on PyPi" {
 }
 
 action "Create release" {
-  uses = "./.github/actions/create-release"
+  uses = "swillner/actions/create-release@master"
   needs = ["Publish on PyPi"]
   secrets = ["GITHUB_TOKEN"]
 }
