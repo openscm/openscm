@@ -1,8 +1,8 @@
 # documentation: https://github.blog/2017-07-06-introducing-code-owners/
 .coveragerc @swillner
 .editorconfig @rgieseke @swillner @znicholls
+.github/main.workflow @swillner
 .readthedocs.yml @swillner
-.travis.yml @rgieseke
 CODE_OF_CONDUCT.rst @rgieseke @swillner @znicholls
 CONTRIBUTING.rst @rgieseke @swillner @znicholls
 LICENSE @rgieseke @swillner @znicholls
