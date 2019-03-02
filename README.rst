@@ -1,11 +1,7 @@
 OpenSCM
 =======
 
-+----------------+----------+
-| |Build Status| | |Docs|   |
-+----------------+----------+
-| |Codecov|      | |Codacy| |
-+----------------+----------+
+|Docs|
 
 .. sec-begin-long-description
 .. sec-begin-index
@@ -111,11 +107,5 @@ Current maintainers of OpenSCM are:
    <`sven.willner@pik-potsdam.de
    <mailto:sven.willner@pik-potsdam.de>`__>
 
-.. |Build Status| image:: https://img.shields.io/travis/openclimatedata/openscm.svg
-    :target: https://travis-ci.org/openclimatedata/openscm
 .. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
     :target: https://openscm.readthedocs.io/en/latest/
-.. |Codecov| image:: https://img.shields.io/codecov/c/github/openclimatedata/openscm.svg
-    :target: https://codecov.io/gh/openclimatedata/openscm
-.. |Codacy| image:: https://img.shields.io/codacy/grade/37d3be5f62b34d048d704718219cfb4f.svg?style=flat
-    :target: https://www.codacy.com/app/openclimatedata/openscm
