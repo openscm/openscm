@@ -52,7 +52,7 @@ action "Test coverage" {
   env = {
     PYTHON_VERSION = "3.7"
     MIN_COVERAGE = "100"
-    PIP_PACKAGES = "coverage pytest pytest-cov .[tests]"
+    PIP_PACKAGES = "coverage .[tests]"
   }
   needs = ["Pylint"]
 }
