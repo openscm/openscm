@@ -65,7 +65,7 @@ workflow "Deployment" {
 
 action "Filter tag" {
   uses = "actions/bin/filter@master"
-  args = "tag v*"
+  args = "tag 'v*'"
 }
 
 action "Publish on PyPi" {
