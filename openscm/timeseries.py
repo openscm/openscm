@@ -186,7 +186,7 @@ def _calc_continuous(
     linearization_values = _calc_linearization_values(values)
     # I'm not happy about extrapolation by default but only way to make things
     # work at the moment
-    return sp.interpolate.interp1d(
+    return interpolate.interp1d(
     	linearization_points,
     	linearization_values,
     	fill_value="extrapolate"
