@@ -217,6 +217,10 @@ def _calc_interval_averages(
     np.ndarray
         Array of the interval/period averages
     """
+
+    # TODO: numerical integration here could be very expensive
+    # TODO: update to include caching and/or analytic solutions depending on
+    # TODO:     interpolation choice
     int_averages = [np.nan] * len(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
         u = target_intervals[i + 1]
