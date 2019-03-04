@@ -96,7 +96,7 @@ def test_insufficient_overlap(source, target):
 def test_short_data(source, target):
     for a in [[], [0], [0, 1]]:
         with pytest.raises(timeseries.InsufficientDataError):
-            timeseries._convert_cached(np.array(a), source, target, None)
+            timeseries._convert_cached(np.array(a), source, target)
 
 
 def test_conversion(source, target, source_values_index):

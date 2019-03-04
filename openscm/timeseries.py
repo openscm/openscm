@@ -19,9 +19,9 @@ import scipy.integrate as integrate
 
 class InsufficientDataError(ValueError):
     """
-    Exception raised when not enough data overlap is available when converting from one
+    Exception raised when not enough data is available to convert from one
     timeseries to another (e.g. when the target timeseries is outside the range of the
-    source timeseries) or when data is too short (less than 3 data points).
+    source timeseries) or when data is too short (fewer than 3 data points).
     """
 
 
@@ -137,13 +137,17 @@ def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
     edge_point_values = (values[1:] + values[:-1]) / 2
     middle_point_values = (
         4 * values[1:-1] - edge_point_values[:-1] - edge_point_values[1:]
-    ) / 2  # values = 1 / 2 * (edges_lower + middle_point_values) / 2 + 1 / 2 * (middle_point_values + edges_upper) / 2
+    ) / 2
+    # values = (
+    #   1 / 2 * (edges_lower + middle_point_values) * 1 /2
+    #   + 1 / 2 * (middle_point_values + edges_upper)
+    # ) / 2
     first_edge_point_value = (
         2 * values[0] - edge_point_values[0]
-    )  # values[0] = (first_edge_point_value + edge_point_values[0] ) / 2
+    )  # values[0] = (first_edge_point_value + edge_point_values[0]) / 2
     last_edge_point_value = (
         2 * values[-1] - edge_point_values[-1]
-    )  # values[-1] = (last_edge_point_value + edge_point_values[-1] ) / 2
+    )  # values[-1] = (last_edge_point_value + edge_point_values[-1]) / 2
     return np.concatenate(
         (
             np.array(
@@ -187,119 +191,7 @@ def _calc_continuous(
     # I'm not happy about extrapolation by default but only way to make things
     # work at the moment
     return interpolate.interp1d(
-    	linearization_points,
-    	linearization_values,
-    	fill_value="extrapolate"
-    )
-
-
-class _Interpolation(NamedTuple):
-    """
-    Collection of interpolation points and associated information.
-    """
-
-    data_len: int
-    """
-    Length of source data array for which these interpolation points have been
-    calculated
-    """
-
-    first_interval_length: int
-    """
-    Length of the first interval/period (can be smaller than ``period_length``
-    when not enough data overlap is available)
-    """
-
-    last_interval_length: int
-    """
-    Length of the last interval/period (can be smaller than ``period_length``
-    when not enough data overlap is available)
-    """
-
-    points: np.ndarray
-    """Array of interpolation time points"""
-
-    period_length: int
-    """
-    Length of the middle intervals/periods
-    """
-
-    target_indices: np.ndarray
-    """
-    Array of indices in ``interpolation_points`` that correspond to edges of target
-    periods
-    """
-
-
-def _calc_interpolation_points(
-    source_len: int, source: Timeseries, target: Timeseries
-) -> _Interpolation:
-    """
-    Calculate the "interpolation" time points that correspond to edges of the target
-    periods and the sampling points for the linearization of source values (i.e. edges
-    and middle points of the source periods).
-
-    Parameters
-    ----------
-    source_len
-        Length of source data values
-    source
-        Source timeseries
-    target
-        Target timeseries
-
-    Returns
-    -------
-    _Interpolation
-        Object wrapping the actual interpolation points and additional information
-    """
-    linearization_points_len = 2 * source_len + 1
-    # For in-between steps periods in the source timeseries need to be halved. To stick
-    # calculations to integer calculations, rather than devide source period length by 2
-    # double all other times/period lengths and devide at the end:
-    source = Timeseries(2 * source.start_time, 1 * source.period_length)
-    target = Timeseries(2 * target.start_time, 2 * target.period_length)
-
-    if target.start_time >= source.start_time:
-        skip_len = 1 + (target.start_time - source.start_time) // source.period_length
-        linearization_points_len -= skip_len
-        source.start_time += skip_len * source.period_length
-        first_target_point = target.start_time
-        first_interval_length = target.period_length
-    else:
-        first_target_point = target.start_time + target.period_length
-        first_interval_length = source.start_time - target.start_time
-
-    source_stop_time = source.get_stop_time(linearization_points_len - 1)
-    target_len = (source_stop_time - first_target_point) // target.period_length
-    target_stop_time = target.get_stop_time(target_len)
-
-    if source_stop_time > target_stop_time:
-        last_interval_length = source_stop_time - target_stop_time
-    else:
-        last_interval_length = target.period_length
-
-    interpolation_points, indices = np.unique(
-        np.concatenate(
-            (
-                target.get_points(target_len + 1),
-                source.get_points(linearization_points_len),
-            )
-        ),
-        return_index=True,
-    )
-    target_indices = np.where(indices <= target_len)[0]
-
-    if source_stop_time <= target_stop_time:
-        target_indices = target_indices[:-1]
-
-    return _Interpolation(
-        data_len=source_len,
-        first_interval_length=first_interval_length // 2,
-        last_interval_length=last_interval_length // 2,
-        period_length=target.period_length // 2,
-        points=interpolation_points / 2,
-        target_indices=target_indices,
+        linearization_points, linearization_values, fill_value="extrapolate"
     )
 
 
@@ -334,12 +226,7 @@ def _calc_interval_averages(
     return averages
 
 
-def _convert(
-    values: np.ndarray,
-    source: Timeseries,
-    target: Timeseries,
-    interpolation: _Interpolation = None,
-) -> np.ndarray:
+def _convert(values: np.ndarray, source: Timeseries, target: Timeseries) -> np.ndarray:
     """
     Convert time period average data ``values`` for timeseries ``source`` to the
     timeseries ``target``.
@@ -352,9 +239,6 @@ def _convert(
         Source timeseries
     target
         Target timeseries
-    interpolation
-        Interpolation data. Used for caching and is newly calculated when not given,
-        i.e. ``None`` (default).
 
     Returns
     -------
@@ -373,11 +257,8 @@ def _convert(
 
 
 def _convert_cached(
-    values: np.ndarray,
-    source: Timeseries,
-    target: Timeseries,
-    interpolation: _Interpolation,
-) -> Tuple[np.ndarray, _Interpolation]:
+    values: np.ndarray, source: Timeseries, target: Timeseries
+) -> Tuple[np.ndarray]:
     """
     Convert time period average data ``values`` for timeseries ``source`` to the
     timeseries ``target`` using and updating cache.
@@ -390,23 +271,16 @@ def _convert_cached(
         Source timeseries
     target
         Target timeseries
-    interpolation
-        Interpolation data (as resulting from
-        :func:`openscm.timeseriess._calc_interpolation_points`)
 
     Returns
     -------
     result
         Converted time period average data for timeseries ``target``
-    interpolation
-        (Possibly) updated interpolation
     """
     values_len = len(values)
     if values_len < 3:
         raise InsufficientDataError
-    if interpolation is None or values_len != interpolation.data_len:
-        interpolation = _calc_interpolation_points(values_len, source, target)
-    return _convert(values, source, target, interpolation), interpolation
+    return _convert(values, source, target)
 
 
 class TimeseriesConverter:
@@ -420,20 +294,6 @@ class TimeseriesConverter:
 
     _target: Timeseries
     """Target timeseries"""
-
-    _convert_from_interpolation: _Interpolation = None
-    """
-    Cached interpolation data as resulting from
-    :func:`openscm.timeseriess._calc_interpolation_points` for conversion from source to
-    target
-    """
-
-    _convert_to_interpolation: _Interpolation = None
-    """
-    Cached interpolation data as resulting from
-    :func:`openscm.timeseriess._calc_interpolation_points` for conversion from target to
-    source
-    """
 
     def __init__(self, source: Timeseries, target: Timeseries):
         """
@@ -466,9 +326,7 @@ class TimeseriesConverter:
         np.ndarray
             Converted array
         """
-        result, self._convert_from_interpolation = _convert_cached(
-            values, self._source, self._target, self._convert_from_interpolation
-        )
+        result = _convert_cached(values, self._source, self._target)
         return result
 
     def convert_to(self, values: np.ndarray) -> np.ndarray:
@@ -485,9 +343,7 @@ class TimeseriesConverter:
         np.ndarray
             Converted array
         """
-        result, self._convert_to_interpolation = _convert_cached(
-            values, self._target, self._source, self._convert_to_interpolation
-        )
+        result = _convert_cached(values, self._target, self._source)
         return result
 
     def get_source_len(self, target_len: int) -> int:
