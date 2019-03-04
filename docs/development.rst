@@ -239,7 +239,9 @@ OpenSCM uses designated Github Actions to upload the package to PyPI
 
 1. Change the "master" header in ``CHANGELOG.rst`` to the release
    version number (not starting with "v", e.g. "1.2.3") and create a
-   new, empyy "master" header above. Commit these changes.
+   new, empty "master" header above. Commit these changes with the
+   message, 'Prepare for release of vVERSIONNUMBER'' e.g. 'Prepare for
+   release of v1.2.3'.
 2. Tag the commit as "vVERSIONNUMBER", e.g. "v1.2.3", on the "master"
    branch. Push the tag.
 3. The Github Actions workflow should now create a release with the
