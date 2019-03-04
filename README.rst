@@ -1,7 +1,7 @@
 OpenSCM
 =======
 
-|WIP| |Docs| |Build| |Coverage|
+|WIP| |Docs| |GithubActions|
 
 .. sec-begin-long-description
 .. sec-begin-index
@@ -111,7 +111,5 @@ Current maintainers of OpenSCM are:
     :target: https://openscm.readthedocs.io/en/latest/
 .. |WIP| image:: https://img.shields.io/badge/state-work%20in%20progress-red.svg?style=flat
     :target: https://github.com/openclimatedata/openscm/milestone/1
-.. |Build| image:: https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat
-    :target: https://github.com/openclimatedata/openscm/actions
-.. |Coverage| image:: https://img.shields.io/badge/coverage-100%25-green.svg?style=flat
+.. |GithubActions| image:: https://wdp9fww0r9.execute-api.us-west-2.amazonaws.com/production/badge/openclimatedata/openscm?style=flat-square
     :target: https://github.com/openclimatedata/openscm/actions
