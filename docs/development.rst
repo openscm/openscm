@@ -230,6 +230,23 @@ there).
 
 .. include:: ../CONTRIBUTING.rst
 
+
+Creating a release
+==================
+
+OpenSCM uses designated Github Actions to upload the package to PyPI
+(and, in the future, also to Conda). To create a release:
+
+1. Change the "master" header in ``CHANGELOG.rst`` to the release
+   version number (not starting with "v", e.g. "1.2.3") and create a
+   new, empyy "master" header above. Commit these changes.
+2. Tag the commit as "vVERSIONNUMBER", e.g. "v1.2.3", on the "master"
+   branch. Push the tag.
+3. The Github Actions workflow should now create a release with the
+   corresponding description in ``CHANGELOG.rst`` and upload the
+   release to PyPI.
+
+
 .. _code_of_conduct:
 
 .. include:: ../CODE_OF_CONDUCT.rst
