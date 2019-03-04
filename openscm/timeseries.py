@@ -9,7 +9,7 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 """
 
 from copy import copy
-from typing import NamedTuple, Tuple, Callable
+from typing import Tuple, Callable
 
 
 import numpy as np
@@ -217,13 +217,13 @@ def _calc_interval_averages(
     np.ndarray
         Array of the interval/period averages
     """
-    averages = np.zeros_like(target_intervals[:-1])
+    int_averages = [np.nan] * len(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
         u = target_intervals[i + 1]
         y, _ = integrate.quad(continuous, l, u)
-        averages[i] = y / (u - l)
+        int_averages[i] = y / (u - l)
 
-    return averages
+    return np.array(int_averages)
 
 
 def _convert(values: np.ndarray, source: Timeseries, target: Timeseries) -> np.ndarray:
