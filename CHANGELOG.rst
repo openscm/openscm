@@ -15,3 +15,4 @@ master
 - (`#44 <https://github.com/openclimatedata/openscm/pull/44>`_) Add timeframes module
 - (`#40 <https://github.com/openclimatedata/openscm/pull/40>`_) Add parameter handling in core module
 - (`#104 <https://github.com/openclimatedata/openscm/pull/104>`_) Define Adapter interface
+- (`#133 <https://github.com/openclimatedata/openscm/pull/104>`_) Cleanup and advance timeseries converter
