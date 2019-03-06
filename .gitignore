@@ -17,3 +17,5 @@ dist/
 docs/_build
 venv/
 htmlcov/
+.pyre
+.pyre_configuration

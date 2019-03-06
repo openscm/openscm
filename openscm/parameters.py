@@ -5,7 +5,7 @@ Parameter handling.
 # pylint: disable=unused-import,protected-access
 
 from enum import Enum
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -168,7 +168,7 @@ class _Parameter:
             self._children[name] = res
         return res
 
-    def get_subparameter(self, name: Tuple[str]) -> "_Parameter":
+    def get_subparameter(self, name: Tuple[str]) -> Optional["_Parameter"]:
         """
         Get a sub parameter of this parameter or ``None`` if not found.
 

@@ -8,7 +8,9 @@ Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
+
+
 from .parameter_views import (
     ScalarView,
     WritableScalarView,
@@ -71,7 +73,7 @@ class ParameterSet:
         # len(name) == 0
         raise ValueError("No region name given")
 
-    def _get_region(self, name: Tuple[str]) -> _Region:
+    def _get_region(self, name: Tuple[str]) -> Optional[_Region]:
         """
         Get a region or ``None`` if not found.
 
@@ -103,7 +105,6 @@ class ParameterSet:
             Name not given
         """
         name = ensure_input_is_tuple(name)
-        region = ensure_input_is_tuple(region)
         if len(name) > 1:
             p = self._get_or_create_parameter(name[:-1], region)
             return p.get_or_create_child_parameter(name[-1])
@@ -284,7 +285,9 @@ class ParameterSet:
             extrapolation_type,
         )
 
-    def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
+    def get_parameter_info(
+        self, name: Tuple[str], region_name: Tuple[str]
+    ) -> Optional[ParameterInfo]:
         """
         Get a parameter or ``None`` if not found.
 
@@ -292,7 +295,7 @@ class ParameterSet:
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
-        region
+        region_name
             Hierarchical name of the region or ``()`` for "World".
 
         Raises
@@ -305,7 +308,7 @@ class ParameterSet:
         _Parameter
             Parameter or ``None`` if the parameter has not been created yet.
         """
-        region = self._get_region(region)
+        region = self._get_region(region_name)
         if region is not None:
             parameter = region.get_parameter(name)
             if parameter is not None:
