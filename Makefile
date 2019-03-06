@@ -22,7 +22,7 @@ define clean_notebooks_code
 endef
 
 clean-notebooks: venv
-	tmp=$$(mktemp); \
+	@tmp=$$(mktemp); \
 	for notebook in notebooks/*.ipynb; do \
 		jq --indent 1 '${clean_notebooks_code}' "$${notebook}" > "$${tmp}"; \
 		cp "$${tmp}" "$${notebook}"; \
@@ -61,6 +61,6 @@ test-pypi-install: venv
 	$(TEMPVENV)/bin/python -c "import sys; sys.path.remove(''); import openscm; print(openscm.__version__)"
 
 clean:
-	rm -rf venv
+	@rm -rf venv
 
 .PHONY: clean coverage test test-all black flake8 docs publish-on-pypi test-pypi-install
