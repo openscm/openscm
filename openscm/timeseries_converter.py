@@ -214,7 +214,7 @@ class TimeseriesConverter:
 
     def _calc_continuous_representation(
         self, time_points: np.ndarray, values: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Callable[[float], float]:
         """
         Calculate a "continuous" representation of a timeseries (see
         :func:`openscm.timeseries_converter._calc_integral_preserving_linear_interpolation`)
@@ -251,13 +251,14 @@ class TimeseriesConverter:
                 linearization_values = _calc_integral_preserving_linear_interpolation(
                     values
                 )
-                return interpolate.interp1d(
+                res = interpolate.interp1d(
                     linearization_points,
                     linearization_values,
                     fill_value="extrapolate"
                     if self._extrapolation_type == ExtrapolationType.LINEAR
                     else None,
-                )
+                )  # type: Callable[[float], float]
+                return res
         # else
         raise NotImplementedError
 
