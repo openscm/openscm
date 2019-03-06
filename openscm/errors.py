@@ -7,6 +7,14 @@ class AdapterNeedsModuleError(Exception):
     """Exception raised when an adapter needs a module that is not installed."""
 
 
+class InsufficientDataError(ValueError):
+    """
+    Exception raised when not enough data is available to convert from one
+    timeseries to another (e.g. when the target timeseries is outside the range of the
+    source timeseries) or when data is too short (fewer than 3 data points).
+    """
+
+
 class ParameterError(Exception):
     """
     Exception relating to a parameter. Used as super class.
@@ -52,4 +60,11 @@ class ParameterWrittenError(ParameterError):
 class RegionAggregatedError(Exception):
     """
     Exception raised when a region has already been read from in a region-aggregated way.
+    """
+
+class TimeseriesPointsValuesMismatchError(IndexError):
+    """
+    Exception raised when the length of the values and of the time points of a
+    timeseries mismatch (depending on the type of timeseries these must equal or deviate
+    by one).
     """

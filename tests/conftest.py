@@ -61,6 +61,6 @@ def test_adapter(request):
 def test_run_parameters():
 
     run_parameters = namedtuple("RunParameters", ["start_time", "stop_time"])
-    setattr(run_parameters, "start_time", 0)
-    setattr(run_parameters, "stop_time", 1)
+    run_parameters.start_time = 0
+    run_parameters.stop_time = 1
     yield run_parameters

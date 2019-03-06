@@ -17,7 +17,7 @@ from .parameter_views import (
 )
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
-from .timeseries import Timeseries
+from .timeseries_converter import ExtrapolationType, InterpolationType
 from .utils import ensure_input_is_tuple
 
 # pylint: disable=too-many-arguments
@@ -181,8 +181,10 @@ class ParameterSet:
         name: Tuple[str],
         region: Tuple[str],
         unit: str,
-        start_time: int,
-        period_length: int,
+        time_points: Tuple[int],
+        timeseries_type: ParameterType = ParameterType.AVERAGE_TIMESERIES,
+        interpolation_type: InterpolationType = InterpolationType.LINEAR,
+        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
     ) -> TimeseriesView:
         """
         Get a read-only view to a timeseries parameter.
@@ -199,10 +201,14 @@ class ParameterSet:
             Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
-        start_time
-            Time for first point in timeseries (seconds since ``1970-01-01 00:00:00``)
-        period_length
-            Length of single time step in seconds
+        time_points
+            Time points of the timeseries (seconds since ``1970-01-01 00:00:00``)
+        timeseries_type
+            Time series type
+        interpolation_type
+            Interpolation type
+        extrapolation_type
+            Extrapolation type
 
         Raises
         ------
@@ -214,17 +220,25 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        timeseries = Timeseries(start_time, period_length)
-        parameter.attempt_read(unit, ParameterType.TIMESERIES, timeseries)
-        return TimeseriesView(parameter, unit, timeseries)
+        parameter.attempt_read(unit, timeseries_type, time_points)
+        return TimeseriesView(
+            parameter,
+            unit,
+            time_points,
+            timeseries_type,
+            interpolation_type,
+            extrapolation_type,
+        )
 
     def get_writable_timeseries_view(
         self,
         name: Tuple[str],
         region: Tuple[str],
         unit: str,
-        start_time: int,
-        period_length: int,
+        time_points: Tuple[int],
+        timeseries_type: ParameterType = ParameterType.AVERAGE_TIMESERIES,
+        interpolation_type: InterpolationType = InterpolationType.LINEAR,
+        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
     ) -> WritableTimeseriesView:
         """
         Get a writable view to a timeseries parameter.
@@ -239,10 +253,14 @@ class ParameterSet:
             Hierarchical name of the region or ``()`` for "World".
         unit
             Unit for the values in the view
-        start_time
-            Time for first point in timeseries (seconds since ``1970-01-01 00:00:00``)
-        period_length
-            Length of single time step in seconds
+        time_points
+            Time points of the timeseries (seconds since ``1970-01-01 00:00:00``)
+        timeseries_type
+            Time series type
+        interpolation_type
+            Interpolation type
+        extrapolation_type
+            Extrapolation type
 
         Raises
         ------
@@ -256,9 +274,15 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        timeseries = Timeseries(start_time, period_length)
-        parameter.attempt_write(unit, ParameterType.TIMESERIES, timeseries)
-        return WritableTimeseriesView(parameter, unit, timeseries)
+        parameter.attempt_write(unit, timeseries_type, time_points)
+        return WritableTimeseriesView(
+            parameter,
+            unit,
+            time_points,
+            timeseries_type,
+            interpolation_type,
+            extrapolation_type,
+        )
 
     def get_parameter_info(self, name: Tuple[str], region: Tuple[str]) -> ParameterInfo:
         """
