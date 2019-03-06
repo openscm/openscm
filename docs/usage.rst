@@ -154,8 +154,20 @@ would create large overhead).
     climate_sensitivity.set(3)
 
     carbon_emissions_raw = [10 for _ in range(2100 - 2006)]
+    time_points = create_time_points(
+        start_time,
+        year_seconds,
+        len(carbon_emissions_raw),
+        ParameterType.AVERAGE_TIMESERIES,
+    )
     carbon_emissions = model_run.parameters.get_writable_timeseries_view(
-        ("Emissions", "CO2"), ("World",), "GtCO2/a", start_time, year_seconds
+        ("Emissions", "CO2"),
+        ("World",),
+        "GtCO2/a",
+        time_points,
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.NONE,
     )
     carbon_emissions.set_series(carbon_emissions_raw)
 

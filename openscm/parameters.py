@@ -4,7 +4,6 @@ Parameter handling.
 
 # pylint: disable=unused-import,protected-access
 
-from copy import copy
 from enum import Enum
 from typing import Any, Dict, Tuple
 
@@ -16,7 +15,6 @@ from .errors import (
     ParameterTypeError,
     ParameterWrittenError,
 )
-from .timeseries import Timeseries
 from .utils import ensure_input_is_tuple
 from . import regions  # needed for type annotations
 
@@ -27,7 +25,8 @@ class ParameterType(Enum):
     """
 
     SCALAR = 1
-    TIMESERIES = 2
+    AVERAGE_TIMESERIES = 2
+    # TODO support POINT_TIMESERIES = 3
 
 
 class ParameterInfo:
@@ -41,8 +40,8 @@ class ParameterInfo:
     _region: "regions._Region"
     """Region this parameter belongs to"""
 
-    _timeseries: Timeseries
-    """Timeseries; only for timeseries parameters"""
+    _time_points: np.ndarray
+    """Timeseries time points; only for timeseries parameters"""
 
     _type: ParameterType
     """Parameter type"""
@@ -63,7 +62,7 @@ class ParameterInfo:
         """
         self._name = name
         self._region = region
-        self._timeseries = None
+        self._time_points = None
         self._type = None
         self._unit = None
 
@@ -189,7 +188,7 @@ class _Parameter:
         return self
 
     def attempt_read(
-        self, unit: str, parameter_type: ParameterType, timeseries: Timeseries = None
+        self, unit: str, parameter_type: ParameterType, time_points: np.ndarray = None
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -202,8 +201,8 @@ class _Parameter:
             Unit to be read
         parameter_type
             Parameter type to be read
-        timeseries
-            Timeseries; only for timeseries parameters
+        time_points
+            Timeseries time points; only for timeseries parameters
 
         Raises
         ------
@@ -218,13 +217,13 @@ class _Parameter:
             self._info._type = parameter_type
             if parameter_type == ParameterType.SCALAR:
                 self._data = float("NaN")
-            else:  # parameter_type == ParameterType.TIMESERIES
+            else:  # parameter_type == ParameterType.AVERAGE_TIMESERIES
                 self._data = np.array([])
-                self._info._timeseries = copy(timeseries)
+                self._info._time_points = np.array(time_points, copy=True)
         self._has_been_read_from = True
 
     def attempt_write(
-        self, unit: str, parameter_type: ParameterType, timeseries: Timeseries = None
+        self, unit: str, parameter_type: ParameterType, time_points: np.ndarray = None
     ) -> None:
         """
         Tell parameter that its data will be written to.
@@ -235,8 +234,8 @@ class _Parameter:
             Unit to be written
         parameter_type
             Parameter type to be written
-        timeseries
-            Timeseries; only for timeseries parameters
+        time_points
+            Timeseries time points; only for timeseries parameters
 
         Raises
         ------
@@ -245,7 +244,7 @@ class _Parameter:
         """
         if self._children:
             raise ParameterReadonlyError
-        self.attempt_read(unit, parameter_type, timeseries)
+        self.attempt_read(unit, parameter_type, time_points)
         self._has_been_written_to = True
 
     @property

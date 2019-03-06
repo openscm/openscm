@@ -12,6 +12,8 @@ from openscm.errors import (
     ParameterWrittenError,
     RegionAggregatedError,
 )
+from openscm.parameters import ParameterType
+from openscm.timeseries_converter import create_time_points
 from openscm.units import DimensionalityError
 
 
@@ -125,14 +127,14 @@ def test_parameter(core):
     assert param_industry.full_name == ("Emissions", "CO2", "Industry")
     assert param_industry.info.name == "Industry"
 
-    param_industry.attempt_read("GtCO2/a", ParameterType.TIMESERIES)
-    assert param_industry.info.parameter_type == ParameterType.TIMESERIES
+    param_industry.attempt_read("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
+    assert param_industry.info.parameter_type == ParameterType.AVERAGE_TIMESERIES
     assert param_industry.info.unit == "GtCO2/a"
 
     with pytest.raises(ParameterReadonlyError):
-        param_co2.attempt_write("GtCO2/a", ParameterType.TIMESERIES)
+        param_co2.attempt_write("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
 
-    param_co2.attempt_read("GtCO2/a", ParameterType.TIMESERIES)
+    param_co2.attempt_read("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
     with pytest.raises(ParameterTypeError):
         param_co2.attempt_read("GtCO2/a", ParameterType.SCALAR)
 
@@ -144,7 +146,7 @@ def test_parameter(core):
     with pytest.raises(ParameterTypeError):
         param_industry.attempt_write("GtCO2/a", ParameterType.SCALAR)
 
-    param_industry.attempt_write("GtCO2/a", ParameterType.TIMESERIES)
+    param_industry.attempt_write("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
     with pytest.raises(ParameterWrittenError):
         parameterset._get_or_create_parameter(
             ("Emissions", "CO2", "Industry", "Other"), region_ber
@@ -182,7 +184,7 @@ def test_scalar_parameter_view(core):
     np.testing.assert_allclose(cs.get(), 20)
     with pytest.raises(ParameterTypeError):
         parameterset.get_timeseries_view(
-            ("Climate Sensitivity"), ("World",), "degC", 0, 1
+            ("Climate Sensitivity"), ("World",), "degC", (0,)
         )
     with pytest.raises(DimensionalityError):
         parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "kg")
@@ -240,19 +242,33 @@ def series(request):
 
 
 def test_timeseries_parameter_view(core, start_time, series):
+    inseries = series[0]
+    outseries = series[1]
+
     parameterset = core.parameters
     carbon = parameterset.get_timeseries_view(
-        ("Emissions", "CO2"), ("World"), "GtCO2/a", start_time, 365 * 24 * 3600
+        ("Emissions", "CO2"),
+        ("World"),
+        "GtCO2/a",
+        create_time_points(
+            start_time,
+            365 * 24 * 3600,
+            len(outseries),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     assert carbon.is_empty
     with pytest.raises(ParameterEmptyError):
         carbon.get_series()
 
     carbon_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2"), ("World"), "ktC/d", start_time, 24 * 3600
+        ("Emissions", "CO2"),
+        ("World"),
+        "ktC/d",
+        create_time_points(
+            start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
+        ),
     )
-    inseries = series[0]
-    outseries = series[1]
     carbon_writable.set_series(inseries)
     assert carbon_writable.length == len(inseries)
     np.testing.assert_allclose(
@@ -263,7 +279,7 @@ def test_timeseries_parameter_view(core, start_time, series):
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
     with pytest.raises(DimensionalityError):
-        parameterset.get_timeseries_view(("Emissions", "CO2"), ("World",), "kg", 0, 1)
+        parameterset.get_timeseries_view(("Emissions", "CO2"), ("World",), "kg", (0,))
 
 
 def test_timeseries_parameter_view_aggregation(core, start_time):
@@ -277,8 +293,12 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ("Emissions", "CO2", "Fossil", "Industry"),
         ("World"),
         "GtC/yr",
-        start_time,
-        24 * 3600,
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_industry_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     fossil_industry_writable.set_series(fossil_industry_emms)
 
@@ -286,13 +306,25 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ("Emissions", "CO2", "Fossil", "Energy"),
         ("World"),
         "GtC/yr",
-        start_time,
-        24 * 3600,
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     fossil_energy_writable.set_series(fossil_energy_emms)
 
     land_writable = parameterset.get_writable_timeseries_view(
-        ("Emissions", "CO2", "Land"), ("World"), "MtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Land"),
+        ("World"),
+        "MtC/yr",
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     land_writable.set_series(land_emms * 1000)
 
@@ -300,8 +332,12 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ("Emissions", "CO2", "Fossil", "Industry"),
         ("World"),
         "GtC/yr",
-        start_time,
-        24 * 3600,
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_industry_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     np.testing.assert_allclose(
         fossil_industry.get_series(),
@@ -313,13 +349,25 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ("Emissions", "CO2", "Fossil", "Energy"),
         ("World"),
         "GtC/yr",
-        start_time,
-        24 * 3600,
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     np.testing.assert_allclose(fossil_energy.get_series(), fossil_energy_emms)
 
     fossil = parameterset.get_timeseries_view(
-        ("Emissions", "CO2", "Fossil"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Fossil"),
+        ("World"),
+        "GtC/yr",
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     np.testing.assert_allclose(
         fossil.get_series(), fossil_industry_emms + fossil_energy_emms
@@ -332,22 +380,47 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             ("Emissions", "CO2", "Fossil", "Transport"),
             ("World"),
             "GtC/yr",
-            start_time,
-            24 * 3600,
+            create_time_points(
+                start_time,
+                24 * 3600,
+                len(fossil_industry_emms),
+                ParameterType.AVERAGE_TIMESERIES,
+            ),
         )
 
     land = parameterset.get_timeseries_view(
-        ("Emissions", "CO2", "Land"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2", "Land"),
+        ("World"),
+        "GtC/yr",
+        create_time_points(
+            start_time, 24 * 3600, len(land_emms), ParameterType.AVERAGE_TIMESERIES
+        ),
     )
     np.testing.assert_allclose(land.get_series(), land_emms)
 
     with pytest.raises(ParameterReadonlyError):
         parameterset.get_writable_timeseries_view(
-            ("Emissions", "CO2"), ("World"), "GtC/yr", start_time, 24 * 3600
+            ("Emissions", "CO2"),
+            ("World"),
+            "GtC/yr",
+            create_time_points(
+                start_time,
+                24 * 3600,
+                len(fossil_energy_emms),
+                ParameterType.AVERAGE_TIMESERIES,
+            ),
         )
 
     total = parameterset.get_timeseries_view(
-        ("Emissions", "CO2"), ("World"), "GtC/yr", start_time, 24 * 3600
+        ("Emissions", "CO2"),
+        ("World"),
+        "GtC/yr",
+        create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
     )
     np.testing.assert_allclose(
         total.get_series(), land_emms + fossil_energy_emms + fossil_industry_emms

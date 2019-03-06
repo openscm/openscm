@@ -4,14 +4,19 @@ and time information.
 """
 
 from typing import Sequence
+import numpy as np
 
 
-from .parameters import _Parameter
-from .timeseries import Timeseries, TimeseriesConverter
+from .parameters import _Parameter, ParameterType
+from .timeseries_converter import (
+    ExtrapolationType,
+    InterpolationType,
+    TimeseriesConverter,
+)
 from .units import UnitConverter
-from .errors import ParameterEmptyError
+from .errors import ParameterEmptyError, TimeseriesPointsValuesMismatchError
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-arguments
 
 
 class ParameterView:
@@ -136,7 +141,15 @@ class TimeseriesView(ParameterView):
     _unit_converter: UnitConverter
     """Unit converter"""
 
-    def __init__(self, parameter: _Parameter, unit: str, timeseries: Timeseries):
+    def __init__(
+        self,
+        parameter: _Parameter,
+        unit: str,
+        time_points: np.ndarray,
+        timeseries_type: ParameterType,
+        interpolation_type: InterpolationType,
+        extrapolation_type: ExtrapolationType,
+    ):
         """
         Initialize.
 
@@ -146,8 +159,14 @@ class TimeseriesView(ParameterView):
             Parameter
         unit
             Unit for the values in the view
-        timeseries
-            Timeseries
+        time_points
+            Timeseries time points
+        timeseries_type
+            Time series type
+        interpolation_type
+            Interpolation type
+        extrapolation_type
+            Extrapolation type
         """
 
         def get_data_views_for_children_or_parameter(
@@ -166,13 +185,20 @@ class TimeseriesView(ParameterView):
                     parameter,
                     self._unit_converter._target,
                     self._timeseries_converter._target,
+                    timeseries_type,
+                    interpolation_type,
+                    extrapolation_type,
                 )
             ]
 
         super().__init__(parameter)
         self._unit_converter = UnitConverter(parameter._info._unit, unit)
         self._timeseries_converter = TimeseriesConverter(
-            parameter._info._timeseries, timeseries
+            parameter._info._time_points,
+            time_points,
+            timeseries_type,
+            interpolation_type,
+            extrapolation_type,
         )
         if self._parameter._children:
             self._child_data_views = get_data_views_for_children_or_parameter(
@@ -201,30 +227,12 @@ class TimeseriesView(ParameterView):
             self._unit_converter.convert_from(self._parameter._data)
         )
 
-    def get(self, index: int) -> float:
-        """
-        Get value at a particular time.
-
-        TODO implement
-
-        Parameters
-        ----------
-        index
-            Time step index
-
-        Raises
-        ------
-        IndexError
-            ``time`` is out of run time range.
-        """
-        raise NotImplementedError
-
     @property
     def length(self) -> int:
         """
         Length of timeseries.
         """
-        return self._timeseries_converter.get_target_len(len(self._parameter._data))
+        return self._timeseries_converter.target_length
 
 
 class WritableTimeseriesView(TimeseriesView):
@@ -240,27 +248,14 @@ class WritableTimeseriesView(TimeseriesView):
         ----------
         values
             Values to set.
-        """
-        self._parameter._data = self._timeseries_converter.convert_to(
-            self._unit_converter.convert_to(values)
-        )
-
-    def set(self, value: float, index: int) -> None:
-        """
-        Set value for a particular time in the time series.
-
-        TODO implement.
-
-        Parameters
-        ----------
-        value
-            Value
-        index
-            Time step index
 
         Raises
         ------
-        IndexError
-            ``index`` is out of range.
+        TimeseriesPointsValuesMismatchError
+            Lengths of ``values`` and the time points number mismatch
         """
-        raise NotImplementedError
+        if len(values) != self._timeseries_converter.target_length:
+            raise TimeseriesPointsValuesMismatchError
+        self._parameter._data = self._timeseries_converter.convert_to(
+            self._unit_converter.convert_to(values)
+        )
