@@ -10,8 +10,24 @@ test: venv
 coverage: test
 	coverage html
 
-test_all: test venv
+test-notebooks: venv
 	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
+
+test-all: test test-notebooks
+
+define clean_notebooks_code
+	(.cells[] | select(has("execution_count")) | .execution_count) = 0 \
+	| .metadata = {"language_info": {"name": "python", "pygments_lexer": "ipython3"}} \
+	| .cells[].metadata = {}
+endef
+
+clean-notebooks: venv
+	tmp=$$(mktemp); \
+	for notebook in notebooks/*.ipynb; do \
+		jq --indent 1 '${clean_notebooks_code}' "$${notebook}" > "$${tmp}"; \
+		cp "$${tmp}" "$${notebook}"; \
+	done; \
+	rm "$${tmp}"
 
 docs: venv
 	./venv/bin/sphinx-build -M html docs docs/build
