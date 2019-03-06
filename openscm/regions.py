@@ -2,7 +2,7 @@
 Handling of region information.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 from .errors import RegionAggregatedError
 from . import parameters  # pylint: disable=cyclic-import
 from .utils import ensure_input_is_tuple
@@ -73,7 +73,7 @@ class _Region:
             self._children[name] = res
         return res
 
-    def get_subregion(self, name: Tuple[str]) -> "_Region":
+    def get_subregion(self, name: Tuple[str]) -> Optional["_Region"]:
         """
         Get a subregion of this region or ``None`` if not found.
 
@@ -86,8 +86,8 @@ class _Region:
         if name:
             res = self._children.get(name[0], None)
             if res is not None:
-                res = res.get_subregion(name[1:])
-            return res
+                return res.get_subregion(name[1:])
+            return None
 
         return self
 
@@ -106,7 +106,7 @@ class _Region:
             self._parameters[name] = res
         return res
 
-    def get_parameter(self, name: Tuple[str]) -> "parameters._Parameter":
+    def get_parameter(self, name: Tuple[str]) -> Optional["parameters._Parameter"]:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
 

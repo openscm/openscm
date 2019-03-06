@@ -219,7 +219,7 @@ class TimeseriesView(ParameterView):
             Parameter is empty, i.e. has not yet been written to
         """
         if self._parameter._children:
-            return sum(v.get_series() for v in self._child_data_views)
+            return sum(v.get_series() for v in self._child_data_views)  # pyre-ignore
         if self.is_empty:
             raise ParameterEmptyError
 
