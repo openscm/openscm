@@ -9,7 +9,9 @@ from dateutil import parser
 from pyam import IamDataFrame
 
 
-class ScmDataFrameBase(IamDataFrame):
+class ScmDataFrameBase(
+    IamDataFrame  # type: ignore # TODO remove ignore after removing Pyam dependency
+):
     """
     This base is the class other libraries can subclass.
 
@@ -19,10 +21,10 @@ class ScmDataFrameBase(IamDataFrame):
     the circularity).
     """
 
-    def _format_datetime_col(self):
+    def _format_datetime_col(self) -> None:
         if isinstance(self.data["time"].iloc[0], str):
 
-            def convert_str_to_datetime(inp):
+            def convert_str_to_datetime(inp: str) -> datetime:
                 return parser.parse(inp)
 
             self.data["time"] = self.data["time"].apply(convert_str_to_datetime)

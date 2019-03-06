@@ -87,6 +87,10 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
 """
 # pylint: disable=unused-import
 
+from typing import Dict, Sequence, Union
+
+
+import numpy as np
 from pint import Context, UnitRegistry
 from pint.errors import DimensionalityError, UndefinedUnitError
 
@@ -168,7 +172,7 @@ _gases = {
 }
 
 
-def _add_mass_emissions_joint_version(symbol: str):
+def _add_mass_emissions_joint_version(symbol: str) -> None:
     """
     Add a unit which is the combination of mass and emissions.
 
@@ -184,7 +188,7 @@ def _add_mass_emissions_joint_version(symbol: str):
     unit_registry.define("t{symbol} = t * {symbol}".format(symbol=symbol))
 
 
-def _add_gases_to_unit_registry(gases):
+def _add_gases_to_unit_registry(gases: Dict[str, Union[str, Sequence[str]]]) -> None:
     for symbol, value in gases.items():
         if isinstance(value, str):
             # symbol is base unit
@@ -320,7 +324,7 @@ class UnitConverter:
         self._scaling = float(t2.m - t1.m) / float(s2.m - s1.m)
         self._offset = t1.m - self._scaling * s1.m
 
-    def convert_from(self, v):
+    def convert_from(self, v: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Convert value **from** source unit to target unit.
 
@@ -331,7 +335,7 @@ class UnitConverter:
         """
         return self._offset + v * self._scaling
 
-    def convert_to(self, v):
+    def convert_to(self, v: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """
         Convert value from target unit **to** source unit.
 

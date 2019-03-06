@@ -5,8 +5,10 @@ Utility functions for openscm.
 from typing import Tuple, Union
 import warnings
 
+_ensure_input_is_tuple_calls: int = 0
 
-def ensure_input_is_tuple(inp: Union[str, Tuple[str]]) -> Tuple[str]:
+
+def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
     """
     Return parameter as a tuple.
 
@@ -19,9 +21,10 @@ def ensure_input_is_tuple(inp: Union[str, Tuple[str]]) -> Tuple[str]:
     -------
     A tuple with a single string `inp` if `inp` is a string, otherwise return `inp`
     """
+    global _ensure_input_is_tuple_calls
     if isinstance(inp, str):
-        if getattr(ensure_input_is_tuple, "calls", 0) == 0:
-            ensure_input_is_tuple.calls = 1
+        if not _ensure_input_is_tuple_calls:
+            _ensure_input_is_tuple_calls = 1
             warnings.warn("Converting input {} from string to tuple".format(inp))
         return (inp,)
 

@@ -2,7 +2,7 @@
 Handling of region information.
 """
 
-from typing import Dict, Optional, Tuple
+from typing import cast, Dict, Optional, Tuple
 from .errors import RegionAggregatedError
 from . import parameters  # pylint: disable=cyclic-import
 from .utils import ensure_input_is_tuple
@@ -30,7 +30,7 @@ class _Region:
     _parameters: Dict[str, "parameters._Parameter"]
     """Parameters"""
 
-    _parent: "_Region"
+    _parent: Optional["_Region"]
     """Parent region (or `None` if root region)"""
 
     def __init__(self, name: str):
@@ -73,7 +73,7 @@ class _Region:
             self._children[name] = res
         return res
 
-    def get_subregion(self, name: Tuple[str]) -> Optional["_Region"]:
+    def get_subregion(self, name: Tuple[str, ...]) -> Optional["_Region"]:
         """
         Get a subregion of this region or ``None`` if not found.
 
@@ -106,7 +106,7 @@ class _Region:
             self._parameters[name] = res
         return res
 
-    def get_parameter(self, name: Tuple[str]) -> Optional["parameters._Parameter"]:
+    def get_parameter(self, name: Tuple[str, ...]) -> Optional["parameters._Parameter"]:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
 
@@ -146,7 +146,7 @@ class _Region:
             r.append(p.name)
             p = p._parent
         r.append(p.name)
-        return tuple(reversed(r))
+        return cast(Tuple[str], tuple(reversed(r)))
 
     @property
     def name(self) -> str:
@@ -156,7 +156,7 @@ class _Region:
         return self._name
 
     @property
-    def parent(self) -> "_Region":
+    def parent(self) -> Optional["_Region"]:
         """
         Parent region (or ``None`` if root region)
         """

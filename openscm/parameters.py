@@ -5,7 +5,7 @@ Parameter handling.
 # pylint: disable=unused-import,protected-access
 
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import cast, Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -40,13 +40,13 @@ class ParameterInfo:
     _region: "regions._Region"
     """Region this parameter belongs to"""
 
-    _time_points: np.ndarray
+    _time_points: Optional[np.ndarray]
     """Timeseries time points; only for timeseries parameters"""
 
-    _type: ParameterType
+    _type: Optional[ParameterType]
     """Parameter type"""
 
-    _unit: str
+    _unit: Optional[str]
     """Unit"""
 
     def __init__(self, name: str, region: "regions._Region"):
@@ -74,7 +74,7 @@ class ParameterInfo:
         return self._name
 
     @property
-    def parameter_type(self) -> ParameterType:
+    def parameter_type(self) -> Optional[ParameterType]:
         """
         Parameter type
         """
@@ -88,7 +88,7 @@ class ParameterInfo:
         return self._region.full_name
 
     @property
-    def unit(self) -> str:
+    def unit(self) -> Optional[str]:
         """
         Unit
         """
@@ -104,7 +104,7 @@ class _Parameter:
     _children: Dict[str, "_Parameter"]
     """Child parameters"""
 
-    _data: Any
+    _data: Union[None, float, Sequence[float]]
     """Data"""
 
     _has_been_read_from: bool
@@ -116,7 +116,7 @@ class _Parameter:
     _info: ParameterInfo
     """Information about the parameter"""
 
-    _parent: "_Parameter"
+    _parent: Optional["_Parameter"]
     """Parent parameter"""
 
     def __init__(self, name: str, region: "regions._Region"):
@@ -168,7 +168,7 @@ class _Parameter:
             self._children[name] = res
         return res
 
-    def get_subparameter(self, name: Tuple[str]) -> Optional["_Parameter"]:
+    def get_subparameter(self, name: Tuple[str, ...]) -> Optional["_Parameter"]:
         """
         Get a sub parameter of this parameter or ``None`` if not found.
 
@@ -252,12 +252,12 @@ class _Parameter:
         """
         Full :ref:`hierarchical name <parameter-hierarchy>`
         """
-        p = self
+        p: Optional["_Parameter"] = self
         r = []
         while p is not None:
             r.append(p._info._name)
             p = p._parent
-        return tuple(reversed(r))
+        return cast(Tuple[str], tuple(reversed(r)))
 
     @property
     def info(self) -> ParameterInfo:
@@ -267,7 +267,7 @@ class _Parameter:
         return self._info
 
     @property
-    def parent(self) -> "_Parameter":
+    def parent(self) -> Optional["_Parameter"]:
         """
         Parent parameter
         """

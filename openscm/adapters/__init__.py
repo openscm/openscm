@@ -2,12 +2,16 @@
 Module including all model adapters shipped with OpenSCM.
 """
 
+from typing import Dict, Optional
+
+
 from ..errors import AdapterNeedsModuleError
 
-_loaded_adapters = {}
+
+_loaded_adapters: Dict[str, type] = {}
 
 
-def load_adapter(name: str) -> type:
+def load_adapter(name: str) -> Optional[type]:
     """
     Load adapter with a given name.
 
@@ -31,7 +35,7 @@ def load_adapter(name: str) -> type:
     if name in _loaded_adapters:
         return _loaded_adapters[name]
 
-    adapter = None
+    adapter: Optional[type] = None
 
     try:
         # TODO remove once we have at least one real adapter in here
