@@ -62,6 +62,7 @@ class RegionAggregatedError(Exception):
     Exception raised when a region has already been read from in a region-aggregated way.
     """
 
+
 class TimeseriesPointsValuesMismatchError(IndexError):
     """
     Exception raised when the length of the values and of the time points of a
