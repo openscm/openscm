@@ -336,20 +336,6 @@ class TimeseriesConverter:
         return self._convert(values, self._target, self._source)
 
     @property
-    def source(self) -> np.ndarray:
-        """
-        Source timeseries time points
-        """
-        return np.array(self._source, copy=True)
-
-    @property
-    def target(self) -> np.ndarray:
-        """
-        Target timeseries time points
-        """
-        return np.array(self._target, copy=True)
-
-    @property
     def source_length(self) -> int:
         """
         Length of source timeseries
