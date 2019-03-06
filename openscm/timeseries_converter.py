@@ -2,10 +2,10 @@
 Different climate models often use different time frames for their input and output
 data. This includes different 'meanings' of time steps (e.g. beginning vs middle of year) and
 different lengths of the time steps (e.g. years vs months). Accordingly, OpenSCM
-supports the conversion of timeseries data between such timeseriess, which is handled in
+supports the conversion of timeseries data between such timeseries, which is handled in
 this module. A thorough explaination of the procedure used is given in a dedicated
 `Jupyter Notebook
-<https://github.com/openclimatedata/openscm/blob/master/notebooks/timeseriess.ipynb>`_.
+<https://github.com/openclimatedata/openscm/blob/master/notebooks/timeseries.ipynb>`_.
 """
 
 from enum import Enum

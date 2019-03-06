@@ -296,7 +296,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region_name
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region".
 
         Raises
         ------
