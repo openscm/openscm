@@ -21,7 +21,7 @@ def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
     -------
     A tuple with a single string `inp` if `inp` is a string, otherwise return `inp`
     """
-    global _ensure_input_is_tuple_calls
+    global _ensure_input_is_tuple_calls  # pylint: disable=global-statement
     if isinstance(inp, str):
         if not _ensure_input_is_tuple_calls:
             _ensure_input_is_tuple_calls = 1

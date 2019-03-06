@@ -9,7 +9,7 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 """
 
 from enum import Enum
-from typing import Tuple, Callable
+from typing import Callable
 
 
 import numpy as np
