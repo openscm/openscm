@@ -19,3 +19,4 @@ venv/
 htmlcov/
 .pyre
 .pyre_configuration
+.mypy_cache
