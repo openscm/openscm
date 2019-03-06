@@ -62,7 +62,7 @@ class Adapter(metaclass=ABCMeta):
         self._output = output
         self._initialized = False
 
-    def __del__(self):
+    def __del__(self) -> None:
         """
         Destructor.
         """
