@@ -112,7 +112,7 @@ def _calc_interval_averages(
     return np.array(int_averages)
 
 
-def _calc_linearization_values(values: np.ndarray) -> np.ndarray:
+def _calc_integral_preserving_linear_interpolation(values: np.ndarray) -> np.ndarray:
     """
     Calculate the "linearization" values of the array ``values`` which is assumed to
     represent averages over time periods. Values at the edges of the periods are
@@ -215,7 +215,7 @@ class TimeseriesConverter:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Calculate a "continuous" representation of a timeseries (see
-        :func:`openscm.timeseries_converter._calc_linearization_values`)
+        :func:`openscm.timeseries_converter._calc_integral_preserving_linear_interpolation`)
         with the time points ``time_points`` and values ``values``.
 
         Parameters
@@ -246,7 +246,9 @@ class TimeseriesConverter:
                     .reshape((2, len(time_points)))
                     .T.flatten()[:-1]
                 )
-                linearization_values = _calc_linearization_values(values)
+                linearization_values = _calc_integral_preserving_linear_interpolation(
+                    values
+                )
                 return interpolate.interp1d(
                     linearization_points,
                     linearization_values,
