@@ -3,7 +3,7 @@ Parameter views provide ways to read and write parameter data with a defined uni
 and time information.
 """
 
-from typing import Sequence
+from typing import cast, Sequence
 import numpy as np
 
 
@@ -83,7 +83,7 @@ class ScalarView(ParameterView):
             return [ScalarView(parameter, self._unit_converter._target)]
 
         super().__init__(parameter)
-        self._unit_converter = UnitConverter(parameter._info._unit, unit)
+        self._unit_converter = UnitConverter(cast(str, parameter._info._unit), unit)
         if self._parameter._children:
             self._child_data_views = get_data_views_for_children_or_parameter(
                 self._parameter
@@ -107,7 +107,7 @@ class ScalarView(ParameterView):
         if self.is_empty:
             raise ParameterEmptyError
 
-        return self._unit_converter.convert_from(self._parameter._data)
+        return self._unit_converter.convert_from(cast(float, self._parameter._data))
 
 
 class WritableScalarView(ScalarView):
@@ -192,7 +192,7 @@ class TimeseriesView(ParameterView):
             ]
 
         super().__init__(parameter)
-        self._unit_converter = UnitConverter(parameter._info._unit, unit)
+        self._unit_converter = UnitConverter(cast(str, parameter._info._unit), unit)
         self._timeseries_converter = TimeseriesConverter(
             parameter._info._time_points,
             time_points,
@@ -219,12 +219,19 @@ class TimeseriesView(ParameterView):
             Parameter is empty, i.e. has not yet been written to
         """
         if self._parameter._children:
-            return sum(v.get_series() for v in self._child_data_views)  # pyre-ignore
+            return cast(
+                Sequence[float], sum(v.get_series() for v in self._child_data_views)
+            )
         if self.is_empty:
             raise ParameterEmptyError
 
-        return self._timeseries_converter.convert_from(
-            self._unit_converter.convert_from(self._parameter._data)
+        return cast(
+            Sequence[float],
+            self._timeseries_converter.convert_from(
+                self._unit_converter.convert_from(
+                    cast(Sequence[float], self._parameter._data)
+                )
+            ),
         )
 
     @property
