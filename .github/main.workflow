@@ -25,6 +25,17 @@ action "Black" {
   }
 }
 
+action "Mypy" {
+  uses = "swillner/actions/python-run@master"
+  args = [
+    "mypy openscm"
+  ]
+  env = {
+    PYTHON_VERSION = "3.7"
+    PIP_PACKAGES = "mypy"
+  }
+}
+
 action "Pylint" {
   uses = "swillner/actions/python-run@master"
   args = [
@@ -34,7 +45,7 @@ action "Pylint" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = "pylint ."
   }
-  needs = ["Bandit", "Black"]
+  needs = ["Bandit", "Black", "Mypy"]
 }
 
 action "Test coverage" {
