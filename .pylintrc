@@ -10,3 +10,9 @@ disable=
     too-many-locals,
     # handled by black
     format
+
+[SIMILARITIES]
+min-similarity-lines=6
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
