@@ -118,7 +118,7 @@ def combo(request):
 def test_conversion_to_same_timeseries(combo):
     timeseriesconverter = timeseries_converter.TimeseriesConverter(
         combo.source,
-        combo.target,
+        combo.source,
         combo.timeseries_type,
         combo.interpolation_type,
         combo.extrapolation_type,
@@ -127,6 +127,12 @@ def test_conversion_to_same_timeseries(combo):
         combo.source_values, combo.source, combo.source
     )
     np.testing.assert_allclose(values, combo.source_values)
+    assert timeseriesconverter.source_length == len(combo.source) - (
+        1 if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES else 0
+    )
+    assert timeseriesconverter.target_length == len(combo.source) - (
+        1 if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES else 0
+    )
 
 
 def test_insufficient_overlap(combo):

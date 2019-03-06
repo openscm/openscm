@@ -11,6 +11,7 @@ from openscm.errors import (
     ParameterEmptyError,
     ParameterWrittenError,
     RegionAggregatedError,
+    TimeseriesPointsValuesMismatchError,
 )
 from openscm.parameters import ParameterType
 from openscm.timeseries_converter import create_time_points
@@ -269,6 +270,8 @@ def test_timeseries_parameter_view(core, start_time, series):
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
         ),
     )
+    with pytest.raises(TimeseriesPointsValuesMismatchError):
+        carbon_writable.set_series(inseries[::2])
     carbon_writable.set_series(inseries)
     assert carbon_writable.length == len(inseries)
     np.testing.assert_allclose(
