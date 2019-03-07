@@ -183,9 +183,9 @@ class ParameterSet:
         region: Tuple[str],
         unit: str,
         time_points: Tuple[int],
-        timeseries_type: ParameterType = ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type: InterpolationType = InterpolationType.LINEAR,
-        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
+        timeseries_type: ParameterType,
+        interpolation_type: InterpolationType,
+        extrapolation_type: ExtrapolationType,
     ) -> TimeseriesView:
         """
         Get a read-only view to a timeseries parameter.
@@ -237,9 +237,9 @@ class ParameterSet:
         region: Tuple[str],
         unit: str,
         time_points: Tuple[int],
-        timeseries_type: ParameterType = ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type: InterpolationType = InterpolationType.LINEAR,
-        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
+        timeseries_type: ParameterType,
+        interpolation_type: InterpolationType,
+        extrapolation_type: ExtrapolationType,
     ) -> WritableTimeseriesView:
         """
         Get a writable view to a timeseries parameter.

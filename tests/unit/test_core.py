@@ -14,7 +14,11 @@ from openscm.errors import (
     TimeseriesPointsValuesMismatchError,
 )
 from openscm.parameters import ParameterType
-from openscm.timeseries_converter import create_time_points
+from openscm.timeseries_converter import (
+    create_time_points,
+    ExtrapolationType,
+    InterpolationType,
+)
 from openscm.units import DimensionalityError
 
 
@@ -185,7 +189,13 @@ def test_scalar_parameter_view(core):
     np.testing.assert_allclose(cs.get(), 20)
     with pytest.raises(ParameterTypeError):
         parameterset.get_timeseries_view(
-            ("Climate Sensitivity"), ("World",), "degC", (0,)
+            ("Climate Sensitivity"),
+            ("World",),
+            "degC",
+            (0,),
+            ParameterType.AVERAGE_TIMESERIES,
+            InterpolationType.LINEAR,
+            ExtrapolationType.LINEAR,
         )
     with pytest.raises(DimensionalityError):
         parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "kg")
@@ -257,6 +267,9 @@ def test_timeseries_parameter_view(core, start_time, series):
             len(outseries),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     assert carbon.is_empty
     with pytest.raises(ParameterEmptyError):
@@ -269,6 +282,9 @@ def test_timeseries_parameter_view(core, start_time, series):
         create_time_points(
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     with pytest.raises(TimeseriesPointsValuesMismatchError):
         carbon_writable.set_series(inseries[::2])
@@ -282,7 +298,15 @@ def test_timeseries_parameter_view(core, start_time, series):
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
     with pytest.raises(DimensionalityError):
-        parameterset.get_timeseries_view(("Emissions", "CO2"), ("World",), "kg", (0,))
+        parameterset.get_timeseries_view(
+            ("Emissions", "CO2"),
+            ("World",),
+            "kg",
+            (0,),
+            ParameterType.AVERAGE_TIMESERIES,
+            InterpolationType.LINEAR,
+            ExtrapolationType.LINEAR,
+        )
 
 
 def test_timeseries_parameter_view_aggregation(core, start_time):
@@ -302,6 +326,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_industry_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     fossil_industry_writable.set_series(fossil_industry_emms)
 
@@ -315,6 +342,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     fossil_energy_writable.set_series(fossil_energy_emms)
 
@@ -328,6 +358,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     land_writable.set_series(land_emms * 1000)
 
@@ -341,6 +374,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_industry_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(
         fossil_industry.get_series(),
@@ -358,6 +394,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(fossil_energy.get_series(), fossil_energy_emms)
 
@@ -371,6 +410,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(
         fossil.get_series(), fossil_industry_emms + fossil_energy_emms
@@ -389,6 +431,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
                 len(fossil_industry_emms),
                 ParameterType.AVERAGE_TIMESERIES,
             ),
+            ParameterType.AVERAGE_TIMESERIES,
+            InterpolationType.LINEAR,
+            ExtrapolationType.LINEAR,
         )
 
     land = parameterset.get_timeseries_view(
@@ -398,6 +443,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         create_time_points(
             start_time, 24 * 3600, len(land_emms), ParameterType.AVERAGE_TIMESERIES
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(land.get_series(), land_emms)
 
@@ -412,6 +460,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
                 len(fossil_energy_emms),
                 ParameterType.AVERAGE_TIMESERIES,
             ),
+            ParameterType.AVERAGE_TIMESERIES,
+            InterpolationType.LINEAR,
+            ExtrapolationType.LINEAR,
         )
 
     total = parameterset.get_timeseries_view(
@@ -424,6 +475,9 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
+        ParameterType.AVERAGE_TIMESERIES,
+        InterpolationType.LINEAR,
+        ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(
         total.get_series(), land_emms + fossil_energy_emms + fossil_industry_emms
