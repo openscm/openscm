@@ -199,7 +199,7 @@ class TimeseriesView(ParameterView):
             timeseries_type,
             interpolation_type,
             extrapolation_type,
-        )
+        )  # TimeseriesConverter
         if self._parameter._children:
             self._child_data_views = get_data_views_for_children_or_parameter(
                 self._parameter
