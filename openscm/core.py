@@ -229,7 +229,7 @@ class ParameterSet:
             timeseries_type,
             interpolation_type,
             extrapolation_type,
-        )
+        )  # TimeseriesView
 
     def get_writable_timeseries_view(
         self,
@@ -283,7 +283,7 @@ class ParameterSet:
             timeseries_type,
             interpolation_type,
             extrapolation_type,
-        )
+        )  # WritableTimeseriesView
 
     def get_parameter_info(
         self, name: Tuple[str], region_name: Tuple[str]

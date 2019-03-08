@@ -12,7 +12,6 @@ disable=
     format
 
 [SIMILARITIES]
-min-similarity-lines=6
-ignore-comments=yes
+ignore-comments=no
 ignore-docstrings=yes
 ignore-imports=yes
