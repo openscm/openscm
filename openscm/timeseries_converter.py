@@ -259,7 +259,6 @@ class TimeseriesConverter:
                     else None,
                 )  # type: Callable[[float], float]
                 return res
-        # else
         raise NotImplementedError
 
     def _convert(
@@ -299,7 +298,6 @@ class TimeseriesConverter:
                 self._calc_continuous_representation(source_time_points, values),
                 target_time_points,
             )
-        # else
         raise NotImplementedError
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
