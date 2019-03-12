@@ -257,7 +257,7 @@ class TimeseriesConverter:
             )  # type: Callable[[float], float]
             return res_average
 
-        elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
+        if self._timeseries_type == ParameterType.POINT_TIMESERIES:
             res_point = interpolate.interp1d(
                 time_points,
                 values,
@@ -271,11 +271,10 @@ class TimeseriesConverter:
     def _get_scipy_extrapolation_args(self, values: np.ndarray) -> dict:
         if self._extrapolation_type == ExtrapolationType.LINEAR:
             return {"fill_value": "extrapolate"}
-        elif self._extrapolation_type == ExtrapolationType.CONSTANT:
+        if self._extrapolation_type == ExtrapolationType.CONSTANT:
             return {"fill_value": (values[0], values[-1]), "bounds_error": False}
         # TODO: add cubic support
-        else:
-            return {}
+        return {}
 
     def _get_scipy_interpolation_arg(self):
         if self._interpolation_type == InterpolationType.LINEAR:
@@ -337,7 +336,7 @@ class TimeseriesConverter:
                 self._calc_continuous_representation(source_time_points, values),
                 target_time_points,
             )
-        elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
+        if self._timeseries_type == ParameterType.POINT_TIMESERIES:
             return self._calc_continuous_representation(source_time_points, values)(
                 target_time_points
             )
