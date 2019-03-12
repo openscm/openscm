@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#138 <https://github.com/openclimatedata/openscm/pull/138>`_) Add support for linear point interpolation as well as linear and constant extrapolation
 - (`#134 <https://github.com/openclimatedata/openscm/pull/134>`_) Fix type annotations and add a static checker
 - (`#133 <https://github.com/openclimatedata/openscm/pull/133>`_) Cleanup and advance timeseries converter
 - (`#125 <https://github.com/openclimatedata/openscm/pull/125>`_) Renamed ``timeframes`` to ``timeseries`` and simplified interpolation calculation
