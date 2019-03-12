@@ -252,32 +252,38 @@ class TimeseriesConverter:
             linearization_values = _calc_integral_preserving_linear_interpolation(
                 values
             )
-            fill_value = (
-                "extrapolate"
-                if self._extrapolation_type == ExtrapolationType.LINEAR
-                else None
-            )
             res = interpolate.interp1d(
                 linearization_points,
                 linearization_values,
                 kind=self._get_scipy_interpolation_arg(),
-                fill_value=fill_value,
+                **self._get_scipy_extrapolation_args(values),
             )  # type: Callable[[float], float]
             return res
+
         elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
-            fill_value = (
-                "extrapolate"
-                if self._extrapolation_type == ExtrapolationType.LINEAR
-                else None
-            )
             res =  interpolate.interp1d(
                 time_points,
                 values,
                 kind=self._get_scipy_interpolation_arg(),
-                fill_value=fill_value,
+                **self._get_scipy_extrapolation_args(values),
             )  # type: Callable[[float], float]
             return res
+
         raise NotImplementedError
+
+    def _get_scipy_extrapolation_args(self, values: np.ndarray):
+        if self._extrapolation_type == ExtrapolationType.LINEAR:
+            return {
+                "fill_value": "extrapolate"
+            }
+        elif self._extrapolation_type == ExtrapolationType.CONSTANT:
+            return {
+                "fill_value": (values[0], values[-1]),
+                "bounds_error": False,
+            }
+        # TODO: add cubic support
+        else:
+            return {}
 
     def _get_scipy_interpolation_arg(self):
         if self._interpolation_type == InterpolationType.LINEAR:
@@ -317,6 +323,23 @@ class TimeseriesConverter:
         if len(values) < 3:
             raise InsufficientDataError
 
+        try:
+            return self._convert_unsafe(values, source_time_points, target_time_points)
+        except ValueError:
+            error_msg = (
+                "Target time points are outside the source time points, use an "
+                "extrapolation type other than None"
+            )
+            raise InsufficientDataError(error_msg)
+
+    def _convert_unsafe(
+        self,
+        values: np.ndarray,
+        source_time_points: np.ndarray,
+        target_time_points: np.ndarray,
+    ) -> np.ndarray:
+        """Same as ``self._convert`` but without error checking
+        """
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
             return _calc_interval_averages(
                 self._calc_continuous_representation(source_time_points, values),
@@ -329,6 +352,7 @@ class TimeseriesConverter:
             )(target_time_points)
 
         raise NotImplementedError
+
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
         """
