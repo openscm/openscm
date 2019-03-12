@@ -26,7 +26,7 @@ class ParameterType(Enum):
 
     SCALAR = 1
     AVERAGE_TIMESERIES = 2
-    # TODO support POINT_TIMESERIES = 3
+    POINT_TIMESERIES = 3
 
 
 class ParameterInfo:
