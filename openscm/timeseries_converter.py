@@ -249,26 +249,26 @@ class TimeseriesConverter:
             linearization_values = _calc_integral_preserving_linear_interpolation(
                 values
             )
-            res = interpolate.interp1d(
+            res_average = interpolate.interp1d(
                 linearization_points,
                 linearization_values,
                 kind=self._get_scipy_interpolation_arg(),
                 **self._get_scipy_extrapolation_args(values),
             )  # type: Callable[[float], float]
-            return res
+            return res_average
 
         elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
-            res = interpolate.interp1d(
+            res_point = interpolate.interp1d(
                 time_points,
                 values,
                 kind=self._get_scipy_interpolation_arg(),
                 **self._get_scipy_extrapolation_args(values),
             )  # type: Callable[[float], float]
-            return res
+            return res_point
 
         raise NotImplementedError
 
-    def _get_scipy_extrapolation_args(self, values: np.ndarray):
+    def _get_scipy_extrapolation_args(self, values: np.ndarray) -> dict:
         if self._extrapolation_type == ExtrapolationType.LINEAR:
             return {"fill_value": "extrapolate"}
         elif self._extrapolation_type == ExtrapolationType.CONSTANT:
