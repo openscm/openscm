@@ -27,6 +27,7 @@ class ExtrapolationType(Enum):
     """
     Extrapolation type.
     """
+
     CONSTANT = -1
     NONE = 0
     LINEAR = 1
@@ -70,11 +71,7 @@ def create_time_points(
         else points_num
     )
     end_time_output = start_time + (points_num_output - 1) * period_length
-    return np.linspace(
-        start_time,
-        end_time_output,
-        points_num_output,
-    )
+    return np.linspace(start_time, end_time_output, points_num_output)
 
 
 def _calc_interval_averages(
@@ -261,7 +258,7 @@ class TimeseriesConverter:
             return res
 
         elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
-            res =  interpolate.interp1d(
+            res = interpolate.interp1d(
                 time_points,
                 values,
                 kind=self._get_scipy_interpolation_arg(),
@@ -273,14 +270,9 @@ class TimeseriesConverter:
 
     def _get_scipy_extrapolation_args(self, values: np.ndarray):
         if self._extrapolation_type == ExtrapolationType.LINEAR:
-            return {
-                "fill_value": "extrapolate"
-            }
+            return {"fill_value": "extrapolate"}
         elif self._extrapolation_type == ExtrapolationType.CONSTANT:
-            return {
-                "fill_value": (values[0], values[-1]),
-                "bounds_error": False,
-            }
+            return {"fill_value": (values[0], values[-1]), "bounds_error": False}
         # TODO: add cubic support
         else:
             return {}
@@ -346,13 +338,11 @@ class TimeseriesConverter:
                 target_time_points,
             )
         elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
-            return self._calc_continuous_representation(
-                source_time_points,
-                values,
-            )(target_time_points)
+            return self._calc_continuous_representation(source_time_points, values)(
+                target_time_points
+            )
 
         raise NotImplementedError
-
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
         """
