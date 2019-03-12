@@ -27,7 +27,7 @@ class ExtrapolationType(Enum):
     """
     Extrapolation type.
     """
-
+    CONSTANT = -1
     NONE = 0
     LINEAR = 1
     # TODO support CUBIC = 3
@@ -64,15 +64,16 @@ def create_time_points(
     np.ndarray
         Array of the timeseries time points
     """
+    points_num_output = (
+        points_num + 1  # +1 for averages as we need to give the full last interval
+        if timeseries_type == ParameterType.AVERAGE_TIMESERIES
+        else points_num
+    )
+    end_time_output = start_time + (points_num_output - 1) * period_length
     return np.linspace(
         start_time,
-        start_time + points_num * period_length,
-        points_num
-        + (
-            1  # +1 because for averages we need to give the full last interval
-            if timeseries_type == ParameterType.AVERAGE_TIMESERIES
-            else 0
-        ),
+        end_time_output,
+        points_num_output,
     )
 
 
@@ -235,30 +236,53 @@ class TimeseriesConverter:
             interpolated timeseries at that point in time ("y-value").
         """
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-            if self._interpolation_type == InterpolationType.LINEAR:
-                linearization_points = (
-                    np.concatenate(
-                        (
-                            # [time_points[0] - (time_points[1] - time_points[0]) / 2],
-                            time_points,
-                            (time_points[1:] + time_points[:-1]) / 2,
-                            [0],
-                        )
+            # our custom implementation of a mean preserving linear interpolation
+            linearization_points = (
+                np.concatenate(
+                    (
+                        # [time_points[0] - (time_points[1] - time_points[0]) / 2],
+                        time_points,
+                        (time_points[1:] + time_points[:-1]) / 2,
+                        [0],
                     )
-                    .reshape((2, len(time_points)))
-                    .T.flatten()[:-1]
                 )
-                linearization_values = _calc_integral_preserving_linear_interpolation(
-                    values
-                )
-                res = interpolate.interp1d(
-                    linearization_points,
-                    linearization_values,
-                    fill_value="extrapolate"
-                    if self._extrapolation_type == ExtrapolationType.LINEAR
-                    else None,
-                )  # type: Callable[[float], float]
-                return res
+                .reshape((2, len(time_points)))
+                .T.flatten()[:-1]
+            )
+            linearization_values = _calc_integral_preserving_linear_interpolation(
+                values
+            )
+            fill_value = (
+                "extrapolate"
+                if self._extrapolation_type == ExtrapolationType.LINEAR
+                else None
+            )
+            res = interpolate.interp1d(
+                linearization_points,
+                linearization_values,
+                kind=self._get_scipy_interpolation_arg(),
+                fill_value=fill_value,
+            )  # type: Callable[[float], float]
+            return res
+        elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
+            fill_value = (
+                "extrapolate"
+                if self._extrapolation_type == ExtrapolationType.LINEAR
+                else None
+            )
+            res =  interpolate.interp1d(
+                time_points,
+                values,
+                kind=self._get_scipy_interpolation_arg(),
+                fill_value=fill_value,
+            )  # type: Callable[[float], float]
+            return res
+        raise NotImplementedError
+
+    def _get_scipy_interpolation_arg(self):
+        if self._interpolation_type == InterpolationType.LINEAR:
+            return "linear"
+        # TODO: add cubic support
         raise NotImplementedError
 
     def _convert(
@@ -298,6 +322,12 @@ class TimeseriesConverter:
                 self._calc_continuous_representation(source_time_points, values),
                 target_time_points,
             )
+        elif self._timeseries_type == ParameterType.POINT_TIMESERIES:
+            return self._calc_continuous_representation(
+                source_time_points,
+                values,
+            )(target_time_points)
+
         raise NotImplementedError
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
