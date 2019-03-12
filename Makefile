@@ -17,10 +17,10 @@ test-notebooks: venv
 test-all: test test-notebooks
 
 checks: venv clean-notebooks
-	bandit -c .bandit.yml -r openscm
-	black --check openscm tests setup.py --exclude openscm/_version.py
-	pylint openscm
-	mypy openscm
+	./venv/bin/bandit -c .bandit.yml -r openscm
+	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
+	./venv/bin/pylint openscm
+	./venv/bin/mypy openscm
 	./venv/bin/pytest -rfsxEX --cov=openscm tests --cov-report term-missing
 	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
 	coverage report --fail-under=100
