@@ -51,7 +51,7 @@ REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.4", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 REQUIREMENTS_DEV = (
-    ["flake8", "black", "bandit", "pylint", "mypy"]
+    ["black", "bandit", "flake8", "isort", "mypy", "pylint"]
     + REQUIREMENTS_NOTEBOOKS
     + REQUIREMENTS_TESTS
     + REQUIREMENTS_DOCS

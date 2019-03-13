@@ -20,10 +20,14 @@ checks: venv clean-notebooks
 	./venv/bin/bandit -c .bandit.yml -r openscm
 	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
 	./venv/bin/pylint openscm
+	./venv/bin/isort --check-only --recursive openscm tests setup.py
 	./venv/bin/mypy openscm
 	./venv/bin/pytest -rfsxEX --cov=openscm tests --cov-report term-missing
 	./venv/bin/coverage report --fail-under=100
 	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
+
+isort: venv
+	./venv/bin/isort --recursive openscm tests setup.py
 
 define clean_notebooks_code
 	(.cells[] | select(has("execution_count")) | .execution_count) = 0 \
@@ -73,4 +77,4 @@ test-pypi-install: venv
 clean:
 	@rm -rf venv
 
-.PHONY: clean coverage test test-all black flake8 docs publish-on-pypi test-pypi-install
+.PHONY: black checks clean coverage docs flake8 isort publish-on-pypi test test-all test-pypi-install
