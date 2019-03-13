@@ -14,6 +14,26 @@ action "Bandit" {
   }
 }
 
+action "Docs" {
+  uses = "swillner/actions/python-run@master"
+  args = [
+    "sphinx-build -M html docs docs/build -qW", # treat warnings as errors (-W)...
+    "sphinx-build -M html docs docs/build -Eqn -b coverage", # ...but not when being nitpicky (-n)
+    "if [[ ! -s docs/build/html/python.txt ]]",
+    "then",
+    "    echo",
+    "    echo \"Error: Documentation missing:"",
+    "    echo",
+    "    cat docs/build/html/python.txt",
+    "    exit 1",
+    "fi"
+  ]
+  env = {
+    PYTHON_VERSION = "3.7"
+    PIP_PACKAGES = "sphinx sphinx_rtd_theme sphinx-autodoc-typehints"
+  }
+}
+
 action "Formatting" {
   uses = "swillner/actions/python-run@master"
   args = [
@@ -46,7 +66,7 @@ action "Pylint" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = "pylint ."
   }
-  needs = ["Bandit", "Formatting", "Mypy"]
+  needs = ["Bandit", "Docs", "Formatting", "Mypy"]
 }
 
 action "Tests" {
