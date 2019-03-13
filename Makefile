@@ -23,6 +23,7 @@ checks: venv clean-notebooks docs test-all
 	./venv/bin/coverage report --fail-under=100 --show-missing
 	./venv/bin/isort --check-only --recursive openscm tests setup.py
 	./venv/bin/mypy openscm
+	./venv/bin/pydocstyle openscm
 	./venv/bin/pylint openscm
 
 isort: venv

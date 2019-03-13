@@ -38,11 +38,12 @@ action "Formatting" {
   uses = "swillner/actions/python-run@master"
   args = [
     "black --check openscm tests setup.py --exclude openscm/_version.py",
-    "isort --check-only --recursive openscm tests setup.py"
+    "isort --check-only --recursive openscm tests setup.py",
+    "pydocstyle openscm",
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "black isort"
+    PIP_PACKAGES = "black isort pydocstyle"
   }
 }
 
