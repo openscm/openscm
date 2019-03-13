@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 import pytest
 
-from openscm.core import Core, ParameterSet, ParameterType
+from openscm.core import Core, ParameterSet
 from openscm.errors import (
     ParameterAggregationError,
     ParameterEmptyError,
@@ -79,7 +79,7 @@ def test_region(core):
     with pytest.raises(RegionAggregatedError):
         parameterset._get_or_create_region(("World", "DEU", "BRB"))
 
-    assert parameterset._get_region(("INVALID", "DEU", "BER")) == None
+    assert parameterset._get_region(("INVALID", "DEU", "BER")) is None
 
 
 def test_parameter(core):
