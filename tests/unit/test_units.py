@@ -1,8 +1,12 @@
 import numpy as np
 import pytest
 
-from openscm.units import unit_registry
-from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
+from openscm.units import (
+    DimensionalityError,
+    UndefinedUnitError,
+    UnitConverter,
+    unit_registry,
+)
 
 
 def test_unit_registry():

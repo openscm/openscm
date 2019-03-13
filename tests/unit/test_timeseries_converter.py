@@ -1,10 +1,8 @@
 from collections import namedtuple
 import re
 
-
-import pytest
 import numpy as np
-
+import pytest
 
 from openscm import timeseries_converter
 from openscm.errors import InsufficientDataError

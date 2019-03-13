@@ -4,9 +4,7 @@ Module including all model adapters shipped with OpenSCM.
 
 from typing import Dict, Optional
 
-
 from ..errors import AdapterNeedsModuleError
-
 
 _loaded_adapters: Dict[str, type] = {}
 

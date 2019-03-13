@@ -1,9 +1,7 @@
 import warnings
 from importlib import reload
 
-
 import pytest
-
 
 import openscm.utils
 

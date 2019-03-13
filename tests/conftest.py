@@ -1,16 +1,13 @@
 from collections import namedtuple
 from datetime import datetime
 
-
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
-
-from openscm.core import ParameterSet
 from openscm import timeseries_converter
+from openscm.core import ParameterSet
 from openscm.parameters import ParameterType
-
 
 TEST_DF = pd.DataFrame(
     [

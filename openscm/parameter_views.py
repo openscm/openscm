@@ -3,18 +3,18 @@ Parameter views provide ways to read and write parameter data with a defined uni
 and time information.
 """
 
-from typing import cast, Sequence
+from typing import Sequence, cast
+
 import numpy as np
 
-
-from .parameters import _Parameter, ParameterType
+from .errors import ParameterEmptyError, TimeseriesPointsValuesMismatchError
+from .parameters import ParameterType, _Parameter
 from .timeseries_converter import (
     ExtrapolationType,
     InterpolationType,
     TimeseriesConverter,
 )
 from .units import UnitConverter
-from .errors import ParameterEmptyError, TimeseriesPointsValuesMismatchError
 
 # pylint: disable=protected-access,too-many-arguments
 

@@ -8,20 +8,19 @@ Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
 """
 
-from typing import cast, Optional, Tuple, Union
-
+from typing import Optional, Tuple, Union, cast
 
 from .parameter_views import (
     ScalarView,
-    WritableScalarView,
     TimeseriesView,
+    WritableScalarView,
     WritableTimeseriesView,
     BooleanView,
     WritableBooleanView,
     StringView,
     WritableStringView,
 )
-from .parameters import _Parameter, ParameterInfo, ParameterType
+from .parameters import ParameterInfo, ParameterType, _Parameter
 from .regions import _Region
 from .timeseries_converter import ExtrapolationType, InterpolationType
 from .utils import ensure_input_is_tuple

@@ -89,11 +89,9 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
 
 from typing import Dict, Sequence, Union
 
-
 import numpy as np
 from pint import Context, UnitRegistry
 from pint.errors import DimensionalityError, UndefinedUnitError
-
 
 # Start a unit registry using the default variables:
 unit_registry = UnitRegistry()
