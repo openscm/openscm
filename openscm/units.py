@@ -9,8 +9,8 @@ to define units simply as well as providing us with the ability to define contex
 
 Emissions are a flux composed of three parts: mass, the species being emitted and the
 time period e.g. "t CO2 / yr". As mass and time are part of SI units, all we need to
-define here are emissions units i.e. the stuff. Here we include as many of the
-canonical emissions units, and their conversions, as possible.
+define here are emissions units i.e. the stuff. Here we include as many of the canonical
+emissions units, and their conversions, as possible.
 
 For emissions units, there are a few cases to be considered:
 
@@ -19,22 +19,23 @@ For emissions units, there are a few cases to be considered:
 - less obvious ones e.g. nitrous oxide emissions can be provided in 'N', 'N2O' or
   'N2ON', we provide conversions
 - case-sensitivity. In order to provide a simplified interface, using all uppercase
-  versions of any unit is also valid e.g. ``unit_registry("HFC4310mee")`` is the same as ``unit_registry("HFC4310MEE")``
+  versions of any unit is also valid e.g. ``unit_registry("HFC4310mee")`` is the same as
+  ``unit_registry("HFC4310MEE")``
 - hyphens and underscores in units. In order to be Pint compatible and to simplify
   things, we strip all hyphens and underscores from units.
 
-As a convenience, we allow users to combine the mass and the type of emissions to make
-a 'joint unit' e.g. "tCO2" but it should be recognised that this joint unit is a
-derived unit and not a base unit.
+As a convenience, we allow users to combine the mass and the type of emissions to make a
+'joint unit' e.g. "tCO2" but it should be recognised that this joint unit is a derived
+unit and not a base unit.
 
-By defining these three separate components, it is much easier to track what
-conversions are valid and which are not. For example, as the emissions units are all
-defined as emissions units, and not as atomic masses, we are able to prevent invalid
-conversions. If emissions units were simply atomic masses, it would be possible to
-convert between e.g. C and N2O which would be a problem. Conventions such as allowing
-carbon dioxide emissions to be reported in C or CO2, despite the fact that they are
-fundamentally different chemical species, is a convention which is particular to
-emissions (as far as we can tell).
+By defining these three separate components, it is much easier to track what conversions
+are valid and which are not. For example, as the emissions units are all defined as
+emissions units, and not as atomic masses, we are able to prevent invalid conversions.
+If emissions units were simply atomic masses, it would be possible to convert between
+e.g. C and N2O which would be a problem. Conventions such as allowing carbon dioxide
+emissions to be reported in C or CO2, despite the fact that they are fundamentally
+different chemical species, is a convention which is particular to emissions (as far as
+we can tell).
 
 Finally, contexts are particularly useful for emissions as they facilitate much easier
 metric conversions. With a context, a conversion which wouldn't normally be allowed
@@ -91,7 +92,7 @@ from typing import Dict, Sequence, Union
 
 import numpy as np
 from pint import Context, UnitRegistry
-from pint.errors import DimensionalityError, UndefinedUnitError
+from pint.errors import DimensionalityError, UndefinedUnitError  # noqa: F401
 
 # Start a unit registry using the default variables:
 unit_registry = UnitRegistry()
