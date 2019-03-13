@@ -86,13 +86,15 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
     >>> NOx.to("N2O", "NOx_conversions")
     <Quantity(0.9565217391304348, 'N2O')>
 """
-# pylint: disable=unused-import
 
 from typing import Dict, Sequence, Union
 
 import numpy as np
 from pint import Context, UnitRegistry
-from pint.errors import DimensionalityError, UndefinedUnitError  # noqa: F401
+from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
+    DimensionalityError,
+    UndefinedUnitError,
+)
 
 # Start a unit registry using the default variables:
 unit_registry = UnitRegistry()
@@ -303,9 +305,9 @@ class UnitConverter:
 
         Raises
         ------
-        DimensionalityError
+        pint.errors.DimensionalityError
             Units cannot be converted into each other.
-        UndefinedUnitError
+        pint.errors.UndefinedUnitError
             Unit undefined.
         """
         self._source = source
