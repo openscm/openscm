@@ -5,10 +5,9 @@ OpenSCM
 A unifying interface for Simple Climate Models.
 """
 
+import versioneer
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-
-import versioneer
 
 NAME = "openscm"
 PACKAGES = ["openscm"]
