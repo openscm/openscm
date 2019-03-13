@@ -8,23 +8,22 @@ test: venv
 	./venv/bin/pytest -sx tests
 
 coverage: venv
-	./venv/bin/pytest -rfsxEX --cov=openscm tests --cov-report term-missing
-	coverage html
+	./venv/bin/pytest tests -r a --cov=openscm --cov-report=''
+	./venv/bin/coverage report --show-missing
+	./venv/bin/coverage html
 
 test-notebooks: venv
-	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
+	./venv/bin/pytest notebooks -r a --nbval --sanitize notebooks/tests_sanitize.cfg
 
 test-all: test test-notebooks
 
-checks: venv clean-notebooks
+checks: venv clean-notebooks docs test-all
 	./venv/bin/bandit -c .bandit.yml -r openscm
 	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
-	./venv/bin/pylint openscm
+	./venv/bin/coverage report --fail-under=100 --show-missing
 	./venv/bin/isort --check-only --recursive openscm tests setup.py
 	./venv/bin/mypy openscm
-	./venv/bin/pytest -rfsxEX --cov=openscm tests --cov-report term-missing
-	./venv/bin/coverage report --fail-under=100
-	./venv/bin/pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg
+	./venv/bin/pylint openscm
 
 isort: venv
 	./venv/bin/isort --recursive openscm tests setup.py
