@@ -121,25 +121,52 @@ def test_conversion_incompatible_units():
 
 def test_context():
     CO2 = unit_registry("CO2")
-    with pytest.raises(DimensionalityError):
-        CO2.to("N")
-
     N = unit_registry("N")
     with unit_registry.context("AR4GWP12"):
         np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)
         np.testing.assert_allclose(N.to("CO2").magnitude, 44 / 12 / 20)
 
 
+def test_context_with_magnitude():
+    CO2 = 1 * unit_registry("CO2")
+    N = 1 * unit_registry("N")
+    with unit_registry.context("AR4GWP12"):
+        np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)
+        np.testing.assert_allclose(N.to("CO2").magnitude, 44 / 12 / 20)
+
+
+def test_context_compound_unit():
+    CO2 = 1 * unit_registry("kg CO2 / yr")
+    N = 1 * unit_registry("kg N / yr")
+    with unit_registry.context("AR4GWP12"):
+        np.testing.assert_allclose(CO2.to("kg N / yr").magnitude, 12 / 44 * 20)
+        np.testing.assert_allclose(N.to("kg CO2 / yr").magnitude, 44 / 12 / 20)
+
+
+def test_context_dimensionality_error():
+    CO2 = unit_registry("CO2")
+    with pytest.raises(DimensionalityError):
+        CO2.to("N")
+
 
 @pytest.mark.parametrize(
     "metric_name,species,conversion",
     (
+        ["AR4GWP100", "CH4", 25],
+        ["AR4GWP100", "N2O", 298],
         ["AR4GWP100", "HFC32", 675],
         ["AR4GWP100", "SF6", 22800],
         ["AR4GWP100", "C2F6", 12200],
     )
 )
 def test_metric_conversion(metric_name, species, conversion):
-    base = 1 * unit_registry("kg {} / yr".format(species))
-    with unit_registry.context("AR4GWP100"):
-        np.testing.assert_allclose(base.to("kg CO2 / yr"), conversion)
+    base_str_formats = [
+        "{}",
+        "kg {} / yr",
+        "kg {}",
+        "{} / yr",
+    ]
+    for base_str_format in base_str_formats:
+        base = unit_registry(base_str_format.format(species))
+        with unit_registry.context(metric_name):
+            np.testing.assert_allclose(base.to(base_str_format.format("CO2")).magnitude, conversion)

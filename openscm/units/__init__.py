@@ -86,8 +86,13 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
     >>> NOx.to("N2O", "NOx_conversions")
     <Quantity(0.9565217391304348, 'N2O')>
 """
-
+from os.path import abspath, dirname, join
+from copy import deepcopy
 from typing import Dict, Sequence, Union
+
+import pandas as pd
+from pint import Context, UnitRegistry
+from pint.errors import DimensionalityError, UndefinedUnitError
 
 import numpy as np
 from pint import Context, UnitRegistry
@@ -95,6 +100,8 @@ from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
     DimensionalityError,
     UndefinedUnitError,
 )
+
+here = dirname(abspath(__file__))
 
 # Start a unit registry using the default variables:
 unit_registry = UnitRegistry()
@@ -124,6 +131,7 @@ The unit registry contains all of our recognised units. A couple of examples
 _gases = {
     "C": "carbon",
     "CO2": ["12/44 * C", "carbon_dioxide"],
+    "CH4": "methane",
     "N": "nitrogen",
     "N2O": ["14/44 * N", "nitrous_oxide"],
     "N2ON": ["14/28 * N", "nitrous_oxide_farming_style"],
@@ -133,43 +141,42 @@ _gases = {
     "S": ["sulfur"],
     "SO2": ["32/64 * S", "sulfur_dioxide"],
     "SOx": ["SO2"],
+    "BC": "black_carbon",
+    "OC": "OC",
+    "CO": "carbon_monoxide",
     "VOC": "VOC",
     "NMVOC": ["VOC", "non_methane_volatile_organic_compounds"],
-    "BC": "black_carbon",
-    "C2F6": "C2F6",
-    "CCl4": "CCl4",
-    "CF4": "CF4",
-    "CFC11": "CFC11",
-    "CFC113": "CFC113",
-    "CFC114": "CFC114",
-    "CFC115": "CFC115",
-    "CFC12": "CFC12",
-    "CH3Br": "CH3Br",
-    "CH3CCl3": "CH3CCl3",
-    "CH3Cl": "CH3Cl",
-    "CH4": "methane",
-    "CO": "carbon_monoxide",
-    "HCFC141b": "HCFC141b",
-    "HCFC142b": "HCFC142b",
-    "HCFC22": "HCFC22",
+    "HFC23": "HFC23",
+    "HFC32": "HFC32",
     "HFC125": "HFC125",
     "HFC134a": "HFC134a",
     "HFC143a": "HFC143a",
     "HFC152a": "HFC152a",
     "HFC227ea": "HFC227ea",
-    "HFC23": "HFC23",
     "HFC236fa": "HFC236fa",
     "HFC245fa": "HFC245fa",
-    "HFC32": "HFC32",
     "HFC365mfc": "HFC365mfc",
     "HFC4310mee": "HFC4310mee",
     "HFC4310": ["HFC4310mee"],
+    "SF6": "SF6",
+    "CF4": "CF4",
+    "C2F6": "C2F6",
+    "CFC11": "CFC11",
+    "CFC12": "CFC12",
+    "CFC113": "CFC113",
+    "CFC114": "CFC114",
+    "CFC115": "CFC115",
+    "CCl4": "CCl4",
+    "CH3CCl3": "CH3CCl3",
+    "CH3Cl": "CH3Cl",
+    "CH3Br": "CH3Br",
+    "HCFC141b": "HCFC141b",
+    "HCFC142b": "HCFC142b",
+    "HCFC22": "HCFC22",
     "Halon1202": "Halon1202",
     "Halon1211": "Halon1211",
     "Halon1301": "Halon1301",
     "Halon2402": "Halon2402",
-    "OC": "OC",
-    "SF6": "SF6",
 }
 
 
@@ -238,6 +245,16 @@ _c.add_transformation(
     "[carbon]",
     lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
 )
+_c.add_transformation(
+    "[mass] * [carbon] / [time]",
+    "[mass] * [nitrogen] / [time]",
+    lambda unit_registry, x: 20 * unit_registry.N * x / unit_registry.C,
+)
+_c.add_transformation(
+    "[mass] * [nitrogen] / [time]",
+    "[mass] * [carbon] / [time]",
+    lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
+)
 unit_registry.add_context(_c)
 
 _ch4_context = Context("CH4_conversions")
@@ -272,6 +289,85 @@ _n2o_context.add_transformation(
     / ((14 + 2 * 16) / 14),
 )
 unit_registry.add_context(_n2o_context)
+
+# TODO: ask how to cache this properly so we don't read from disk unless we have to
+_metric_conversions = pd.read_csv(
+    join(here, "metric_conversions.csv"),
+    skiprows=1,  # skip source row
+    header=0,
+    index_col=0,
+).iloc[1:, :]  # drop out 'OpenSCM base unit' row
+
+def get_transform_func(unit_reg, unit_reg_unit, conversion_factor, forward=True):
+    if forward:
+        def result(unit_reg, strt):
+            return strt * unit_reg.carbon / unit_reg_unit * conversion_factor
+    else:
+        def result(ur, strt):
+            return strt * unit_reg_unit / unit_reg.carbon / conversion_factor
+    return result
+
+for col in _metric_conversions:
+    tc = Context(col)
+    for label, val in _metric_conversions[col].iteritems():
+        conv_val = (
+            val
+            * (unit_registry("CO2").to_base_units()).magnitude
+            / (unit_registry(label).to_base_units()).magnitude
+        )
+        base_unit = [
+            s for s, _ in
+            unit_registry._get_dimensionality(
+                unit_registry(label).to_base_units()._units
+            ).items()
+        ][0]
+
+        unit_reg_unit = getattr(
+            unit_registry,
+            base_unit.replace("[", "").replace("]", "")
+        )
+        tc.add_transformation(
+            base_unit,
+            "[carbon]",
+            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+        )
+        tc.add_transformation(
+            "[carbon]",
+            base_unit,
+            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+        )
+        tc.add_transformation(
+            "[mass] * {} / [time]".format(base_unit),
+            "[mass] * [carbon] / [time]",
+            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+        )
+        tc.add_transformation(
+            "[mass] * [carbon] / [time]",
+            "[mass] * {} / [time]".format(base_unit),
+            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+        )
+        tc.add_transformation(
+            "[mass] * {}".format(base_unit),
+            "[mass] * [carbon]",
+            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+        )
+        tc.add_transformation(
+            "[mass] * [carbon]",
+            "[mass] * {}".format(base_unit),
+            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+        )
+        tc.add_transformation(
+            "{} / [time]".format(base_unit),
+            "[carbon] / [time]",
+            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+        )
+        tc.add_transformation(
+            "[carbon] / [time]",
+            "{} / [time]".format(base_unit),
+            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+        )
+
+    unit_registry.add_context(tc)
 
 
 class UnitConverter:
