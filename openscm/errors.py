@@ -21,12 +21,10 @@ class ParameterError(Exception):
     """
 
 
-class ParameterReadonlyError(ParameterError):
+class ParameterAggregationError(ParameterError):
     """
-    Exception raised when a requested parameter is read-only.
-
-    This can happen, for instance, if a parameter's parent parameter
-    in the parameter hierarchy has already been requested as writable.
+    Exception raised when a parameter is read from but has child parameters
+    which cannot be aggregated (boolean or string parameters).
     """
 
 
@@ -36,17 +34,26 @@ class ParameterEmptyError(ParameterError):
     """
 
 
-class ParameterTypeError(ParameterError):
-    """
-    Exception raised when a parameter is of a different type than
-    requested (scalar or timeseries).
-    """
-
-
 class ParameterReadError(ParameterError):
     """
     Exception raised when a parameter has been read from (raised, e.g., when attempting
     to create a child parameter).
+    """
+
+
+class ParameterReadonlyError(ParameterError):
+    """
+    Exception raised when a requested parameter is read-only.
+
+    This can happen, for instance, if a parameter's parent parameter
+    in the parameter hierarchy has already been requested as writable.
+    """
+
+
+class ParameterTypeError(ParameterError):
+    """
+    Exception raised when a parameter is of a different type than
+    requested.
     """
 
 

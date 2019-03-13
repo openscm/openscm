@@ -10,6 +10,7 @@ from typing import cast, Dict, Optional, Sequence, Tuple, Union
 import numpy as np
 
 from .errors import (
+    ParameterAggregationError,
     ParameterReadError,
     ParameterReadonlyError,
     ParameterTypeError,
@@ -27,6 +28,8 @@ class ParameterType(Enum):
     SCALAR = 1
     AVERAGE_TIMESERIES = 2
     POINT_TIMESERIES = 3
+    BOOLEAN = 4
+    STRING = 5
 
 
 class ParameterInfo:
@@ -104,7 +107,7 @@ class _Parameter:
     _children: Dict[str, "_Parameter"]
     """Child parameters"""
 
-    _data: Union[None, float, Sequence[float]]
+    _data: Union[None, bool, float, str, Sequence[float]]
     """Data"""
 
     _has_been_read_from: bool
@@ -188,7 +191,10 @@ class _Parameter:
         return self
 
     def attempt_read(
-        self, unit: str, parameter_type: ParameterType, time_points: np.ndarray = None
+        self,
+        parameter_type: ParameterType,
+        unit: Optional[str] = None,
+        time_points: Optional[np.ndarray] = None,
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -197,10 +203,10 @@ class _Parameter:
 
         Parameters
         ----------
-        unit
-            Unit to be read
         parameter_type
             Parameter type to be read
+        unit
+            Unit to be read; only for scalar and timeseries parameters
         time_points
             Timeseries time points; only for timeseries parameters
 
@@ -208,32 +214,53 @@ class _Parameter:
         ------
         ParameterTypeError
             If parameter has already been read from or written to in a different type.
+        ParameterAggregationError
+            If parameter has child parameters which cannot be aggregated (for boolean
+            and string parameters).
         """
         # TODO aggregate
         if self._info._type is not None and self._info._type != parameter_type:
             raise ParameterTypeError
-        if self._info._unit is None:
+        if self._info._type is None:
             self._info._unit = unit
             self._info._type = parameter_type
             if parameter_type == ParameterType.SCALAR:
                 self._data = float("NaN")
-            else:  # parameter_type == ParameterType.AVERAGE_TIMESERIES
-                self._data = np.array([])
+            elif parameter_type == ParameterType.BOOLEAN:
+                if self._children:
+                    raise ParameterAggregationError
+                self._data = False
+            elif parameter_type == ParameterType.STRING:
+                if self._children:
+                    raise ParameterAggregationError
+                self._data = ""
+            else:  # parameter is a timeseries
+                self._data = np.full(
+                    (
+                        (len(time_points) - 1)  # type: ignore
+                        if parameter_type == ParameterType.AVERAGE_TIMESERIES
+                        else len(time_points)  # type: ignore
+                    ),
+                    float("NaN"),
+                )
                 self._info._time_points = np.array(time_points, copy=True)
         self._has_been_read_from = True
 
     def attempt_write(
-        self, unit: str, parameter_type: ParameterType, time_points: np.ndarray = None
+        self,
+        parameter_type: ParameterType,
+        unit: Optional[str] = None,
+        time_points: Optional[np.ndarray] = None,
     ) -> None:
         """
         Tell parameter that its data will be written to.
 
         Parameters
         ----------
-        unit
-            Unit to be written
         parameter_type
             Parameter type to be written
+        unit
+            Unit to be written; only for scalar and timeseries parameters
         time_points
             Timeseries time points; only for timeseries parameters
 
@@ -244,7 +271,7 @@ class _Parameter:
         """
         if self._children:
             raise ParameterReadonlyError
-        self.attempt_read(unit, parameter_type, time_points)
+        self.attempt_read(parameter_type, unit, time_points)
         self._has_been_written_to = True
 
     @property
