@@ -11,7 +11,7 @@ action "Documentation" {
     "if [[ ! -s docs/build/html/python.txt ]]",
     "then",
     "    echo",
-    "    echo \"Error: Documentation missing:"",
+    "    echo \"Error: Documentation missing:\"",
     "    echo",
     "    cat docs/build/html/python.txt",
     "    exit 1",
@@ -66,7 +66,7 @@ action "Tests" {
 action "Coverage" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "if ! coverage report --fail-under=\"$MIN_COVERAGE\ --show-missing"",
+    "if ! coverage report --fail-under=\"$MIN_COVERAGE\" --show-missing",
     "then",
     "    echo",
     "    echo \"Error: Test coverage has to be at least ${MIN_COVERAGE}%\"",
