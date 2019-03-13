@@ -14,14 +14,15 @@ action "Bandit" {
   }
 }
 
-action "Black" {
+action "Formatting" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "black --check openscm tests setup.py --exclude openscm/_version.py"
+    "black --check openscm tests setup.py --exclude openscm/_version.py",
+    "isort --check-only --recursive openscm tests setup.py"
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "black"
+    PIP_PACKAGES = "black isort"
   }
 }
 
@@ -45,7 +46,7 @@ action "Pylint" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = "pylint ."
   }
-  needs = ["Bandit", "Black", "Mypy"]
+  needs = ["Bandit", "Formatting", "Mypy"]
 }
 
 action "Tests" {
