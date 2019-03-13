@@ -2,8 +2,8 @@
 Utility functions for openscm.
 """
 
-from typing import Tuple, Union
 import warnings
+from typing import Tuple, Union
 
 
 def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:

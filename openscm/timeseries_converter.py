@@ -11,11 +11,9 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 from enum import Enum
 from typing import Callable, Dict, Any
 
-
 import numpy as np
-import scipy.interpolate as interpolate
 import scipy.integrate as integrate
-
+import scipy.interpolate as interpolate
 
 from .errors import InsufficientDataError
 from .parameters import ParameterType

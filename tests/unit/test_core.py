@@ -1,24 +1,24 @@
 import warnings
 
-import pytest
 import numpy as np
+import pytest
 
-from openscm.core import Core, ParameterType, ParameterSet
+from openscm.core import Core, ParameterSet, ParameterType
 from openscm.errors import (
     ParameterAggregationError,
+    ParameterEmptyError,
     ParameterReadError,
     ParameterReadonlyError,
     ParameterTypeError,
-    ParameterEmptyError,
     ParameterWrittenError,
     RegionAggregatedError,
     TimeseriesPointsValuesMismatchError,
 )
 from openscm.parameters import ParameterType
 from openscm.timeseries_converter import (
-    create_time_points,
     ExtrapolationType,
     InterpolationType,
+    create_time_points,
 )
 from openscm.units import DimensionalityError
 

@@ -1,10 +1,8 @@
 import re
 import sys
-
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import patch, MagicMock
-
 
 from openscm.adapters import load_adapter
 from openscm.errors import AdapterNeedsModuleError

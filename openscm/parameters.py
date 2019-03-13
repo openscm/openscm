@@ -5,10 +5,11 @@ Parameter handling.
 # pylint: disable=unused-import,protected-access
 
 from enum import Enum
-from typing import cast, Dict, Optional, Sequence, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 
+from . import regions  # needed for type annotations
 from .errors import (
     ParameterAggregationError,
     ParameterReadError,
@@ -17,7 +18,6 @@ from .errors import (
     ParameterWrittenError,
 )
 from .utils import ensure_input_is_tuple
-from . import regions  # needed for type annotations
 
 
 class ParameterType(Enum):

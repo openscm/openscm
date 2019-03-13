@@ -2,9 +2,10 @@
 Handling of region information.
 """
 
-from typing import cast, Dict, Optional, Tuple
-from .errors import RegionAggregatedError
+from typing import Dict, Optional, Tuple, cast
+
 from . import parameters  # pylint: disable=cyclic-import
+from .errors import RegionAggregatedError
 from .utils import ensure_input_is_tuple
 
 # pylint: disable=protected-access
