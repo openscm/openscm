@@ -28,10 +28,11 @@ Parameters
 .. _parameter-hierarchy:
 
 **Parameter** here refers to any named input or output variable of a
-model. A parameter can be either scalar (i.e. a single number) or a
-timeseries and has a unique name in a hierarchy of arbitrary depth.
-That means every parameter either is a root parameter without a parent
-parameter ("level 0") or belongs to a parent parameter.
+model. A parameter can be either scalar (i.e. a single number), a
+timeseries, a boolean, or a string value and has a unique name in a
+hierarchy of arbitrary depth. That means every parameter either is a
+root parameter without a parent parameter ("level 0") or belongs to a
+parent parameter.
 
 For example, the parameter for industrial carbon emissions belongs to
 the parameter for carbon emissions, which in turn belongs to the root
@@ -96,8 +97,9 @@ Setting input parameters
 In the core API parameters are get and set through subclasses of
 :class:`ParameterView`. While the values of the parameters are stored
 internaly, a :class:`ParameterView` provides an (always up-to-date)
-"view" of the corresponding parameter and will always return the parameter values in a
-specific unit and, in the case of timeseries, a specific time frame.
+"view" of the corresponding parameter and will always return the
+parameter values in a specific unit and, in the case of timeseries, a
+specific time frame.
 
 Unit and time frame have to be specified when requesting a
 :class:`~openscm.core.ParameterView` from the
@@ -105,17 +107,29 @@ Unit and time frame have to be specified when requesting a
 property called ``parameters`` using one of the following functions:
 
 - :func:`~openscm.core.ParameterSet.get_scalar_view` returns a
-  read-only view to a scalar parameter
+  read-only view to a scalar ("number") parameter
   (:class:`~openscm.core.ScalarView`)
+- :func:`~openscm.core.ParameterSet.get_writable_scalar_view` returns
+  a writable view to a scalar ("number") parameter
+  (:class:`~openscm.core.WritableScalarView`)
 - :func:`~openscm.core.ParameterSet.get_timeseries_view` returns a
   read-only view to a timeseries parameter
   (:class:`~openscm.core.TimeseriesView`)
-- :func:`~openscm.core.ParameterSet.get_writable_scalar_view` returns
-  a writable view to a scalar parameter
-  (:class:`~openscm.core.WritableScalarView`)
 - :func:`~openscm.core.ParameterSet.get_writable_timeseries_view`
   returns a writable view to a timeseries parameter
   (:class:`~openscm.core.WritableTimeseriesView`)
+- :func:`~openscm.core.ParameterSet.get_boolean_view` returns a
+  read-only view to a boolean parameter
+  (:class:`~openscm.core.BooleanView`)
+- :func:`~openscm.core.ParameterSet.get_writable_boolean_view` returns
+  a writable view to a boolean parameter
+  (:class:`~openscm.core.WritableBooleanView`)
+- :func:`~openscm.core.ParameterSet.get_string_view` returns a
+  read-only view to a string parameter
+  (:class:`~openscm.core.StringView`)
+- :func:`~openscm.core.ParameterSet.get_writable_string_view` returns
+  a writable view to a string parameter
+  (:class:`~openscm.core.WritableStringView`)
 
 Each of these functions take the hierarchical name of the parameter
 (as described under :ref:`parameters`) and, in a similar fashion, the
