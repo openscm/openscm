@@ -68,6 +68,8 @@ class ScalarView(ParameterView):
         unit
             Unit for the values in the view
         """
+        super().__init__(parameter)
+        self._unit_converter = UnitConverter(cast(str, parameter._info._unit), unit)
 
         def get_data_views_for_children_or_parameter(
             parameter: _Parameter
@@ -82,8 +84,6 @@ class ScalarView(ParameterView):
                 )
             return [ScalarView(parameter, self._unit_converter._target)]
 
-        super().__init__(parameter)
-        self._unit_converter = UnitConverter(cast(str, parameter._info._unit), unit)
         if self._parameter._children:
             self._child_data_views = get_data_views_for_children_or_parameter(
                 self._parameter
@@ -168,6 +168,15 @@ class TimeseriesView(ParameterView):
         extrapolation_type
             Extrapolation type
         """
+        super().__init__(parameter)
+        self._unit_converter = UnitConverter(cast(str, parameter._info._unit), unit)
+        self._timeseries_converter = TimeseriesConverter(
+            parameter._info._time_points,
+            time_points,
+            timeseries_type,
+            interpolation_type,
+            extrapolation_type,
+        )  # TimeseriesConverter
 
         def get_data_views_for_children_or_parameter(
             parameter: _Parameter
@@ -191,15 +200,6 @@ class TimeseriesView(ParameterView):
                 )
             ]
 
-        super().__init__(parameter)
-        self._unit_converter = UnitConverter(cast(str, parameter._info._unit), unit)
-        self._timeseries_converter = TimeseriesConverter(
-            parameter._info._time_points,
-            time_points,
-            timeseries_type,
-            interpolation_type,
-            extrapolation_type,
-        )  # TimeseriesConverter
         if self._parameter._children:
             self._child_data_views = get_data_views_for_children_or_parameter(
                 self._parameter

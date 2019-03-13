@@ -93,7 +93,7 @@ class ParameterInfo:
     @property
     def unit(self) -> Optional[str]:
         """
-        Unit
+        Parameter unit
         """
         return self._unit
 

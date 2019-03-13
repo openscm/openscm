@@ -95,7 +95,6 @@ def _calc_interval_averages(
     np.ndarray
         Array of the interval/period averages
     """
-
     # TODO: numerical integration here could be very expensive
     # TODO: update to include caching and/or analytic solutions depending on
     # TODO:     interpolation choice
@@ -289,7 +288,7 @@ class TimeseriesConverter:
         target_time_points: np.ndarray,
     ) -> np.ndarray:
         """
-        Wraps ``self._convert_unsafe`` to provide proper error handling.
+        Wrap ``self._convert_unsafe`` to provide proper error handling.
 
         ``self._convert_unsafe`` converts time period average timeseries data
         ``values`` for timeseries time points ``source_time_points`` to the time

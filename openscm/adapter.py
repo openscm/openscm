@@ -47,19 +47,19 @@ class Adapter(metaclass=ABCMeta):
     ``1970-01-01 00:00:00``)
     """
 
-    def __init__(self, parameters: ParameterSet, output: ParameterSet):
+    def __init__(self, input_parameters: ParameterSet, output_parameters: ParameterSet):
         """
         Initialize.
 
         Parameters
         ----------
-        parameters
+        input_parameters
             Input parameter set to use
-        output
+        output_parameters
             Output parameter set to use
         """
-        self._parameters = parameters
-        self._output = output
+        self._parameters = input_parameters
+        self._output = output_parameters
         self._initialized = False
 
     def __del__(self) -> None:
