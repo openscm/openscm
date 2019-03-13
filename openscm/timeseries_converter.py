@@ -9,7 +9,7 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 """
 
 from enum import Enum
-from typing import Callable
+from typing import Callable, Dict, Any
 
 
 import numpy as np
@@ -28,8 +28,8 @@ class ExtrapolationType(Enum):
     Extrapolation type.
     """
 
-    CONSTANT = -1
-    NONE = 0
+    NONE = -1
+    CONSTANT = 0
     LINEAR = 1
     # TODO support CUBIC = 3
 
@@ -66,7 +66,7 @@ def create_time_points(
         Array of the timeseries time points
     """
     points_num_output = (
-        points_num + 1  # +1 for averages as we need to give the full last interval
+        (points_num + 1)  # +1 for averages as we need to give the full last interval
         if timeseries_type == ParameterType.AVERAGE_TIMESERIES
         else points_num
     )
@@ -232,7 +232,9 @@ class TimeseriesConverter:
             argument, time ("x-value"), and returns a single float, the value of the
             interpolated timeseries at that point in time ("y-value").
         """
-        if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+        if (self._timeseries_type == ParameterType.AVERAGE_TIMESERIES) and (
+            self._interpolation_type == InterpolationType.LINEAR
+        ):
             # our custom implementation of a mean preserving linear interpolation
             linearization_points = (
                 np.concatenate(
@@ -268,7 +270,7 @@ class TimeseriesConverter:
 
         raise NotImplementedError
 
-    def _get_scipy_extrapolation_args(self, values: np.ndarray) -> dict:
+    def _get_scipy_extrapolation_args(self, values: np.ndarray) -> Dict[str, Any]:
         if self._extrapolation_type == ExtrapolationType.LINEAR:
             return {"fill_value": "extrapolate"}
         if self._extrapolation_type == ExtrapolationType.CONSTANT:
@@ -276,7 +278,7 @@ class TimeseriesConverter:
         # TODO: add cubic support
         return {}
 
-    def _get_scipy_interpolation_arg(self):
+    def _get_scipy_interpolation_arg(self) -> str:
         if self._interpolation_type == InterpolationType.LINEAR:
             return "linear"
         # TODO: add cubic support
@@ -289,8 +291,11 @@ class TimeseriesConverter:
         target_time_points: np.ndarray,
     ) -> np.ndarray:
         """
-        Convert time period average timeseries data ``values`` for timeseries time
-        points ``source_time_points`` to the time points ``target_time_points``.
+        Wraps ``self._convert_unsafe`` to provide proper error handling.
+
+        ``self._convert_unsafe`` converts time period average timeseries data
+        ``values`` for timeseries time points ``source_time_points`` to the time
+        points ``target_time_points``.
 
         Parameters
         ----------
@@ -305,6 +310,10 @@ class TimeseriesConverter:
         ------
         InsufficientDataError
             Length of the time series is too short to convert
+
+        InsufficientDataError
+            Target time points are outside the source time points and
+            ``self._extrapolation_type`` is ``ExtrapolationType.None``
 
         Returns
         -------
@@ -329,7 +338,28 @@ class TimeseriesConverter:
         source_time_points: np.ndarray,
         target_time_points: np.ndarray,
     ) -> np.ndarray:
-        """Same as ``self._convert`` but without error checking
+        """
+        Convert time period average timeseries data ``values`` for timeseries time
+        points ``source_time_points`` to the time points ``target_time_points``.
+
+        Parameters
+        ----------
+        values
+            Array of data to convert
+        source_time_points
+            Source timeseries time points
+        target_time_points
+            Target timeseries time points
+
+        Raises
+        ------
+        NotImplementedError
+            The timeseries type is not recognised
+
+        Returns
+        -------
+        np.ndarray
+            Converted time period average data for timeseries ``target``
         """
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
             return _calc_interval_averages(
