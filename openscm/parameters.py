@@ -16,7 +16,7 @@ from .errors import (
 )
 from .utils import ensure_input_is_tuple
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from . import regions  # pylint: disable=cyclic-import
 
 # pylint: disable=protected-access
