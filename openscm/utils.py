@@ -17,7 +17,8 @@ def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
 
     Returns
     -------
-    A tuple with a single string `inp` if `inp` is a string, otherwise return `inp`
+    Tuple[str, ...]
+        A tuple with a single string `inp` if `inp` is a string, otherwise return `inp`
     """
     if isinstance(inp, str):
         if not getattr(ensure_input_is_tuple, "calls", 0):

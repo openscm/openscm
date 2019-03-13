@@ -101,6 +101,11 @@ class ScalarView(ParameterView):
         ------
         ParameterEmptyError
             Parameter is empty, i.e. has not yet been written to
+
+        Returns
+        -------
+        float
+            Current value of parameter
         """
         if self._parameter._children:
             return sum(v.get() for v in self._child_data_views)
@@ -217,6 +222,11 @@ class TimeseriesView(ParameterView):
         ------
         ParameterEmptyError
             Parameter is empty, i.e. has not yet been written to
+
+        Returns
+        -------
+        Sequence[float]
+            Current value of parameter
         """
         if self._parameter._children:
             return cast(

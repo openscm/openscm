@@ -195,6 +195,11 @@ class TimeseriesConverter:
             Interpolation type
         extrapolation_type
             Extrapolation type
+
+        Raises
+        ------
+        InsufficientDataError
+            Timeseries too short to extrapolate
         """
         self._source = np.array(source_time_points, copy=True)
         self._target = np.array(target_time_points, copy=True)
@@ -208,7 +213,11 @@ class TimeseriesConverter:
             raise InsufficientDataError
 
     def _calc_continuous_representation(
-        self, time_points: np.ndarray, values: np.ndarray
+        # TODO remove when NotImplementedError removed:
+        # pylint: disable=missing-raises-doc
+        self,
+        time_points: np.ndarray,
+        values: np.ndarray,
     ) -> Callable[[float], float]:
         """
         Calculate a "continuous" representation of a timeseries (see
