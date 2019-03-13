@@ -1,0 +1,10 @@
+Source,https://www.ghgprotocol.org/sites/default/files/ghgp/Global-Warming-Potential-Values%20%28Feb%2016%202016%29_1.pdf
+OpenSCMMetricName,AR4GWP100
+Species,
+CO2,1
+CH4,25
+N2O,298
+HFC32,675
+SF6,22800
+CF4,7390
+C2F6,12200

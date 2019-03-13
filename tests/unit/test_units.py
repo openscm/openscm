@@ -128,3 +128,18 @@ def test_context():
     with unit_registry.context("AR4GWP12"):
         np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)
         np.testing.assert_allclose(N.to("CO2").magnitude, 44 / 12 / 20)
+
+
+
+@pytest.mark.parametrize(
+    "metric_name,species,conversion",
+    (
+        ["AR4GWP100", "HFC32", 675],
+        ["AR4GWP100", "SF6", 22800],
+        ["AR4GWP100", "C2F6", 12200],
+    )
+)
+def test_metric_conversion(metric_name, species, conversion):
+    base = 1 * unit_registry("kg {} / yr".format(species))
+    with unit_registry.context("AR4GWP100"):
+        np.testing.assert_allclose(base.to("kg CO2 / yr"), conversion)
