@@ -22,3 +22,8 @@ Regions
 *******
 
 .. automodule:: openscm.regions
+
+Timeseries converter
+********************
+
+.. automodule:: openscm.timeseries_converter

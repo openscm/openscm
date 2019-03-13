@@ -38,7 +38,6 @@ Schema
     openscm
     adapter
     errors
-    timeframes
     units
 
 .. toctree::
