@@ -10,9 +10,9 @@ black: venv
 
 checks: venv
 	./venv/bin/bandit -c .bandit.yml -r openscm
-	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
+	./venv/bin/black --quiet --check openscm tests setup.py --exclude openscm/_version.py
 	./venv/bin/flake8 openscm tests
-	./venv/bin/isort --check-only --recursive openscm tests setup.py
+	./venv/bin/isort --check-only --quiet --recursive openscm tests setup.py
 	./venv/bin/mypy openscm
 	./venv/bin/pydocstyle openscm
 	./venv/bin/pylint openscm

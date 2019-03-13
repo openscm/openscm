@@ -9,7 +9,7 @@ this module. A thorough explaination of the procedure used is given in a dedicat
 """
 
 from enum import Enum
-from typing import Callable, Dict, Any
+from typing import Any, Callable, Dict
 
 import numpy as np
 import scipy.integrate as integrate

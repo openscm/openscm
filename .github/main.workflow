@@ -26,8 +26,8 @@ action "Documentation" {
 action "Formatting" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "black --check openscm tests setup.py --exclude openscm/_version.py",
-    "isort --check-only --recursive openscm tests setup.py",
+    "black --quiet --check openscm tests setup.py --exclude openscm/_version.py",
+    "isort --check-only --quiet --recursive openscm tests setup.py",
     "pydocstyle openscm"
   ]
   env = {
