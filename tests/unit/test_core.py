@@ -5,6 +5,7 @@ import numpy as np
 
 from openscm.core import Core, ParameterType, ParameterSet
 from openscm.errors import (
+    ParameterAggregationError,
     ParameterReadError,
     ParameterReadonlyError,
     ParameterTypeError,
@@ -187,7 +188,7 @@ def test_scalar_parameter_view(core):
         cs.get()
     assert cs.is_empty
     cs_writable = parameterset.get_writable_scalar_view(
-        ("Climate Sensitivity"), "World", "degF"
+        ("Climate Sensitivity"), ("World",), "degF"
     )
     cs_writable.set(68)
     assert cs_writable.get() == 68
@@ -215,36 +216,36 @@ def test_scalar_parameter_view_aggregation(core, start_time):
     parameterset = core.parameters
 
     a_1_writable = parameterset.get_writable_scalar_view(
-        ("Top", "a", "1"), ("World"), "dimensionless"
+        ("Top", "a", "1"), ("World",), "dimensionless"
     )
     a_1_writable.set(ta_1)
 
     a_2_writable = parameterset.get_writable_scalar_view(
-        ("Top", "a", "2"), ("World"), "dimensionless"
+        ("Top", "a", "2"), ("World",), "dimensionless"
     )
     a_2_writable.set(ta_2)
 
     b_writable = parameterset.get_writable_scalar_view(
-        ("Top", "b"), ("World"), "dimensionless"
+        ("Top", "b"), ("World",), "dimensionless"
     )
     b_writable.set(tb)
 
-    a_1 = parameterset.get_scalar_view(("Top", "a", "1"), ("World"), "dimensionless")
+    a_1 = parameterset.get_scalar_view(("Top", "a", "1"), ("World",), "dimensionless")
     np.testing.assert_allclose(a_1.get(), ta_1)
 
-    a_2 = parameterset.get_scalar_view(("Top", "a", "2"), ("World"), "dimensionless")
+    a_2 = parameterset.get_scalar_view(("Top", "a", "2"), ("World",), "dimensionless")
     np.testing.assert_allclose(a_2.get(), ta_2)
 
-    a = parameterset.get_scalar_view(("Top", "a"), ("World"), "dimensionless")
+    a = parameterset.get_scalar_view(("Top", "a"), ("World",), "dimensionless")
     np.testing.assert_allclose(a.get(), ta_1 + ta_2)
 
-    b = parameterset.get_scalar_view(("Top", "b"), ("World"), "dimensionless")
+    b = parameterset.get_scalar_view(("Top", "b"), ("World",), "dimensionless")
     np.testing.assert_allclose(b.get(), tb)
 
     with pytest.raises(ParameterReadonlyError):
-        parameterset.get_writable_scalar_view(("Top", "a"), ("World"), "dimensionless")
+        parameterset.get_writable_scalar_view(("Top", "a"), ("World",), "dimensionless")
 
-    total = parameterset.get_scalar_view(("Top"), ("World"), "dimensionless")
+    total = parameterset.get_scalar_view(("Top"), ("World",), "dimensionless")
     np.testing.assert_allclose(total.get(), ta_1 + ta_2 + tb)
 
 
@@ -265,7 +266,7 @@ def test_timeseries_parameter_view(core, start_time, series):
     parameterset = core.parameters
     carbon = parameterset.get_timeseries_view(
         ("Emissions", "CO2"),
-        ("World"),
+        ("World",),
         "GtCO2/a",
         create_time_points(
             start_time,
@@ -283,7 +284,7 @@ def test_timeseries_parameter_view(core, start_time, series):
 
     carbon_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2"),
-        ("World"),
+        ("World",),
         "ktC/d",
         create_time_points(
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
@@ -324,7 +325,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     fossil_industry_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Industry"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -340,7 +341,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     fossil_energy_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Energy"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -356,7 +357,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     land_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2", "Land"),
-        ("World"),
+        ("World",),
         "MtC/yr",
         create_time_points(
             start_time,
@@ -372,7 +373,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     fossil_industry = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Industry"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -392,7 +393,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     fossil_energy = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Energy"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -408,7 +409,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     fossil = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -429,7 +430,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     with pytest.raises(ParameterReadError):
         parameterset.get_writable_timeseries_view(
             ("Emissions", "CO2", "Fossil", "Transport"),
-            ("World"),
+            ("World",),
             "GtC/yr",
             create_time_points(
                 start_time,
@@ -444,7 +445,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     land = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Land"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time, 24 * 3600, len(land_emms), ParameterType.AVERAGE_TIMESERIES
@@ -458,7 +459,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     with pytest.raises(ParameterReadonlyError):
         parameterset.get_writable_timeseries_view(
             ("Emissions", "CO2"),
-            ("World"),
+            ("World",),
             "GtC/yr",
             create_time_points(
                 start_time,
@@ -473,7 +474,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
 
     total = parameterset.get_timeseries_view(
         ("Emissions", "CO2"),
-        ("World"),
+        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -488,3 +489,41 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     np.testing.assert_allclose(
         total.get_series(), land_emms + fossil_energy_emms + fossil_industry_emms
     )
+
+
+def test_boolean_parameter_view(core):
+    parameterset = core.parameters
+    cs = parameterset.get_boolean_view(("Model Options", "Boolean Option"), ("World",))
+    with pytest.raises(ParameterAggregationError):
+        parameterset.get_boolean_view(("Model Options"), ("World",))
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_scalar_view(("Model Options"), ("World",), "dimensionless")
+    with pytest.raises(ParameterEmptyError):
+        cs.get()
+    assert cs.is_empty
+    cs_writable = parameterset.get_writable_boolean_view(
+        ("Model Options", "Boolean Option"), ("World",)
+    )
+    cs_writable.set(True)
+    assert cs_writable.get() == True
+    assert not cs.is_empty
+    assert cs.get() == True
+
+
+def test_string_parameter_view(core):
+    parameterset = core.parameters
+    cs = parameterset.get_string_view(("Model Options", "String Option"), ("World",))
+    with pytest.raises(ParameterAggregationError):
+        parameterset.get_string_view(("Model Options"), ("World",))
+    with pytest.raises(ParameterTypeError):
+        parameterset.get_scalar_view(("Model Options"), ("World",), "dimensionless")
+    with pytest.raises(ParameterEmptyError):
+        cs.get()
+    assert cs.is_empty
+    cs_writable = parameterset.get_writable_string_view(
+        ("Model Options", "String Option"), ("World",)
+    )
+    cs_writable.set("enabled")
+    assert cs_writable.get() == "enabled"
+    assert not cs.is_empty
+    assert cs.get() == "enabled"
