@@ -330,7 +330,12 @@ class UnitConverter:
         Parameters
         ----------
         value
-            Value
+            Value in source unit
+
+        Returns
+        -------
+        Union[float, np.ndarray]
+            Value in target unit
         """
         return self._offset + v * self._scaling
 
@@ -341,6 +346,11 @@ class UnitConverter:
         Parameters
         ----------
         value
-            Value
+            Value in target unit
+
+        Returns
+        -------
+        Union[float, np.ndarray]
+            Value in source unit
         """
         return (v - self._offset) / self._scaling

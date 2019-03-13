@@ -58,6 +58,11 @@ class _Region:
         name
             Name
 
+        Returns
+        -------
+        _Region
+            Region found or newly created
+
         Raises
         ------
         RegionAggregatedError
@@ -81,7 +86,12 @@ class _Region:
         Parameters
         ----------
         name
-            Hierarchical name of the region below this region or ``()`` for this region.
+            Hierarchical name of the region below this region or ``()`` for this region
+
+        Returns
+        -------
+        Optional[_Region]
+            Subregion or ``None`` if not found
         """
         name = ensure_input_is_tuple(name)
         if name:
@@ -100,6 +110,11 @@ class _Region:
         ----------
         name
             Name
+
+        Returns
+        -------
+        parameters._Parameter
+            Root parameter found or newly created
         """
         res = self._parameters.get(name, None)
         if res is None:
@@ -115,6 +130,11 @@ class _Region:
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+
+        Returns
+        -------
+        Optional[parameters._Parameter]
+            Parameter of ``None`` if not found
 
         Raises
         ------

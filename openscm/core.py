@@ -43,7 +43,7 @@ class ParameterSet:
         Parameters
         ----------
         name_root : str
-            Name of root region, default is "World".
+            Name of root region, default is "World"
         """
         self._root = _Region(name_root)
 
@@ -54,7 +54,17 @@ class ParameterSet:
         Parameters
         ----------
         name
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
+
+        Returns
+        -------
+        _Region
+            Found or created region
+
+        Raises
+        ------
+        ValueError
+            If parent region could not be found
         """
         name_tuple = ensure_input_is_tuple(name)
         if len(name_tuple) > 1:
@@ -78,12 +88,17 @@ class ParameterSet:
 
     def _get_region(self, name: Tuple[str]) -> Optional[_Region]:
         """
-        Get a region or ``None`` if not found.
+        Get a region by its hierarchichal name.
 
         Parameters
         ----------
         name
             Hierarchical name of the region.
+
+        Returns
+        -------
+        Optional[_Region]
+            Region or ``None`` if not found
         """
         name_tuple = ensure_input_is_tuple(name)
         if name_tuple[0] != self._root.name:
@@ -101,6 +116,11 @@ class ParameterSet:
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
             Region
+
+        Returns
+        -------
+        _Parameter
+            Parameter found or newly created.
 
         Raises
         ------
@@ -131,9 +151,14 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
         unit
             Unit for the values in the view
+
+        Returns
+        -------
+        ScalarView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -161,9 +186,14 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
         unit
             Unit for the values in the view
+
+        Returns
+        -------
+        WritableScalarView
+            Writable view to the parameter
 
         Raises
         ------
@@ -202,7 +232,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
         unit
             Unit for the values in the view
         time_points
@@ -213,6 +243,11 @@ class ParameterSet:
             Interpolation type
         extrapolation_type
             Extrapolation type
+
+        Returns
+        -------
+        TimeseriesView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -254,7 +289,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
         unit
             Unit for the values in the view
         time_points
@@ -265,6 +300,11 @@ class ParameterSet:
             Interpolation type
         extrapolation_type
             Extrapolation type
+
+        Returns
+        -------
+        WritableTimeseriesView
+            Writable view to the parameter
 
         Raises
         ------
@@ -411,7 +451,7 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region_name
-            Hierarchical name of the region".
+            Hierarchical name of the region
 
         Raises
         ------
@@ -421,7 +461,7 @@ class ParameterSet:
         Returns
         -------
         _Parameter
-            Parameter or ``None`` if the parameter has not been created yet.
+            Parameter or ``None`` if the parameter has not been created yet
         """
         region = self._get_region(region_name)
         if region is not None:

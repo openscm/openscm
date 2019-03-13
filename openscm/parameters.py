@@ -151,6 +151,11 @@ class _Parameter:
         parameter_type
             Parameter type if it is going to be created
 
+        Returns
+        -------
+        _Parameter
+            Parameter found or newly created
+
         Raises
         ------
         ParameterReadError
@@ -180,6 +185,11 @@ class _Parameter:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the subparameter below this
             parameter or ``()`` for this parameter
+
+        Returns
+        -------
+        Optional[_Parameter]
+            Parameter of ``None`` if not found
         """
         name = ensure_input_is_tuple(name)
         if name:
@@ -218,7 +228,6 @@ class _Parameter:
             If parameter has child parameters which cannot be aggregated (for boolean
             and string parameters).
         """
-        # TODO aggregate
         if self._info._type is not None and self._info._type != parameter_type:
             raise ParameterTypeError
         if self._info._type is None:
