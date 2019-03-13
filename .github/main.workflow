@@ -8,7 +8,7 @@ action "Documentation" {
   args = [
     "sphinx-build -M html docs docs/build -qW", # treat warnings as errors (-W)...
     "sphinx-build -M html docs docs/build -Eqn -b coverage", # ...but not when being nitpicky (-n)
-    "if [[ ! -s docs/build/html/python.txt ]]",
+    "if [[ -s docs/build/html/python.txt ]]",
     "then",
     "    echo",
     "    echo \"Error: Documentation missing:\"",
@@ -19,7 +19,7 @@ action "Documentation" {
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "sphinx sphinx_rtd_theme sphinx-autodoc-typehints"
+    PIP_PACKAGES = ".[docs]"
   }
 }
 
