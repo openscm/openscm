@@ -233,7 +233,7 @@ class TimeseriesConverter:
 
         Returns
         -------
-        func
+        Callable[[float], float]
             Function that represents the interpolated timeseries. It takes a single
             argument, time ("x-value"), and returns a single float, the value of the
             interpolated timeseries at that point in time ("y-value").

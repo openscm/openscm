@@ -68,7 +68,7 @@ with which adapters should interact is
   should set the default values of mandatory *model-specific* (not
   :ref:`standard OpenSCM parameters <standard-parameters>`!)
   parameters in the in the :class:`~openscm.core.ParameterSet` stored
-  in the adapter's :attr:`~openscm.adapter.Adapter._parameter`
+  in the adapter's :attr:`~openscm.adapter.Adapter._parameters`
   attribute. The :ref:`hierarchical names <parameter-hierarchy>` of
   these model-specific parameters should start with the model/adapter
   name (as you set it in the model registry, see below).
@@ -184,8 +184,8 @@ possible, adapters should be able to take all of them as input from
 values to :attr:`~openscm.adapter.Adapter._output`.
 
 For efficiency, the OpenSCM Core interface provides subclasses of
-:class:`~openscm.core.ParameterView` that provide a view into a
-parameter with a requested :ref:`time frame <timeframes>` and
+:class:`~openscm.parameter_views.ParameterView` that provide a view
+into a parameter with a requested :ref:`time frame <timeframes>` and
 :ref:`unit <units>`. Conversion (aggregation, unit conversion, and
 time frame adjustment) is done interally if possible. Subclasses
 implement functionality for scalar and time series values, each for
