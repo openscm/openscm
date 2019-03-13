@@ -3,18 +3,7 @@ workflow "Continuous Integration" {
   resolves = ["Coverage"]
 }
 
-action "Bandit" {
-  uses = "swillner/actions/python-run@master"
-  args = [
-    "bandit -c .bandit.yml -r openscm"
-  ]
-  env = {
-    PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "bandit"
-  }
-}
-
-action "Docs" {
+action "Documentation" {
   uses = "swillner/actions/python-run@master"
   args = [
     "sphinx-build -M html docs docs/build -qW", # treat warnings as errors (-W)...
@@ -39,7 +28,7 @@ action "Formatting" {
   args = [
     "black --check openscm tests setup.py --exclude openscm/_version.py",
     "isort --check-only --recursive openscm tests setup.py",
-    "pydocstyle openscm",
+    "pydocstyle openscm"
   ]
   env = {
     PYTHON_VERSION = "3.7"
@@ -47,27 +36,18 @@ action "Formatting" {
   }
 }
 
-action "Mypy" {
+action "Linters" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "mypy openscm"
-  ]
-  env = {
-    PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "mypy"
-  }
-}
-
-action "Pylint" {
-  uses = "swillner/actions/python-run@master"
-  args = [
+    "bandit -c .bandit.yml -r openscm",
+    "flake8 openscm tests",
+    "mypy openscm",
     "pylint openscm"
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "pylint ."
+    PIP_PACKAGES = "bandit flake8 mypy pylint ."
   }
-  needs = ["Bandit", "Docs", "Formatting", "Mypy"]
 }
 
 action "Tests" {
@@ -80,7 +60,7 @@ action "Tests" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = ".[tests]"
   }
-  needs = ["Pylint"]
+  needs = ["Documentation", "Formatting", "Linters"]
 }
 
 action "Coverage" {
@@ -89,7 +69,7 @@ action "Coverage" {
     "if ! coverage report --fail-under=\"$MIN_COVERAGE\ --show-missing"",
     "then",
     "    echo",
-    "    echo \"Error: Coverage has to be at least ${MIN_COVERAGE}%\"",
+    "    echo \"Error: Test coverage has to be at least ${MIN_COVERAGE}%\"",
     "    exit 1",
     "fi"
   ]
