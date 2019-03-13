@@ -13,7 +13,7 @@ coverage: venv
 	./venv/bin/coverage html
 
 test-notebooks: venv
-	./venv/bin/pytest notebooks -r a --nbval --sanitize notebooks/tests_sanitize.cfg
+	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
 
 test-all: test test-notebooks
 
@@ -32,6 +32,7 @@ isort: venv
 
 define clean_notebooks_code
 	(.cells[] | select(has("execution_count")) | .execution_count) = 0 \
+	| (.cells[] | select(has("outputs")) | .outputs[] | select(has("execution_count")) | .execution_count) = 0 \
 	| .metadata = {"language_info": {"name": "python", "pygments_lexer": "ipython3"}} \
 	| .cells[].metadata = {}
 endef

@@ -54,7 +54,7 @@ action "Tests" {
   uses = "swillner/actions/python-run@master"
   args = [
     "pytest tests -r a --cov=openscm --cov-report=''",
-    "pytest notebooks -r a --nbval --sanitize notebooks/tests_sanitize.cfg"
+    "pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg"
   ]
   env = {
     PYTHON_VERSION = "3.7"
