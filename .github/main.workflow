@@ -1,6 +1,6 @@
 workflow "Continuous Integration" {
   on = "push"
-  resolves = ["Test coverage"]
+  resolves = ["Coverage"]
 }
 
 action "Bandit" {
@@ -48,12 +48,23 @@ action "Pylint" {
   needs = ["Bandit", "Black", "Mypy"]
 }
 
-action "Test coverage" {
+action "Tests" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "pytest -rfsxEX --cov=openscm tests --cov-report term-missing",
-    "pytest -rfsxEX --nbval ./notebooks --sanitize ./notebooks/tests_sanitize.cfg",
-    "if ! coverage report --fail-under=\"$MIN_COVERAGE\"",
+    "pytest tests -r a --cov=openscm --cov-report=''",
+    "pytest notebooks -r a --nbval --sanitize notebooks/tests_sanitize.cfg"
+  ]
+  env = {
+    PYTHON_VERSION = "3.7"
+    PIP_PACKAGES = ".[tests]"
+  }
+  needs = ["Pylint"]
+}
+
+action "Coverage" {
+  uses = "swillner/actions/python-run@master"
+  args = [
+    "if ! coverage report --fail-under=\"$MIN_COVERAGE\ --show-missing"",
     "then",
     "    echo",
     "    echo \"Error: Coverage has to be at least ${MIN_COVERAGE}%\"",
@@ -63,9 +74,9 @@ action "Test coverage" {
   env = {
     PYTHON_VERSION = "3.7"
     MIN_COVERAGE = "100"
-    PIP_PACKAGES = "coverage .[tests]"
+    PIP_PACKAGES = "coverage"
   }
-  needs = ["Pylint"]
+  needs = ["Tests"]
 }
 
 
@@ -90,7 +101,7 @@ action "Publish on PyPi" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = "twine ."
   }
-  needs = ["Filter tag", "Test coverage"]
+  needs = ["Filter tag", "Coverage"]
   secrets = ["TWINE_USERNAME", "TWINE_PASSWORD"]
 }
 
