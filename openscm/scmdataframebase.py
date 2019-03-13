@@ -12,7 +12,7 @@ class ScmDataFrameBase(
     IamDataFrame  # type: ignore # TODO remove ignore after removing Pyam dependency
 ):
     """
-    This base is the class other libraries can subclass.
+    Base class for :class:``openscm.scmdataframe.ScmDataFrame``.
 
     Having such a subclass avoids a potential circularity where e.g. openscm imports
     ScmDataFrame as well as Pymagicc, but Pymagicc wants to import ScmDataFrame and
