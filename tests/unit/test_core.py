@@ -132,16 +132,20 @@ def test_parameter(core):
     assert param_industry.full_name == ("Emissions", "CO2", "Industry")
     assert param_industry.info.name == "Industry"
 
-    param_industry.attempt_read("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
+    param_industry.attempt_read(
+        ParameterType.AVERAGE_TIMESERIES, "GtCO2/a", np.array([0])
+    )
     assert param_industry.info.parameter_type == ParameterType.AVERAGE_TIMESERIES
     assert param_industry.info.unit == "GtCO2/a"
 
     with pytest.raises(ParameterReadonlyError):
-        param_co2.attempt_write("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
+        param_co2.attempt_write(
+            ParameterType.AVERAGE_TIMESERIES, "GtCO2/a", np.array([0])
+        )
 
-    param_co2.attempt_read("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
+    param_co2.attempt_read(ParameterType.AVERAGE_TIMESERIES, "GtCO2/a", np.array([0]))
     with pytest.raises(ParameterTypeError):
-        param_co2.attempt_read("GtCO2/a", ParameterType.SCALAR)
+        param_co2.attempt_read(ParameterType.SCALAR, "GtCO2/a")
 
     with pytest.raises(ParameterReadError):
         parameterset._get_or_create_parameter(
@@ -149,9 +153,11 @@ def test_parameter(core):
         )
 
     with pytest.raises(ParameterTypeError):
-        param_industry.attempt_write("GtCO2/a", ParameterType.SCALAR)
+        param_industry.attempt_write(ParameterType.SCALAR, "GtCO2/a")
 
-    param_industry.attempt_write("GtCO2/a", ParameterType.AVERAGE_TIMESERIES)
+    param_industry.attempt_write(
+        ParameterType.AVERAGE_TIMESERIES, "GtCO2/a", np.array([0])
+    )
     with pytest.raises(ParameterWrittenError):
         parameterset._get_or_create_parameter(
             ("Emissions", "CO2", "Industry", "Other"), region_ber
