@@ -266,3 +266,77 @@ class WritableTimeseriesView(TimeseriesView):
         self._parameter._data = self._timeseries_converter.convert_to(
             self._unit_converter.convert_to(values)
         )
+
+
+class BooleanView(ParameterView):
+    """
+    Read-only view of a boolean parameter.
+    """
+
+    def get(self) -> bool:
+        """
+        Get current value of boolean parameter.
+
+        Raises
+        ------
+        ParameterEmptyError
+            Parameter is empty, i.e. has not yet been written to
+        """
+        if self.is_empty:
+            raise ParameterEmptyError
+
+        return cast(bool, self._parameter._data)
+
+
+class WritableBooleanView(BooleanView):
+    """
+    View of a boolean parameter whose value can be changed.
+    """
+
+    def set(self, value: bool) -> None:
+        """
+        Set current value of boolean parameter.
+
+        Parameters
+        ----------
+        value
+            Value
+        """
+        self._parameter._data = value
+
+
+class StringView(ParameterView):
+    """
+    Read-only view of a string parameter.
+    """
+
+    def get(self) -> str:
+        """
+        Get current value of string parameter.
+
+        Raises
+        ------
+        ParameterEmptyError
+            Parameter is empty, i.e. has not yet been written to
+        """
+        if self.is_empty:
+            raise ParameterEmptyError
+
+        return cast(str, self._parameter._data)
+
+
+class WritableStringView(StringView):
+    """
+    View of a string parameter whose value can be changed.
+    """
+
+    def set(self, value: str) -> None:
+        """
+        Set current value of string parameter.
+
+        Parameters
+        ----------
+        value
+            Value
+        """
+        self._parameter._data = value

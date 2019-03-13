@@ -16,6 +16,10 @@ from .parameter_views import (
     WritableScalarView,
     TimeseriesView,
     WritableTimeseriesView,
+    BooleanView,
+    WritableBooleanView,
+    StringView,
+    WritableStringView,
 )
 from .parameters import _Parameter, ParameterInfo, ParameterType
 from .regions import _Region
@@ -142,7 +146,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_read(unit, ParameterType.SCALAR)
+        parameter.attempt_read(ParameterType.SCALAR, unit)
         return ScalarView(parameter, unit)
 
     def get_writable_scalar_view(
@@ -174,7 +178,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_write(unit, ParameterType.SCALAR)
+        parameter.attempt_write(ParameterType.SCALAR, unit)
         return WritableScalarView(parameter, unit)
 
     def get_timeseries_view(
@@ -221,7 +225,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_read(unit, timeseries_type, time_points)
+        parameter.attempt_read(timeseries_type, unit, time_points)
         return TimeseriesView(
             parameter,
             unit,
@@ -275,7 +279,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_write(unit, timeseries_type, time_points)
+        parameter.attempt_write(timeseries_type, unit, time_points)
         return WritableTimeseriesView(
             parameter,
             unit,
@@ -284,6 +288,118 @@ class ParameterSet:
             interpolation_type,
             extrapolation_type,
         )  # WritableTimeseriesView
+
+    def get_boolean_view(self, name: Tuple[str], region: Tuple[str]) -> BooleanView:
+        """
+        Get a read-only view to a boolean parameter.
+
+        The parameter is created as a boolean if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+
+        Raises
+        ------
+        ParameterTypeError
+            Parameter is not boolean
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_read(ParameterType.BOOLEAN)
+        return BooleanView(parameter)
+
+    def get_writable_boolean_view(
+        self, name: Tuple[str], region: Tuple[str]
+    ) -> WritableBooleanView:
+        """
+        Get a writable view to a boolean parameter.
+
+        The parameter is created as a boolean if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+
+        Raises
+        ------
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        ParameterTypeError
+            Parameter is not boolean
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_write(ParameterType.BOOLEAN)
+        return WritableBooleanView(parameter)
+
+    def get_string_view(self, name: Tuple[str], region: Tuple[str]) -> StringView:
+        """
+        Get a read-only view to a string parameter.
+
+        The parameter is created as a string if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+
+        Raises
+        ------
+        ParameterTypeError
+            Parameter is not string
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_read(ParameterType.STRING)
+        return StringView(parameter)
+
+    def get_writable_string_view(
+        self, name: Tuple[str], region: Tuple[str]
+    ) -> WritableStringView:
+        """
+        Get a writable view to a string parameter.
+
+        The parameter is created as a string if not viewed so far.
+
+        Parameters
+        ----------
+        name
+            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
+        region
+            Hierarchical name of the region or ``()`` for "World".
+
+        Raises
+        ------
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        ParameterTypeError
+            Parameter is not boolean
+        ValueError
+            Name not given or invalid region
+        """
+        parameter = self._get_or_create_parameter(
+            name, self._get_or_create_region(region)
+        )
+        parameter.attempt_write(ParameterType.STRING)
+        return WritableStringView(parameter)
 
     def get_parameter_info(
         self, name: Tuple[str], region_name: Tuple[str]
