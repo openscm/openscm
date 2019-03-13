@@ -1,6 +1,13 @@
 [MASTER]
 ignore=_version.py
-load-plugins=pylint.extensions.docparams
+load-plugins=
+    pylint.extensions.bad_builtin,
+    pylint.extensions.check_elif,
+    pylint.extensions.comparetozero,
+    pylint.extensions.docparams,
+    pylint.extensions.emptystring,
+    pylint.extensions.overlapping_exceptions,
+    pylint.extensions.redefined_variable_type
 
 [MESSAGES CONTROL]
 disable=
