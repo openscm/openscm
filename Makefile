@@ -21,6 +21,7 @@ checks: venv clean-notebooks docs test-all
 	./venv/bin/bandit -c .bandit.yml -r openscm
 	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
 	./venv/bin/coverage report --fail-under=100 --show-missing
+	./venv/bin/flake8 openscm tests
 	./venv/bin/isort --check-only --recursive openscm tests setup.py
 	./venv/bin/mypy openscm
 	./venv/bin/pydocstyle openscm
@@ -45,9 +46,6 @@ clean-notebooks: venv
 
 docs: venv
 	./venv/bin/sphinx-build -M html docs docs/build
-
-flake8: venv
-	./venv/bin/flake8 openscm tests
 
 black: venv
 	@status=$$(git status --porcelain openscm tests); \
