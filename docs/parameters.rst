@@ -9,6 +9,19 @@ In OpenSCM a 'parameter' is anything which is passed to a model e.g. |CO2| emiss
 Simple climate models come in many different shapes and forms hence we do not expect them to all be able to do everything.
 However, to be included in OpenSCM they must be able to understand all of OpenSCM's key parameters where here, 'understand' means that their adapters should either be able to use them or should throw sensible warning/error messages if they are used.
 
+Conventions
+-----------
+
+'Pre-industrial' refers to an unperturbed state of the climate.
+Individual adapters can translate this into whatever year they need to for their model, but they should do such translations with this definition in mind.
+
+'Reference period' refers to the period a given variable is reported relative to the mean of.
+For example, 'surface temperature relative to a 1961-1990 reference period' refers to surface temperatures relative to the mean of the period 1961-1990.
+Adapters can report variables without reference periods if these are not used internally by the models.
+However, if the model uses an internal reference period then this should be indicated in the reported variable names by appending ``(rel. to XXXX-YYYY)`` to the variable name.
+Hence, 'surface temperature relative to a 1961-1990 reference period' would become ``Surface Temperature (rel. to 1961-1990)`` [TODO: discuss with other authors how we want this to play out].
+
+
 Variables
 ---------
 
@@ -24,7 +37,7 @@ As OpenSCM can handle unit conversion any unit which can be converted to the exa
 Emissions
 *********
 
-All climate models included in OpenSCM must be able to understand and take the following emissions variables as input:
+All climate models included in OpenSCM must be able to understand and take the following emissions variables as input. Note that adding up all sub-categories of ``Emissions`` will fail as the units will all be different.
 
 - ``Emissions|CO2`` (GtC / yr)
 - ``Emissions|CO2|MAGICC Fossil and Industrial`` (GtC / yr) i.e. the ``FossilCO2`` column in a MAGICC ``.SCEN`` file
@@ -99,6 +112,149 @@ All climate models included in OpenSCM must be able to understand and take the f
 - ``Emissions|Halon2402`` (ktHalon2402 / yr)
 
 
+Concentrations
+**************
+
+Atmospheric concentrations should be of the form ``Atmospheric Concentrations|XXX`` e.g. ``Atmospheric Concentrations|CO2``.
+OpenSCM models should understand all of the following variables.
+Note that adding up all sub-categories of ``Atmospheric Concentrations`` will either fail as the units will not all be the same or will produce a basically nonsense number (but still be possible).
+
+- ``Atmospheric Concentrations|CO2`` (ppm)
+- ``Atmospheric Concentrations|CH4`` (ppb)
+- ``Atmospheric Concentrations|N2O`` (ppb)
+- ``Atmospheric Concentrations|NF3`` (ppt)
+- ``Atmospheric Concentrations|CF4`` (ppt)
+- ``Atmospheric Concentrations|C2F6`` (ppt)
+- ``Atmospheric Concentrations|C3F8`` (ppt)
+- ``Atmospheric Concentrations|cC4F8`` (ppt)
+- ``Atmospheric Concentrations|C4F10`` (ppt)
+- ``Atmospheric Concentrations|C5F12`` (ppt)
+- ``Atmospheric Concentrations|C6F14`` (ppt)
+- ``Atmospheric Concentrations|C7F16`` (ppt)
+- ``Atmospheric Concentrations|C8F18`` (ppt)
+- ``Atmospheric Concentrations|CCl4`` (ppt)
+- ``Atmospheric Concentrations|CHCl3`` (ppt)
+- ``Atmospheric Concentrations|CH2Cl2`` (ppt)
+- ``Atmospheric Concentrations|CH3CCl3`` (ppt)
+- ``Atmospheric Concentrations|CH3Cl`` (ppt)
+- ``Atmospheric Concentrations|CH3Br`` (ppt)
+- ``Atmospheric Concentrations|HFC23`` (ppt)
+- ``Atmospheric Concentrations|HFC32`` (ppt)
+- ``Atmospheric Concentrations|HFC4310`` (ppt)
+- ``Atmospheric Concentrations|HFC125`` (ppt)
+- ``Atmospheric Concentrations|HFC134a`` (ppt)
+- ``Atmospheric Concentrations|HFC143a`` (ppt)
+- ``Atmospheric Concentrations|HFC152a`` (ppt)
+- ``Atmospheric Concentrations|HFC227ea`` (ppt)
+- ``Atmospheric Concentrations|HFC236fa`` (ppt)
+- ``Atmospheric Concentrations|HFC245fa`` (ppt)
+- ``Atmospheric Concentrations|HFC365mfc`` (ppt)
+- ``Atmospheric Concentrations|CFC11`` (ppt)
+- ``Atmospheric Concentrations|CFC12`` (ppt)
+- ``Atmospheric Concentrations|CFC113`` (ppt)
+- ``Atmospheric Concentrations|CFC114`` (ppt)
+- ``Atmospheric Concentrations|CFC115`` (ppt)
+- ``Atmospheric Concentrations|HCFC22`` (ppt)
+- ``Atmospheric Concentrations|HCFC141b`` (ppt)
+- ``Atmospheric Concentrations|HCFC142b`` (ppt)
+- ``Atmospheric Concentrations|SF6`` (ppt)
+- ``Atmospheric Concentrations|SO2F2`` (ppt)
+- ``Atmospheric Concentrations|Halon1202`` (ppt)
+- ``Atmospheric Concentrations|Halon1211`` (ppt)
+- ``Atmospheric Concentrations|Halon1301`` (ppt)
+- ``Atmospheric Concentrations|Halon2402`` (ppt)
+
+
+Radiative Forcing
+*****************
+
+Radiative forcing should be of the form ``Radiative Forcing|XXX`` e.g. ``Radiative Forcing|CO2``.
+OpenSCM models should understand all of the following variables.
+Note that adding up all sub-categories of ``Radiative Forcing`` will give total forcing which is a sensible number, unlike emissions and concentrations.
+However, the adapters have to be careful to ensure that they don't double report by e.g. providing ``Radiative Forcing|Aerosols|Direct Effect`` and ``Radiative Forcing|Aerosols|NOx``.
+
+- ``Radiative Forcing`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols|Direct Effect`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols|Indirect Effect`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols|SOx`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols|NOx`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols|OC`` (W/m\*\*2)
+- ``Radiative Forcing|Aerosols|BC`` (W/m\*\*2)
+- ``Radiative Forcing|Land-use Change`` (W/m\*\*2)
+- ``Radiative Forcing|Black Carbon on Snow`` (W/m\*\*2)
+- ``Radiative Forcing|Volcanic`` (W/m\*\*2)
+- ``Radiative Forcing|Solar`` (W/m\*\*2)
+- ``Radiative Forcing|External`` (W/m\*\*2)
+- ``Radiative Forcing|CO2`` (W/m\*\*2)
+- ``Radiative Forcing|CH4`` (W/m\*\*2)
+- ``Radiative Forcing|N2O`` (W/m\*\*2)
+- ``Radiative Forcing|NF3`` (W/m\*\*2)
+- ``Radiative Forcing|CF4`` (W/m\*\*2)
+- ``Radiative Forcing|C2F6`` (W/m\*\*2)
+- ``Radiative Forcing|C3F8`` (W/m\*\*2)
+- ``Radiative Forcing|cC4F8`` (W/m\*\*2)
+- ``Radiative Forcing|C4F10`` (W/m\*\*2)
+- ``Radiative Forcing|C5F12`` (W/m\*\*2)
+- ``Radiative Forcing|C6F14`` (W/m\*\*2)
+- ``Radiative Forcing|C7F16`` (W/m\*\*2)
+- ``Radiative Forcing|C8F18`` (W/m\*\*2)
+- ``Radiative Forcing|CCl4`` (W/m\*\*2)
+- ``Radiative Forcing|CHCl3`` (W/m\*\*2)
+- ``Radiative Forcing|CH2Cl2`` (W/m\*\*2)
+- ``Radiative Forcing|CH3CCl3`` (W/m\*\*2)
+- ``Radiative Forcing|CH3Cl`` (W/m\*\*2)
+- ``Radiative Forcing|CH3Br`` (W/m\*\*2)
+- ``Radiative Forcing|HFC23`` (W/m\*\*2)
+- ``Radiative Forcing|HFC32`` (W/m\*\*2)
+- ``Radiative Forcing|HFC4310`` (W/m\*\*2)
+- ``Radiative Forcing|HFC125`` (W/m\*\*2)
+- ``Radiative Forcing|HFC134a`` (W/m\*\*2)
+- ``Radiative Forcing|HFC143a`` (W/m\*\*2)
+- ``Radiative Forcing|HFC152a`` (W/m\*\*2)
+- ``Radiative Forcing|HFC227ea`` (W/m\*\*2)
+- ``Radiative Forcing|HFC236fa`` (W/m\*\*2)
+- ``Radiative Forcing|HFC245fa`` (W/m\*\*2)
+- ``Radiative Forcing|HFC365mfc`` (W/m\*\*2)
+- ``Radiative Forcing|CFC11`` (W/m\*\*2)
+- ``Radiative Forcing|CFC12`` (W/m\*\*2)
+- ``Radiative Forcing|CFC113`` (W/m\*\*2)
+- ``Radiative Forcing|CFC114`` (W/m\*\*2)
+- ``Radiative Forcing|CFC115`` (W/m\*\*2)
+- ``Radiative Forcing|HCFC22`` (W/m\*\*2)
+- ``Radiative Forcing|HCFC141b`` (W/m\*\*2)
+- ``Radiative Forcing|HCFC142b`` (W/m\*\*2)
+- ``Radiative Forcing|SF6`` (W/m\*\*2)
+- ``Radiative Forcing|SO2F2`` (W/m\*\*2)
+- ``Radiative Forcing|Halon1202`` (W/m\*\*2)
+- ``Radiative Forcing|Halon1211`` (W/m\*\*2)
+- ``Radiative Forcing|Halon1301`` (W/m\*\*2)
+- ``Radiative Forcing|Halon2402`` (W/m\*\*2)
+
+
+Material Fluxes
+***************
+
+These variables can be used to store the flux of material within the model.
+They should be of the form ``X to Y Flux`` where the material is flowing from ``X`` into ``Y`` (and hence negative values represent flows from ``Y`` into ``X``).
+OpenSCM models should understand all of the following variables.
+
+
+- ``Land to Air Flux|CO2|Permafrost`` (GtC / yr) - land to air flux of |CO2| from permafrost
+- ``Land to Air Flux|CH4|Permafrost`` (MtCH4 / yr)
+
+
+Other
+*****
+
+Other variables which should be recognised by OpenSCM adapters are given below.
+
+- ``Surface Temperature`` (K) - surface air temperature i.e. tas
+- ``Ocean Temperature`` (K) - surface ocean temperature i.e. tos
+- ``Ocean Heat Content`` (J)
+- ``Sea Level Rise`` (mm)
+
+
 Regions
 -------
 
@@ -127,3 +283,15 @@ All OpenSCM adapaters must understand the following regions:
 - ``World|R5.2OECD``
 - ``World|R5.2LAM``
 - ``World|Bunkers``
+
+
+Configuration
+-------------
+
+Each model will have its own set of configuration parameters and conventions.
+In OpenSCM we allow the user to pass these to and from the model via the adapter, following the model's own internal conventions for naming.
+However, we also insist that models understand the following configuration options.
+
+- ``ecs`` (K) - equilibrium climate sensitivity
+- ``tcr`` (K) - transient climate response
+- ``f2xco2`` (W/m\*\*2) - radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level
