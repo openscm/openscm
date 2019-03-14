@@ -19,7 +19,7 @@ from _version import get_versions  # isort:skip # append path before
 # -- Project information -----------------------------------------------------
 
 project = "OpenSCM"
-copyright = "2018, Robert Gieseke, Zebedee Nicholls, Sven Willner"
+copyright = "2018-2019, Robert Gieseke, Zebedee Nicholls, Sven Willner"
 author = "Robert Gieseke, Zebedee Nicholls, Sven Willner"
 version = get_versions()["version"]  # The short X.Y version
 release = version  # The full version, including alpha/beta/rc tags
@@ -37,7 +37,7 @@ extensions = [
 ]
 language = "en"
 master_doc = "index"
-needs_sphinx = "1.4"
+needs_sphinx = "1.8"
 nitpick_ignore = [
     ("py:class", "Callable"),
     ("py:class", "Optional"),
@@ -126,13 +126,13 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_default_flags = [  # TODO deprecated since 1.8
-    "inherited-members",
-    "members",
-    "private-members",
-    "show-inheritance",
-    "undoc-members",
-]
+autodoc_default_options = {
+    "inherited-members": True,
+    "members": True,
+    "private-members": True,
+    "show-inheritance": True,
+    "undoc-members": True,
+}
 coverage_write_headline = False  # do not write headlines.
 intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy", None),
