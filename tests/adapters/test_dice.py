@@ -1,18 +1,59 @@
-from openscm.adapters.dice import DICE
+from datetime import datetime
 
+import numpy as np
+import pandas as pd
 from base import _AdapterTester
+
+from openscm.adapters.dice import DICE, YEAR
+from openscm.parameters import ParameterType
+from openscm.timeseries_converter import create_time_points
+
+
+def _run_and_compare(test_adapter, filename):
+    original_data = pd.read_csv(filename)
+    start_time = int(datetime(2010, 1, 1).timestamp())
+    timestep_count = 100
+    stop_time = start_time + timestep_count * YEAR
+    time_points = create_time_points(
+        start_time, YEAR, timestep_count, ParameterType.AVERAGE_TIMESERIES
+    )
+    test_adapter._parameters.get_writable_timeseries_view(
+        ("Emissions", "CO2"),
+        ("World",),
+        "GtCO2/a",
+        time_points,
+        ParameterType.AVERAGE_TIMESERIES,
+    ).set(original_data.E.values[:timestep_count])
+    test_adapter.initialize_model_input()
+    test_adapter.initialize_run_parameters(start_time, stop_time)
+    test_adapter.reset()
+    test_adapter.run()
+    output_parameters = [
+        (("Concentration", "Atmosphere"), "GtC", "MAT"),
+        (("Concentration", "Ocean", "lower"), "GtC", "ML"),
+        (("Concentration", "Ocean", "shallow"), "GtC", "MU"),
+        (("Radiative forcing",), "W/m^2", "FORC"),
+        (("Temperature Increase", "Atmosphere"), "degC", "TATM"),
+        (("Temperature Increase", "Ocean", "lower"), "degC", "TOCEAN"),
+    ]
+    for name, unit, original_name in output_parameters:
+        np.testing.assert_allclose(
+            test_adapter._output.get_timeseries_view(
+                name,
+                ("World",),
+                unit,
+                time_points[:-1],  # these are point timeseries
+                ParameterType.POINT_TIMESERIES,
+            ).get(),
+            original_data[original_name][:timestep_count],
+        )
 
 
 class TestMyAdapter(_AdapterTester):
     tadapter = DICE
 
-    # if necessary, you can extend the tests e.g.
-    @classmethod
-    def test_run(cls, test_adapter, test_config_paraset, test_drivers_core):
-        super().test_run(test_adapter, test_config_paraset, test_drivers_core)
-        # some specific test of your adapter here
+    def test_match_original(self, test_adapter):
+        _run_and_compare(test_adapter, "tests/data/dice_original_results.csv")
 
-    @classmethod
-    def test_my_special_feature(cls, test_adapter):
-        # test some special feature of your adapter class
-        pass
+    def test_match_original_bau(self, test_adapter):
+        _run_and_compare(test_adapter, "tests/data/dice_original_results_bau.csv")
