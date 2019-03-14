@@ -57,9 +57,9 @@ frame, which consists of a time point and a period length. The time
 point gives the start of the timeseries; the period length gives the
 length of the period between consecutive values in the timeseries.
 Each parameter value is assumed to be the **average value** for its
-corresponding period. This implies that values that are not averages but, for instance, absolute values, such as
-emissions need to be given as a rate, e.g. ``tC/a`` rather than
-``tC``.
+corresponding period. This implies that values that are not averages
+but, for instance, absolute values, such as emissions need to be given
+as a rate, e.g. ``tC/a`` rather than ``tC``.
 
 In the core and pythonic API time points are given in seconds since
 ``1970-01-01 00:00:00``, while time period lengths are specified in
@@ -116,7 +116,7 @@ property called ``parameters`` using one of the following functions:
 - :func:`~openscm.core.ParameterSet.get_timeseries_view` returns a
   read-only view to a timeseries parameter
   (:class:`~openscm.parameter_views.TimeseriesView`)
-- :func:`~openscm.parameter_views.ParameterSet.get_writable_timeseries_view`
+- :func:`~openscm.core.ParameterSet.get_writable_timeseries_view`
   returns a writable view to a timeseries parameter
   (:class:`~openscm.parameter_views.WritableTimeseriesView`)
 - :func:`~openscm.core.ParameterSet.get_boolean_view` returns a

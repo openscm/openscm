@@ -39,6 +39,7 @@ language = "en"
 master_doc = "index"
 needs_sphinx = "1.4"
 nitpick_ignore = [
+    ("py:class", "Callable"),
     ("py:class", "Optional"),
     ("py:class", "Sequence"),
     ("py:class", "Union"),
