@@ -505,9 +505,9 @@ def test_boolean_parameter_view(core):
         ("Model Options", "Boolean Option"), ("World",)
     )
     cs_writable.set(True)
-    assert cs_writable.get() == True
+    assert cs_writable.get()
     assert not cs.is_empty
-    assert cs.get() == True
+    assert cs.get()
 
 
 def test_string_parameter_view(core):
