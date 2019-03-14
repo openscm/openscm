@@ -92,6 +92,12 @@ action "Filter tag" {
   args = "tag 'v*'"
 }
 
+action "Filter master branch" {
+  uses = "swillner/actions/filter-branch@master"
+  args = "master"
+  needs = "Filter tag"
+}
+
 action "Publish on PyPi" {
   uses = "swillner/actions/python-run@master"
   args = [
@@ -103,7 +109,7 @@ action "Publish on PyPi" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = "twine ."
   }
-  needs = ["Filter tag", "Coverage"]
+  needs = ["Filter master branch"]
   secrets = ["TWINE_USERNAME", "TWINE_PASSWORD"]
 }
 
