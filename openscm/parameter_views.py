@@ -210,7 +210,7 @@ class TimeseriesView(ParameterView):
                 self._parameter
             )
 
-    def get_series(self) -> Sequence[float]:
+    def get(self) -> Sequence[float]:
         """
         Get values of the full timeseries.
 
@@ -257,7 +257,7 @@ class WritableTimeseriesView(TimeseriesView):
     View of a timeseries whose values can be changed.
     """
 
-    def set_series(self, values: Sequence[float]) -> None:
+    def set(self, values: Sequence[float]) -> None:
         """
         Set value for whole time series.
 
