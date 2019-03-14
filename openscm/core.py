@@ -11,14 +11,14 @@ implementable in several programming languages.
 from typing import Optional, Tuple, Union, cast
 
 from .parameter_views import (
-    ScalarView,
-    TimeseriesView,
-    WritableScalarView,
-    WritableTimeseriesView,
     BooleanView,
-    WritableBooleanView,
+    ScalarView,
     StringView,
+    TimeseriesView,
+    WritableBooleanView,
+    WritableScalarView,
     WritableStringView,
+    WritableTimeseriesView,
 )
 from .parameters import ParameterInfo, ParameterType, _Parameter
 from .regions import _Region
@@ -339,7 +339,12 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
+
+        Returns
+        -------
+        BooleanView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -367,7 +372,12 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
+
+        Returns
+        -------
+        WritableBooleanView
+            Writable view to the parameter
 
         Raises
         ------
@@ -395,7 +405,12 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
+
+        Returns
+        -------
+        StringView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -423,7 +438,12 @@ class ParameterSet:
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
         region
-            Hierarchical name of the region or ``()`` for "World".
+            Hierarchical name of the region
+
+        Returns
+        -------
+        WritableStringView
+            Writable view to the parameter
 
         Raises
         ------

@@ -97,15 +97,15 @@ class ScalarView(ParameterView):
         the returned value will be the sum of the values of all of the child
         parameters.
 
-        Raises
-        ------
-        ParameterEmptyError
-            Parameter is empty, i.e. has not yet been written to
-
         Returns
         -------
         float
             Current value of parameter
+
+        Raises
+        ------
+        ParameterEmptyError
+            Parameter is empty, i.e. has not yet been written to
         """
         if self._parameter._children:
             return sum(v.get() for v in self._child_data_views)
@@ -218,15 +218,15 @@ class TimeseriesView(ParameterView):
         the returned value will be the sum of the values of all of the child
         parameters.
 
-        Raises
-        ------
-        ParameterEmptyError
-            Parameter is empty, i.e. has not yet been written to
-
         Returns
         -------
         Sequence[float]
             Current value of parameter
+
+        Raises
+        ------
+        ParameterEmptyError
+            Parameter is empty, i.e. has not yet been written to
         """
         if self._parameter._children:
             return cast(
@@ -264,7 +264,7 @@ class WritableTimeseriesView(TimeseriesView):
         Parameters
         ----------
         values
-            Values to set.
+            Values to set
 
         Raises
         ------
@@ -286,6 +286,11 @@ class BooleanView(ParameterView):
     def get(self) -> bool:
         """
         Get current value of boolean parameter.
+
+        Returns
+        -------
+        bool
+            Current value of parameter
 
         Raises
         ------
@@ -323,6 +328,11 @@ class StringView(ParameterView):
     def get(self) -> str:
         """
         Get current value of string parameter.
+
+        Returns
+        -------
+        str
+            Current value of parameter
 
         Raises
         ------
