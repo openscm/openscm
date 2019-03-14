@@ -280,7 +280,7 @@ def test_timeseries_parameter_view(core, start_time, series):
     )
     assert carbon.is_empty
     with pytest.raises(ParameterEmptyError):
-        carbon.get_series()
+        carbon.get()
 
     carbon_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2"),
@@ -294,14 +294,14 @@ def test_timeseries_parameter_view(core, start_time, series):
         ExtrapolationType.LINEAR,
     )
     with pytest.raises(TimeseriesPointsValuesMismatchError):
-        carbon_writable.set_series(inseries[::2])
-    carbon_writable.set_series(inseries)
+        carbon_writable.set(inseries[::2])
+    carbon_writable.set(inseries)
     assert carbon_writable.length == len(inseries)
     np.testing.assert_allclose(
-        carbon_writable.get_series(), inseries, atol=inseries.max() * 1e-10
+        carbon_writable.get(), inseries, atol=inseries.max() * 1e-10
     )
     assert carbon.length == 5
-    np.testing.assert_allclose(carbon.get_series(), outseries, rtol=1e-3)
+    np.testing.assert_allclose(carbon.get(), outseries, rtol=1e-3)
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
     with pytest.raises(DimensionalityError):
@@ -337,7 +337,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         InterpolationType.LINEAR,
         ExtrapolationType.LINEAR,
     )
-    fossil_industry_writable.set_series(fossil_industry_emms)
+    fossil_industry_writable.set(fossil_industry_emms)
 
     fossil_energy_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Energy"),
@@ -353,7 +353,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         InterpolationType.LINEAR,
         ExtrapolationType.LINEAR,
     )
-    fossil_energy_writable.set_series(fossil_energy_emms)
+    fossil_energy_writable.set(fossil_energy_emms)
 
     land_writable = parameterset.get_writable_timeseries_view(
         ("Emissions", "CO2", "Land"),
@@ -369,7 +369,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         InterpolationType.LINEAR,
         ExtrapolationType.LINEAR,
     )
-    land_writable.set_series(land_emms * 1000)
+    land_writable.set(land_emms * 1000)
 
     fossil_industry = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil", "Industry"),
@@ -386,7 +386,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(
-        fossil_industry.get_series(),
+        fossil_industry.get(),
         fossil_industry_emms,
         atol=fossil_industry_emms.max() * 1e-10,
     )
@@ -405,7 +405,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         InterpolationType.LINEAR,
         ExtrapolationType.LINEAR,
     )
-    np.testing.assert_allclose(fossil_energy.get_series(), fossil_energy_emms)
+    np.testing.assert_allclose(fossil_energy.get(), fossil_energy_emms)
 
     fossil = parameterset.get_timeseries_view(
         ("Emissions", "CO2", "Fossil"),
@@ -421,9 +421,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         InterpolationType.LINEAR,
         ExtrapolationType.LINEAR,
     )
-    np.testing.assert_allclose(
-        fossil.get_series(), fossil_industry_emms + fossil_energy_emms
-    )
+    np.testing.assert_allclose(fossil.get(), fossil_industry_emms + fossil_energy_emms)
 
     # ensure that you can't write extra children once you've got a parent view, this
     # avoids ever having the child views become out of date
@@ -454,7 +452,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         InterpolationType.LINEAR,
         ExtrapolationType.LINEAR,
     )
-    np.testing.assert_allclose(land.get_series(), land_emms)
+    np.testing.assert_allclose(land.get(), land_emms)
 
     with pytest.raises(ParameterReadonlyError):
         parameterset.get_writable_timeseries_view(
@@ -487,7 +485,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
         ExtrapolationType.LINEAR,
     )
     np.testing.assert_allclose(
-        total.get_series(), land_emms + fossil_energy_emms + fossil_industry_emms
+        total.get(), land_emms + fossil_energy_emms + fossil_industry_emms
     )
 
 

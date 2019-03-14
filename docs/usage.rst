@@ -138,13 +138,13 @@ hierarchical name of the region it applies to. The "root" region, i.e.
 the region of which all others are subregions and which applies to
 parameters for all regions, is by default named ``"World"``.
 
-Values can be get and set using ``get`` and ``set`` (also,
-``get_series`` and ``set_series`` for whole timeseries), respectively.
+Values can be get and set using ``get`` and ``set``, respectively.
 Conversion, if necessary, is done internally by the object. There is
 no standard for the unit and time frame for internal storage, but
-those of the first :class:`openscm.parameter_views.ParameterView` requested are used. If a
-scalar view for a time series is requested (or vice-versa), or if the
-units are not convertible, an error is raised.
+those of the first :class:`openscm.parameter_views.ParameterView`
+requested are used. If a scalar view for a time series is requested
+(or vice-versa), or if the units are not convertible, an error is
+raised.
 
 :class:`~openscm.parameter_views.ParameterView` objects also convert
 between hierarchical levels if possible: a view to a higher level
@@ -185,7 +185,7 @@ step-wise would create large overhead).
         InterpolationType.LINEAR,
         ExtrapolationType.NONE,
     )
-    carbon_emissions.set_series(carbon_emissions_raw)
+    carbon_emissions.set(carbon_emissions_raw)
 
 Running the model
 *****************
@@ -219,7 +219,7 @@ read-only :class:`~openscm.parameter_views.ParameterView` objects:
     gmt = model_run.parameters.get_timeseries_view(
         ("Temperature", "Surface"), ("World",), "degC", start_time, year_seconds
     )
-    print(gmt.get_series())
+    print(gmt.get())
 
 
 Pythonic interface
