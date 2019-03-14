@@ -127,11 +127,11 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 autodoc_default_options = {
-    "inherited-members": True,
-    "members": True,
-    "private-members": True,
-    "show-inheritance": True,
-    "undoc-members": True,
+    "inherited-members": None,
+    "members": None,
+    "private-members": None,
+    "show-inheritance": None,
+    "undoc-members": None,
 }
 coverage_write_headline = False  # do not write headlines.
 intersphinx_mapping = {
