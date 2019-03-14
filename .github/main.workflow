@@ -26,7 +26,7 @@ action "Documentation" {
 action "Formatting" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "black --quiet --check openscm tests setup.py --exclude openscm/_version.py",
+    "black --check openscm tests setup.py --exclude openscm/_version.py",
     "isort --check-only --quiet --recursive openscm tests setup.py",
     "pydocstyle openscm"
   ]
@@ -40,7 +40,7 @@ action "Linters" {
   uses = "swillner/actions/python-run@master"
   args = [
     "bandit -c .bandit.yml -r openscm",
-    "flake8 openscm tests",
+    "flake8 openscm tests setup.py",
     "mypy openscm",
     "pylint openscm"
   ]
