@@ -489,37 +489,18 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     )
 
 
-def test_boolean_parameter_view(core):
+def test_generic_parameter_view(core):
     parameterset = core.parameters
-    cs = parameterset.get_boolean_view(("Model Options", "Boolean Option"), ("World",))
+    cs = parameterset.get_generic_view(("Model Options", "Generic Option"), ("World",))
     with pytest.raises(ParameterAggregationError):
-        parameterset.get_boolean_view(("Model Options"), ("World",))
+        parameterset.get_generic_view(("Model Options"), ("World",))
     with pytest.raises(ParameterTypeError):
         parameterset.get_scalar_view(("Model Options"), ("World",), "dimensionless")
     with pytest.raises(ParameterEmptyError):
         cs.get()
     assert cs.is_empty
-    cs_writable = parameterset.get_writable_boolean_view(
-        ("Model Options", "Boolean Option"), ("World",)
-    )
-    cs_writable.set(True)
-    assert cs_writable.get()
-    assert not cs.is_empty
-    assert cs.get()
-
-
-def test_string_parameter_view(core):
-    parameterset = core.parameters
-    cs = parameterset.get_string_view(("Model Options", "String Option"), ("World",))
-    with pytest.raises(ParameterAggregationError):
-        parameterset.get_string_view(("Model Options"), ("World",))
-    with pytest.raises(ParameterTypeError):
-        parameterset.get_scalar_view(("Model Options"), ("World",), "dimensionless")
-    with pytest.raises(ParameterEmptyError):
-        cs.get()
-    assert cs.is_empty
-    cs_writable = parameterset.get_writable_string_view(
-        ("Model Options", "String Option"), ("World",)
+    cs_writable = parameterset.get_writable_generic_view(
+        ("Model Options", "Generic Option"), ("World",)
     )
     cs_writable.set("enabled")
     assert cs_writable.get() == "enabled"
