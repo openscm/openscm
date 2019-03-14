@@ -229,9 +229,7 @@ class TimeseriesView(ParameterView):
             Parameter is empty, i.e. has not yet been written to
         """
         if self._parameter._children:
-            return cast(
-                Sequence[float], sum(v.get_series() for v in self._child_data_views)
-            )
+            return cast(Sequence[float], sum(v.get() for v in self._child_data_views))
         if self.is_empty:
             raise ParameterEmptyError
 
