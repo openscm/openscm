@@ -61,6 +61,7 @@ class Adapter(metaclass=ABCMeta):
         self._parameters = input_parameters
         self._output = output_parameters
         self._initialized = False
+        self._current_time = 0
 
     def __del__(self) -> None:
         """
@@ -133,28 +134,60 @@ class Adapter(metaclass=ABCMeta):
 
     @abstractmethod
     def _initialize_model(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Initialize the model. Called only once but as late as possible before a call to
+        `_run` or `_step`.
+        """
 
     @abstractmethod
     def _initialize_model_input(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Initialize the model input. Called before the adapter is used in any way and at
+        most once before a call to `_run` or `_step`.
+        """
 
     @abstractmethod
     def _initialize_run_parameters(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Initialize parameters for the run. Called before the adapter is used in any way
+        and at most once before a call to `_run` or `_step`.
+        """
 
     @abstractmethod
     def _reset(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Reset the model to prepare for a new run. Called once after each call of `_run`
+        and to reset the model after several calls to `_step`.
+        """
 
     @abstractmethod
     def _run(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Run the model over the full time range.
+        """
 
     @abstractmethod
     def _shutdown(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Shut the model down.
+        """
 
     @abstractmethod
     def _step(self) -> None:
-        """To be implemented by specific adapters"""
+        """
+        To be implemented by specific adapters.
+
+        Do a single time step.
+        """

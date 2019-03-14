@@ -36,7 +36,7 @@ class _AdapterTester:
         assert test_adapter._initialized
 
     def test_initialize_model_input_non_model_parameter(self, test_adapter):
-        tname = "junk"
+        tname = ("junk",)
         test_adapter._parameters.get_writable_scalar_view(tname, ("World",), "K").set(4)
         test_adapter.initialize_model_input()
         # TODO test that "junk" has not been used
@@ -55,7 +55,7 @@ class _AdapterTester:
     def test_initialize_run_parameters_non_model_parameter(
         self, test_adapter, test_run_parameters
     ):
-        tname = "junk"
+        tname = ("junk",)
         test_adapter._parameters.get_writable_scalar_view(tname, ("World",), "K").set(4)
         test_adapter.initialize_run_parameters(
             test_run_parameters.start_time, test_run_parameters.stop_time
@@ -67,19 +67,18 @@ class _AdapterTester:
         test_adapter.initialize_run_parameters(
             test_run_parameters.start_time, test_run_parameters.stop_time
         )
+        test_adapter.reset()
+        test_adapter.run()
 
-        res = test_adapter.run()
-
-        assert (
-            res.parameters.get_scalar_view(
-                name=("ecs",), region=("World",), unit="K"
-            ).get()
-            == 3
+    def test_step(self, test_adapter, test_run_parameters):
+        test_adapter.initialize_model_input()
+        test_adapter.initialize_run_parameters(
+            test_run_parameters.start_time, test_run_parameters.stop_time
         )
-
-        assert (
-            res.parameters.get_scalar_view(
-                name=("rf2xco2",), region=("World",), unit="W / m^2"
-            ).get()
-            == 4.0
-        )
+        test_adapter.reset()
+        assert test_adapter._current_time == test_run_parameters.start_time
+        try:
+            new_time = test_adapter.step()
+            assert new_time > test_run_parameters.start_time
+        except NotImplementedError:
+            pass

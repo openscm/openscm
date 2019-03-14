@@ -1,3 +1,7 @@
+"""
+Fixtures and data for tests.
+"""
+
 from collections import namedtuple
 from datetime import datetime
 
@@ -48,8 +52,8 @@ def test_adapter(request):
     Get an initialized instance of an the requesting classes ``tadapter`` property.
     """
     parameters = ParameterSet()
-    parameters.get_writable_scalar_view("ecs", ("World",), "K").set(3)
-    parameters.get_writable_scalar_view("rf2xco2", ("World",), "W / m^2").set(4.0)
+    parameters.get_writable_scalar_view(("ecs",), ("World",), "K").set(3)
+    parameters.get_writable_scalar_view(("rf2xco2",), ("World",), "W / m^2").set(4.0)
     output_parameters = ParameterSet()
     try:
         yield request.cls.tadapter(parameters, output_parameters)
@@ -59,10 +63,9 @@ def test_adapter(request):
 
 @pytest.fixture(scope="function")
 def test_run_parameters():
-
     run_parameters = namedtuple("RunParameters", ["start_time", "stop_time"])
     run_parameters.start_time = 0
-    run_parameters.stop_time = 1
+    run_parameters.stop_time = 100 * 365 * 24 * 60 * 60
     yield run_parameters
 
 
