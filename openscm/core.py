@@ -11,13 +11,11 @@ implementable in several programming languages.
 from typing import Optional, Sequence, Tuple, Union
 
 from .parameter_views import (
-    BooleanView,
+    GenericView,
     ScalarView,
-    StringView,
     TimeseriesView,
-    WritableBooleanView,
+    WritableGenericView,
     WritableScalarView,
-    WritableStringView,
     WritableTimeseriesView,
 )
 from .parameters import ParameterInfo, ParameterType, _Parameter
@@ -330,13 +328,13 @@ class ParameterSet:
             extrapolation_type,
         )  # WritableTimeseriesView
 
-    def get_boolean_view(
+    def get_generic_view(
         self, name: Tuple[str, ...], region: Tuple[str, ...]
-    ) -> BooleanView:
+    ) -> GenericView:
         """
-        Get a read-only view to a boolean parameter.
+        Get a read-only view to a generic parameter.
 
-        The parameter is created as a boolean if not viewed so far.
+        The parameter is created as a generic if not viewed so far.
 
         Parameters
         ----------
@@ -347,29 +345,31 @@ class ParameterSet:
 
         Returns
         -------
-        BooleanView
+        GenericView
             Read-only view to the parameter
 
         Raises
         ------
+        ParameterAggregationError
+            If parameter has child parameters and thus cannot be aggregated
         ParameterTypeError
-            Parameter is not boolean
+            Parameter is not generic (scalar or timeseries)
         ValueError
             Name not given or invalid region
         """
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_read(ParameterType.BOOLEAN)
-        return BooleanView(parameter)
+        parameter.attempt_read(ParameterType.GENERIC)
+        return GenericView(parameter)
 
-    def get_writable_boolean_view(
+    def get_writable_generic_view(
         self, name: Tuple[str, ...], region: Tuple[str, ...]
-    ) -> WritableBooleanView:
+    ) -> WritableGenericView:
         """
-        Get a writable view to a boolean parameter.
+        Get a writable view to a generic parameter.
 
-        The parameter is created as a boolean if not viewed so far.
+        The parameter is created as a generic if not viewed so far.
 
         Parameters
         ----------
@@ -380,91 +380,25 @@ class ParameterSet:
 
         Returns
         -------
-        WritableBooleanView
+        WritableGenericView
             Writable view to the parameter
 
         Raises
         ------
+        ParameterAggregationError
+            If parameter has child parameters and thus cannot be aggregated
         ParameterReadonlyError
             Parameter is read-only (e.g. because its parent has been written to)
         ParameterTypeError
-            Parameter is not boolean
+            Parameter is not generic (scalar or timeseries)
         ValueError
             Name not given or invalid region
         """
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_write(ParameterType.BOOLEAN)
-        return WritableBooleanView(parameter)
-
-    def get_string_view(
-        self, name: Tuple[str, ...], region: Tuple[str, ...]
-    ) -> StringView:
-        """
-        Get a read-only view to a string parameter.
-
-        The parameter is created as a string if not viewed so far.
-
-        Parameters
-        ----------
-        name
-            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
-        region
-            Hierarchical name of the region
-
-        Returns
-        -------
-        StringView
-            Read-only view to the parameter
-
-        Raises
-        ------
-        ParameterTypeError
-            Parameter is not string
-        ValueError
-            Name not given or invalid region
-        """
-        parameter = self._get_or_create_parameter(
-            name, self._get_or_create_region(region)
-        )
-        parameter.attempt_read(ParameterType.STRING)
-        return StringView(parameter)
-
-    def get_writable_string_view(
-        self, name: Tuple[str, ...], region: Tuple[str, ...]
-    ) -> WritableStringView:
-        """
-        Get a writable view to a string parameter.
-
-        The parameter is created as a string if not viewed so far.
-
-        Parameters
-        ----------
-        name
-            :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
-        region
-            Hierarchical name of the region
-
-        Returns
-        -------
-        WritableStringView
-            Writable view to the parameter
-
-        Raises
-        ------
-        ParameterReadonlyError
-            Parameter is read-only (e.g. because its parent has been written to)
-        ParameterTypeError
-            Parameter is not boolean
-        ValueError
-            Name not given or invalid region
-        """
-        parameter = self._get_or_create_parameter(
-            name, self._get_or_create_region(region)
-        )
-        parameter.attempt_write(ParameterType.STRING)
-        return WritableStringView(parameter)
+        parameter.attempt_write(ParameterType.GENERIC)
+        return WritableGenericView(parameter)
 
     def get_parameter_info(
         self, name: Tuple[str, ...], region_name: Tuple[str, ...]

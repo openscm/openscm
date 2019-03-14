@@ -3,7 +3,7 @@ Parameter views provide ways to read and write parameter data with a defined uni
 and time information.
 """
 
-from typing import Sequence, cast
+from typing import Any, Sequence, cast
 
 import numpy as np
 
@@ -276,18 +276,18 @@ class WritableTimeseriesView(TimeseriesView):
         )
 
 
-class BooleanView(ParameterView):
+class GenericView(ParameterView):
     """
-    Read-only view of a boolean parameter.
+    Read-only view of a generic parameter.
     """
 
-    def get(self) -> bool:
+    def get(self) -> Any:
         """
-        Get current value of boolean parameter.
+        Get current value of generic parameter.
 
         Returns
         -------
-        bool
+        Any
             Current value of parameter
 
         Raises
@@ -298,59 +298,17 @@ class BooleanView(ParameterView):
         if self.is_empty:
             raise ParameterEmptyError
 
-        return cast(bool, self._parameter._data)
+        return self._parameter._data
 
 
-class WritableBooleanView(BooleanView):
+class WritableGenericView(GenericView):
     """
-    View of a boolean parameter whose value can be changed.
+    View of a generic parameter whose value can be changed.
     """
 
     def set(self, value: bool) -> None:
         """
         Set current value of boolean parameter.
-
-        Parameters
-        ----------
-        value
-            Value
-        """
-        self._parameter._data = value
-
-
-class StringView(ParameterView):
-    """
-    Read-only view of a string parameter.
-    """
-
-    def get(self) -> str:
-        """
-        Get current value of string parameter.
-
-        Returns
-        -------
-        str
-            Current value of parameter
-
-        Raises
-        ------
-        ParameterEmptyError
-            Parameter is empty, i.e. has not yet been written to
-        """
-        if self.is_empty:
-            raise ParameterEmptyError
-
-        return cast(str, self._parameter._data)
-
-
-class WritableStringView(StringView):
-    """
-    View of a string parameter whose value can be changed.
-    """
-
-    def set(self, value: str) -> None:
-        """
-        Set current value of string parameter.
 
         Parameters
         ----------

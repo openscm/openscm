@@ -30,8 +30,7 @@ class ParameterType(Enum):
     SCALAR = 1
     AVERAGE_TIMESERIES = 2
     POINT_TIMESERIES = 3
-    BOOLEAN = 4
-    STRING = 5
+    GENERIC = 4
 
 
 class ParameterInfo:
@@ -237,14 +236,10 @@ class _Parameter:
             self._info._type = parameter_type
             if parameter_type == ParameterType.SCALAR:
                 self._data = float("NaN")
-            elif parameter_type == ParameterType.BOOLEAN:
+            elif parameter_type == ParameterType.GENERIC:
                 if self._children:
                     raise ParameterAggregationError
-                self._data = False
-            elif parameter_type == ParameterType.STRING:
-                if self._children:
-                    raise ParameterAggregationError
-                self._data = ""
+                self._data = None
             else:  # parameter is a timeseries
                 self._data = np.full(
                     (
