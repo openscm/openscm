@@ -8,7 +8,7 @@ Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
 """
 
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Sequence, Tuple, Union
 
 from .parameter_views import (
     BooleanView,
@@ -86,7 +86,7 @@ class ParameterSet:
         # len(name_tuple) == 0
         raise ValueError("No region name given")
 
-    def _get_region(self, name: Tuple[str]) -> Optional[_Region]:
+    def _get_region(self, name: Tuple[str, ...]) -> Optional[_Region]:
         """
         Get a region by its hierarchichal name.
 
@@ -106,7 +106,9 @@ class ParameterSet:
 
         return self._root.get_subregion(name_tuple[1:])
 
-    def _get_or_create_parameter(self, name: Tuple[str], region: _Region) -> _Parameter:
+    def _get_or_create_parameter(
+        self, name: Tuple[str, ...], region: _Region
+    ) -> _Parameter:
         """
         Get a parameter. Create and add it if not found.
 
@@ -129,7 +131,7 @@ class ParameterSet:
         """
         name_tuple = ensure_input_is_tuple(name)
         if len(name_tuple) > 1:
-            p = self._get_or_create_parameter(cast(Tuple[str], name_tuple[:-1]), region)
+            p = self._get_or_create_parameter(name_tuple[:-1], region)
             return p.get_or_create_child_parameter(name_tuple[-1])
 
         if len(name_tuple) == 1:
@@ -139,7 +141,7 @@ class ParameterSet:
         raise ValueError("No parameter name given")
 
     def get_scalar_view(
-        self, name: Tuple[str], region: Tuple[str], unit: str
+        self, name: Tuple[str, ...], region: Tuple[str, ...], unit: str
     ) -> ScalarView:
         """
         Get a read-only view to a scalar parameter.
@@ -174,7 +176,7 @@ class ParameterSet:
         return ScalarView(parameter, unit)
 
     def get_writable_scalar_view(
-        self, name: Tuple[str], region: Tuple[str], unit: str
+        self, name: Tuple[str, ...], region: Tuple[str, ...], unit: str
     ) -> WritableScalarView:
         """
         Get a writable view to a scalar parameter.
@@ -212,10 +214,10 @@ class ParameterSet:
 
     def get_timeseries_view(
         self,
-        name: Tuple[str],
-        region: Tuple[str],
+        name: Tuple[str, ...],
+        region: Tuple[str, ...],
         unit: str,
-        time_points: Tuple[int],
+        time_points: Sequence[int],
         timeseries_type: ParameterType,
         interpolation_type: InterpolationType,
         extrapolation_type: ExtrapolationType,
@@ -271,10 +273,10 @@ class ParameterSet:
 
     def get_writable_timeseries_view(
         self,
-        name: Tuple[str],
-        region: Tuple[str],
+        name: Tuple[str, ...],
+        region: Tuple[str, ...],
         unit: str,
-        time_points: Tuple[int],
+        time_points: Sequence[int],
         timeseries_type: ParameterType,
         interpolation_type: InterpolationType,
         extrapolation_type: ExtrapolationType,
@@ -328,7 +330,9 @@ class ParameterSet:
             extrapolation_type,
         )  # WritableTimeseriesView
 
-    def get_boolean_view(self, name: Tuple[str], region: Tuple[str]) -> BooleanView:
+    def get_boolean_view(
+        self, name: Tuple[str, ...], region: Tuple[str, ...]
+    ) -> BooleanView:
         """
         Get a read-only view to a boolean parameter.
 
@@ -360,7 +364,7 @@ class ParameterSet:
         return BooleanView(parameter)
 
     def get_writable_boolean_view(
-        self, name: Tuple[str], region: Tuple[str]
+        self, name: Tuple[str, ...], region: Tuple[str, ...]
     ) -> WritableBooleanView:
         """
         Get a writable view to a boolean parameter.
@@ -394,7 +398,9 @@ class ParameterSet:
         parameter.attempt_write(ParameterType.BOOLEAN)
         return WritableBooleanView(parameter)
 
-    def get_string_view(self, name: Tuple[str], region: Tuple[str]) -> StringView:
+    def get_string_view(
+        self, name: Tuple[str, ...], region: Tuple[str, ...]
+    ) -> StringView:
         """
         Get a read-only view to a string parameter.
 
@@ -426,7 +432,7 @@ class ParameterSet:
         return StringView(parameter)
 
     def get_writable_string_view(
-        self, name: Tuple[str], region: Tuple[str]
+        self, name: Tuple[str, ...], region: Tuple[str, ...]
     ) -> WritableStringView:
         """
         Get a writable view to a string parameter.
@@ -461,7 +467,7 @@ class ParameterSet:
         return WritableStringView(parameter)
 
     def get_parameter_info(
-        self, name: Tuple[str], region_name: Tuple[str]
+        self, name: Tuple[str, ...], region_name: Tuple[str, ...]
     ) -> Optional[ParameterInfo]:
         """
         Get a parameter or ``None`` if not found.
