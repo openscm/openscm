@@ -9,7 +9,7 @@ from ..errors import AdapterNeedsModuleError
 _loaded_adapters: Dict[str, type] = {}
 
 
-def load_adapter(name: str) -> Optional[type]:
+def load_adapter(name: str) -> type:
     """
     Load adapter with a given name.
 

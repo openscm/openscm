@@ -8,8 +8,9 @@ Parts of this API definition seems unpythonic as it is designed to be easily
 implementable in several programming languages.
 """
 
-from typing import Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
 
+from .adapters import load_adapter
 from .parameter_views import (
     GenericView,
     ScalarView,
@@ -22,6 +23,9 @@ from .parameters import ParameterInfo, ParameterType, _Parameter
 from .regions import _Region
 from .timeseries_converter import ExtrapolationType, InterpolationType
 from .utils import ensure_input_is_tuple
+
+if TYPE_CHECKING:  # pragma: no cover
+    from . import adapter  # pylint: disable=cyclic-import
 
 # pylint: disable=too-many-arguments
 
@@ -435,89 +439,94 @@ class Core:
     """
     OpenSCM core class.
 
-    Represents a model run with a particular simple climate model.
+    Represents a particular simple climate model to be run.
     """
 
-    _model: str
+    _model: "adapter.Adapter"
+    """Adapter of the SCM to run"""
+
+    _model_name: str
     """Name of the SCM to run"""
 
+    _output: ParameterSet
+    """Set of output :ref:`parameters <parameters>` of the model"""
+
     _parameters: ParameterSet
-    """Set of :ref:`parameters <parameters>` for the run"""
+    """Set of input :ref:`parameters <parameters>` for the model"""
 
-    _start_time: int
-    """
-    Beginning of the time range to run over (seconds since
-    ``1970-01-01 00:00:00``)
-    """
-
-    _stop_time: int
-    """
-    End of the time range to run over (including; seconds since
-    ``1970-01-01 00:00:00``)
-    """
-
-    def __init__(self, model: str, start_time: int, stop_time: int):
+    def __init__(self, model_name: str):
         """
         Initialize.
 
-        Attributes
+        Parameters
         ----------
         model
             Name of the SCM to run
+
+        Raises
+        ------
+        KeyError
+            No adapter for SCM named ``model`` found
+        """
+        self._input_parameters = ParameterSet()
+        self._output_parameters = ParameterSet()
+        self._model_name = model_name
+        model = load_adapter(model_name)
+        self._model = model(self._parameters, self._output)
+
+    @property
+    def model(self) -> str:
+        """
+        Name of the SCM
+        """
+        return self._model_name
+
+    @property
+    def output(self) -> ParameterSet:
+        """
+        Set of output parameters of the model
+        """
+        return self._output
+
+    @property
+    def parameters(self) -> ParameterSet:
+        """
+        Set of input parameters for the model
+        """
+        return self._parameters
+
+    def reset_stepping(self, start_time: int, stop_time: int) -> None:
+        """
+        Reset the model before starting stepping.
+
+        Parameters
+        ----------
         start_time
             Beginning of the time range to run over (seconds since
             ``1970-01-01 00:00:00``)
         stop_time
             End of the time range to run over (including; seconds since
             ``1970-01-01 00:00:00``)
+        """
+        self._model.initialize_model_input()
+        self._model.initialize_run_parameters(start_time, stop_time)
+        self._model.reset()
 
-        Raises
-        ------
-        KeyError
-            No adapter for SCM named ``model`` found
-        ValueError
-            ``stop_time`` before ``start_time``
-        """
-        self._model = model
-        self._start_time = start_time
-        self._stop_time = stop_time
-        self._parameters = ParameterSet()
-
-    @property
-    def stop_time(self) -> int:
-        """
-        End of the time range to run over (including; seconds since
-        ``1970-01-01 00:00:00``)
-        """
-        return self._stop_time
-
-    @property
-    def model(self) -> str:
-        """
-        Name of the SCM to run
-        """
-        return self._model
-
-    @property
-    def parameters(self) -> ParameterSet:
-        """
-        Set of parameters for the run
-        """
-        return self._parameters
-
-    def run(self) -> None:
+    def run(self, start_time: int, stop_time: int) -> None:
         """
         Run the model over the full time range.
-        """
-        raise NotImplementedError
 
-    @property
-    def start_time(self) -> int:
+        Parameters
+        ----------
+        start_time
+            Beginning of the time range to run over (seconds since
+            ``1970-01-01 00:00:00``)
+        stop_time
+            End of the time range to run over (including; seconds since
+            ``1970-01-01 00:00:00``)
         """
-        Beginning of the time range to run over (seconds since
-        ``1970-01-01 00:00:00``)
-        """
-        return self._start_time
+        self.reset_stepping(start_time, stop_time)
+        self._model.run()
 
     def step(self) -> int:
         """
@@ -528,4 +537,5 @@ class Core:
         int
             Current time (seconds since ``1970-01-01 00:00:00``)
         """
-        raise NotImplementedError
+        # TODO check if reset_stepping has been called
+        return self._model.step()
