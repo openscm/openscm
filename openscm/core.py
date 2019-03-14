@@ -219,8 +219,8 @@ class ParameterSet:
         unit: str,
         time_points: Sequence[int],
         timeseries_type: ParameterType,
-        interpolation_type: InterpolationType,
-        extrapolation_type: ExtrapolationType,
+        interpolation_type: InterpolationType = InterpolationType.LINEAR,
+        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
     ) -> TimeseriesView:
         """
         Get a read-only view to a timeseries parameter.
@@ -278,8 +278,8 @@ class ParameterSet:
         unit: str,
         time_points: Sequence[int],
         timeseries_type: ParameterType,
-        interpolation_type: InterpolationType,
-        extrapolation_type: ExtrapolationType,
+        interpolation_type: InterpolationType = InterpolationType.LINEAR,
+        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
     ) -> WritableTimeseriesView:
         """
         Get a writable view to a timeseries parameter.
