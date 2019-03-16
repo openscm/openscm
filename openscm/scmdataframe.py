@@ -3,7 +3,7 @@ OpenSCM's custom DataFrame implementation.
 """
 
 
-class ScmDataFrame():
+class ScmDataFrame:
     """
     OpenSCM's custom DataFrame implementation.
 
