@@ -53,12 +53,23 @@ action "Linters" {
 action "Tests" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "pytest tests -r a --cov=openscm --cov-report=''",
-    "pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg"
+    "pytest tests -r a --cov=openscm --cov-report=''"
   ]
   env = {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = ".[tests]"
+  }
+  needs = ["Documentation", "Formatting", "Linters"]
+}
+
+action "Notebooks" {
+  uses = "swillner/actions/python-run@master"
+  args = [
+    "pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg"
+  ]
+  env = {
+    PYTHON_VERSION = "3.7"
+    PIP_PACKAGES = ".[tests,notebooks]"
   }
   needs = ["Documentation", "Formatting", "Linters"]
 }
@@ -78,7 +89,7 @@ action "Coverage" {
     MIN_COVERAGE = "100"
     PIP_PACKAGES = "coverage"
   }
-  needs = ["Tests"]
+  needs = ["Tests", "Notebooks"]
 }
 
 
