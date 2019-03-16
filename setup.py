@@ -37,14 +37,14 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = [
-    "numpy",
-    "pint",
-    "pandas",
+REQUIREMENTS_INSTALL = ["numpy", "pint", "pandas"]
+REQUIREMENTS_NOTEBOOKS = [
+    "matplotlib",
+    "notebook",
+    "seaborn",
     # TODO can be moved into notebooks dependencies once Jared's new backend is in place
     "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@a6ac0c574c3d5363fb8dba7d8b42a845fd3dbe87",
 ]
-REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn"]
 REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.8", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
