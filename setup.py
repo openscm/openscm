@@ -37,7 +37,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = ["numpy", "pint", "pandas"]
+REQUIREMENTS_INSTALL = ["numpy", "scipy", "pint", "pandas"]
 REQUIREMENTS_NOTEBOOKS = [
     "matplotlib",
     "notebook",
