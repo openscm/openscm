@@ -1,9 +1,9 @@
-Source,https://www.ghgprotocol.org/sites/default/files/ghgp/Global-Warming-Potential-Values%20%28Feb%2016%202016%29_1.pdf
-OpenSCMMetricName,AR4GWP100
-OpenSCM species,
-CH4,25
-N2O,298
-HFC32,675
-SF6,22800
-CF4,7390
-C2F6,12200
+Source,https://www.ghgprotocol.org/sites/default/files/ghgp/Global-Warming-Potential-Values%20%28Feb%2016%202016%29_1.pdf,
+OpenSCMMetricName,AR4GWP100,SARGWP100
+OpenSCM species,,
+CH4,25,21
+N2O,298,310
+HFC32,675,650
+SF6,22800,23900
+CF4,7390,6500
+C2F6,12200,9200

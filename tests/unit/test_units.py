@@ -157,6 +157,12 @@ def test_context_dimensionality_error():
         ["AR4GWP100", "HFC32", 675],
         ["AR4GWP100", "SF6", 22800],
         ["AR4GWP100", "C2F6", 12200],
+        ["SARGWP100", "CH4", 21],
+        ["SARGWP100", "N2O", 310],
+        ["SARGWP100", "HFC32", 650],
+        ["SARGWP100", "SF6", 23900],
+        ["SARGWP100", "CF4", 6500],
+        ["SARGWP100", "C2F6", 9200],
     )
 )
 def test_metric_conversion(metric_name, species, conversion):
