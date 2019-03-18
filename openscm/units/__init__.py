@@ -230,29 +230,6 @@ unit_registry.define("ppm = 1000 * ppb")
 
 # Contexts:
 
-_c = Context("AR4GWP12")
-_c.add_transformation(
-    "[carbon]",
-    "[nitrogen]",
-    lambda unit_registry, x: 20 * unit_registry.N * x / unit_registry.C,
-)
-_c.add_transformation(
-    "[nitrogen]",
-    "[carbon]",
-    lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
-)
-_c.add_transformation(
-    "[mass] * [carbon] / [time]",
-    "[mass] * [nitrogen] / [time]",
-    lambda unit_registry, x: 20 * unit_registry.N * x / unit_registry.C,
-)
-_c.add_transformation(
-    "[mass] * [nitrogen] / [time]",
-    "[mass] * [carbon] / [time]",
-    lambda unit_registry, x: x * unit_registry.C / unit_registry.N / 20,
-)
-unit_registry.add_context(_c)
-
 _ch4_context = Context("CH4_conversions")
 _ch4_context.add_transformation(
     "[carbon]",

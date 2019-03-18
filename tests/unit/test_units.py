@@ -122,25 +122,25 @@ def test_conversion_incompatible_units():
 def test_context():
     CO2 = unit_registry("CO2")
     N = unit_registry("N")
-    with unit_registry.context("AR4GWP12"):
-        np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)
-        np.testing.assert_allclose(N.to("CO2").magnitude, 44 / 12 / 20)
+    with unit_registry.context("AR4GWP100"):
+        np.testing.assert_allclose(CO2.to("N").magnitude, 14 / (44 * 298))
+        np.testing.assert_allclose(N.to("CO2").magnitude, 44 * 298 / 14)
 
 
 def test_context_with_magnitude():
     CO2 = 1 * unit_registry("CO2")
     N = 1 * unit_registry("N")
-    with unit_registry.context("AR4GWP12"):
-        np.testing.assert_allclose(CO2.to("N").magnitude, 12 / 44 * 20)
-        np.testing.assert_allclose(N.to("CO2").magnitude, 44 / 12 / 20)
+    with unit_registry.context("AR4GWP100"):
+        np.testing.assert_allclose(CO2.to("N").magnitude, 14 / (44 * 298))
+        np.testing.assert_allclose(N.to("CO2").magnitude, 44 * 298 / 14)
 
 
 def test_context_compound_unit():
     CO2 = 1 * unit_registry("kg CO2 / yr")
     N = 1 * unit_registry("kg N / yr")
-    with unit_registry.context("AR4GWP12"):
-        np.testing.assert_allclose(CO2.to("kg N / yr").magnitude, 12 / 44 * 20)
-        np.testing.assert_allclose(N.to("kg CO2 / yr").magnitude, 44 / 12 / 20)
+    with unit_registry.context("AR4GWP100"):
+        np.testing.assert_allclose(CO2.to("kg N / yr").magnitude, 14 / (44 * 298))
+        np.testing.assert_allclose(N.to("kg CO2 / yr").magnitude, 44 * 298 / 14)
 
 
 def test_context_dimensionality_error():
