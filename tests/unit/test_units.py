@@ -163,18 +163,13 @@ def test_context_dimensionality_error():
         ["SARGWP100", "SF6", 23900],
         ["SARGWP100", "CF4", 6500],
         ["SARGWP100", "C2F6", 9200],
-    )
+    ),
 )
 def test_metric_conversion(metric_name, species, conversion):
-    base_str_formats = [
-        "{}",
-        "kg {} / yr",
-        "kg {}",
-        "{} / yr",
-    ]
+    base_str_formats = ["{}", "kg {} / yr", "kg {}", "{} / yr"]
     for base_str_format in base_str_formats:
         base = unit_registry(base_str_format.format(species))
         dest = unit_registry(base_str_format.format("CO2"))
         with unit_registry.context(metric_name):
             np.testing.assert_allclose(base.to(dest).magnitude, conversion)
-            np.testing.assert_allclose(dest.to(base).magnitude, 1/conversion)
+            np.testing.assert_allclose(dest.to(base).magnitude, 1 / conversion)

@@ -87,14 +87,10 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
     <Quantity(0.9565217391304348, 'N2O')>
 """
 from os.path import abspath, dirname, join
-from copy import deepcopy
 from typing import Dict, Sequence, Union
 
-import pandas as pd
-from pint import Context, UnitRegistry
-from pint.errors import DimensionalityError, UndefinedUnitError
-
 import numpy as np
+import pandas as pd
 from pint import Context, UnitRegistry
 from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
     DimensionalityError,
@@ -296,16 +292,24 @@ _metric_conversions = pd.read_csv(
     skiprows=1,  # skip source row
     header=0,
     index_col=0,
-).iloc[1:, :]  # drop out 'OpenSCM base unit' row
+).iloc[
+    1:, :
+]  # drop out 'OpenSCM base unit' row
 
-def get_transform_func(unit_reg, unit_reg_unit, conversion_factor, forward=True):
+
+def _get_transform_func(ureg_unit, conversion_factor, forward=True):
     if forward:
-        def result(unit_reg, strt):
-            return strt * unit_reg.carbon / unit_reg_unit * conversion_factor
-    else:
-        def result(ur, strt):
-            return strt * unit_reg_unit / unit_reg.carbon / conversion_factor
-    return result
+
+        def result_forward(ur, strt):
+            return strt * ur.carbon / ureg_unit * conversion_factor
+
+        return result_forward
+
+    def result_backward(ur, strt):
+        return strt * ureg_unit / ur.carbon / conversion_factor
+
+    return result_backward
+
 
 for col in _metric_conversions:
     tc = Context(col)
@@ -316,55 +320,54 @@ for col in _metric_conversions:
             / (unit_registry(label).to_base_units()).magnitude
         )
         base_unit = [
-            s for s, _ in
-            unit_registry._get_dimensionality(
-                unit_registry(label).to_base_units()._units
+            s
+            for s, _ in unit_registry._get_dimensionality(  # pylint: disable=protected-access
+                unit_registry(label)  # pylint: disable=protected-access
+                .to_base_units()
+                ._units
             ).items()
         ][0]
 
         unit_reg_unit = getattr(
-            unit_registry,
-            base_unit.replace("[", "").replace("]", "")
+            unit_registry, base_unit.replace("[", "").replace("]", "")
         )
         tc.add_transformation(
-            base_unit,
-            "[carbon]",
-            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+            base_unit, "[carbon]", _get_transform_func(unit_reg_unit, conv_val)
         )
         tc.add_transformation(
             "[carbon]",
             base_unit,
-            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+            _get_transform_func(unit_reg_unit, conv_val, forward=False),
         )
         tc.add_transformation(
             "[mass] * {} / [time]".format(base_unit),
             "[mass] * [carbon] / [time]",
-            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+            _get_transform_func(unit_reg_unit, conv_val),
         )
         tc.add_transformation(
             "[mass] * [carbon] / [time]",
             "[mass] * {} / [time]".format(base_unit),
-            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+            _get_transform_func(unit_reg_unit, conv_val, forward=False),
         )
         tc.add_transformation(
             "[mass] * {}".format(base_unit),
             "[mass] * [carbon]",
-            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+            _get_transform_func(unit_reg_unit, conv_val),
         )
         tc.add_transformation(
             "[mass] * [carbon]",
             "[mass] * {}".format(base_unit),
-            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+            _get_transform_func(unit_reg_unit, conv_val, forward=False),
         )
         tc.add_transformation(
             "{} / [time]".format(base_unit),
             "[carbon] / [time]",
-            get_transform_func(unit_registry, unit_reg_unit, conv_val)
+            _get_transform_func(unit_reg_unit, conv_val),
         )
         tc.add_transformation(
             "[carbon] / [time]",
             "{} / [time]".format(base_unit),
-            get_transform_func(unit_registry, unit_reg_unit, conv_val, forward=False)
+            _get_transform_func(unit_reg_unit, conv_val, forward=False),
         )
 
     unit_registry.add_context(tc)
