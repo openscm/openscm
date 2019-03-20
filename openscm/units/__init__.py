@@ -546,8 +546,8 @@ class UnitConverter:
         """
         return (v - self._offset) / self._scaling
 
-    @classmethod
-    def contexts(cls) -> Sequence[str]:
+    @property
+    def contexts(self) -> Sequence[str]:
         """
         Get available contexts for unit conversions.
 
@@ -557,3 +557,15 @@ class UnitConverter:
             List of names of the available contexts
         """
         return list(_unit_registry._contexts.keys())  # pylint: disable=protected-access
+
+    @property
+    def unit_registry(self) -> ScmUnitRegistry:
+        """
+        Get underlying unit registry.
+
+        Returns
+        -------
+        ScmUnitRegistry
+            Unit registry used by this unit converter
+        """
+        return _unit_registry
