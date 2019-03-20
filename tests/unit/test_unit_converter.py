@@ -3,8 +3,8 @@ import warnings
 import numpy as np
 import pytest
 
-from openscm.unit_converter import UnitConverter
-from openscm.units import DimensionalityError, UndefinedUnitError, unit_registry
+from openscm.units import UnitConverter, DimensionalityError, UndefinedUnitError
+from openscm.units._unit_registry import _unit_registry
 
 
 def test_conversion_without_offset():
@@ -32,7 +32,7 @@ def test_conversion_incompatible_units():
 
 
 def test_metric_conversion_unit_converter_with_context():
-    with unit_registry.context("AR4GWP100"):
+    with _unit_registry.context("AR4GWP100"):
         uc = UnitConverter("kg SF5CF3 / yr", "kg CO2 / yr")
         assert uc.convert_from(1) == 17700
         assert uc.convert_to(1) == 1 / 17700
@@ -50,7 +50,7 @@ def test_metric_conversion_unit_converter_nan():
         "No conversion from {} to {} available, nan will be returned "
         "upon conversion".format(src_species, target_species)
     )
-    with unit_registry.context("AR4GWP100"):
+    with _unit_registry.context("AR4GWP100"):
         with warnings.catch_warnings(record=True) as recorded_warnings:
             UnitConverter(src_species, target_species)
 
