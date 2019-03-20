@@ -1,10 +1,10 @@
 """
 Unit handling.
 
-Unit handling make use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
-allows to easily define units as well as using contexts of several conversion types.
+Unit handling makes use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
+allows us to easily define units as well as contexts. Contexts allow us to perform conversions which would not normally be allowed e.g. in the 'AR4GWP100' context we can convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
 
-Do not use Pint with OpenSCM explicitely. Internally, units are used the following way:
+In general, you should not use Pint with OpenSCM explicitly. As illustration of how units are used internally, we provide the following example:
 
 .. code:: python
 
@@ -264,8 +264,8 @@ class ScmUnitRegistry(pint.UnitRegistry):  # type: ignore
 
     def enable_contexts(self, *names_or_contexts, **kwargs):
         """
-        Overload pint's `enable_contexts` to load contexts once the first time some are
-        used to avoid (unnecessary) file operations on import.
+        Overload pint's `enable_contexts` to load contexts once (the first time they are
+        used) to avoid (unnecessary) file operations on import.
         """
         if not self._contexts_loaded:
             self._load_contexts()
