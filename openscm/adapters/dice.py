@@ -320,7 +320,7 @@ class DICE(Adapter):
             self._values.M_atm_lower,
             self._values.M_atm[self._timestep - 1] * self._values.b11
             + self._values.M_u[self._timestep - 1] * self._values.b21
-            + self._values.E[self._timestep - 1] * self._period_length / YEAR / 3.666,
+            + self._values.E[self._timestep - 1] * self._period_length / YEAR / 44 / 12,
         )
 
         # Lower ocean pool size (rel. to 1750)
@@ -359,8 +359,8 @@ class DICE(Adapter):
             forcoth = (
                 self._values.fex0
                 + (self._values.fex1 - self._values.fex0)
-                * (self._period_length / YEAR * 0.2 * self._timestep)
-                / 18.0
+                * (self._period_length / YEAR * self._timestep)
+                / 90.0
             )
 
         # Increase in radiative forcing (rel. to 1900)
