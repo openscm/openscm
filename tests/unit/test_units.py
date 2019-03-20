@@ -197,15 +197,12 @@ def test_metric_conversion_unit_converter_error():
 
 
 def test_metric_conversion_unit_converter_nan():
-    metric_name = "AR4GWP100"
     src_species = "CHCl3"
     target_species = "CO2"
     expected_warning = (
         "No conversion from {} to {} available, nan will be returned "
-        "upon conversion".format(
-            src_species,
-            target_species
-        ))
+        "upon conversion".format(src_species, target_species)
+    )
     with unit_registry.context("AR4GWP100"):
         with warnings.catch_warnings(record=True) as recorded_warnings:
             UnitConverter(src_species, target_species)
