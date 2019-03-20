@@ -57,7 +57,7 @@ action "Tests" {
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = ".[tests,notebooks]"
+    PIP_PACKAGES = ".[tests]"
   }
   needs = ["Formatting", "Linters"]
 }
