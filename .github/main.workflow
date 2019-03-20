@@ -1,6 +1,6 @@
 workflow "Continuous Integration" {
   on = "push"
-  resolves = ["Coverage"]
+  resolves = ["Coverage", "Documentation"]
 }
 
 action "Documentation" {
@@ -59,7 +59,7 @@ action "Tests" {
     PYTHON_VERSION = "3.7"
     PIP_PACKAGES = ".[tests]"
   }
-  needs = ["Documentation", "Formatting", "Linters"]
+  needs = ["Formatting", "Linters"]
 }
 
 action "Notebooks" {
