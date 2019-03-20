@@ -184,32 +184,31 @@ def test_metric_conversion(metric_name, species, conversion):
             np.testing.assert_allclose(dest.to(base).magnitude, 1 / conversion)
 
 
-@pytest.mark.parametrize(
-    "metric_name,species",
-    (
+def test_metric_conversion_unit_converter_with_context():
+    with unit_registry.context("AR4GWP100"):
+        uc = UnitConverter("kg SF5CF3 / yr", "kg CO2 / yr")
+        assert uc.convert_from(1) == 17700
+        assert uc.convert_to(1) == 1 / 17700
 
-        ["AR4GWP100", "CHCl3"],
-    ),
-)
-def test_metric_conversion_nan(metric_name, species):
-    base_str_formats = ["{}", "kg {} / yr", "kg {}", "{} / yr"]
-    for base_str_format in base_str_formats:
-        base = unit_registry(base_str_format.format(species))
-        dest = unit_registry(base_str_format.format("CO2"))
 
-        expected_warning = "No {} conversion found for {}, returning nan".format(
-            metric_name,
-            species
-        )
+def test_metric_conversion_unit_converter_error():
+    with pytest.raises(DimensionalityError):
+        UnitConverter("kg SF5CF3 / yr", "kg CO2 / yr")
+
+
+def test_metric_conversion_unit_converter_nan():
+    metric_name = "AR4GWP100"
+    src_species = "CHCl3"
+    target_species = "CO2"
+    expected_warning = (
+        "No conversion from {} to {} available, nan will be returned "
+        "upon conversion".format(
+            src_species,
+            target_species
+        ))
+    with unit_registry.context("AR4GWP100"):
         with warnings.catch_warnings(record=True) as recorded_warnings:
-            with unit_registry.context(metric_name):
-                res = base.to(dest).magnitude
-                assert np.isnan(res)
-                res = dest.to(base).magnitude
-                assert np.isnan(res)
+            UnitConverter(src_species, target_species)
 
-        assert len(recorded_warnings) == 2
-        import pdb
-        pdb.set_trace()
-        assert str(recorded_warnings[0].message) == expected_warning
-        assert str(recorded_warnings[1].message) == expected_warning
+    assert len(recorded_warnings) == 1
+    assert str(recorded_warnings[0].message) == expected_warning
