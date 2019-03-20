@@ -88,6 +88,7 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
 """
 from os.path import abspath, dirname, join
 from typing import Dict, Sequence, Union
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -472,6 +473,12 @@ class UnitConverter:
 
         t1 = s1.to(target_unit)
         t2 = s2.to(target_unit)
+        if np.isnan(t1) or np.isnan(t2):
+            warn_msg = (
+                "No conversion from {} to {} available, nan will be returned "
+                "upon conversion".format(source, target)
+            )
+            warnings.warn(warn_msg)
 
         self._scaling = float(t2.m - t1.m) / float(s2.m - s1.m)
         self._offset = t1.m - self._scaling * s1.m
