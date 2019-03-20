@@ -61,5 +61,6 @@ def test_metric_conversion_unit_converter_nan():
     assert str(recorded_warnings[0].message) == expected_warning
 
 
-def test_contexts():
-    assert isinstance(UnitConverter.contexts(), list)
+def test_properties():
+    assert UnitConverter("CO2", "C").contexts
+    assert UnitConverter("CO2", "C").unit_registry
