@@ -1,4 +1,5 @@
-"""Unit registry for OpenSCM, based on `Pint <https://github.com/hgrecco/pint>`_
+"""
+Unit registry for OpenSCM, based on `Pint <https://github.com/hgrecco/pint>`_
 
 .. code:: python
 
@@ -18,20 +19,11 @@ from typing import Dict, Sequence, Union
 
 import pandas as pd
 from pint import Context, UnitRegistry
-from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
+
+from pint.errors import (  # noqa: F401 # pylint: disable=unused-import; noqa: F401 # pylint: disable=unused-import
     DimensionalityError,
     UndefinedUnitError,
 )
-
-import warnings
-from typing import Union
-
-import numpy as np
-from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
-    DimensionalityError,
-    UndefinedUnitError,
-)
-from pint.registry import UnitRegistry  # noqa: F401 # pylint: disable=unused-import
 
 here = dirname(abspath(__file__))
 

@@ -52,18 +52,19 @@ However, it can be performed within the context 'CH4_conversions' as shown below
 
 .. code:: python
 
-    >>> from openscm.units import unit_registry
-    >>> CH4 = unit_registry("CH4")
-    >>> CH4.to("C")
+    >>> from openscm.units import UnitConverter
+    >>> uc = UnitConverter("CH4", "C")
     pint.errors.DimensionalityError: Cannot convert from 'CH4' ([methane]) to 'C' ([carbon])
 
     # with a context, the conversion becomes legal again
-    >>> CH4.to("C", "CH4_conversions")
-    <Quantity(0.75, 'C')>
+    >>> uc = UnitConverter("CH4", "C", context="CH4_conversions")
+    >>> uc.convert_from(1)
+    0.75
 
     # as an unavoidable side effect, this also becomes possible
-    >>> CH4.to("CO2", "CH4_conversions")
-    <Quantity(2.75, 'CO2')>
+    >>> uc = UnitConverter("CH4", "CO2", context="CH4_conversions")
+    >>> uc.convert_from(1)
+    2.75
 
 *NOx*
 
@@ -74,52 +75,45 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
 .. code:: python
 
     >>> from openscm.units import unit_registry
-    >>> NOx = unit_registry("NOx")
-    >>> NOx.to("N")
+    >>> uc = UnitConverter("NOx", "N")
     pint.errors.DimensionalityError: Cannot convert from 'NOx' ([NOx]) to 'N' ([nitrogen])
 
     # with a context, the conversion becomes legal again
-    >>> NOx.to("N", "NOx_conversions")
-    <Quantity(0.30434782608695654, 'N')>
+    >>> uc = UnitConverter("NOx", "N", context="NOx_conversions")
+    >>> uc.convert_from(1)
+    0.30434782608695654
 
     # as an unavoidable side effect, this also becomes possible
-    >>> NOx.to("N2O", "NOx_conversions")
-    <Quantity(0.9565217391304348, 'N2O')>
+    >>> uc = UnitConverter("NOx", "N2O", context="NOx_conversions")
+    >>> uc.convert_from(1)
+    0.9565217391304348
 """
-from os.path import abspath, dirname, join
-from typing import Dict, Sequence, Union
-
-import pandas as pd
-from pint import Context, UnitRegistry
-from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
-    DimensionalityError,
-    UndefinedUnitError,
-)
-
 import warnings
 from typing import Union
 
 import numpy as np
+from pint import UnitRegistry
 from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
     DimensionalityError,
     UndefinedUnitError,
 )
-from pint.registry import UnitRegistry  # noqa: F401 # pylint: disable=unused-import
+
 
 class _Registry:
-    _ur: UnitRegistry = None
+    _unit_registry: UnitRegistry = None
     """Unit registry which is used for conversions"""
 
     @property
-    def _unit_registry(self) -> UnitRegistry:
+    def unit_registry(self) -> UnitRegistry:
         """
-        Unit registry which is used for conversions.
+        Get Pint unit registry which is used for conversions.
         """
-        if self._ur is None:
+        if self._unit_registry is None:
             from ._unit_registry import _unit_registry
-            self._ur = _unit_registry
 
-        return self._ur
+            self._unit_registry = _unit_registry
+
+        return self._unit_registry
 
 
 _register = _Registry()
@@ -146,7 +140,7 @@ class UnitConverter:
     _unit_registry: UnitRegistry = None
     """Unit registry which is used for conversions"""
 
-    def __init__(self, source: str, target: str):
+    def __init__(self, source: str, target: str, context: str = "No context"):
         """
         Initialize.
 
@@ -156,6 +150,11 @@ class UnitConverter:
             Unit to convert **from**
         target
             Unit to convert **to**
+        context
+            Context to use for the conversion i.e. which metric to apply when
+            performing CO2-equivalent calculations. If ``"No context"``, no metric
+            will be applied and CO2-equivalent calculations will raise
+            ``DimensionalityError``.
 
         Raises
         ------
@@ -173,8 +172,14 @@ class UnitConverter:
         s1 = self.unit_registry.Quantity(1, source_unit)
         s2 = self.unit_registry.Quantity(-1, source_unit)
 
-        t1 = s1.to(target_unit)
-        t2 = s2.to(target_unit)
+        if context == "No context":
+            t1 = s1.to(target_unit)
+            t2 = s2.to(target_unit)
+        else:
+            with self.unit_registry.context(context):
+                t1 = s1.to(target_unit)
+                t2 = s2.to(target_unit)
+
         if np.isnan(t1) or np.isnan(t2):
             warn_msg = (
                 "No conversion from {} to {} available, nan will be returned "
@@ -220,6 +225,15 @@ class UnitConverter:
     @property
     def unit_registry(self) -> UnitRegistry:
         """
-        Unit registry which is used for conversions.
+        Get pint unit registry which is used for conversions.
         """
-        return _register._unit_registry
+        return _register.unit_registry
+
+    @property
+    def contexts(self) -> list:
+        """
+        Get available contexts for unit conversions.
+        """
+        return list(
+            self.unit_registry._contexts.keys()  # pylint: disable=protected-access
+        )
