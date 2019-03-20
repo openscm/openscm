@@ -86,9 +86,9 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
     >>> NOx.to("N2O", "NOx_conversions")
     <Quantity(0.9565217391304348, 'N2O')>
 """
+import warnings
 from os.path import abspath, dirname, join
 from typing import Dict, Sequence, Union
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -133,7 +133,6 @@ _gases = {
     "N": "nitrogen",
     "N2O": ["14/44 * N", "nitrous_oxide"],
     "N2ON": ["14/28 * N", "nitrous_oxide_farming_style"],
-
     # aerosol precursors
     "NOx": "NOx",
     "nox": ["NOx"],
@@ -146,7 +145,6 @@ _gases = {
     "CO": "carbon_monoxide",
     "VOC": "VOC",
     "NMVOC": ["VOC", "non_methane_volatile_organic_compounds"],
-
     # CFCs
     "CFC11": "CFC11",
     "CFC12": "CFC12",
@@ -154,7 +152,6 @@ _gases = {
     "CFC113": "CFC113",
     "CFC114": "CFC114",
     "CFC115": "CFC115",
-
     # HCFCs
     "HCFC21": "HCFC21",
     "HCFC22": "HCFC22",
@@ -164,7 +161,6 @@ _gases = {
     "HCFC142b": "HCFC142b",
     "HCFC225ca": "HCFC225ca",
     "HCFC225cb": "HCFC225cb",
-
     # HFCs
     "HFC23": "HFC23",
     "HFC32": "HFC32",
@@ -186,14 +182,12 @@ _gases = {
     "HFC365mfc": "HFC365mfc",
     "HFC4310mee": "HFC4310mee",
     "HFC4310": ["HFC4310mee"],
-
     # Halogenated gases
     "Halon1201": "Halon1201",
     "Halon1202": "Halon1202",
     "Halon1211": "Halon1211",
     "Halon1301": "Halon1301",
     "Halon2402": "Halon2402",
-
     # PFCs
     "CF4": "CF4",
     "C2F6": "C2F6",
@@ -206,7 +200,6 @@ _gases = {
     "C7F16": "C7F16",
     "C8F18": "C8F18",
     "C10F18": "C10F18",
-
     # Fluorinated ethers
     "HFE125": "HFE125",
     "HFE134": "HFE134",
@@ -235,10 +228,8 @@ _gases = {
     "HFE356pcf3": "HFE356pcf3",
     "HFE365mcf3": "HFE365mcf3",
     "HFE374pc2": "HFE374pc2",
-
     # Perfluoropolyethers
     "PFPMIE": "PFPMIE",
-
     # Misc
     "CCl4": "CCl4",
     "CHCl3": "CHCl3",
