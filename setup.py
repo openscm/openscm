@@ -78,6 +78,8 @@ for k, v in REQUIREMENTS_MODELS.items():
     REQUIREMENTS_EXTRAS["tests"] += v
     REQUIREMENTS_EXTRAS["dev"] += v
 
+PACKAGE_DATA = {"openscm": ["units/*.csv"]}
+
 # Get the long description from the README file
 with open("README.rst", "r", encoding="utf-8") as f:
     README_LINES = ["OpenSCM", "=======", ""]
@@ -120,6 +122,7 @@ setup(
     license=LICENSE,
     classifiers=CLASSIFIERS,
     packages=PACKAGES,
+    package_data=PACKAGE_DATA,
     install_requires=REQUIREMENTS_INSTALL,
     extras_require=REQUIREMENTS_EXTRAS,
     cmdclass=CMDCLASS,
