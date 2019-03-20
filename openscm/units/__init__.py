@@ -1,9 +1,23 @@
 """
 Unit handling.
 
-Our unit handling library is `Pint <https://github.com/hgrecco/pint>`_. This allows us
-to define units simply as well as providing us with the ability to define contexts.
+Unit handling make use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
+allows to easily define units as well as using contexts of several conversion types.
 
+Do not use Pint with OpenSCM explicitely. Internally, units are used the following way:
+
+.. code:: python
+
+    >>> from openscm.units import _unit_registry
+    >>> _unit_registry("CO2")
+    <Quantity(1, 'CO2')>
+
+    >>> emissions_aus = 0.34 * _unit_registry("Gt C / yr")
+    >>> emissions_aus
+    <Quantity(0.34, 'C * gigametric_ton / a')>
+
+    >>> emissions_aus.to("Mt C / week")
+    <Quantity(6.516224050620789, 'C * megametric_ton / week')>
 
 **A note on emissions units**
 
@@ -89,40 +103,354 @@ prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <
     0.9565217391304348
 """
 import warnings
-from typing import Union
+from typing import Dict, Optional, Sequence, Union
 
 import numpy as np
-from pint import UnitRegistry
+import pint
 from pint.errors import (  # noqa: F401 # pylint: disable=unused-import
     DimensionalityError,
     UndefinedUnitError,
 )
 
+# Standard gases. If the value is:
+# - str: this entry defines a base gas unit
+# - list: this entry defines a derived unit
+#    - the first entry defines how to convert from base units
+#    - other entries define other names i.e. aliases
+_standard_gases = {
+    # CO2, CH4, N2O
+    "C": "carbon",
+    "CO2": ["12/44 * C", "carbon_dioxide"],
+    "CH4": "methane",
+    "N": "nitrogen",
+    "N2O": ["14/44 * N", "nitrous_oxide"],
+    "N2ON": ["14/28 * N", "nitrous_oxide_farming_style"],
+    # aerosol precursors
+    "NOx": "NOx",
+    "nox": ["NOx"],
+    "NH3": ["14/17 * N", "ammonia"],
+    "S": ["sulfur"],
+    "SO2": ["32/64 * S", "sulfur_dioxide"],
+    "SOx": ["SO2"],
+    "BC": "black_carbon",
+    "OC": "OC",
+    "CO": "carbon_monoxide",
+    "VOC": "VOC",
+    "NMVOC": ["VOC", "non_methane_volatile_organic_compounds"],
+    # CFCs
+    "CFC11": "CFC11",
+    "CFC12": "CFC12",
+    "CFC13": "CFC13",
+    "CFC113": "CFC113",
+    "CFC114": "CFC114",
+    "CFC115": "CFC115",
+    # HCFCs
+    "HCFC21": "HCFC21",
+    "HCFC22": "HCFC22",
+    "HCFC123": "HCFC123",
+    "HCFC124": "HCFC124",
+    "HCFC141b": "HCFC141b",
+    "HCFC142b": "HCFC142b",
+    "HCFC225ca": "HCFC225ca",
+    "HCFC225cb": "HCFC225cb",
+    # HFCs
+    "HFC23": "HFC23",
+    "HFC32": "HFC32",
+    "HFC41": "HFC41",
+    "HFC125": "HFC125",
+    "HFC134": "HFC134",
+    "HFC134a": "HFC134a",
+    "HFC143": "HFC143",
+    "HFC143a": "HFC143a",
+    "HFC152": "HFC152",
+    "HFC152a": "HFC152a",
+    "HFC161": "HFC161",
+    "HFC227ea": "HFC227ea",
+    "HFC236cb": "HFC236cb",
+    "HFC236ea": "HFC236ea",
+    "HFC236fa": "HFC236fa",
+    "HFC245ca": "HFC245ca",
+    "HFC245fa": "HFC245fa",
+    "HFC365mfc": "HFC365mfc",
+    "HFC4310mee": "HFC4310mee",
+    "HFC4310": ["HFC4310mee"],
+    # Halogenated gases
+    "Halon1201": "Halon1201",
+    "Halon1202": "Halon1202",
+    "Halon1211": "Halon1211",
+    "Halon1301": "Halon1301",
+    "Halon2402": "Halon2402",
+    # PFCs
+    "CF4": "CF4",
+    "C2F6": "C2F6",
+    "cC3F6": "cC3F6",
+    "C3F8": "C3F8",
+    "cC4F8": "cC4F8",
+    "C4F10": "C4F10",
+    "C5F12": "C5F12",
+    "C6F14": "C6F14",
+    "C7F16": "C7F16",
+    "C8F18": "C8F18",
+    "C10F18": "C10F18",
+    # Fluorinated ethers
+    "HFE125": "HFE125",
+    "HFE134": "HFE134",
+    "HFE143a": "HFE143a",
+    "HCFE235da2": "HCFE235da2",
+    "HFE245cb2": "HFE245cb2",
+    "HFE245fa2": "HFE245fa2",
+    "HFE347mcc3": "HFE347mcc3",
+    "HFE347pcf2": "HFE347pcf2",
+    "HFE356pcc3": "HFE356pcc3",
+    "HFE449sl": "HFE449sl",
+    "HFE569sf2": "HFE569sf2",
+    "HFE4310pccc124": "HFE4310pccc124",
+    "HFE236ca12": "HFE236ca12",
+    "HFE338pcc13": "HFE338pcc13",
+    "HFE227ea": "HFE227ea",
+    "HFE236ea2": "HFE236ea2",
+    "HFE236fa": "HFE236fa",
+    "HFE245fa1": "HFE245fa1",
+    "HFE263fb2": "HFE263fb2",
+    "HFE329mcc2": "HFE329mcc2",
+    "HFE338mcf2": "HFE338mcf2",
+    "HFE347mcf2": "HFE347mcf2",
+    "HFE356mec3": "HFE356mec3",
+    "HFE356pcf2": "HFE356pcf2",
+    "HFE356pcf3": "HFE356pcf3",
+    "HFE365mcf3": "HFE365mcf3",
+    "HFE374pc2": "HFE374pc2",
+    # Perfluoropolyethers
+    "PFPMIE": "PFPMIE",
+    # Misc
+    "CCl4": "CCl4",
+    "CHCl3": "CHCl3",
+    "CH2Cl2": "CH2Cl2",
+    "CH3CCl3": "CH3CCl3",
+    "CH3Cl": "CH3Cl",
+    "CH3Br": "CH3Br",
+    "SF5CF3": "SF5CF3",
+    "SF6": "SF6",
+    "NF3": "NF3",
+}
 
-class _Registry:
-    _unit_registry: UnitRegistry = None
-    """Unit registry which is used for conversions"""
 
-    @property
-    def unit_registry(self) -> UnitRegistry:
+class ScmUnitRegistry(pint.UnitRegistry):  # type: ignore
+    """
+    Unit registry class for OpenSCM. Provides some convenience methods to add standard
+    unit and contexts.
+    """
+
+    _contexts_loaded: bool = False
+
+    def add_standards(self):
         """
-        Get Pint unit registry which is used for conversions.
+        Add standard units.
+
+        Has to be done separately because of pint's weird initializing.
         """
-        if self._unit_registry is None:
-            from ._unit_registry import _unit_registry
+        self._add_gases(_standard_gases)
 
-            self._unit_registry = _unit_registry
+        self.define("a = 1 * year = annum = yr")
+        self.define("h = hour")
+        self.define("d = day")
+        self.define("degreeC = degC")
+        self.define("degreeF = degF")
+        self.define("kt = 1000 * t")  # since kt is used for "knot" in the defaults
 
-        return self._unit_registry
+        self.define("ppt = [concentrations]")
+        self.define("ppb = 1000 * ppt")
+        self.define("ppm = 1000 * ppb")
+
+    def enable_contexts(self, *names_or_contexts, **kwargs):
+        """
+        Overload pint's `enable_contexts` to load contexts once the first time some are
+        used to avoid (unnecessary) file operations on import.
+        """
+        if not self._contexts_loaded:
+            self._load_contexts()
+        self._contexts_loaded = True
+        super().enable_contexts(*names_or_contexts, **kwargs)
+
+    def _add_mass_emissions_joint_version(self, symbol: str) -> None:
+        """
+        Add a unit which is the combination of mass and emissions.
+
+        This allows users to units like e.g. ``"tC"`` rather than requiring a space
+        between the mass and the emissions i.e. ``"t C"``
+
+        Parameters
+        ----------
+        symbol
+            The unit to add a joint version for
+        """
+        self.define("g{symbol} = g * {symbol}".format(symbol=symbol))
+        self.define("t{symbol} = t * {symbol}".format(symbol=symbol))
+
+    def _add_gases(self, gases: Dict[str, Union[str, Sequence[str]]]) -> None:
+        for symbol, value in gases.items():
+            if isinstance(value, str):
+                # symbol is base unit
+                self.define("{} = [{}]".format(symbol, value))
+                if value != symbol:
+                    self.define("{} = {}".format(value, symbol))
+            else:
+                # symbol has conversion and aliases
+                self.define("{} = {}".format(symbol, value[0]))
+                for alias in value[1:]:
+                    self.define("{} = {}".format(alias, symbol))
+
+            self._add_mass_emissions_joint_version(symbol)
+
+            # Add alias for upper case symbol:
+            if symbol.upper() != symbol:
+                self.define("{} = {}".format(symbol.upper(), symbol))
+                self._add_mass_emissions_joint_version(symbol.upper())
+
+    def _load_contexts(self) -> None:
+        """
+        Load contexts.
+        """
+        _ch4_context = pint.Context("CH4_conversions")
+        _ch4_context.add_transformation(
+            "[carbon]",
+            "[methane]",
+            lambda registry, x: 16 / 12 * registry.CH4 * x / registry.C,
+        )
+        _ch4_context.add_transformation(
+            "[methane]",
+            "[carbon]",
+            lambda registry, x: x * registry.C / registry.CH4 / (16 / 12),
+        )
+        self.add_context(_ch4_context)
+
+        _n2o_context = pint.Context("NOx_conversions")
+        _n2o_context.add_transformation(
+            "[nitrogen]",
+            "[NOx]",
+            lambda registry, x: (14 + 2 * 16)
+            / 14
+            * registry.NOx
+            * x
+            / registry.nitrogen,
+        )
+        _n2o_context.add_transformation(
+            "[NOx]",
+            "[nitrogen]",
+            lambda registry, x: x
+            * registry.nitrogen
+            / registry.NOx
+            / ((14 + 2 * 16) / 14),
+        )
+        self.add_context(_n2o_context)
+
+        self._load_metric_conversions()
+
+    def _load_metric_conversions(self) -> None:
+        """
+        Load metric conversion contexts from file.
+
+        This is done only when contexts are needed to avoid reading files on import.
+        """
+        import pandas as pd
+        from os import path
+
+        metric_conversions = pd.read_csv(
+            path.join(path.dirname(path.abspath(__file__)), "metric_conversions.csv"),
+            skiprows=1,  # skip source row
+            header=0,
+            index_col=0,
+        ).iloc[
+            1:, :
+        ]  # drop out 'OpenSCM base unit' row
+
+        def _get_transform_func(ureg_unit, conversion_factor, forward=True):
+            if forward:
+
+                def result_forward(ur, strt):
+                    return strt * ur.carbon / ureg_unit * conversion_factor
+
+                return result_forward
+
+            def result_backward(ur, strt):
+                return strt * ureg_unit / ur.carbon / conversion_factor
+
+            return result_backward
+
+        for col in metric_conversions:
+            tc = pint.Context(col)
+            for label, val in metric_conversions[col].iteritems():
+                conv_val = (
+                    val
+                    * (self("CO2").to_base_units()).magnitude
+                    / (self(label).to_base_units()).magnitude
+                )
+                base_unit = [
+                    s
+                    for s, _ in self._get_dimensionality(
+                        self(label)  # pylint: disable=protected-access
+                        .to_base_units()
+                        ._units
+                    ).items()
+                ][0]
+
+                unit_reg_unit = getattr(
+                    self, base_unit.replace("[", "").replace("]", "")
+                )
+                tc.add_transformation(
+                    base_unit, "[carbon]", _get_transform_func(unit_reg_unit, conv_val)
+                )
+                tc.add_transformation(
+                    "[carbon]",
+                    base_unit,
+                    _get_transform_func(unit_reg_unit, conv_val, forward=False),
+                )
+                tc.add_transformation(
+                    "[mass] * {} / [time]".format(base_unit),
+                    "[mass] * [carbon] / [time]",
+                    _get_transform_func(unit_reg_unit, conv_val),
+                )
+                tc.add_transformation(
+                    "[mass] * [carbon] / [time]",
+                    "[mass] * {} / [time]".format(base_unit),
+                    _get_transform_func(unit_reg_unit, conv_val, forward=False),
+                )
+                tc.add_transformation(
+                    "[mass] * {}".format(base_unit),
+                    "[mass] * [carbon]",
+                    _get_transform_func(unit_reg_unit, conv_val),
+                )
+                tc.add_transformation(
+                    "[mass] * [carbon]",
+                    "[mass] * {}".format(base_unit),
+                    _get_transform_func(unit_reg_unit, conv_val, forward=False),
+                )
+                tc.add_transformation(
+                    "{} / [time]".format(base_unit),
+                    "[carbon] / [time]",
+                    _get_transform_func(unit_reg_unit, conv_val),
+                )
+                tc.add_transformation(
+                    "[carbon] / [time]",
+                    "{} / [time]".format(base_unit),
+                    _get_transform_func(unit_reg_unit, conv_val, forward=False),
+                )
+
+            self.add_context(tc)
 
 
-_register = _Registry()
+_unit_registry = ScmUnitRegistry()
+"""
+OpenSCM standard unit registry
+
+The unit registry contains all of the recognised units.
+"""
+_unit_registry.add_standards()
 
 
 class UnitConverter:
     """
     Converts numbers between two units.
-
     """
 
     _source: str
@@ -137,10 +465,7 @@ class UnitConverter:
     _scaling: float
     """Scaling factor between units"""
 
-    _unit_registry: UnitRegistry = None
-    """Unit registry which is used for conversions"""
-
-    def __init__(self, source: str, target: str, context: str = "No context"):
+    def __init__(self, source: str, target: str, context: Optional[str] = None):
         """
         Initialize.
 
@@ -151,10 +476,9 @@ class UnitConverter:
         target
             Unit to convert **to**
         context
-            Context to use for the conversion i.e. which metric to apply when
-            performing CO2-equivalent calculations. If ``"No context"``, no metric
-            will be applied and CO2-equivalent calculations will raise
-            ``DimensionalityError``.
+            Context to use for the conversion i.e. which metric to apply when performing
+            CO2-equivalent calculations. If ``None``, no metric will be applied and
+            CO2-equivalent calculations will raise ``DimensionalityError``.
 
         Raises
         ------
@@ -166,17 +490,17 @@ class UnitConverter:
         self._source = source
         self._target = target
 
-        source_unit = self.unit_registry.Unit(source)
-        target_unit = self.unit_registry.Unit(target)
+        source_unit = _unit_registry.Unit(source)
+        target_unit = _unit_registry.Unit(target)
 
-        s1 = self.unit_registry.Quantity(1, source_unit)
-        s2 = self.unit_registry.Quantity(-1, source_unit)
+        s1 = _unit_registry.Quantity(1, source_unit)
+        s2 = _unit_registry.Quantity(-1, source_unit)
 
-        if context == "No context":
+        if context is None:
             t1 = s1.to(target_unit)
             t2 = s2.to(target_unit)
         else:
-            with self.unit_registry.context(context):
+            with _unit_registry.context(context):
                 t1 = s1.to(target_unit)
                 t2 = s2.to(target_unit)
 
@@ -222,18 +546,14 @@ class UnitConverter:
         """
         return (v - self._offset) / self._scaling
 
-    @property
-    def unit_registry(self) -> UnitRegistry:
-        """
-        Get pint unit registry which is used for conversions.
-        """
-        return _register.unit_registry
-
-    @property
-    def contexts(self) -> list:
+    @classmethod
+    def contexts(cls) -> Sequence[str]:
         """
         Get available contexts for unit conversions.
+
+        Returns
+        -------
+        Sequence[str]
+            List of names of the available contexts
         """
-        return list(
-            self.unit_registry._contexts.keys()  # pylint: disable=protected-access
-        )
+        return list(_unit_registry._contexts.keys())  # pylint: disable=protected-access
