@@ -1,6 +1,6 @@
 workflow "Continuous Integration" {
   on = "push"
-  resolves = ["Coverage"]
+  resolves = ["Coverage", "Documentation"]
 }
 
 action "Documentation" {
