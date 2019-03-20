@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 import pytest
 
-from openscm.units import UnitConverter, DimensionalityError, UndefinedUnitError
+from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
 from openscm.units._unit_registry import _unit_registry
 
 
@@ -32,10 +32,9 @@ def test_conversion_incompatible_units():
 
 
 def test_metric_conversion_unit_converter_with_context():
-    with _unit_registry.context("AR4GWP100"):
-        uc = UnitConverter("kg SF5CF3 / yr", "kg CO2 / yr")
-        assert uc.convert_from(1) == 17700
-        assert uc.convert_to(1) == 1 / 17700
+    uc = UnitConverter("kg SF5CF3 / yr", "kg CO2 / yr", context="AR4GWP100")
+    assert uc.convert_from(1) == 17700
+    assert uc.convert_to(1) == 1 / 17700
 
 
 def test_metric_conversion_unit_converter_error():
@@ -56,3 +55,7 @@ def test_metric_conversion_unit_converter_nan():
 
     assert len(recorded_warnings) == 1
     assert str(recorded_warnings[0].message) == expected_warning
+
+
+def test_contexts():
+    assert isinstance(UnitConverter("CO2", "C").contexts, list)
