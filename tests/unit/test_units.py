@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 
@@ -154,9 +156,16 @@ def test_context_dimensionality_error():
     (
         ["AR4GWP100", "CH4", 25],
         ["AR4GWP100", "N2O", 298],
+        ["AR4GWP100", "CCl4", 1400],
         ["AR4GWP100", "HFC32", 675],
         ["AR4GWP100", "SF6", 22800],
         ["AR4GWP100", "C2F6", 12200],
+        ["AR4GWP100", "HCFC142b", 2310],
+        ["AR4GWP100", "HFC32", 675],
+        ["AR4GWP100", "cC4F8", 10300],
+        ["AR4GWP100", "cC4F8", 10300],
+        ["AR4GWP100", "HFE356pcc3", 413],
+        ["AR4GWP100", "CH2Cl2", 8.7],
         ["SARGWP100", "CH4", 21],
         ["SARGWP100", "N2O", 310],
         ["SARGWP100", "HFC32", 650],
@@ -173,3 +182,34 @@ def test_metric_conversion(metric_name, species, conversion):
         with unit_registry.context(metric_name):
             np.testing.assert_allclose(base.to(dest).magnitude, conversion)
             np.testing.assert_allclose(dest.to(base).magnitude, 1 / conversion)
+
+
+@pytest.mark.parametrize(
+    "metric_name,species",
+    (
+
+        ["AR4GWP100", "CHCl3"],
+    ),
+)
+def test_metric_conversion_nan(metric_name, species):
+    base_str_formats = ["{}", "kg {} / yr", "kg {}", "{} / yr"]
+    for base_str_format in base_str_formats:
+        base = unit_registry(base_str_format.format(species))
+        dest = unit_registry(base_str_format.format("CO2"))
+
+        expected_warning = "No {} conversion found for {}, returning nan".format(
+            metric_name,
+            species
+        )
+        with warnings.catch_warnings(record=True) as recorded_warnings:
+            with unit_registry.context(metric_name):
+                res = base.to(dest).magnitude
+                assert np.isnan(res)
+                res = dest.to(base).magnitude
+                assert np.isnan(res)
+
+        assert len(recorded_warnings) == 2
+        import pdb
+        pdb.set_trace()
+        assert str(recorded_warnings[0].message) == expected_warning
+        assert str(recorded_warnings[1].message) == expected_warning
