@@ -14,7 +14,7 @@ from .timeseries_converter import (
     InterpolationType,
     TimeseriesConverter,
 )
-from .units import UnitConverter
+from .unit_converter import UnitConverter
 
 # pylint: disable=protected-access,too-many-arguments
 
