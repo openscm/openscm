@@ -3,8 +3,12 @@ import warnings
 import numpy as np
 import pytest
 
-from openscm.units import DimensionalityError, UndefinedUnitError, UnitConverter
-from openscm.units._unit_registry import _unit_registry
+from openscm.units import (
+    DimensionalityError,
+    UndefinedUnitError,
+    UnitConverter,
+    _unit_registry,
+)
 
 
 def test_conversion_without_offset():
@@ -58,4 +62,4 @@ def test_metric_conversion_unit_converter_nan():
 
 
 def test_contexts():
-    assert isinstance(UnitConverter("CO2", "C").contexts, list)
+    assert isinstance(UnitConverter.contexts(), list)
