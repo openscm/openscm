@@ -1,8 +1,14 @@
 """
 Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
-model by William Nordhaus.
+model by William Nordhaus (DICE 2013).
 
 Original source: https://sites.google.com/site/williamdnordhaus/dice-rice
+
+http://www.econ.yale.edu/~nordhaus/homepage/homepage/DICE2013R_100413_vanilla.gms
+http://www.econ.yale.edu/~nordhaus/homepage/homepage/DICE2016R-091916ap.gms
+
+This implementation follows the original DICE code closely, especially regarding
+variable naming. Original comments are marked by "Original:".
 """
 
 from collections import namedtuple
@@ -23,52 +29,49 @@ from ..timeseries_converter import (
 YEAR = 365 * 24 * 60 * 60
 
 MODEL_PARAMETER_DEFAULTS = {
-    # Initial concentration in atmosphere
-    "M_atm0": (830.4, "GtC"),
-    # Equilibrium concentration atmosphere
-    "M_atm_eq": (588, "GtC"),
-    # Lower bound concentration in atmosphere
-    "M_atm_lower": (10, "GtC"),
-    # Initial concentration in lower strata
-    "M_l0": (10010, "GtC"),
-    # Equilibrium concentration in lower strata
-    "M_l_eq": (10000, "GtC"),
-    # Lower bound for concentration in lower strata
-    "M_l_lower": (1000, "GtC"),
-    # Initial concentration in upper strata
-    "M_u0": (1527, "GtC"),
-    # Equilibrium concentration in upper strata
-    "M_u_eq": (1350, "GtC"),
-    # Lower bound for concentration in upper strata
-    "M_u_lower": (100, "GtC"),
-    # Initial atmospheric temperature change (rel. to 1900)
-    "T_atm0": (0.8, "degC"),
-    # Upper bound for atmospheric temperature change (rel. to 1900)
-    "T_atm_upper": (40, "degC"),
-    # Initial lower stratum temperature change (rel. to 1900)
-    "T_ocean0": (0.0068, "degC"),
-    # Lower bound for lower stratum temperature change (rel. to 1900)
-    "T_ocean_lower": (-1, "degC"),
-    # Upper bound for lower stratum temperature change (rel. to 1900)
-    "T_ocean_upper": (20, "degC"),
-    # Carbon cycle transition matrix
-    "b12": (0.0181, ""),
-    # Carbon cycle transition matrix
-    "b23": (0.00071, ""),
-    # Climate equation coefficient for upper level
-    "c1": (0.0222, "degC*m^2/W"),
-    # Transfer coefficient upper to lower stratum
-    "c3": (0.09175, "W/m^2/degC"),
-    # Transfer coefficient for lower level
-    "c4": (0.00487, ""),
-    # Forcings of equilibrium CO2 doubling
-    "fco22x": (3.8, "W/m^2"),
-    # 2010 forcings of non-CO2 GHG
-    "fex0": (0.25, "W/m^2"),
-    # 2100 forcings of non-CO2 GHG
-    "fex1": (0.7, "W/m^2"),
+    # Initial pool size atmosphere
+    #     Original: "Initial Concentration in atmosphere 2010 (GtC)"
+    "mat0": (830.4, "GtC"),  # 851
+    # Equilibrium pool size atmosphere
+    #     Original: "Equilibrium concentration atmosphere (GtC)"
+    "mateq": (588, "GtC"),  # 588
+    "mat_lower": (10, "GtC"),  # 10
+    # Original: "Initial Concentration in lower strata 2010 (GtC)"
+    "ml0": (10010, "GtC"),  # 1740
+    # Original: "Equilibrium concentration in lower strata (GtC)"
+    "mleq": (10000, "GtC"),  # 1720
+    "ml_lower": (1000, "GtC"),  # 1000
+    # Original: "Initial Concentration in upper strata 2010 (GtC)"
+    "mu0": (1527, "GtC"),  # 460
+    # Original: "Equilibrium concentration in upper strata (GtC)"
+    "mueq": (1350, "GtC"),  # 360
+    "mu_lower": (100, "GtC"),  # 100
+    # Original: "Initial atmospheric temp change (C from 1900)"
+    "tatm0": (0.8, "degC"),  # 0.85
+    "tatm_upper": (40, "degC"),  # 12
+    # Original: "Initial lower stratum temp change (C from 1900)"
+    "tocean0": (0.0068, "degC"),  # 0.0068
+    "tocean_lower": (-1, "degC"),  # -1
+    "tocean_upper": (20, "degC"),  # 20
+    # Original: "Carbon cycle transition matrix"
+    "b12": (0.0181, ""),  # 0.088; 0.12
+    # Original: "Carbon cycle transition matrix"
+    "b23": (0.00071, ""),  # 0.00250; 0.007
+    # Original: "Climate equation coefficient for upper level"
+    "c1": (0.0222, "degC*m^2/W"),  # 0.098; 0.1005
+    # Original: "Transfer coefficient upper to lower stratum"
+    "c3": (0.09175, "W/m^2/degC"),  # 0.088; 0.088
+    # Original: "Transfer coefficient for lower level"
+    "c4": (0.00487, ""),  # 0.025; 0.025
+    # Forcings of equilibrium CO2 doubling (Wm-2)
+    "fco22x": (3.8, "W/m^2"),  # 3.6813
+    # Original: "2010 forcings of non-CO2 GHG (Wm-2)"
+    "fex0": (0.25, "W/m^2"),  # 0.5
+    # Original: "2100 forcings of non-CO2 GHG (Wm-2)"
+    "fex1": (0.7, "W/m^2"),  # 1.0
     # Equilibrium climate sensitivity
-    "t2xco2": (2.9, "degC"),
+    #     Original: "Equilibrium temp impact (oC per doubling CO2)"
+    "t2xco2": (2.9, "degC"),  # 3.1
 }
 
 
@@ -157,7 +160,7 @@ class DICE(Adapter):
             ParameterType.AVERAGE_TIMESERIES,
         )
 
-        # Total CO2 emissions (GtCO2 per year)
+        # Original: "Total CO2 emissions (GtCO2 per year)"
         self._views.E = self._parameters.get_timeseries_view(
             ("Emissions", "CO2"),
             ("World",),
@@ -180,8 +183,8 @@ class DICE(Adapter):
                 ExtrapolationType.LINEAR,
             ).set(np.zeros(self._timestep_count))
 
-        # Concentration in atmosphere
-        self._views.M_atm = self._output.get_writable_timeseries_view(
+        # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
+        self._views.mat = self._output.get_writable_timeseries_view(
             ("Concentration", "Atmosphere"),
             ("World",),
             "GtC",
@@ -191,8 +194,8 @@ class DICE(Adapter):
             ExtrapolationType.LINEAR,
         )
 
-        # Carbon concentration increase in lower oceans (rel. to 1750)
-        self._views.M_l = self._output.get_writable_timeseries_view(
+        # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
+        self._views.ml = self._output.get_writable_timeseries_view(
             ("Concentration", "Ocean", "lower"),
             ("World",),
             "GtC",
@@ -202,8 +205,8 @@ class DICE(Adapter):
             ExtrapolationType.LINEAR,
         )
 
-        # Carbon concentration increase in shallow oceans (rel. to 1750)
-        self._views.M_u = self._output.get_writable_timeseries_view(
+        # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
+        self._views.mu = self._output.get_writable_timeseries_view(
             ("Concentration", "Ocean", "shallow"),
             ("World",),
             "GtC",
@@ -213,8 +216,8 @@ class DICE(Adapter):
             ExtrapolationType.LINEAR,
         )
 
-        # Increase temperature of atmosphere (rel. to 1900)
-        self._views.T_atm = self._output.get_writable_timeseries_view(
+        # Original: "Increase temperature of atmosphere (degrees C from 1900)"
+        self._views.tatm = self._output.get_writable_timeseries_view(
             ("Temperature Increase", "Atmosphere"),
             ("World",),
             "degC",
@@ -224,8 +227,8 @@ class DICE(Adapter):
             ExtrapolationType.LINEAR,
         )
 
-        # Increase in temperature of lower oceans (rel. to 1900)
-        self._views.T_ocean = self._output.get_writable_timeseries_view(
+        # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
+        self._views.tocean = self._output.get_writable_timeseries_view(
             ("Temperature Increase", "Ocean", "lower"),
             ("World",),
             "degC",
@@ -235,8 +238,8 @@ class DICE(Adapter):
             ExtrapolationType.LINEAR,
         )
 
-        # Increase in radiative forcing (rel. to 1900)
-        self._views.force = self._output.get_writable_timeseries_view(
+        # Original: "Increase in radiative forcing (watts per m2 from 1900)"
+        self._views.forc = self._output.get_writable_timeseries_view(
             ("Radiative forcing",),
             ("World",),
             "W/m^2",
@@ -251,31 +254,29 @@ class DICE(Adapter):
         for name in MODEL_PARAMETER_DEFAULTS:
             setattr(self._values, name, getattr(self._views, name).get())
 
-        # Carbon cycle transition matrix
+        # Original: "Carbon cycle transition matrix"
         self._values.b11 = 1 - self._values.b12
-        self._values.b21 = (
-            self._values.b12 * self._values.M_atm_eq / self._values.M_u_eq
-        )
+        self._values.b21 = self._values.b12 * self._values.mateq / self._values.mueq
         self._values.b22 = 1 - self._values.b21 - self._values.b23
-        self._values.b32 = self._values.b23 * self._values.M_u_eq / self._values.M_l_eq
+        self._values.b32 = self._values.b23 * self._values.mueq / self._values.mleq
         self._values.b33 = 1 - self._values.b32
 
         self._values.E = self._views.E.get()
 
-        self._values.M_atm = np.empty(self._timestep_count)
-        self._values.M_atm[0] = self._values.M_atm0
-        self._values.M_l = np.empty(self._timestep_count)
-        self._values.M_l[0] = self._values.M_l0
-        self._values.M_u = np.empty(self._timestep_count)
-        self._values.M_u[0] = self._values.M_u0
-        self._values.T_atm = np.empty(self._timestep_count)
-        self._values.T_atm[0] = self._values.T_atm0
-        self._values.T_ocean = np.empty(self._timestep_count)
-        self._values.T_ocean[0] = self._values.T_ocean0
+        self._values.mat = np.empty(self._timestep_count)
+        self._values.mat[0] = self._values.mat0
+        self._values.ml = np.empty(self._timestep_count)
+        self._values.ml[0] = self._values.ml0
+        self._values.mu = np.empty(self._timestep_count)
+        self._values.mu[0] = self._values.mu0
+        self._values.tatm = np.empty(self._timestep_count)
+        self._values.tatm[0] = self._values.tatm0
+        self._values.tocean = np.empty(self._timestep_count)
+        self._values.tocean[0] = self._values.tocean0
 
-        self._values.force = np.empty(self._timestep_count)
-        self._values.force[0] = (
-            self._values.fco22x * log2(self._values.M_atm0 / self._values.M_atm_eq)
+        self._values.forc = np.empty(self._timestep_count)
+        self._values.forc[0] = (
+            self._values.fco22x * log2(self._values.mat0 / self._values.mateq)
             + self._values.fex0
         )
 
@@ -301,12 +302,12 @@ class DICE(Adapter):
         """
         Set output data from values.
         """
-        self._views.M_atm.set(self._values.M_atm)
-        self._views.M_l.set(self._values.M_l)
-        self._views.M_u.set(self._values.M_u)
-        self._views.T_atm.set(self._values.T_atm)
-        self._views.T_ocean.set(self._values.T_ocean)
-        self._views.force.set(self._values.force)
+        self._views.mat.set(self._values.mat)
+        self._views.ml.set(self._values.ml)
+        self._views.mu.set(self._values.mu)
+        self._views.tatm.set(self._values.tatm)
+        self._views.tocean.set(self._values.tocean)
+        self._views.forc.set(self._values.forc)
 
     def _calc_step(self) -> None:
         """
@@ -315,44 +316,47 @@ class DICE(Adapter):
         self._timestep += 1
         self._current_time += YEAR
 
-        # Atmospheric pool size
-        self._values.M_atm[self._timestep] = max(
-            self._values.M_atm_lower,
-            self._values.M_atm[self._timestep - 1] * self._values.b11
-            + self._values.M_u[self._timestep - 1] * self._values.b21
-            + self._values.E[self._timestep - 1] * self._period_length / YEAR / 44 / 12,
+        # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
+        self._values.mat[self._timestep] = max(
+            self._values.mat_lower,
+            self._values.mat[self._timestep - 1] * self._values.b11
+            + self._values.mu[self._timestep - 1] * self._values.b21
+            + self._values.E[self._timestep - 1]
+            * self._values.period_length
+            / YEAR
+            / 44 * 12,
         )
 
-        # Lower ocean pool size (rel. to 1750)
-        self._values.M_l[self._timestep] = max(
-            self._values.M_l_lower,
-            self._values.M_l[self._timestep - 1] * self._values.b33
-            + self._values.M_u[self._timestep - 1] * self._values.b23,
+        # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
+        self._values.ml[self._timestep] = max(
+            self._values.ml_lower,
+            self._values.ml[self._timestep - 1] * self._values.b33
+            + self._values.mu[self._timestep - 1] * self._values.b23,
         )
 
-        # Shallow ocean pool size (rel. to 1750)
-        self._values.M_u[self._timestep] = max(
-            self._values.M_u_lower,
-            self._values.M_atm[self._timestep - 1] * self._values.b12
-            + self._values.M_u[self._timestep - 1] * self._values.b22
-            + self._values.M_l[self._timestep - 1] * self._values.b32,
+        # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
+        self._values.mu[self._timestep] = max(
+            self._values.mu_lower,
+            self._values.mat[self._timestep - 1] * self._values.b12
+            + self._values.mu[self._timestep - 1] * self._values.b22
+            + self._values.ml[self._timestep - 1] * self._values.b32,
         )
 
-        # Increase in temperature of lower oceans (rel. to 1900)
-        self._values.T_ocean[self._timestep] = max(
-            self._values.T_ocean_lower,
+        # Original: "Increase temperatureof lower oceans (degrees C from 1900)" (sic)
+        self._values.tocean[self._timestep] = max(
+            self._values.tocean_lower,
             min(
-                self._values.T_ocean_upper,
-                self._values.T_ocean[self._timestep - 1]
+                self._values.tocean_upper,
+                self._values.tocean[self._timestep - 1]
                 + self._values.c4
                 * (
-                    self._values.T_atm[self._timestep - 1]
-                    - self._values.T_ocean[self._timestep - 1]
+                    self._values.tatm[self._timestep - 1]
+                    - self._values.tocean[self._timestep - 1]
                 ),
             ),
         )
 
-        # Exogenous forcing for other greenhouse gases
+        # Original: "Exogenous forcing for other greenhouse gases"
         if self._start_time + self._period_length * self._timestep > self._year2100:
             forcoth = self._values.fex1
         else:
@@ -363,26 +367,26 @@ class DICE(Adapter):
                 / 90.0
             )
 
-        # Increase in radiative forcing (rel. to 1900)
+        # Original: "Increase in radiative forcing (watts per m2 from 1900)"
         self._values.force[self._timestep] = (
             self._values.fco22x
-            * log2(self._values.M_atm[self._timestep] / self._values.M_atm_eq)
+            * log2(self._values.mat[self._timestep] / self._values.mateq)
             + forcoth
         )
 
-        # Increase temperature of atmosphere (rel. to 1900)
-        self._values.T_atm[self._timestep] = min(
-            self._values.T_atm_upper,
-            self._values.T_atm[self._timestep - 1]
+        # Original: "Increase temperature of atmosphere (degrees C from 1900)"
+        self._values.tatm[self._timestep] = min(
+            self._values.tatm_upper,
+            self._values.tatm[self._timestep - 1]
             + self._values.c1
             * (
-                self._values.force[self._timestep]
+                self._values.forc[self._timestep]
                 - (self._values.fco22x / self._values.t2xco2)
-                * self._values.T_atm[self._timestep - 1]
+                * self._values.tatm[self._timestep - 1]
                 - self._values.c3
                 * (
-                    self._values.T_atm[self._timestep - 1]
-                    - self._values.T_ocean[self._timestep - 1]
+                    self._values.tatm[self._timestep - 1]
+                    - self._values.tocean[self._timestep - 1]
                 )
             ),
         )
