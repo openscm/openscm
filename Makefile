@@ -1,12 +1,4 @@
-.PHONY: black checks clean coverage docs flake8 isort publish-on-pypi test test-all test-pypi-install
-
-black: venv
-	@status=$$(git status --porcelain openscm tests); \
-	if test "x$${status}" = x; then \
-		./venv/bin/black --exclude _version.py setup.py openscm tests; \
-	else \
-		echo Not trying any formatting. Working directory is dirty ... >&2; \
-	fi;
+.PHONY: checks check-docs clean clean-notebooks coverage docs format test test-all test-notebooks
 
 checks: venv
 	./venv/bin/bandit -c .bandit.yml -r openscm
@@ -50,33 +42,17 @@ coverage: venv
 docs: venv
 	./venv/bin/sphinx-build -M html docs docs/build
 
-isort: venv
+format: venv clean-notebooks
 	./venv/bin/isort --recursive openscm tests setup.py
+	./venv/bin/black openscm tests setup.py --exclude openscm/_version.py
 
-publish-on-pypi: venv
-	-rm -rf build dist
-	@status=$$(git status --porcelain); \
-	if test "x$${status}" = x; then \
-		./venv/bin/python setup.py bdist_wheel --universal; \
-		./venv/bin/twine upload dist/*; \
-	else \
-		echo Working directory is dirty >&2; \
-	fi;
+test-all: test test-notebooks
 
 test: venv
 	./venv/bin/pytest -sx tests
 
 test-notebooks: venv
 	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
-
-test-all: test test-notebooks
-
-test-pypi-install: venv
-	$(eval TEMPVENV := $(shell mktemp -d))
-	python3 -m venv $(TEMPVENV)
-	$(TEMPVENV)/bin/pip install pip --upgrade
-	$(TEMPVENV)/bin/pip install openscm
-	$(TEMPVENV)/bin/python -c "import sys; sys.path.remove(''); import openscm; print(openscm.__version__)"
 
 venv: setup.py
 	[ -d ./venv ] || python3 -m venv ./venv
