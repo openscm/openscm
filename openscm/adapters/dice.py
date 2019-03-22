@@ -72,6 +72,13 @@ MODEL_PARAMETER_DEFAULTS = {
     # Equilibrium climate sensitivity
     #     Original: "Equilibrium temp impact (oC per doubling CO2)"
     "t2xco2": (2.9, "degC"),  # 3.1
+    # Period length in seconds (not part of original)
+    "period_length": (YEAR, None),
+    # Use original conversion factor from tCO2 to tC
+    # (has rounding errors but needed to reproduce original output; not part of original)
+    "original_rounding": (True, None),
+    # Time when forcing due to other greenhouse gases saturates (original: 2100)
+    "forcoth_saturation_time": (int(datetime(2100, 1, 1).timestamp()), None),
 }
 
 
@@ -80,13 +87,10 @@ class DICE(Adapter):
     Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
     model.
 
+    TODO Recalibration to different period lengths
     TODO recalculate increase to absolute values
-    TODO still calibrated to initial year 2010
     TODO What about timeseries parameters when run times change?
     """
-
-    _period_length: int
-    """Period length in seconds (currently 1yr)"""
 
     _timestep: int
     """Current time step"""
@@ -100,23 +104,17 @@ class DICE(Adapter):
     _views: Any
     """Parameter views"""
 
-    _year2100: int
-    """Timestamp of 2100-01-01"""
-
     def _initialize_model(self) -> None:
         """
         Initialize the model.
         """
-        self._period_length = YEAR
-        self._year2100 = int(datetime(2100, 1, 1).timestamp())  # TODO 365 days-year
-
         parameter_names = list(MODEL_PARAMETER_DEFAULTS.keys()) + [
             "E",
-            "M_atm",
-            "M_l",
-            "M_u",
-            "T_atm",
-            "T_ocean",
+            "mat",
+            "ml",
+            "mu",
+            "tatm",
+            "tocean",
             "force",
             "b11",
             "b21",
@@ -129,33 +127,45 @@ class DICE(Adapter):
 
         for name, (default, unit) in MODEL_PARAMETER_DEFAULTS.items():
             setattr(self._values, name, default)
-            self._parameters.get_writable_scalar_view(
-                ("DICE", name), ("World",), unit
-            ).set(default)
-            setattr(
-                self._views,
-                name,
-                self._parameters.get_scalar_view(("DICE", name), ("World",), unit),
-            )
+            if unit is None:
+                # Non-scalar parameter
+                self._parameters.get_writable_generic_view(
+                    ("DICE", name), ("World",)
+                ).set(default)
+                setattr(
+                    self._views,
+                    name,
+                    self._parameters.get_generic_view(("DICE", name), ("World",)),
+                )
+            else:
+                # Scalar parameter
+                self._parameters.get_writable_scalar_view(
+                    ("DICE", name), ("World",), unit
+                ).set(default)
+                setattr(
+                    self._views,
+                    name,
+                    self._parameters.get_scalar_view(("DICE", name), ("World",), unit),
+                )
 
     def _initialize_model_input(self) -> None:
         pass
 
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
-        self._timestep_count = (
-            self._stop_time - self._start_time
-        ) // self._period_length
+        self._timestep_count = (self._stop_time - self._start_time) // int(
+            self._values.period_length
+        ) + 1  # include self._stop_time
 
         time_points = create_time_points(
             self._start_time,
-            self._period_length,
+            self._values.period_length,
             self._timestep_count,
             ParameterType.POINT_TIMESERIES,
         )
         time_points_for_averages = create_time_points(
             self._start_time,
-            self._period_length,
+            self._values.period_length,
             self._timestep_count,
             ParameterType.AVERAGE_TIMESERIES,
         )
@@ -164,24 +174,12 @@ class DICE(Adapter):
         self._views.E = self._parameters.get_timeseries_view(
             ("Emissions", "CO2"),
             ("World",),
-            "GtCO2/a",
+            "GtCO2/a" if self._values.original_rounding else "GtC/a",
             time_points_for_averages,
             ParameterType.AVERAGE_TIMESERIES,
             InterpolationType.LINEAR,
             ExtrapolationType.LINEAR,
         )
-
-        # TODO remove setting missing emissions once there is a method in tests for that
-        if self._views.E.is_empty:
-            self._parameters.get_writable_timeseries_view(
-                ("Emissions", "CO2"),
-                ("World",),
-                "GtCO2/a",
-                time_points_for_averages,
-                ParameterType.AVERAGE_TIMESERIES,
-                InterpolationType.LINEAR,
-                ExtrapolationType.LINEAR,
-            ).set(np.zeros(self._timestep_count))
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
         self._views.mat = self._output.get_writable_timeseries_view(
@@ -324,7 +322,7 @@ class DICE(Adapter):
             + self._values.E[self._timestep - 1]
             * self._values.period_length
             / YEAR
-            / 44 * 12,
+            / (3.666 if self._values.original_rounding else 1),
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
@@ -357,18 +355,18 @@ class DICE(Adapter):
         )
 
         # Original: "Exogenous forcing for other greenhouse gases"
-        if self._start_time + self._period_length * self._timestep > self._year2100:
+        if (
+            self._start_time + self._values.period_length * self._timestep
+            >= self._values.forcoth_saturation_time
+        ):
             forcoth = self._values.fex1
         else:
-            forcoth = (
-                self._values.fex0
-                + (self._values.fex1 - self._values.fex0)
-                * (self._period_length / YEAR * self._timestep)
-                / 90.0
-            )
+            forcoth = self._values.fex0 + (self._values.fex1 - self._values.fex0) * (
+                self._values.period_length * self._timestep
+            ) / (self._values.forcoth_saturation_time - self._start_time)
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
-        self._values.force[self._timestep] = (
+        self._values.forc[self._timestep] = (
             self._values.fco22x
             * log2(self._values.mat[self._timestep] / self._values.mateq)
             + forcoth
