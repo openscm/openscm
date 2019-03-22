@@ -306,7 +306,7 @@ class WritableGenericView(GenericView):
     View of a generic parameter whose value can be changed.
     """
 
-    def set(self, value: bool) -> None:
+    def set(self, value: Any) -> None:
         """
         Set current value of boolean parameter.
 
