@@ -2,9 +2,12 @@
 Unit handling.
 
 Unit handling makes use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
-allows us to easily define units as well as contexts. Contexts allow us to perform conversions which would not normally be allowed e.g. in the 'AR4GWP100' context we can convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
+allows us to easily define units as well as contexts. Contexts allow us to perform
+conversions which would not normally be allowed e.g. in the 'AR4GWP100' context we can
+convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
 
-In general, you should not use Pint with OpenSCM explicitly. As illustration of how units are used internally, we provide the following example:
+In general, you should not use Pint with OpenSCM explicitly. As illustration of how
+units are used internally, we provide the following example:
 
 .. code:: python
 
@@ -83,8 +86,8 @@ However, it can be performed within the context 'CH4_conversions' as shown below
 *NOx*
 
 Like for methane, NOx emissions also suffer from a namespace collision. In order to
-prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <-->
-'N' is by default forbidden. It can be performed within the 'NOx_conversions' context:
+prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <--> 'N'
+is by default forbidden. It can be performed within the 'NOx_conversions' context:
 
 .. code:: python
 
