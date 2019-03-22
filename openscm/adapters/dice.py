@@ -115,7 +115,7 @@ class DICE(Adapter):
             "mu",
             "tatm",
             "tocean",
-            "force",
+            "forc",
             "b11",
             "b21",
             "b22",
