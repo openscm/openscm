@@ -53,7 +53,7 @@ class TestMyAdapter(_AdapterTester):
     tadapter = DICE
 
     def test_match_original(self, test_adapter):
-        _run_and_compare(test_adapter, "tests/data/dice_original_results.csv")
+        _run_and_compare(test_adapter, "tests/data/dice/original_results.csv")
 
     def test_match_original_bau(self, test_adapter):
-        _run_and_compare(test_adapter, "tests/data/dice_original_results_bau.csv")
+        _run_and_compare(test_adapter, "tests/data/dice/original_results_bau.csv")
