@@ -21,7 +21,7 @@ REQUIREMENTS = [
     "pandas",
     # can be moved into notebooks dependencies once Jared's new backend is in place
     "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@master",
-    "xarray @ git+https://github.com/pydata/xarray.git@master",  # Next release after 0.11.2
+    "xarray>=0.12.0",
     "cftime",
     "progressbar2",
 ]
