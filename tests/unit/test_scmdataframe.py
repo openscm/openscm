@@ -1,14 +1,13 @@
 import copy
 import datetime
-from dateutil import relativedelta
 import re
 
-
-import pytest
 import numpy as np
 import pandas as pd
-from pandas.errors import UnsupportedFunctionCall
+import pytest
+from dateutil import relativedelta
 from numpy import testing as npt
+from pandas.errors import UnsupportedFunctionCall
 from pyam.core import (
     require_variable,
     categorize,
@@ -18,19 +17,15 @@ from pyam.core import (
     IamDataFrame,
 )
 
-
+from conftest import assert_core
 from openscm.scmdataframe import (
     ScmDataFrame,
     convert_scmdataframe_to_core,
     convert_core_to_scmdataframe,
     df_append,
+    ONE_YEAR_IN_S_INTEGER
 )
-from openscm.scenarios import rcps
-from openscm.constants import ONE_YEAR_IN_S_INTEGER
 from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_year
-
-
-from conftest import assert_core
 
 
 def test_init_df_long_timespan(test_pd_longtime_df):
@@ -128,12 +123,12 @@ def test_init_with_decimal_years():
 
     res = ScmDataFrame(d, columns=cols)
     assert (
-        res["time"].unique()
-        == [
-            datetime.datetime(1765, 1, 1, 0, 0),
-            datetime.datetime(1765, 1, 31, 7, 4, 48, 3),
-            datetime.datetime(1765, 3, 2, 22, 55, 11, 999997),
-        ]
+            res["time"].unique()
+            == [
+                datetime.datetime(1765, 1, 1, 0, 0),
+                datetime.datetime(1765, 1, 31, 7, 4, 48, 3),
+                datetime.datetime(1765, 3, 2, 22, 55, 11, 999997),
+            ]
     ).all()
     npt.assert_array_equal(res._data.loc[:, 0].values, inp_array)
 
@@ -387,13 +382,13 @@ def test_filter_time_no_match(test_scm_datetime_df):
 
 
 def test_filter_time_not_datetime_error(test_scm_datetime_df):
-    error_msg = re.escape("`time` can only be filtered by datetimes")
+    error_msg = re.escape("`time` can only be filtered with datetimes")
     with pytest.raises(TypeError, match=error_msg):
         test_scm_datetime_df.filter(time=2005)
 
 
 def test_filter_time_not_datetime_range_error(test_scm_datetime_df):
-    error_msg = re.escape("`time` can only be filtered by datetimes")
+    error_msg = re.escape("`time` can only be filtered with datetimes")
     with pytest.raises(TypeError, match=error_msg):
         test_scm_datetime_df.filter(time=range(2000, 2008))
 
@@ -574,16 +569,16 @@ def test_process_over_kwargs_error(test_scm_df):
     "tfilter,tappend_str,exp_append_str",
     [
         (
-            {"time": [datetime.datetime(y, 1, 1, 0, 0, 0) for y in range(2005, 2011)]},
-            None,
-            "(ref. period time: 2005-01-01 00:00:00 - 2010-01-01 00:00:00)",
+                {"time": [datetime.datetime(y, 1, 1, 0, 0, 0) for y in range(2005, 2011)]},
+                None,
+                "(ref. period time: 2005-01-01 00:00:00 - 2010-01-01 00:00:00)",
         ),
         ({"month": [1, 2, 3]}, "(Jan - Mar)", "(Jan - Mar)"),
         ({"day": [1, 2, 3]}, None, "(ref. period day: 1 - 3)"),
     ],
 )
 def test_relative_to_ref_period_mean(
-    test_processing_scm_df, tfilter, tappend_str, exp_append_str
+        test_processing_scm_df, tfilter, tappend_str, exp_append_str
 ):
     exp = pd.DataFrame(
         [
@@ -977,8 +972,8 @@ def test_append_inplace_column_order_time_interpolation(test_scm_df):
     pd.testing.assert_frame_equal(
         test_scm_df.timeseries().sort_index(),
         exp.timeseries()
-        .reorder_levels(test_scm_df.timeseries().index.names)
-        .sort_index(),
+            .reorder_levels(test_scm_df.timeseries().index.names)
+            .sort_index(),
         check_like=True,
     )
 
@@ -1386,8 +1381,8 @@ def test_pd_join_by_meta_nonmatching_index(test_scm_df):
     pd.testing.assert_frame_equal(obs.sort_index(level=1), exp)
 
 
-def test_convert_scmdataframe_to_core():
-    tdata = rcps.filter(scenario="RCP26")
+def test_convert_scmdataframe_to_core(rcp26):
+    tdata = rcp26
 
     res = convert_scmdataframe_to_core(tdata)
 
@@ -1456,8 +1451,8 @@ def test_convert_scmdataframe_to_core():
     )
 
 
-def test_convert_core_to_scmdataframe():
-    tdata = rcps.filter(scenario="RCP26")
+def test_convert_core_to_scmdataframe(rcp26):
+    tdata = rcp26
 
     intermediate = convert_scmdataframe_to_core(tdata)
 
@@ -1487,8 +1482,8 @@ def test_resample(test_scm_df):
 
     obs = (
         res.filter(scenario="a_scenario", variable="Primary Energy")
-        .timeseries()
-        .T.squeeze()
+            .timeseries()
+            .T.squeeze()
     )
     exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     npt.assert_almost_equal(obs, exp, decimal=1)

@@ -4,6 +4,7 @@ Fixtures and data for tests.
 
 from collections import namedtuple
 from datetime import datetime
+from os.path import abspath, dirname, join
 
 import pytest
 import numpy as np
@@ -110,13 +111,14 @@ def test_iam_df():
     yield IamDataFrame(TEST_DF)
 
 
-
 @pytest.fixture(
     scope="function",
     params=[
         {"data": TEST_DF},
-        {"data": IamDataFrame(TEST_DF).data},
-        {"data": IamDataFrame(TEST_DF).timeseries()},
+        pytest.param({"data": IamDataFrame(TEST_DF).data},
+                     marks=pytest.mark.skipif(IamDataFrame is None, reason='pyam is not available')),
+        pytest.param({"data": IamDataFrame(TEST_DF).timeseries()},
+                     marks=pytest.mark.skipif(IamDataFrame is None, reason='pyam is not available')),
         {
             "data": TEST_TS,
             "columns": {
@@ -131,8 +133,7 @@ def test_iam_df():
         },
     ],
 )
-@pytest.importorskip('pyam')
-def test_scm_df(pyam, request):
+def test_scm_df(request):
     if IamDataFrame is None:
         pytest.skip('pyam is not installed')
     yield ScmDataFrame(**request.param)
@@ -163,6 +164,12 @@ def test_processing_scm_df():
     )
 
 
+@pytest.fixture(scope="module")
+def rcp26():
+    fname = join(dirname(abspath(__file__)), 'test_data', 'rcp26_emissions.csv')
+    return ScmDataFrame(fname)
+
+
 def test_adapter(request):
     """
     Get an initialized instance of an the requesting classes ``tadapter`` property.
@@ -175,6 +182,14 @@ def test_adapter(request):
         yield request.cls.tadapter(parameters, output_parameters)
     except TypeError:
         pytest.skip("{} cannot be instantiated".format(str(request.cls.tadapter)))
+
+
+def assert_core(expected, time, test_core, name, region, unit, start, period_length):
+    pview = test_core.parameters.get_timeseries_view(
+        name, region, unit, start, period_length
+    )
+    relevant_idx = (np.abs(pview.get_times() - time)).argmin()
+    np.testing.assert_allclose(pview.get(relevant_idx), expected)
 
 
 @pytest.fixture(scope="function")
