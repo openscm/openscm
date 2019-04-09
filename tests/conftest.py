@@ -5,15 +5,21 @@ Fixtures and data for tests.
 from collections import namedtuple
 from datetime import datetime
 
+import pytest
 import numpy as np
 import pandas as pd
-import pytest
+try:
+    from pyam import IamDataFrame
+except ImportError:
+    IamDataFrame = None
 
 from openscm import timeseries_converter
 from openscm.core import ParameterSet
 from openscm.parameters import ParameterType
+from openscm.scmdataframe import ScmDataFrame
 
-TEST_DF = pd.DataFrame(
+
+TEST_DF_LONG_TIMES = pd.DataFrame(
     [
         ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/y", 1, 6.0],
         [
@@ -40,6 +46,35 @@ TEST_DF = pd.DataFrame(
     ],
 )
 
+TEST_DF = pd.DataFrame(
+    [
+        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/y", 1, 6.0],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario",
+            "World",
+            "Primary Energy|Coal",
+            "EJ/y",
+            0.5,
+            3,
+        ],
+        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/y", 2, 7],
+    ],
+    columns=[
+        "climate_model",
+        "model",
+        "scenario",
+        "region",
+        "variable",
+        "unit",
+        2005,
+        2010,
+    ],
+)
+
+TEST_TS = np.array([[1, 6.0], [0.5, 3], [2, 7]]).T
+
 
 @pytest.fixture(scope="function")
 def test_pd_df():
@@ -47,6 +82,87 @@ def test_pd_df():
 
 
 @pytest.fixture(scope="function")
+def test_scm_datetime_df():
+    tdf = TEST_DF.copy()
+    tdf.rename(
+        {2005: datetime(2005, 6, 17, 12), 2010: datetime(2010, 1, 3, 0)},
+        axis="columns",
+        inplace=True,
+    )
+
+    yield ScmDataFrame(tdf)
+
+
+@pytest.fixture(scope="function")
+def test_pd_longtime_df():
+    yield TEST_DF_LONG_TIMES
+
+
+@pytest.fixture(scope="function")
+def test_ts():
+    yield TEST_TS
+
+
+@pytest.fixture(scope="function")
+def test_iam_df():
+    if IamDataFrame is None:
+        pytest.skip('pyam is not installed')
+    yield IamDataFrame(TEST_DF)
+
+
+
+@pytest.fixture(
+    scope="function",
+    params=[
+        {"data": TEST_DF},
+        {"data": IamDataFrame(TEST_DF).data},
+        {"data": IamDataFrame(TEST_DF).timeseries()},
+        {
+            "data": TEST_TS,
+            "columns": {
+                "index": [2005, 2010],
+                "model": ["a_iam"],
+                "climate_model": ["a_model"],
+                "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
+                "region": ["World"],
+                "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
+                "unit": ["EJ/y"],
+            },
+        },
+    ],
+)
+@pytest.importorskip('pyam')
+def test_scm_df(pyam, request):
+    if IamDataFrame is None:
+        pytest.skip('pyam is not installed')
+    yield ScmDataFrame(**request.param)
+
+
+@pytest.fixture(scope="function")
+def test_processing_scm_df():
+    yield ScmDataFrame(
+        data=np.array([[1, 6.0, 7], [0.5, 3, 2], [2, 7, 0], [-1, -2, 3]]).T,
+        columns={
+            "index": [
+                datetime(2005, 1, 1),
+                datetime(2010, 1, 1),
+                datetime(2015, 6, 12),
+            ],
+            "model": ["a_iam"],
+            "climate_model": ["a_model"],
+            "scenario": ["a_scenario", "a_scenario", "a_scenario2", "a_scenario3"],
+            "region": ["World"],
+            "variable": [
+                "Primary Energy",
+                "Primary Energy|Coal",
+                "Primary Energy",
+                "Primary Energy",
+            ],
+            "unit": ["EJ/y"],
+        },
+    )
+
+
 def test_adapter(request):
     """
     Get an initialized instance of an the requesting classes ``tadapter`` property.
