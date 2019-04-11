@@ -19,7 +19,7 @@ from openscm.scmdataframe import (
     ONE_YEAR_IN_S_INTEGER
 )
 from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_year
-from openscm.timeseries_converter import ExtrapolationType
+from openscm.timeseries_converter import ExtrapolationType, ParameterType
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
@@ -1176,10 +1176,9 @@ def test_convert_scmdataframe_to_core(rcp26):
     tdata = rcp26
 
     res = convert_scmdataframe_to_core(tdata)
+    time_points = np.array([convert_datetime_to_openscm_time(dt) for dt in tdata['time']])
 
     tstart_dt = tdata["time"].min()
-    tstart = convert_datetime_to_openscm_time(tstart_dt)
-    tperiod_length = ONE_YEAR_IN_S_INTEGER
 
     def get_comparison_time_for_year(yr):
         return convert_datetime_to_openscm_time(
@@ -1193,8 +1192,7 @@ def test_convert_scmdataframe_to_core(rcp26):
         ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
         "World",
         "GtC / yr",
-        tstart,
-        tperiod_length,
+        time_points
     )
 
     assert_core(
@@ -1204,8 +1202,7 @@ def test_convert_scmdataframe_to_core(rcp26):
         ("Emissions", "CO2"),
         "World",
         "GtC / yr",
-        tstart,
-        tperiod_length,
+        time_points
     )
 
     assert_core(
@@ -1215,8 +1212,7 @@ def test_convert_scmdataframe_to_core(rcp26):
         ("Emissions", "N2O"),
         "World",
         "MtN2ON / yr",
-        tstart,
-        tperiod_length,
+        time_points
     )
 
     assert_core(
@@ -1226,8 +1222,7 @@ def test_convert_scmdataframe_to_core(rcp26):
         ("Emissions", "OC"),
         "World",
         "MtOC / yr",
-        tstart,
-        tperiod_length,
+        time_points
     )
 
     assert_core(
@@ -1237,11 +1232,11 @@ def test_convert_scmdataframe_to_core(rcp26):
         ("Emissions", "SF6"),
         "World",
         "ktSF6 / yr",
-        tstart,
-        tperiod_length,
+        time_points
     )
 
 
+@pytest.mark.skip
 def test_convert_core_to_scmdataframe(rcp26):
     tdata = rcp26
 

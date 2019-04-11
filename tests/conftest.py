@@ -192,12 +192,12 @@ def test_adapter(request):
         pytest.skip("{} cannot be instantiated".format(str(request.cls.tadapter)))
 
 
-def assert_core(expected, time, test_core, name, region, unit, start, period_length):
+def assert_core(expected, time, test_core, name, region, unit, time_points):
     pview = test_core.parameters.get_timeseries_view(
-        name, region, unit, start, period_length
+        name, region, unit, time_points, ParameterType.POINT_TIMESERIES
     )
-    relevant_idx = (np.abs(pview.get_times() - time)).argmin()
-    np.testing.assert_allclose(pview.get(relevant_idx), expected)
+    relevant_idx = (np.abs(time_points - time)).argmin()
+    np.testing.assert_allclose(pview.get()[relevant_idx], expected)
 
 
 @pytest.fixture(scope="function")

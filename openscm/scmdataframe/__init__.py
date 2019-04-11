@@ -176,15 +176,15 @@ def convert_scmdataframe_to_core(
         assert (
                 region_openscm[0] == "World"
         ), "have not considered cases other than the RCPs yet"
-
+        time_points = [convert_datetime_to_openscm_time(dt) for dt in scmdf['time']]
         emms_view = core.parameters.get_writable_timeseries_view(
             variable_openscm,
             region_openscm,
             unit,
-            convert_datetime_to_openscm_time(datetime.datetime(syr, 1, 1, 0, 0, 0)),
-            tstep,
+            time_points,
+            ParameterType.POINT_TIMESERIES
         )
-        emms_view.set_series(tsdf.loc[i, :].values)
+        emms_view.set(tsdf.loc[i, :].values)
 
     return core
 
