@@ -19,6 +19,7 @@ from openscm.scmdataframe import (
     ONE_YEAR_IN_S_INTEGER
 )
 from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_year
+from openscm.timeseries_converter import ExtrapolationType
 
 
 def test_init_df_long_timespan(test_pd_longtime_df):
@@ -1297,3 +1298,63 @@ def test_resample_long_datetimes(test_pd_longtime_df):
 
     assert res.timeseries().T.index[0] == DatetimeGregorian(1005, 1, 1)
     assert res.timeseries().T.index[-1] == DatetimeGregorian(3010, 1, 1)
+
+
+def test_interpolate_with_datetimes(test_processing_scm_df):
+    target_times = [datetime.datetime(y, 1, 1) for y in range(2005, 2010 + 1)]
+
+    res = test_processing_scm_df.interpolate(target_times)
+
+    obs = (
+        res.filter(scenario="a_scenario", variable="Primary Energy")
+            .timeseries()
+            .T.squeeze()
+    )
+    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    npt.assert_almost_equal(obs, exp, decimal=1)
+    pd.testing.assert_index_equal(res.timeseries().columns, pd.Index(target_times, dtype="object", name="time"))
+
+
+def test_interpolate_with_ints(test_processing_scm_df):
+    target_times = [datetime.datetime(y, 1, 1) for y in range(2005, 2010 + 1)]
+    target_times_openscm = [convert_datetime_to_openscm_time(dt) for dt in target_times]
+
+    res = test_processing_scm_df.interpolate(target_times_openscm)
+
+    obs = (
+        res.filter(scenario="a_scenario", variable="Primary Energy")
+            .timeseries()
+            .T.squeeze()
+    )
+    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    npt.assert_almost_equal(obs, exp, decimal=1)
+    pd.testing.assert_index_equal(res.timeseries().columns, pd.Index(target_times, dtype="object", name="time"))
+
+
+def test_interpolate_with_extrapolate(test_processing_scm_df):
+    target_times = [datetime.datetime(y, 1, 1) for y in range(2010, 2017 + 1)]
+    target_times_openscm = [convert_datetime_to_openscm_time(dt) for dt in target_times]
+
+    # Default is to NOT extrapolate
+    with pytest.raises(ValueError):
+        test_processing_scm_df.interpolate(target_times_openscm)
+
+    res = test_processing_scm_df.interpolate(target_times_openscm, extrapolation_type=ExtrapolationType.CONSTANT)
+    obs = (
+        res.filter(scenario="a_scenario", variable="Primary Energy")
+            .timeseries()
+            .T.squeeze()
+    )
+    exp = [6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.0, 7.0]
+    npt.assert_almost_equal(obs, exp, decimal=1)
+    pd.testing.assert_index_equal(res.timeseries().columns, pd.Index(target_times, dtype="object", name="time"))
+
+    res = test_processing_scm_df.interpolate(target_times_openscm, extrapolation_type=ExtrapolationType.LINEAR)
+    obs = (
+        res.filter(scenario="a_scenario", variable="Primary Energy")
+            .timeseries()
+            .T.squeeze()
+    )
+    exp = [6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4]
+    npt.assert_almost_equal(obs, exp, decimal=1)
+    pd.testing.assert_index_equal(res.timeseries().columns, pd.Index(target_times, dtype="object", name="time"))

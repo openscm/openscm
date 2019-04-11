@@ -1,15 +1,14 @@
+from __future__ import annotations
+
 import copy
 import os
 from datetime import datetime, timedelta
 from logging import getLogger
 
 import cftime
-import dateutil
 import numpy as np
 import pandas as pd
-import xarray as xr
 from dateutil import parser
-from xarray.core.resample import DataArrayResample
 
 from .filters import (
     years_match,
@@ -20,6 +19,9 @@ from .filters import (
     pattern_match,
     is_str
 )
+
+from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
+from openscm.timeseries_converter import TimeseriesConverter, ParameterType, InterpolationType, ExtrapolationType
 
 logger = getLogger(__name__)
 
@@ -132,7 +134,7 @@ def format_data(df):
                         time_cols = True
                     except ValueError:
                         # this is super slow so avoid if possible
-                        d = dateutil.parser.parse(str(i))  # this is datetime
+                        d = parser.parse(str(i))  # this is datetime
                         time_cols = True
                 except ValueError:
                     extra_cols.append(i)  # some other string
@@ -555,6 +557,64 @@ class ScmDataFrameBase(object):
         if "level_0" in self._meta:
             self._meta.drop("level_0", axis=1, inplace=True)
         self._sort_meta_cols()
+
+    def _get_resampled_datetimes(self, rule):
+        """
+        Calculates the datetimes to resample to given a rule.
+
+        A subset of
+        Parameters
+        ----------
+        rule
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def interpolate(self, target_times, timeseries_type=ParameterType.POINT_TIMESERIES,
+                    interpolation_type=InterpolationType.LINEAR,
+                    extrapolation_type=ExtrapolationType.NONE) -> ScmDataFrameBase:
+        """
+        Interpolate the dataframe onto a new time frame
+
+        Uses openscm.timeseries_converter.TimeseriesConverter internally
+
+        Parameters
+        ----------
+        target_times: listlike of datetimes or integers
+            If integers are provided, they should be in OpenSCM time i.e. seconds since 1970-1-1 00:00:00
+
+        Returns
+        -------
+        A new ScmDataFrame containing the data interpolated onto the target_times grid
+        """
+        source_times_openscm = [convert_datetime_to_openscm_time(t) for t in self['time']]
+        if isinstance(target_times[0], (datetime, cftime.datetime)):
+            target_times_openscm = [convert_datetime_to_openscm_time(t) for t in target_times]
+            target_times_dt = target_times
+        else:
+            target_times_openscm = target_times
+            target_times_dt = [convert_openscm_time_to_datetime(t) for t in target_times]
+
+        timeseries_converter = TimeseriesConverter(
+            np.asarray(source_times_openscm),
+            np.asarray(target_times_openscm),
+            timeseries_type,
+            interpolation_type,
+            extrapolation_type,
+        )
+
+        # Need to keep an object index or pandas will not be able to handle a wide time range
+        timeseries_index = pd.Index(target_times_dt, dtype="object", name="time")
+
+        res = self.copy()
+
+        res._data = res._data.apply(lambda col: pd.Series(timeseries_converter.convert_from(col.values), index=timeseries_index))
+        res['time'] = timeseries_index
+
+        return res
 
     def resample(self, rule=None, datetime_cls=cftime.DatetimeGregorian, **kwargs):
         """Resample the time index of the timeseries data
