@@ -43,14 +43,14 @@ class ScmDataFrame(ScmDataFrameBase):
     operation can be relatively computationally expensive for large data sets.
     """
 
-    def append(self, other, inplace=False, **kwargs):
+    def append(self, other: ScmDataFrameBase, inplace=False, **kwargs):
         """Appends additional timeseries from a castable object to the current dataframe
 
         See ``df_append``
 
         Parameters
         ----------
-        other: openscm.ScmDataFrame or something which can be cast to ScmDataFrameBase
+        other: openscm.scmdataframe.ScmDataFrame or something which can be cast to ScmDataFrameBase
         """
         if not isinstance(other, ScmDataFrameBase):
             other = self.__class__(other, **kwargs)
@@ -89,7 +89,7 @@ class ScmDataFrame(ScmDataFrameBase):
 
         return LongIamDataFrame(self.timeseries())
 
-    def to_csv(self, path, **kwargs):
+    def to_csv(self, path: str, **kwargs):
         """Write timeseries data to a csv file
 
         Parameters
@@ -99,7 +99,7 @@ class ScmDataFrame(ScmDataFrameBase):
         """
         self.to_iamdataframe().to_csv(path, **kwargs)
 
-    def line_plot(self, x="time", y="value", **kwargs):
+    def line_plot(self, x: str = "time", y: str = "value", **kwargs):
         """Helper to generate line plots of timeseries
 
         See ``pyam.IamDataFrame.line_plot`` for more information
@@ -107,7 +107,7 @@ class ScmDataFrame(ScmDataFrameBase):
         """
         return self.to_iamdataframe().line_plot(x, y, **kwargs)
 
-    def scatter(self, x, y, **kwargs):
+    def scatter(self, x: str, y: str, **kwargs):
         """Plot a scatter chart using metadata columns
 
         see pyam.plotting.scatter() for all available options

@@ -1,6 +1,7 @@
 import copy
 import datetime
 import re
+from unittest import mock
 
 import numpy as np
 import pandas as pd
@@ -8,16 +9,8 @@ import pytest
 from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
-from pyam.core import (
-    require_variable,
-    categorize,
-    filter_by_meta,
-    validate,
-    META_IDX,
-    IamDataFrame,
-)
 
-from conftest import assert_core
+from tests.conftest import assert_core
 from openscm.scmdataframe import (
     ScmDataFrame,
     convert_scmdataframe_to_core,
@@ -195,6 +188,8 @@ def test_init_self(test_iam_df):
 def test_as_iam(test_iam_df, test_pd_df):
     df = ScmDataFrame(test_pd_df).to_iamdataframe()
 
+    # test_iam_df would have already skipped test if pyam isn't installed
+    IamDataFrame = pytest.importorskip("pyam.IamDataFrame")
     assert isinstance(df, IamDataFrame)
 
     pd.testing.assert_frame_equal(test_iam_df.meta, df.meta)
@@ -203,6 +198,12 @@ def test_as_iam(test_iam_df, test_pd_df):
     tdf["year"] = tdf["time"].apply(lambda x: x.year)
     tdf.drop("time", axis="columns", inplace=True)
     pd.testing.assert_frame_equal(test_iam_df.data, tdf, check_like=True)
+
+
+@mock.patch('openscm.scmdataframe.IamDataFrame', None)
+def test_pyam_missing(test_scm_df):
+    with pytest.raises(ImportError):
+        test_scm_df.to_iamdataframe()
 
 
 def test_get_item(test_scm_df):
@@ -645,145 +646,6 @@ def test_relative_to_ref_period_mean(
     )
     pd.testing.assert_frame_equal(exp.set_index(obs.index.names), obs, check_like=True)
 
-
-@pytest.mark.skip
-def test_require_variable(test_scm_df):
-    obs = test_scm_df.require_variable(
-        variable="Primary Energy|Coal", exclude_on_fail=True
-    )
-    assert len(obs) == 1
-    assert obs.loc[0, "scenario"] == "a_scenario2"
-
-    assert list(test_scm_df["exclude"]) == [False, True]
-
-
-@pytest.mark.skip
-def test_require_variable_top_level(test_scm_df):
-    obs = require_variable(
-        test_scm_df, variable="Primary Energy|Coal", exclude_on_fail=True
-    )
-    assert len(obs) == 1
-    assert obs.loc[0, "scenario"] == "a_scenario2"
-
-    assert list(test_scm_df["exclude"]) == [False, True]
-
-
-@pytest.mark.skip
-def test_validate_all_pass(test_scm_df):
-    obs = test_scm_df.validate({"Primary Energy": {"up": 10}}, exclude_on_fail=True)
-    assert obs is None
-    assert len(test_scm_df.data) == 6  # data unchanged
-
-    assert list(test_scm_df["exclude"]) == [False, False]  # none excluded
-
-
-@pytest.mark.skip
-def test_validate_nonexisting(test_scm_df):
-    obs = test_scm_df.validate({"Primary Energy|Coal": {"up": 2}}, exclude_on_fail=True)
-    assert len(obs) == 1
-    assert obs["scenario"].values[0] == "a_scenario"
-
-    assert list(test_scm_df["exclude"]) == [True, False]  # scenario with failed
-    # validation excluded, scenario with non-defined value passes validation
-
-
-@pytest.mark.skip
-def test_validate_up(test_scm_df):
-    obs = test_scm_df.validate({"Primary Energy": {"up": 6.5}}, exclude_on_fail=False)
-    assert len(obs) == 1
-    assert obs["year"].values[0] == 2010
-
-    assert list(test_scm_df["exclude"]) == [False, False]  # assert none excluded
-
-
-@pytest.mark.skip
-def test_validate_lo(test_scm_df):
-    obs = test_scm_df.validate({"Primary Energy": {"up": 8, "lo": 2.0}})
-    assert len(obs) == 1
-    assert obs["year"].values[0] == 2005
-    assert list(obs["scenario"].values) == ["a_scenario"]
-
-
-@pytest.mark.skip
-def test_validate_both(test_scm_df):
-    obs = test_scm_df.validate({"Primary Energy": {"up": 6.5, "lo": 2.0}})
-    assert len(obs) == 2
-    assert list(obs["year"].values) == [2005, 2010]
-    assert list(obs["scenario"].values) == ["a_scenario", "a_scenario2"]
-
-
-@pytest.mark.skip
-def test_validate_year(test_scm_df):
-    obs = test_scm_df.validate(
-        {"Primary Energy": {"up": 5.0, "year": 2005}}, exclude_on_fail=False
-    )
-    assert obs is None
-
-    obs = test_scm_df.validate(
-        {"Primary Energy": {"up": 5.0, "year": 2010}}, exclude_on_fail=False
-    )
-    assert len(obs) == 2
-
-
-@pytest.mark.skip
-def test_validate_exclude(test_scm_df):
-    test_scm_df.validate({"Primary Energy": {"up": 6.0}}, exclude_on_fail=True)
-    assert list(test_scm_df["exclude"]) == [False, True]
-
-
-@pytest.mark.skip
-def test_validate_top_level(test_scm_df):
-    obs = validate(
-        test_scm_df,
-        criteria={"Primary Energy": {"up": 6.0}},
-        exclude_on_fail=True,
-        variable="Primary Energy",
-    )
-    assert len(obs) == 1
-    assert obs["year"].values[0] == 2010
-    assert list(test_scm_df["exclude"]) == [False, True]
-
-
-@pytest.mark.skip
-def test_category_none(test_scm_df):
-    test_scm_df.categorize("category", "Testing", {"Primary Energy": {"up": 0.8}})
-    assert "category" not in test_scm_df.meta.columns
-
-
-@pytest.mark.skip
-def test_category_pass(test_scm_df):
-    dct = {
-        "model": ["a_model", "a_model"],
-        "scenario": ["a_scenario", "a_scenario2"],
-        "category": ["foo", None],
-    }
-    exp = pd.DataFrame(dct).set_index(["model", "scenario"])["category"]
-
-    test_scm_df.categorize(
-        "category", "foo", {"Primary Energy": {"up": 6, "year": 2010}}
-    )
-    obs = test_scm_df["category"]
-    pd.testing.assert_series_equal(obs, exp)
-
-
-@pytest.mark.skip
-def test_category_top_level(test_scm_df):
-    dct = {
-        "model": ["a_model", "a_model"],
-        "scenario": ["a_scenario", "a_scenario2"],
-        "category": ["Testing", None],
-    }
-    exp = pd.DataFrame(dct).set_index(["model", "scenario"])["category"]
-
-    categorize(
-        test_scm_df,
-        "category",
-        "Testing",
-        criteria={"Primary Energy": {"up": 6, "year": 2010}},
-        variable="Primary Energy",
-    )
-    obs = test_scm_df["category"]
-    pd.testing.assert_series_equal(obs, exp)
 
 
 def test_append(test_scm_df):
@@ -1317,68 +1179,6 @@ def test_convert_unit():
     ).data.reset_index(drop=True)
 
     pd.testing.assert_frame_equal(obs, exp, check_index_type=False)
-
-
-@pytest.mark.skip
-def test_pd_filter_by_meta(test_scm_df):
-    data = df_filter_by_meta_matching_idx.set_index(["model", "region"])
-
-    test_scm_df.set_meta([True, False], "boolean")
-    test_scm_df.set_meta(0, "integer")
-
-    obs = filter_by_meta(data, test_scm_df, join_meta=True, boolean=True, integer=None)
-    obs = obs.reindex(columns=["scenario", "col", "boolean", "integer"])
-
-    exp = data.iloc[0:2].copy()
-    exp["boolean"] = True
-    exp["integer"] = 0
-
-    pd.testing.assert_frame_equal(obs, exp)
-
-
-@pytest.mark.skip
-def test_pd_filter_by_meta_no_index(test_scm_df):
-    data = df_filter_by_meta_matching_idx
-
-    test_scm_df.set_meta([True, False], "boolean")
-    test_scm_df.set_meta(0, "int")
-
-    obs = filter_by_meta(data, test_scm_df, join_meta=True, boolean=True, int=None)
-    obs = obs.reindex(columns=META_IDX + ["region", "col", "boolean", "int"])
-
-    exp = data.iloc[0:2].copy()
-    exp["boolean"] = True
-    exp["int"] = 0
-
-    pd.testing.assert_frame_equal(obs, exp)
-
-
-@pytest.mark.skip
-def test_pd_filter_by_meta_nonmatching_index(test_scm_df):
-    data = df_filter_by_meta_nonmatching_idx
-    test_scm_df.set_meta(["a", "b"], "string")
-
-    obs = filter_by_meta(data, test_scm_df, join_meta=True, string="b")
-    obs = obs.reindex(columns=["scenario", 2010, 2020, "string"])
-
-    exp = data.iloc[2:3].copy()
-    exp["string"] = "b"
-
-    pd.testing.assert_frame_equal(obs, exp)
-
-
-@pytest.mark.skip
-def test_pd_join_by_meta_nonmatching_index(test_scm_df):
-    data = df_filter_by_meta_nonmatching_idx
-    test_scm_df.set_meta(["a", "b"], "string")
-
-    obs = filter_by_meta(data, test_scm_df, join_meta=True, string=None)
-    obs = obs.reindex(columns=["scenario", 2010, 2020, "string"])
-
-    exp = data.copy()
-    exp["string"] = [np.nan, np.nan, "b"]
-
-    pd.testing.assert_frame_equal(obs.sort_index(level=1), exp)
 
 
 def test_convert_scmdataframe_to_core(rcp26):
