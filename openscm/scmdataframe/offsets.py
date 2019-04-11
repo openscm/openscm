@@ -83,7 +83,7 @@ def to_offset(rule):
     """
     offset = pd_to_offset(rule)
 
-    if isinstance(offset, BusinessMixin):
+    if isinstance(offset, BusinessMixin) or offset.rule_code.startswith('B'):
         raise ValueError('Invalid rule for offset - Business related offsets are not supported')
 
     def wrap_funcs(fname):
