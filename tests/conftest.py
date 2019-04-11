@@ -95,11 +95,6 @@ def test_scm_datetime_df():
 
 
 @pytest.fixture(scope="function")
-def test_pd_longtime_df():
-    yield TEST_DF_LONG_TIMES
-
-
-@pytest.fixture(scope="function")
 def test_ts():
     yield TEST_TS
 
@@ -137,6 +132,19 @@ def test_scm_df(request):
     if IamDataFrame is None:
         pytest.skip('pyam is not installed')
     yield ScmDataFrame(**request.param)
+
+
+@pytest.fixture(scope="function")
+def test_resample_df(test_scm_df):
+    # resampling needs at least 3 datapoints
+    df = test_scm_df.copy()
+    df._data = df._data.append(pd.DataFrame([[6.0, 3.0, 7.0]], columns=df._data.columns))
+    df['time'] = [
+        datetime(2005, 1, 1),
+        datetime(2010, 1, 1),
+        datetime(2012, 1, 1),
+    ]
+    yield df
 
 
 @pytest.fixture(scope="function")

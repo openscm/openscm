@@ -5,7 +5,6 @@ import os
 from datetime import datetime, timedelta
 from logging import getLogger
 
-import cftime
 import numpy as np
 import pandas as pd
 from dateutil import parser
@@ -19,6 +18,7 @@ from .filters import (
     pattern_match,
     is_str
 )
+from .offsets import generate_range, to_offset
 
 from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
 from openscm.timeseries_converter import TimeseriesConverter, ParameterType, InterpolationType, ExtrapolationType
@@ -291,7 +291,7 @@ class ScmDataFrameBase(object):
     def _format_datetime_col(self):
         time_srs = self["time"]
 
-        if isinstance(time_srs.iloc[0], (datetime, cftime.datetime)):
+        if isinstance(time_srs.iloc[0], datetime):
             pass
         elif isinstance(time_srs.iloc[0], int):
             self["time"] = [datetime(y, 1, 1) for y in to_int(time_srs)]
@@ -318,7 +318,7 @@ class ScmDataFrameBase(object):
             self["time"] = time_srs.apply(convert_str_to_datetime)
 
         not_datetime = [
-            not isinstance(x, (datetime, cftime.datetime)) for x in self["time"]
+            not isinstance(x, datetime) for x in self["time"]
         ]
         if any(not_datetime):
             bad_values = self["time"][not_datetime]
@@ -569,9 +569,21 @@ class ScmDataFrameBase(object):
 
         Returns
         -------
-
+        list of datetimes
         """
-        pass
+        offset = to_offset(rule)
+        orig_dts = self['time']
+
+        # Get the bounds
+        dt_0 = offset.rollback(orig_dts.iloc[0])
+        dt_1 = offset.rollforward(orig_dts.iloc[-1])
+
+        # Iterate to find all the required timesteps
+        res = [dt_0]
+        while res[-1] < dt_1:
+            res.append(res[-1] + offset)
+
+        return res
 
     def interpolate(self, target_times, timeseries_type=ParameterType.POINT_TIMESERIES,
                     interpolation_type=InterpolationType.LINEAR,
@@ -591,7 +603,7 @@ class ScmDataFrameBase(object):
         A new ScmDataFrame containing the data interpolated onto the target_times grid
         """
         source_times_openscm = [convert_datetime_to_openscm_time(t) for t in self['time']]
-        if isinstance(target_times[0], (datetime, cftime.datetime)):
+        if isinstance(target_times[0], datetime):
             target_times_openscm = [convert_datetime_to_openscm_time(t) for t in target_times]
             target_times_dt = target_times
         else:
@@ -616,25 +628,25 @@ class ScmDataFrameBase(object):
 
         return res
 
-    def resample(self, rule=None, datetime_cls=cftime.DatetimeGregorian, **kwargs):
-        """Resample the time index of the timeseries data
+    def resample(self, rule="AS", **kwargs):
+        """Resample the time index of the timeseries data onto a custom grid
 
-        Under the hood the pandas DataFrame holding the data is converted to an xarray.DataArray which provides functionality for
-        using cftime arrays for dealing with timeseries spanning more than 292 years. The result is then cast back to a ScmDataFrame
+        This helper function allows for values to be easily interpolated onto Annual or monthly timesteps using rule='AS' or 'MS'
+        respectively. Internally, the interpolate function performs the regridding.
 
         Parameters
         ----------
         rule: string
-        See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>` for
-        a list of options
+            See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>` for
+            a list of options. Note that Business-related offsets such as `BusinessDay` are not supported.
         kwargs:
-        See pd.resample documentation for other possible arguments
+            Other arguments to pass through to `interpolate`
 
         Examples
         --------
 
             # resample a dataframe to annual values
-        >>> scm_df = ScmDataFrame(pd.Series([1, 10], index=(2000, 2009)), columns={
+        >>> scm_df = ScmDataFrame(pd.Series([1, 2, 10], index=(2000, 2001, 2009)), columns={
             "model": ["a_iam"],
             "scenario": ["a_scenario"],
             "region": ["World"],
@@ -653,7 +665,7 @@ class ScmDataFrameBase(object):
 
         An annual timeseries can be the created by interpolating between to the start of years using the rule 'AS'.
 
-        >>> res = scm_df.resample('AS').interpolate()
+        >>> res = scm_df.resample('AS')
         >>> res.timeseries().T
         model                        a_iam
         scenario                a_scenario
@@ -672,7 +684,7 @@ class ScmDataFrameBase(object):
         2008-01-01 00:00:00       8.998175
         2009-01-01 00:00:00      10.00000
 
-        >>> m_df = scm_df.resample('MS').interpolate()
+        >>> m_df = scm_df.resample('MS')
         >>> m_df.timeseries().T
         model                        a_iam
         scenario                a_scenario
@@ -700,17 +712,7 @@ class ScmDataFrameBase(object):
         2008-12-01 00:00:00       9.915146
         2009-01-01 00:00:00      10.000000
         [109 rows x 1 columns]
-        >>> m_df.resample('AS').bfill().timeseries().T
-        2000-01-01 00:00:00       1.000000
-        2001-01-01 00:00:00       2.001825
-        2002-01-01 00:00:00       3.000912
-        2003-01-01 00:00:00       4.000000
-        2004-01-01 00:00:00       4.999088
-        2005-01-01 00:00:00       6.000912
-        2006-01-01 00:00:00       7.000000
-        2007-01-01 00:00:00       7.999088
-        2008-01-01 00:00:00       8.998175
-        2009-01-01 00:00:00      10.000000
+
 
         Note that the values do not fall exactly on integer values due the period between years is not exactly the same
 
@@ -722,74 +724,11 @@ class ScmDataFrameBase(object):
 
         Returns
         -------
-        Resampler which providing the following sampling methods:
-            - asfreq
-            - ffill
-            - bfill
-            - pad
-            - nearest
-            - interpolate
+
         """
-
-        def get_resampler(scm_df):
-            scm_df = scm_df
-
-            class CustomDataArrayResample(object):
-                def __init__(self, *args, **kwargs):
-                    self._resampler = DataArrayResample(*args, **kwargs)
-                    self.target = self._resampler._full_index
-                    self.orig_index = self._resampler._obj.indexes["time"]
-
-                    # To work around some limitations the maximum that can be interpolated over we are using a float index
-                    self._resampler._full_index = [
-                        (c - self.target[0]).total_seconds() for c in self.target
-                    ]
-                    self._resampler._obj["time"] = [
-                        (c - self.target[0]).total_seconds() for c in self.orig_index
-                    ]
-                    self._resampler._unique_coord = xr.IndexVariable(
-                        data=self._resampler._full_index, dims=["__resample_dim__"]
-                    )
-
-                def __getattr__(self, item):
-                    resampler = self._resampler
-
-                    def r(*args, **kwargs):
-                        # Perform the resampling
-                        res = getattr(resampler, item)(*args, **kwargs)
-
-                        # replace the index with the intended index
-                        res["time"] = self.target
-
-                        # Convert the result back to a ScmDataFrame
-                        res = res.to_pandas()
-                        res.columns.name = None
-
-                        df = copy.deepcopy(scm_df)
-                        df._data = res
-                        df._data.dropna(inplace=True)
-                        return df
-
-                    return r
-
-            return CustomDataArrayResample
-
-        if datetime_cls is not None:
-            dts = [
-                datetime_cls(d.year, d.month, d.day, d.hour, d.minute, d.second)
-                for d in self._data.index
-            ]
-        else:
-            dts = list(self._data.index)
-        df = self._data.copy()
-
-        # convert the dates to use cftime
-        df.index = dts
-        df.index.name = "time"
-        x = xr.DataArray(df)
-        # Use a custom resample array to wrap the resampling while returning a ScmDataFrame
-        x._resample_cls = get_resampler(self)
-        return x.resample(time=rule, **kwargs)
+        orig_dts = self['time']
+        target_dts = generate_range(orig_dts.iloc[0], orig_dts.iloc[-1], to_offset(rule))
+        return self.interpolate(list(target_dts), **kwargs)
 
     def process_over(self, cols, operation, **kwargs):
         """

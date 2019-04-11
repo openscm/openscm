@@ -22,16 +22,6 @@ from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_yea
 from openscm.timeseries_converter import ExtrapolationType
 
 
-def test_init_df_long_timespan(test_pd_longtime_df):
-    df = ScmDataFrame(test_pd_longtime_df)
-
-    pd.testing.assert_frame_equal(
-        df.timeseries().reset_index(), test_pd_longtime_df, check_like=True
-    )
-    assert (df["year"].unique() == [1005, 3010]).all()
-    assert df._data.index.name == "time"
-
-
 def test_init_df_year_converted_to_datetime(test_pd_df):
     res = ScmDataFrame(test_pd_df)
     assert (res["year"].unique() == [2005, 2010]).all()
@@ -1278,26 +1268,31 @@ def test_convert_core_to_scmdataframe(rcp26):
     )
 
 
-def test_resample(test_scm_df):
-    res = test_scm_df.resample("AS").interpolate()
+def test_resample(test_resample_df):
+    res = test_resample_df.resample("AS")
 
     obs = (
         res.filter(scenario="a_scenario", variable="Primary Energy")
             .timeseries()
             .T.squeeze()
     )
-    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.0, 6.0]
     npt.assert_almost_equal(obs, exp, decimal=1)
 
 
-def test_resample_long_datetimes(test_pd_longtime_df):
-    from cftime import DatetimeGregorian
+def test_resample_long_datetimes(test_resample_df):
+    dts = [
+        datetime.datetime(1005, 1, 1),
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(3010, 1, 1)
+    ]
+    test_resample_df['time'] = dts
 
-    df = ScmDataFrame(test_pd_longtime_df)
-    res = df.resample("AS").interpolate()
+    res = test_resample_df.resample("AS")
 
-    assert res.timeseries().T.index[0] == DatetimeGregorian(1005, 1, 1)
-    assert res.timeseries().T.index[-1] == DatetimeGregorian(3010, 1, 1)
+    assert res.timeseries().T.index[0] == datetime.datetime(1005, 1, 1)
+    assert res.timeseries().T.index[-1] == datetime.datetime(3010, 1, 1)
+    np.testing.assert_array_equal(res['year'], np.arange(1005, 3010 + 1))
 
 
 def test_interpolate_with_datetimes(test_processing_scm_df):
