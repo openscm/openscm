@@ -20,14 +20,6 @@ try:
 except ImportError:
     IamDataFrame = None
 
-DATA_HIERARCHY_SEPARATOR = "|"
-"""str: String used to define different levels in our data hierarchies.
-
-For example, "Emissions|CO2|Energy|Coal".
-
-We copy this straight from pyam
-"""
-
 ONE_YEAR_IN_S_INTEGER = int(round(UnitConverter('year', 's').convert_from(1)))
 
 
@@ -129,66 +121,6 @@ class ScmDataFrame(ScmDataFrameBase):
         return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
 
 
-def convert_scmdataframe_to_core(
-        scmdf: ScmDataFrame, climate_model: str = "unspecified"
-) -> Core:
-    # TODO: move to method of scmdataframe
-    tsdf = scmdf.timeseries()
-
-    # columns are times when you call scmdataframe.timeseries()
-    stime = tsdf.columns.min()
-    etime = tsdf.columns.max()
-
-    st = convert_datetime_to_openscm_time(stime)
-    et = convert_datetime_to_openscm_time(etime)
-    core = Core(climate_model, st, et)
-
-    syr = stime.year
-    eyr = etime.year
-    # TODO: remove this restriction
-    assert syr == 1765, "have not considered cases other than the RCPs yet"
-    eyr = scmdf["time"].max().year
-    # TODO: remove this restriction
-    assert eyr == 2500, "have not considered cases other than the RCPs yet"
-    # TODO: remove this restriction
-    assert len(scmdf["time"].unique()) == 736, \
-        "have not considered cases other than the RCPs read in by pymagicc yet"
-    tstep = (
-        ONE_YEAR_IN_S_INTEGER
-    )  # having passed all above, can safely assume this [TODO: remove this assumption]
-
-    variable_idx = scmdf.timeseries().index.names.index("variable")
-    region_idx = scmdf.timeseries().index.names.index("region")
-    unit_idx = scmdf.timeseries().index.names.index("unit")
-
-    assert len(scmdf["scenario"].unique()) == 1, "haven't thought about this yet"
-    assert len(scmdf["model"].unique()) == 1, "haven't thought about this yet"
-    assert len(scmdf["climate_model"].unique()) == 1, "haven't thought about this yet"
-
-    for i in tsdf.index:
-        variable = i[variable_idx]
-        region = i[region_idx]
-        unit = i[unit_idx]
-
-        variable_openscm = tuple(variable.split(DATA_HIERARCHY_SEPARATOR))
-
-        region_openscm = tuple(region.split(DATA_HIERARCHY_SEPARATOR))
-        assert (
-                region_openscm[0] == "World"
-        ), "have not considered cases other than the RCPs yet"
-        time_points = [convert_datetime_to_openscm_time(dt) for dt in scmdf['time']]
-        emms_view = core.parameters.get_writable_timeseries_view(
-            variable_openscm,
-            region_openscm,
-            unit,
-            time_points,
-            ParameterType.POINT_TIMESERIES
-        )
-        emms_view.set(tsdf.loc[i, :].values)
-
-    return core
-
-
 def convert_core_to_scmdataframe(
         core: Core,
         period_length: int = ONE_YEAR_IN_S_INTEGER,
@@ -248,8 +180,8 @@ def convert_core_to_scmdataframe(
 
             ts_in.append(values)
             ch_in["unit"].append(unit)
-            ch_in["variable"].append(DATA_HIERARCHY_SEPARATOR.join(para_here.full_name))
-            ch_in["region"].append(DATA_HIERARCHY_SEPARATOR.join(para_here.info.region))
+            ch_in["variable"].append(ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.full_name))
+            ch_in["region"].append(ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.info.region))
 
             return ts_in, time_in, ch_in
 

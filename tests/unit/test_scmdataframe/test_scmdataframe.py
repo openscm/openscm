@@ -1239,6 +1239,13 @@ def test_scmdataframe_to_core(rcp26):
     )
 
 
+def test_scmdataframe_to_core_raises(test_scm_df):
+    with pytest.raises(ValueError, match='Not all timeseries have identical metadata'):
+        test_scm_df.to_core()
+
+    core = test_scm_df.filter(scenario='a_scenario2').to_core()
+    pass
+
 @pytest.mark.skip
 def test_convert_core_to_scmdataframe(rcp26):
     tdata = rcp26

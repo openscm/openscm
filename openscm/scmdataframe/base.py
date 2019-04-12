@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from dateutil import parser
 
+from openscm.core import Core
 from openscm.timeseries_converter import TimeseriesConverter, ParameterType, InterpolationType, ExtrapolationType
 from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime, is_floatlike
 from .filters import (
@@ -164,7 +165,15 @@ class ScmDataFrameBase(object):
     the circularity).
     """
 
-    def __init__(self, data, columns=None, **kwargs):
+    DATA_HIERARCHY_SEPARATOR = '|'
+    """str: String used to define different levels in our data hierarchies.
+
+    For example, "Emissions|CO2|Energy|Coal".
+
+    We copy this straight from pyam
+    """
+
+    def __init__(self, data, columns=None, climate_model: str = "unspecified", **kwargs):
         """Initialize an instance of an ScmDataFrameBase
 
         Parameters
@@ -256,6 +265,58 @@ class ScmDataFrameBase(object):
             return value
         if set(_key_check).issubset(self.meta.columns):
             return self._meta.__setitem__(key, value)
+
+    def to_core(self, climate_model: str = "unspecified") -> Core:
+        """Convert a DataFrame to a Core object
+
+        A ScmDataFrame can only be converted to a core object if all timeseries have the same metadata. This is typically the case
+        if all output comes from a single model run. If that is not the case, further filtering is needed to reduce
+        to a dataframe with identical metadata.
+
+        Raises
+        ------
+        ValueError
+            Not all timeseries have the same metadata
+        """
+        meta_values = self._meta.drop(['variable', 'region', 'unit'], axis=1).drop_duplicates()
+        if len(meta_values) > 1:
+            raise ValueError('Not all timeseries have identical metadata')
+        meta_values = meta_values.squeeze()
+        if 'climate_model' in meta_values:
+            climate_model = meta_values.pop('climate_model')
+
+        core = Core(climate_model, self.time_points.min(), self.time_points.max())
+
+        for i in self._data:
+            vals = self._data[i]
+            metadata = self._meta.loc[i]
+            variable = metadata.pop('variable')
+            region = metadata.pop('region')
+            unit = metadata.pop('unit')
+
+            variable_openscm = tuple(variable.split(self.DATA_HIERARCHY_SEPARATOR))
+            region_openscm = tuple(region.split(self.DATA_HIERARCHY_SEPARATOR))
+            emms_view = core.parameters.get_writable_timeseries_view(
+                variable_openscm,
+                region_openscm,
+                unit,
+                self.time_points,
+                ParameterType.POINT_TIMESERIES
+            )
+            emms_view.set(vals.values)
+
+        for k, v in meta_values.iteritems():
+            meta_view = core.parameters.get_writable_generic_view(
+                k,
+                ("World",)
+            )
+            meta_view.set(v)
+
+        return core
+
+    @property
+    def time_points(self):
+        return self._time_index.as_openscm()
 
     def timeseries(self, meta=None):
         """Return a pandas dataframe in the same format as pyam.IamDataFrame.timeseries
