@@ -13,7 +13,6 @@ from pandas.errors import UnsupportedFunctionCall
 from tests.conftest import assert_core
 from openscm.scmdataframe import (
     ScmDataFrame,
-    convert_scmdataframe_to_core,
     convert_core_to_scmdataframe,
     df_append,
     ONE_YEAR_IN_S_INTEGER
@@ -24,16 +23,16 @@ from openscm.timeseries_converter import ExtrapolationType, ParameterType
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
     res = ScmDataFrame(test_pd_df)
-    assert (res["year"].unique() == [2005, 2010]).all()
+    assert (res["year"].unique() == [2005, 2010, 2015]).all()
     assert (
         res["time"].unique()
-        == [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1)]
+        == [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1), datetime.datetime(2015, 1, 1)]
     ).all()
 
 
 def get_test_pd_df_with_datetime_columns(tpdf):
     return tpdf.rename(
-        {2005.0: datetime.datetime(2005, 1, 1), 2010.0: datetime.datetime(2010, 1, 1)},
+        {2005.0: datetime.datetime(2005, 1, 1), 2010.0: datetime.datetime(2010, 1, 1), 2015.0: datetime.datetime(2015, 1, 1)},
         axis="columns",
     )
 
@@ -42,13 +41,13 @@ def test_init_ts(test_ts, test_pd_df):
     df = ScmDataFrame(
         test_ts,
         columns={
-            "index": [2005, 2010],
+            "index": [2005, 2010, 2015],
             "model": ["a_iam"],
             "climate_model": ["a_model"],
             "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
             "region": ["World"],
             "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
-            "unit": ["EJ/y"],
+            "unit": ["EJ/yr"],
         },
     )
 
@@ -61,20 +60,20 @@ def test_init_ts(test_ts, test_pd_df):
     pd.testing.assert_frame_equal(df._data, b._data)
 
 
-@pytest.mark.parametrize("years", [["2005.0", "2010.0"], ["2005", "2010"]])
+@pytest.mark.parametrize("years", [["2005.0", "2010.0", "2015.0"], ["2005", "2010", "2015"]])
 def test_init_with_years_as_str(test_pd_df, years):
     df = copy.deepcopy(
         test_pd_df
     )  # This needs to be a deep copy so it doesn't break the other tests
     cols = copy.deepcopy(test_pd_df.columns.values)
-    cols[-2:] = years
+    cols[-3:] = years
     df.columns = cols
 
     df = ScmDataFrame(df)
 
     obs = df._data.index
     exp = pd.Index(
-        [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1)],
+        [datetime.datetime(2005, 1, 1), datetime.datetime(2010, 1, 1), datetime.datetime(2015, 1, 1)],
         name="time",
         dtype="object",
     )
@@ -102,7 +101,7 @@ def test_init_with_decimal_years():
         "scenario": ["a_scenario"],
         "region": ["World"],
         "variable": ["Primary Energy"],
-        "unit": ["EJ/y"],
+        "unit": ["EJ/yr"],
     }
 
     res = ScmDataFrame(d, columns=cols)
@@ -138,26 +137,6 @@ def test_init_df_with_extra_col(test_pd_df):
     tdf = get_test_pd_df_with_datetime_columns(tdf)
     assert extra_col in df.meta
     pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
-
-
-def test_init_datetime_subclass_long_timespan(test_pd_df):
-    class TempSubClass(ScmDataFrame):
-        def _format_datetime_col(self):
-            # the subclass does not try to coerce the datetimes to pandas
-            # datetimes, instead simply leaving the time column as object type,
-            # so we don't run into the problem of pandas limited time period as
-            # discussed in https://stackoverflow.com/a/37226672
-            pass
-
-    tdf = test_pd_df.copy()
-    tmin = datetime.datetime(2005, 6, 17)
-    tmax = datetime.datetime(3005, 6, 17)
-    tdf = tdf.rename({2005: tmin, 2010: tmax}, axis="columns")
-
-    df = TempSubClass(tdf)
-
-    assert df["time"].max() == tmax
-    assert df["time"].min() == tmin
 
 
 def test_init_iam(test_iam_df, test_pd_df):
@@ -287,7 +266,7 @@ def test_filter_day(test_scm_datetime_df, test_day):
     assert unique_time[0] == expected
 
 
-@pytest.mark.parametrize("test_hour", [0, 12, [12, 13]])
+@pytest.mark.parametrize("test_hour", [12, [12, 13]])
 def test_filter_hour(test_scm_datetime_df, test_hour):
     obs = test_scm_datetime_df.filter(hour=test_hour)
     test_hour = [test_hour] if isinstance(test_hour, int) else test_hour
@@ -297,6 +276,16 @@ def test_filter_hour(test_scm_datetime_df, test_hour):
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected[0]
+
+
+def test_filter_hour_multiple(test_scm_datetime_df):
+    obs = test_scm_datetime_df.filter(hour=0)
+    expected_rows = test_scm_datetime_df["time"].apply(lambda x: x.hour).isin([0])
+    expected = test_scm_datetime_df["time"].loc[expected_rows].unique()
+
+    unique_time = obs["time"].unique()
+    assert len(unique_time) == 2
+    assert all([dt in unique_time for dt in expected])
 
 
 def test_filter_time_exact_match(test_scm_datetime_df):
@@ -393,7 +382,7 @@ def test_filter_as_kwarg(test_scm_df):
 def test_filter_keep_false(test_scm_df):
     df = test_scm_df.filter(variable="Primary Energy|Coal", year=2005, keep=False)
     obs = df.filter(scenario="a_scenario").timeseries().values.ravel()
-    npt.assert_array_equal(obs, [1, 6, np.nan, 3])
+    npt.assert_array_equal(obs, [1, 6, 6, np.nan, 3, 3])
 
 
 def test_filter_by_regexp(test_scm_df):
@@ -412,7 +401,7 @@ def test_filter_timeseries_different_length():
             "scenario": ["a_scenario", "a_scenario2"],
             "region": ["World"],
             "variable": ["Primary Energy"],
-            "unit": ["EJ/y"],
+            "unit": ["EJ/yr"],
         },
     )
 
@@ -429,10 +418,10 @@ def test_filter_timeseries_different_length():
 
 def test_timeseries(test_scm_df):
     dct = {
-        "model": ["a_model"] * 2,
-        "scenario": ["a_scenario"] * 2,
-        "years": [2005, 2010],
-        "value": [1, 6],
+        "model": ["a_model"] * 3,
+        "scenario": ["a_scenario"] * 3,
+        "years": [2005, 2010, 2015],
+        "value": [1, 6, 6],
     }
     exp = pd.DataFrame(dct).pivot_table(
         index=["model", "scenario"], columns=["years"], values="value"
@@ -457,8 +446,8 @@ def test_timeseries_duplicated(test_scm_df):
 def test_quantile_over_lower(test_processing_scm_df):
     exp = pd.DataFrame(
         [
-            ["a_model", "a_iam", "World", "Primary Energy", "EJ/y", -1.0, -2.0, 0.0],
-            ["a_model", "a_iam", "World", "Primary Energy|Coal", "EJ/y", 0.5, 3.0, 2.0],
+            ["a_model", "a_iam", "World", "Primary Energy", "EJ/yr", -1.0, -2.0, 0.0],
+            ["a_model", "a_iam", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3.0, 2.0],
         ],
         columns=[
             "climate_model",
@@ -478,8 +467,8 @@ def test_quantile_over_lower(test_processing_scm_df):
 def test_quantile_over_upper(test_processing_scm_df):
     exp = pd.DataFrame(
         [
-            ["a_model", "World", "Primary Energy", "EJ/y", 2.0, 7.0, 7.0],
-            ["a_model", "World", "Primary Energy|Coal", "EJ/y", 0.5, 3.0, 2.0],
+            ["a_model", "World", "Primary Energy", "EJ/yr", 2.0, 7.0, 7.0],
+            ["a_model", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3.0, 2.0],
         ],
         columns=[
             "climate_model",
@@ -503,12 +492,12 @@ def test_mean_over(test_processing_scm_df):
                 "a_iam",
                 "World",
                 "Primary Energy",
-                "EJ/y",
+                "EJ/yr",
                 2 / 3,
                 11 / 3,
                 10 / 3,
             ],
-            ["a_model", "a_iam", "World", "Primary Energy|Coal", "EJ/y", 0.5, 3.0, 2.0],
+            ["a_model", "a_iam", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3.0, 2.0],
         ],
         columns=[
             "climate_model",
@@ -528,8 +517,8 @@ def test_mean_over(test_processing_scm_df):
 def test_median_over(test_processing_scm_df):
     exp = pd.DataFrame(
         [
-            ["a_model", "a_iam", "World", "Primary Energy", "EJ/y", 1.0, 6.0, 3.0],
-            ["a_model", "a_iam", "World", "Primary Energy|Coal", "EJ/y", 0.5, 3.0, 2.0],
+            ["a_model", "a_iam", "World", "Primary Energy", "EJ/yr", 1.0, 6.0, 3.0],
+            ["a_model", "a_iam", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3.0, 2.0],
         ],
         columns=[
             "climate_model",
@@ -580,7 +569,7 @@ def test_relative_to_ref_period_mean(
                 "a_scenario",
                 "World",
                 "Primary Energy {}".format(exp_append_str),
-                "EJ/y",
+                "EJ/yr",
                 -2.5,
                 2.5,
                 3.5,
@@ -591,7 +580,7 @@ def test_relative_to_ref_period_mean(
                 "a_scenario",
                 "World",
                 "Primary Energy|Coal {}".format(exp_append_str),
-                "EJ/y",
+                "EJ/yr",
                 -1.25,
                 1.25,
                 0.25,
@@ -602,7 +591,7 @@ def test_relative_to_ref_period_mean(
                 "a_scenario2",
                 "World",
                 "Primary Energy {}".format(exp_append_str),
-                "EJ/y",
+                "EJ/yr",
                 -2.5,
                 2.5,
                 -4.5,
@@ -613,7 +602,7 @@ def test_relative_to_ref_period_mean(
                 "a_scenario3",
                 "World",
                 "Primary Energy {}".format(exp_append_str),
-                "EJ/y",
+                "EJ/yr",
                 0.5,
                 -0.5,
                 4.5,
@@ -693,12 +682,26 @@ def test_append_exact_duplicates(test_scm_df):
 
 def test_append_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
-    other["time"] = [2020, 2030]
+    other["time"] = [2020, 2030, 2040]
 
     res = test_scm_df.append(other)
 
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
-    exp = [2.0, 7.0, 2.0, 7.0]
+    exp = [2.0, 7.0, 7.0, 2.0, 7.0, 7.0]
+    npt.assert_array_equal(res._time_index.years(), [2005, 2010, 2015, 2020, 2030, 2040])
+    npt.assert_almost_equal(obs, exp)
+
+
+def test_append_duplicates_order_doesnt_matter(test_scm_df):
+    other = copy.deepcopy(test_scm_df)
+    other["time"] = [2020, 2030, 2040]
+    other._data.values[2, 2] = 5.0
+
+    res = other.append(test_scm_df)
+
+    obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
+    exp = [2.0, 7.0, 7.0, 2.0, 7.0, 5.0]
+    npt.assert_array_equal(res._time_index.years(), [2005, 2010, 2015, 2020, 2030, 2040])
     npt.assert_almost_equal(obs, exp)
 
 
@@ -709,7 +712,7 @@ def test_append_duplicate_times(test_scm_df):
     res = test_scm_df.append(other)
 
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
-    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2]
+    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
     npt.assert_almost_equal(obs, exp)
 
 
@@ -718,14 +721,14 @@ def test_append_inplace(test_scm_df):
     other._data *= 2
 
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
-    exp = [2, 7]
+    exp = [2, 7, 7]
     npt.assert_almost_equal(obs, exp)
 
     test_scm_df.append(other, inplace=True)
 
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
     # is this averaging business really what we want
-    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2]
+    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
     npt.assert_almost_equal(obs, exp)
 
 
@@ -742,6 +745,7 @@ def get_append_col_order_time_dfs(base):
     tdata["time"] = [
         datetime.datetime(2002, 1, 1, 0, 0),
         datetime.datetime(2008, 1, 1, 0, 0),
+        datetime.datetime(2009, 1, 1, 0, 0),
     ]
     tdata = tdata.set_index("time")
     tdata.index = tdata.index.astype("object")
@@ -755,36 +759,36 @@ def get_append_col_order_time_dfs(base):
         pd.DataFrame(
             np.array(
                 [
-                    [1.0, 1.0, 6.0, 6.0],
-                    [np.nan, 0.5, np.nan, 3.0],
-                    [0.5, np.nan, 3.0, np.nan],
-                    [2.0, 2.0, 7.0, 7.0],
-                    [np.nan, 0.5, np.nan, 3.0],
+                    [1.0, 1.0, 6.0, 6.0, 6.0, 6.0],
+                    [np.nan, 0.5, np.nan, np.nan, 3.0, 3.0],
+                    [np.nan, 0.5, np.nan, np.nan, 3.0,  3.0],
+                    [0.5, np.nan, 3.0, 3.0, np.nan, np.nan],
+                    [2.0, 2.0, 7.0, 7.0, 7.0, 7.0],
                 ]
             ).T,
-            index=[2002, 2005, 2008, 2010],
+            index=[2002, 2005, 2008, 2009, 2010, 2015],
         ),
         columns={
             "model": ["a_iam"],
-            "climate_model": ["a_model", "a_model", "a_model", "a_model", "a_model2"],
+            "climate_model": ["a_model", "a_model", "a_model2", "a_model", "a_model"],
             "scenario": [
                 "a_scenario",
                 "a_scenario",
                 "a_scenario",
-                "a_scenario2",
                 "a_scenario",
+                "a_scenario2"
             ],
             "region": ["World"],
             "variable": [
                 "Primary Energy",
                 "Primary Energy|Coal",
+                "Primary Energy|Coal",
                 "Primary Energy|Gas",
                 "Primary Energy",
-                "Primary Energy|Coal",
             ],
-            "unit": ["EJ/y"],
-            "runmodus": ["co2_only", "co2_only", "co2_only", "co2_only", np.nan],
-            "ecs": [np.nan, np.nan, np.nan, np.nan, 3.0],
+            "unit": ["EJ/yr"],
+            "runmodus": ["co2_only", "co2_only", np.nan, "co2_only", "co2_only"],
+            "ecs": [np.nan, np.nan, 3.0, np.nan, np.nan],
         },
     )
 
@@ -1171,11 +1175,11 @@ def test_convert_unit():
     pd.testing.assert_frame_equal(obs, exp, check_index_type=False)
 
 
-def test_convert_scmdataframe_to_core(rcp26):
+def test_scmdataframe_to_core(rcp26):
     tdata = rcp26
 
-    res = convert_scmdataframe_to_core(tdata)
-    time_points = np.array([convert_datetime_to_openscm_time(dt) for dt in tdata['time']])
+    res = tdata.to_core()
+    time_points = tdata.time_points
 
     tstart_dt = tdata["time"].min()
 
@@ -1262,27 +1266,27 @@ def test_convert_core_to_scmdataframe(rcp26):
     )
 
 
-def test_resample(test_resample_df):
-    res = test_resample_df.resample("AS")
+def test_resample(test_scm_df):
+    res = test_scm_df.resample("AS")
 
     obs = (
         res.filter(scenario="a_scenario", variable="Primary Energy")
             .timeseries()
             .T.squeeze()
     )
-    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.0, 6.0]
+    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]
     npt.assert_almost_equal(obs, exp, decimal=1)
 
 
-def test_resample_long_datetimes(test_resample_df):
+def test_resample_long_datetimes(test_scm_df):
     dts = [
         datetime.datetime(1005, 1, 1),
         datetime.datetime(2000, 1, 1),
         datetime.datetime(3010, 1, 1)
     ]
-    test_resample_df['time'] = dts
+    test_scm_df['time'] = dts
 
-    res = test_resample_df.resample("AS")
+    res = test_scm_df.resample("AS")
 
     assert res.timeseries().T.index[0] == datetime.datetime(1005, 1, 1)
     assert res.timeseries().T.index[-1] == datetime.datetime(3010, 1, 1)

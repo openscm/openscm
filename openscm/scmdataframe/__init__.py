@@ -343,8 +343,8 @@ def df_append(dfs, inplace=False):
         ret = dfs[0]
 
     ret._data = data.reset_index(drop=True).T
-    ret._data.index = ret._data.index.astype("object")
-    ret._data.index.name = "time"
+    ret._data = ret._data.sort_index()
+    ret['time'] = ret._data.index.values
     ret._data = ret._data.astype(float)
 
     ret._meta = (

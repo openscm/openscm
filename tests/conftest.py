@@ -22,18 +22,9 @@ from openscm.scmdataframe import ScmDataFrame
 
 TEST_DF_LONG_TIMES = pd.DataFrame(
     [
-        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/y", 1, 6.0],
-        [
-            "a_model",
-            "a_iam",
-            "a_scenario",
-            "World",
-            "Primary Energy|Coal",
-            "EJ/y",
-            0.5,
-            3,
-        ],
-        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/y", 2, 7],
+        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/yr", 1, 6.0, 6.0],
+        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3, 3.0],
+        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/yr", 2, 7, 7],
     ],
     columns=[
         "climate_model",
@@ -43,24 +34,16 @@ TEST_DF_LONG_TIMES = pd.DataFrame(
         "variable",
         "unit",
         datetime(1005, 1, 1),
+        datetime(2010, 1, 1),
         datetime(3010, 12, 31),
     ],
 )
 
 TEST_DF = pd.DataFrame(
     [
-        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/y", 1, 6.0],
-        [
-            "a_model",
-            "a_iam",
-            "a_scenario",
-            "World",
-            "Primary Energy|Coal",
-            "EJ/y",
-            0.5,
-            3,
-        ],
-        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/y", 2, 7],
+        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/yr", 1, 6.0, 6.0],
+        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3, 3.0],
+        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/yr", 2, 7, 7.0],
     ],
     columns=[
         "climate_model",
@@ -71,22 +54,27 @@ TEST_DF = pd.DataFrame(
         "unit",
         2005,
         2010,
+        2015
     ],
 )
 
-TEST_TS = np.array([[1, 6.0], [0.5, 3], [2, 7]]).T
+TEST_TS = np.array([[1, 6.0, 6], [0.5, 3, 3], [2, 7, 7]]).T
 
 
 @pytest.fixture(scope="function")
 def test_pd_df():
-    yield TEST_DF
+    yield TEST_DF.copy()
 
 
 @pytest.fixture(scope="function")
 def test_scm_datetime_df():
     tdf = TEST_DF.copy()
     tdf.rename(
-        {2005: datetime(2005, 6, 17, 12), 2010: datetime(2010, 1, 3, 0)},
+        {
+            2005: datetime(2005, 6, 17, 12),
+            2010: datetime(2010, 1, 3, 0),
+            2015: datetime(2015, 1, 4, 0)
+        },
         axis="columns",
         inplace=True,
     )
@@ -96,34 +84,34 @@ def test_scm_datetime_df():
 
 @pytest.fixture(scope="function")
 def test_ts():
-    yield TEST_TS
+    yield TEST_TS.copy()
 
 
 @pytest.fixture(scope="function")
 def test_iam_df():
     if IamDataFrame is None:
         pytest.skip('pyam is not installed')
-    yield IamDataFrame(TEST_DF)
+    yield IamDataFrame(TEST_DF.copy())
 
 
 @pytest.fixture(
     scope="function",
     params=[
-        {"data": TEST_DF},
-        pytest.param({"data": IamDataFrame(TEST_DF).data},
+        {"data": TEST_DF.copy()},
+        pytest.param({"data": IamDataFrame(TEST_DF.copy()).data},
                      marks=pytest.mark.skipif(IamDataFrame is None, reason='pyam is not available')),
-        pytest.param({"data": IamDataFrame(TEST_DF).timeseries()},
+        pytest.param({"data": IamDataFrame(TEST_DF.copy()).timeseries()},
                      marks=pytest.mark.skipif(IamDataFrame is None, reason='pyam is not available')),
         {
-            "data": TEST_TS,
+            "data": TEST_TS.copy(),
             "columns": {
-                "index": [2005, 2010],
+                "index": [2005, 2010, 2015],
                 "model": ["a_iam"],
                 "climate_model": ["a_model"],
                 "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
                 "region": ["World"],
                 "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
-                "unit": ["EJ/y"],
+                "unit": ["EJ/yr"],
             },
         },
     ],
@@ -132,19 +120,6 @@ def test_scm_df(request):
     if IamDataFrame is None:
         pytest.skip('pyam is not installed')
     yield ScmDataFrame(**request.param)
-
-
-@pytest.fixture(scope="function")
-def test_resample_df(test_scm_df):
-    # resampling needs at least 3 datapoints
-    df = test_scm_df.copy()
-    df._data = df._data.append(pd.DataFrame([[6.0, 3.0, 7.0]], columns=df._data.columns))
-    df['time'] = [
-        datetime(2005, 1, 1),
-        datetime(2010, 1, 1),
-        datetime(2012, 1, 1),
-    ]
-    yield df
 
 
 @pytest.fixture(scope="function")
@@ -167,7 +142,7 @@ def test_processing_scm_df():
                 "Primary Energy",
                 "Primary Energy",
             ],
-            "unit": ["EJ/y"],
+            "unit": ["EJ/yr"],
         },
     )
 
