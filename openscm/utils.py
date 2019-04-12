@@ -56,3 +56,26 @@ def round_to_nearest_year(dtin: datetime) -> datetime:
         return dt_start_year + relativedelta(years=1)
     else:
         return dt_start_year
+
+
+def is_floatlike(f) -> bool:
+    """ Checks if input can be cast to a float
+
+    This includes strings such as "6.03" which can be cast to a float
+
+    Parameters
+    ----------
+    f
+        Input
+    Returns
+    -------
+    True if f can be cast to a float
+    """
+    if isinstance(f, (int, float)):
+        return True
+
+    try:
+        float(f)
+        return True
+    except (TypeError, ValueError):
+        return False

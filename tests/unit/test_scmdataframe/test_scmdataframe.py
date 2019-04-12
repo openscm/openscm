@@ -361,7 +361,7 @@ def test_filter_time_range_hour(test_scm_datetime_df, hour_range):
     expected_rows = (
         test_scm_datetime_df["time"].apply(lambda x: x.hour).isin(hour_range)
     )
-    expected = test_scm_datetime_df["time"].loc[expected_rows].unique()
+    expected = test_scm_datetime_df["time"][expected_rows].unique()
 
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
@@ -694,7 +694,6 @@ def test_append_exact_duplicates(test_scm_df):
 def test_append_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     other["time"] = [2020, 2030]
-    other._format_datetime_col()
 
     res = test_scm_df.append(other)
 

@@ -17,6 +17,10 @@ def is_str(s):
     return isinstance(s, six.string_types)
 
 
+def is_in(vals: np.array, items: list) -> np.array:
+    return np.array([v in items for v in vals])
+
+
 def find_depth(data, s, level):
     # determine function for finding depth level =, >=, <= |s
     if not is_str(level):
@@ -81,7 +85,7 @@ def years_match(data, years):
     if isinstance(years, dt) or isinstance(years[0], dt):
         error_msg = "`year` can only be filtered with ints or lists of ints"
         raise TypeError(error_msg)
-    return data.isin(years)
+    return is_in(data, years)
 
 
 def month_match(data, months):
@@ -103,7 +107,7 @@ def hour_match(data, hours):
     matching of days in time columns for data filtering
     """
     hours = [hours] if isinstance(hours, int) else hours
-    return data.isin(hours)
+    return is_in(data, hours)
 
 
 def time_match(data, times, conv_codes, strptime_attr, name):
@@ -145,7 +149,7 @@ def time_match(data, times, conv_codes, strptime_attr, name):
         times = conv_strs(times, conv_codes, name)
         times += to_append
 
-    return data.isin(times)
+    return is_in(data, times)
 
 
 def datetime_match(data, dts):
@@ -158,4 +162,4 @@ def datetime_match(data, dts):
             "`time` can only be filtered with datetimes or lists of datetimes"
         )
         raise TypeError(error_msg)
-    return data.isin(dts)
+    return is_in(data, dts)

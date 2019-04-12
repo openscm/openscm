@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import copy
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from logging import getLogger
 
 import numpy as np
 import pandas as pd
 from dateutil import parser
 
+from openscm.timeseries_converter import TimeseriesConverter, ParameterType, InterpolationType, ExtrapolationType
+from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime, is_floatlike
 from .filters import (
     years_match,
     month_match,
@@ -19,30 +21,11 @@ from .filters import (
     is_str
 )
 from .offsets import generate_range, to_offset
-
-from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
-from openscm.timeseries_converter import TimeseriesConverter, ParameterType, InterpolationType, ExtrapolationType
+from .timeindex import TimeIndex
 
 logger = getLogger(__name__)
 
 REQUIRED_COLS = ['model', 'scenario', 'region', 'variable', 'unit']
-
-
-def to_int(x, index=False):
-    """Formatting series or timeseries columns to int and checking validity.
-    If `index=False`, the function works on the `pd.Series x`; else,
-    the function casts the index of `x` to int and returns x with a new index.
-    """
-    _x = x.index if index else x
-    cols = list(map(int, _x))
-    error = _x[cols != _x]
-    if not error.empty:
-        raise ValueError('invalid values `{}`'.format(list(error)))
-    if index:
-        x.index = cols
-        return x
-    else:
-        return _x
 
 
 def read_files(fnames, *args, **kwargs):
@@ -70,18 +53,6 @@ def read_pandas(fname, *args, **kwargs):
             kwargs['sheet_name'] = 'data'
         df = pd.read_excel(fname, *args, **kwargs)
     return df
-
-
-def _is_floatlike(f):
-    if isinstance(f, (int, float)):
-        return True
-
-    try:
-        float(f)
-        return True
-    except (TypeError, ValueError):
-        return False
-
 
 def format_data(df):
     """Convert an imported dataframe and check all required columns"""
@@ -124,7 +95,7 @@ def format_data(df):
         cols = set(df.columns) - set(REQUIRED_COLS)
         time_cols, extra_cols = False, []
         for i in cols:
-            if _is_floatlike(i) or isinstance(i, datetime):
+            if is_floatlike(i) or isinstance(i, datetime):
                 time_cols = True
             else:
                 try:
@@ -246,14 +217,11 @@ class ScmDataFrameBase(object):
                 (_df, _meta) = format_data(data.data.copy())
             else:
                 (_df, _meta) = read_files(data, **kwargs)
-        # force index to be object to avoid unexpected loss of behaviour when
-        # pandas can't convert to DateTimeIndex
-        _df.index = _df.index.astype("object")
-        _df.index.name = "time"
+        self._time_index = TimeIndex(py_dt=_df.index.values)
+        _df.index = self._time_index.as_pd_index()
         _df = _df.astype(float)
 
         self._data, self._meta = (_df, _meta)
-        self._format_datetime_col()
         self._sort_meta_cols()
 
     def copy(self):
@@ -271,9 +239,9 @@ class ScmDataFrameBase(object):
     def __getitem__(self, key):
         _key_check = [key] if is_str(key) else key
         if key is "time":
-            return pd.Series(self._data.index, dtype="object")
+            return pd.Series(self._time_index.as_pd_index(), dtype="object")
         elif key is "year":
-            return pd.Series([v.year for v in self._data.index])
+            return pd.Series(self._time_index.years())
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
         else:
@@ -283,49 +251,11 @@ class ScmDataFrameBase(object):
         _key_check = [key] if is_str(key) else key
 
         if key is "time":
-            self._data.index = pd.Index(value, dtype="object", name="time")
+            self._time_index = TimeIndex(py_dt=value)
+            self._data.index = self._time_index.as_pd_index()
             return value
         if set(_key_check).issubset(self.meta.columns):
             return self._meta.__setitem__(key, value)
-
-    def _format_datetime_col(self):
-        time_srs = self["time"]
-
-        if isinstance(time_srs.iloc[0], datetime):
-            pass
-        elif isinstance(time_srs.iloc[0], int):
-            self["time"] = [datetime(y, 1, 1) for y in to_int(time_srs)]
-        elif _is_floatlike(time_srs.iloc[0]):
-
-            def convert_float_to_datetime(inp):
-                year = int(inp)
-                fractional_part = inp - year
-                base = datetime(year, 1, 1)
-                return base + timedelta(
-                    seconds=(base.replace(year=year + 1) - base).total_seconds()
-                            * fractional_part
-                )
-
-            self["time"] = [
-                convert_float_to_datetime(t) for t in time_srs.astype("float")
-            ]
-
-        elif isinstance(self._data.index[0], str):
-
-            def convert_str_to_datetime(inp):
-                return parser.parse(inp)
-
-            self["time"] = time_srs.apply(convert_str_to_datetime)
-
-        not_datetime = [
-            not isinstance(x, datetime) for x in self["time"]
-        ]
-        if any(not_datetime):
-            bad_values = self["time"][not_datetime]
-            error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
-                bad_values
-            )
-            raise ValueError(error_msg)
 
     def timeseries(self, meta=None):
         """Return a pandas dataframe in the same format as pyam.IamDataFrame.timeseries
@@ -394,6 +324,7 @@ class ScmDataFrameBase(object):
         d = ret._data.where(idx)
         ret._data = d.dropna(axis=1, how="all").dropna(axis=0, how="all")
         ret._meta = ret._meta[(~d.isna()).sum(axis=0) > 0]
+        ret["time"] = ret._data.index.values
 
         assert len(ret._data.columns) == len(ret._meta)
 
@@ -425,12 +356,12 @@ class ScmDataFrameBase(object):
                 keep_col &= pattern_match(self.meta[col], values, regexp=regexp).values
             elif col == "year":
                 keep_ts &= years_match(
-                    self._data.index.to_series().apply(lambda x: x.year), values
+                    self._time_index.years(), values
                 )
 
             elif col == "month":
                 keep_ts &= month_match(
-                    self._data.index.to_series().apply(lambda x: x.month), values
+                    self._time_index.months(), values
                 )
 
             elif col == "day":
@@ -442,19 +373,19 @@ class ScmDataFrameBase(object):
                     wday = False
 
                 if wday:
-                    days = self._data.index.to_series().apply(lambda x: x.weekday())
+                    days = self._time_index.weekdays()
                 else:  # ints or list of ints
-                    days = self._data.index.to_series().apply(lambda x: x.day)
+                    days = self._time_index.days()
 
                 keep_ts &= day_match(days, values)
 
             elif col == "hour":
                 keep_ts &= hour_match(
-                    self._data.index.to_series().apply(lambda x: x.hour), values
+                    self._time_index.hours(), values
                 )
 
             elif col == "time":
-                keep_ts &= datetime_match(self._data.index, values)
+                keep_ts &= datetime_match(self._time_index.as_py(), values)
 
             elif col == "level":
                 if "variable" not in filters.keys():
