@@ -6,14 +6,17 @@ import pytest
 from openscm.scmdataframe.offsets import to_offset, generate_range
 
 
-@pytest.mark.parametrize("offset_rule", ["B", "C", "BM", "BMS", "CBM", "CBMS", "BQ", "BSS", "BA", "BAS", "RE", "BH", "CBH"])
+@pytest.mark.parametrize(
+    "offset_rule",
+    ["B", "C", "BM", "BMS", "CBM", "CBMS", "BQ", "BSS", "BA", "BAS", "RE", "BH", "CBH"],
+)
 def test_invalid_offsets(offset_rule):
     with pytest.raises(ValueError):
         to_offset(offset_rule)
 
 
 def test_annual_start():
-    offset = to_offset('AS')
+    offset = to_offset("AS")
     dt = datetime(2001, 2, 12)
 
     res = offset.apply(dt)
@@ -34,7 +37,7 @@ def test_annual_start():
 
 
 def test_month_start():
-    offset = to_offset('MS')
+    offset = to_offset("MS")
     dt = datetime(2001, 2, 12)
 
     res = offset.apply(dt)
@@ -55,7 +58,7 @@ def test_month_start():
 
 
 def test_generate_range():
-    offset = to_offset('AS')
+    offset = to_offset("AS")
     start = datetime(2000, 2, 12)
     end = datetime(2001, 2, 12)
 

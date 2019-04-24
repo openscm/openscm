@@ -12,7 +12,10 @@ from dateutil import parser
 from openscm.core import Core, ParameterSet
 from openscm.parameters import ParameterType
 from openscm.units import UnitConverter
-from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
+from openscm.utils import (
+    convert_datetime_to_openscm_time,
+    convert_openscm_time_to_datetime,
+)
 from .base import ScmDataFrameBase
 
 try:
@@ -20,7 +23,7 @@ try:
 except ImportError:
     IamDataFrame = None
 
-ONE_YEAR_IN_S_INTEGER = int(round(UnitConverter('year', 's').convert_from(1)))
+ONE_YEAR_IN_S_INTEGER = int(round(UnitConverter("year", "s").convert_from(1)))
 
 
 class ScmDataFrame(ScmDataFrameBase):
@@ -57,7 +60,9 @@ class ScmDataFrame(ScmDataFrameBase):
         An pyam.IamDataFrame instance containing the same data
         """
         if IamDataFrame is None:
-            raise ImportError('pyam is not installed. Features involving IamDataFrame are unavailable')
+            raise ImportError(
+                "pyam is not installed. Features involving IamDataFrame are unavailable"
+            )
 
         class LongIamDataFrame(IamDataFrame):
             """This baseclass is a custom implementation of the IamDataFrame which handles datetime data which spans longer than pd.to_datetime
@@ -66,12 +71,15 @@ class ScmDataFrame(ScmDataFrameBase):
 
             def _format_datetime_col(self):
                 if isinstance(self.data["time"].iloc[0], str):
+
                     def convert_str_to_datetime(inp):
                         return parser.parse(inp)
 
                     self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
 
-                not_datetime = [not isinstance(x, datetime.datetime) for x in self.data["time"]]
+                not_datetime = [
+                    not isinstance(x, datetime.datetime) for x in self.data["time"]
+                ]
                 if any(not_datetime):
                     bad_values = self.data[not_datetime]["time"]
                     error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
@@ -122,11 +130,11 @@ class ScmDataFrame(ScmDataFrameBase):
 
 
 def convert_core_to_scmdataframe(
-        core: Core,
-        period_length: int = ONE_YEAR_IN_S_INTEGER,
-        model: str = "unspecified",
-        scenario: str = "unspecified",
-        climate_model: str = "unspecified",
+    core: Core,
+    period_length: int = ONE_YEAR_IN_S_INTEGER,
+    model: str = "unspecified",
+    scenario: str = "unspecified",
+    climate_model: str = "unspecified",
 ) -> ScmDataFrame:
     def get_metadata(c, para):
         md = {}
@@ -181,8 +189,12 @@ def convert_core_to_scmdataframe(
 
             ts_in.append(values)
             ch_in["unit"].append(unit)
-            ch_in["variable"].append(ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.full_name))
-            ch_in["region"].append(ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.info.region))
+            ch_in["variable"].append(
+                ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.full_name)
+            )
+            ch_in["region"].append(
+                ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.info.region)
+            )
 
             return ts_in, time_in, ch_in
 
@@ -276,7 +288,7 @@ def df_append(dfs, inplace=False):
 
     ret._data = data.reset_index(drop=True).T
     ret._data = ret._data.sort_index()
-    ret['time'] = ret._data.index.values
+    ret["time"] = ret._data.index.values
     ret._data = ret._data.astype(float)
 
     ret._meta = (

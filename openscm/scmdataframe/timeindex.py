@@ -4,7 +4,11 @@ import numpy as np
 import pandas as pd
 from dateutil import parser
 
-from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime, is_floatlike
+from openscm.utils import (
+    convert_datetime_to_openscm_time,
+    convert_openscm_time_to_datetime,
+    is_floatlike,
+)
 
 
 def to_int(x):
@@ -15,12 +19,13 @@ def to_int(x):
     cols = list(map(int, x))
     error = x[cols != x]
     if len(error):
-        raise ValueError('invalid values `{}`'.format(list(error)))
+        raise ValueError("invalid values `{}`".format(list(error)))
     return cols
 
 
 def npdt_to_datetime(dt):
     return pd.Timestamp(dt).to_pydatetime()
+
 
 def _format_datetime(dts):
     if not len(dts):
@@ -33,13 +38,14 @@ def _format_datetime(dts):
     elif isinstance(dt_0, np.datetime64):
         dts = [pd.Timestamp(dt).to_pydatetime() for dt in dts]
     elif is_floatlike(dt_0):
+
         def convert_float_to_datetime(inp):
             year = int(inp)
             fractional_part = inp - year
             base = datetime(year, 1, 1)
             return base + timedelta(
                 seconds=(base.replace(year=year + 1) - base).total_seconds()
-                        * fractional_part
+                * fractional_part
             )
 
         dts = [convert_float_to_datetime(float(t)) for t in dts]
@@ -48,9 +54,7 @@ def _format_datetime(dts):
     elif isinstance(dt_0, pd.Timestamp):
         dts = [dt.to_pydatetime() for dt in dts]
 
-    not_datetime = [
-        not isinstance(x, datetime) for x in dts
-    ]
+    not_datetime = [not isinstance(x, datetime) for x in dts]
     if any(not_datetime):
         bad_values = np.asarray(dts)[not_datetime]
         error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
@@ -74,14 +78,22 @@ class TimeIndex(object):
 
         if py_dt is not None:
             py_dt = _format_datetime(np.asarray(py_dt))
-            object.__setattr__(self, '_py', np.asarray(py_dt))
-            object.__setattr__(self, '_openscm', np.asarray([convert_datetime_to_openscm_time(dt) for dt in py_dt]))
+            object.__setattr__(self, "_py", np.asarray(py_dt))
+            object.__setattr__(
+                self,
+                "_openscm",
+                np.asarray([convert_datetime_to_openscm_time(dt) for dt in py_dt]),
+            )
         else:
-            object.__setattr__(self, '_py', np.asarray([convert_openscm_time_to_datetime(dt) for dt in openscm_dt]))
-            object.__setattr__(self, '_openscm', np.asarray(openscm_dt))
+            object.__setattr__(
+                self,
+                "_py",
+                np.asarray([convert_openscm_time_to_datetime(dt) for dt in openscm_dt]),
+            )
+            object.__setattr__(self, "_openscm", np.asarray(openscm_dt))
 
     def __setattr__(self, key, value):
-        raise AttributeError('TimeIndex is immutable')
+        raise AttributeError("TimeIndex is immutable")
 
     def as_openscm(self):
         return self._openscm
@@ -90,7 +102,7 @@ class TimeIndex(object):
         return self._py
 
     def as_pd_index(self):
-        return pd.Index(self._py, dtype='object', name='time')
+        return pd.Index(self._py, dtype="object", name="time")
 
     def years(self):
         return np.array([dt.year for dt in self._py])

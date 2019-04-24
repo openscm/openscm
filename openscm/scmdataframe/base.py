@@ -10,8 +10,17 @@ import pandas as pd
 from dateutil import parser
 
 from openscm.core import Core
-from openscm.timeseries_converter import TimeseriesConverter, ParameterType, InterpolationType, ExtrapolationType
-from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime, is_floatlike
+from openscm.timeseries_converter import (
+    TimeseriesConverter,
+    ParameterType,
+    InterpolationType,
+    ExtrapolationType,
+)
+from openscm.utils import (
+    convert_datetime_to_openscm_time,
+    convert_openscm_time_to_datetime,
+    is_floatlike,
+)
 from .filters import (
     years_match,
     month_match,
@@ -19,14 +28,14 @@ from .filters import (
     datetime_match,
     hour_match,
     pattern_match,
-    is_str
+    is_str,
 )
 from .offsets import generate_range, to_offset
 from .timeindex import TimeIndex
 
 logger = getLogger(__name__)
 
-REQUIRED_COLS = ['model', 'scenario', 'region', 'variable', 'unit']
+REQUIRED_COLS = ["model", "scenario", "region", "variable", "unit"]
 
 
 def read_files(fnames, *args, **kwargs):
@@ -45,15 +54,16 @@ def read_files(fnames, *args, **kwargs):
 def read_pandas(fname, *args, **kwargs):
     """Read a file and return a pd.DataFrame"""
     if not os.path.exists(fname):
-        raise ValueError('no data file `{}` found!'.format(fname))
-    if fname.endswith('csv'):
+        raise ValueError("no data file `{}` found!".format(fname))
+    if fname.endswith("csv"):
         df = pd.read_csv(fname, *args, **kwargs)
     else:
         xl = pd.ExcelFile(fname)
-        if len(xl.sheet_names) > 1 and 'sheet_name' not in kwargs:
-            kwargs['sheet_name'] = 'data'
+        if len(xl.sheet_names) > 1 and "sheet_name" not in kwargs:
+            kwargs["sheet_name"] = "data"
         df = pd.read_excel(fname, *args, **kwargs)
     return df
+
 
 def format_data(df):
     """Convert an imported dataframe and check all required columns"""
@@ -165,7 +175,7 @@ class ScmDataFrameBase(object):
     the circularity).
     """
 
-    DATA_HIERARCHY_SEPARATOR = '|'
+    DATA_HIERARCHY_SEPARATOR = "|"
     """str: String used to define different levels in our data hierarchies.
 
     For example, "Emissions|CO2|Energy|Coal".
@@ -173,7 +183,9 @@ class ScmDataFrameBase(object):
     We copy this straight from pyam
     """
 
-    def __init__(self, data, columns=None, climate_model: str = "unspecified", **kwargs):
+    def __init__(
+        self, data, columns=None, climate_model: str = "unspecified", **kwargs
+    ):
         """Initialize an instance of an ScmDataFrameBase
 
         Parameters
@@ -221,7 +233,7 @@ class ScmDataFrameBase(object):
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             (_df, _meta) = format_data(data.copy())
         else:
-            if hasattr(data, 'data'):
+            if hasattr(data, "data"):
                 # It might be a IamDataFrame?
                 (_df, _meta) = format_data(data.data.copy())
             else:
@@ -240,7 +252,7 @@ class ScmDataFrameBase(object):
         # First columns are from REQUIRED_COLS and the remainder of the columns are alphabetically sorted
         self._meta = self._meta[
             REQUIRED_COLS + sorted(list(set(self._meta.columns) - set(REQUIRED_COLS)))
-            ]
+        ]
 
     def __len__(self):
         return len(self._meta)
@@ -278,21 +290,23 @@ class ScmDataFrameBase(object):
         ValueError
             Not all timeseries have the same metadata
         """
-        meta_values = self._meta.drop(['variable', 'region', 'unit'], axis=1).drop_duplicates()
+        meta_values = self._meta.drop(
+            ["variable", "region", "unit"], axis=1
+        ).drop_duplicates()
         if len(meta_values) > 1:
-            raise ValueError('Not all timeseries have identical metadata')
+            raise ValueError("Not all timeseries have identical metadata")
         meta_values = meta_values.squeeze()
-        if 'climate_model' in meta_values:
-            climate_model = meta_values.pop('climate_model')
+        if "climate_model" in meta_values:
+            climate_model = meta_values.pop("climate_model")
 
         core = Core(climate_model, self.time_points.min(), self.time_points.max())
 
         for i in self._data:
             vals = self._data[i]
             metadata = self._meta.loc[i]
-            variable = metadata.pop('variable')
-            region = metadata.pop('region')
-            unit = metadata.pop('unit')
+            variable = metadata.pop("variable")
+            region = metadata.pop("region")
+            unit = metadata.pop("unit")
 
             variable_openscm = tuple(variable.split(self.DATA_HIERARCHY_SEPARATOR))
             region_openscm = tuple(region.split(self.DATA_HIERARCHY_SEPARATOR))
@@ -301,15 +315,12 @@ class ScmDataFrameBase(object):
                 region_openscm,
                 unit,
                 self.time_points,
-                ParameterType.POINT_TIMESERIES
+                ParameterType.POINT_TIMESERIES,
             )
             emms_view.set(vals.values)
 
         for k, v in meta_values.iteritems():
-            meta_view = core.parameters.get_writable_generic_view(
-                k,
-                ("World",)
-            )
+            meta_view = core.parameters.get_writable_generic_view(k, ("World",))
             meta_view.set(v)
 
         return core
@@ -418,14 +429,10 @@ class ScmDataFrameBase(object):
             elif col in self.meta.columns:
                 keep_col &= pattern_match(self.meta[col], values, regexp=regexp).values
             elif col == "year":
-                keep_ts &= years_match(
-                    self._time_index.years(), values
-                )
+                keep_ts &= years_match(self._time_index.years(), values)
 
             elif col == "month":
-                keep_ts &= month_match(
-                    self._time_index.months(), values
-                )
+                keep_ts &= month_match(self._time_index.months(), values)
 
             elif col == "day":
                 if isinstance(values, str):
@@ -443,9 +450,7 @@ class ScmDataFrameBase(object):
                 keep_ts &= day_match(days, values)
 
             elif col == "hour":
-                keep_ts &= hour_match(
-                    self._time_index.hours(), values
-                )
+                keep_ts &= hour_match(self._time_index.hours(), values)
 
             elif col == "time":
                 keep_ts &= datetime_match(self._time_index.as_py(), values)
@@ -459,7 +464,7 @@ class ScmDataFrameBase(object):
                     continue
 
             else:
-                raise ValueError('filter by `{}` not supported'.format(col))
+                raise ValueError("filter by `{}` not supported".format(col))
 
         return keep_ts, keep_col
 
@@ -544,8 +549,8 @@ class ScmDataFrameBase(object):
             df = df.set_index(index.names)
         self._meta = (
             pd.merge(df, meta, left_index=True, right_index=True, how="outer")
-                .reset_index()
-                .set_index("index")
+            .reset_index()
+            .set_index("index")
         )
         # Edge case of using a different index on meta
         if "level_0" in self._meta:
@@ -566,7 +571,7 @@ class ScmDataFrameBase(object):
         list of datetimes
         """
         offset = to_offset(rule)
-        orig_dts = self['time']
+        orig_dts = self["time"]
 
         # Get the bounds
         dt_0 = offset.rollback(orig_dts.iloc[0])
@@ -579,9 +584,13 @@ class ScmDataFrameBase(object):
 
         return res
 
-    def interpolate(self, target_times, timeseries_type=ParameterType.POINT_TIMESERIES,
-                    interpolation_type=InterpolationType.LINEAR,
-                    extrapolation_type=ExtrapolationType.NONE) -> ScmDataFrameBase:
+    def interpolate(
+        self,
+        target_times,
+        timeseries_type=ParameterType.POINT_TIMESERIES,
+        interpolation_type=InterpolationType.LINEAR,
+        extrapolation_type=ExtrapolationType.NONE,
+    ) -> ScmDataFrameBase:
         """
         Interpolate the dataframe onto a new time frame
 
@@ -596,13 +605,19 @@ class ScmDataFrameBase(object):
         -------
         A new ScmDataFrame containing the data interpolated onto the target_times grid
         """
-        source_times_openscm = [convert_datetime_to_openscm_time(t) for t in self['time']]
+        source_times_openscm = [
+            convert_datetime_to_openscm_time(t) for t in self["time"]
+        ]
         if isinstance(target_times[0], datetime):
-            target_times_openscm = [convert_datetime_to_openscm_time(t) for t in target_times]
+            target_times_openscm = [
+                convert_datetime_to_openscm_time(t) for t in target_times
+            ]
             target_times_dt = target_times
         else:
             target_times_openscm = target_times
-            target_times_dt = [convert_openscm_time_to_datetime(t) for t in target_times]
+            target_times_dt = [
+                convert_openscm_time_to_datetime(t) for t in target_times
+            ]
 
         timeseries_converter = TimeseriesConverter(
             np.asarray(source_times_openscm),
@@ -617,8 +632,12 @@ class ScmDataFrameBase(object):
 
         res = self.copy()
 
-        res._data = res._data.apply(lambda col: pd.Series(timeseries_converter.convert_from(col.values), index=timeseries_index))
-        res['time'] = timeseries_index
+        res._data = res._data.apply(
+            lambda col: pd.Series(
+                timeseries_converter.convert_from(col.values), index=timeseries_index
+            )
+        )
+        res["time"] = timeseries_index
 
         return res
 
@@ -720,8 +739,10 @@ class ScmDataFrameBase(object):
         -------
 
         """
-        orig_dts = self['time']
-        target_dts = generate_range(orig_dts.iloc[0], orig_dts.iloc[-1], to_offset(rule))
+        orig_dts = self["time"]
+        target_dts = generate_range(
+            orig_dts.iloc[0], orig_dts.iloc[-1], to_offset(rule)
+        )
         return self.interpolate(list(target_dts), **kwargs)
 
     def process_over(self, cols, operation, **kwargs):

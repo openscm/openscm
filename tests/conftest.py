@@ -9,6 +9,7 @@ from os.path import abspath, dirname, join
 import pytest
 import numpy as np
 import pandas as pd
+
 try:
     from pyam import IamDataFrame
 except ImportError:
@@ -22,9 +23,39 @@ from openscm.scmdataframe import ScmDataFrame
 
 TEST_DF_LONG_TIMES = pd.DataFrame(
     [
-        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/yr", 1, 6.0, 6.0],
-        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3, 3.0],
-        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/yr", 2, 7, 7],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario",
+            "World",
+            "Primary Energy",
+            "EJ/yr",
+            1,
+            6.0,
+            6.0,
+        ],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario",
+            "World",
+            "Primary Energy|Coal",
+            "EJ/yr",
+            0.5,
+            3,
+            3.0,
+        ],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario2",
+            "World",
+            "Primary Energy",
+            "EJ/yr",
+            2,
+            7,
+            7,
+        ],
     ],
     columns=[
         "climate_model",
@@ -41,9 +72,39 @@ TEST_DF_LONG_TIMES = pd.DataFrame(
 
 TEST_DF = pd.DataFrame(
     [
-        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy", "EJ/yr", 1, 6.0, 6.0],
-        ["a_model", "a_iam", "a_scenario", "World", "Primary Energy|Coal", "EJ/yr", 0.5, 3, 3.0],
-        ["a_model", "a_iam", "a_scenario2", "World", "Primary Energy", "EJ/yr", 2, 7, 7.0],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario",
+            "World",
+            "Primary Energy",
+            "EJ/yr",
+            1,
+            6.0,
+            6.0,
+        ],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario",
+            "World",
+            "Primary Energy|Coal",
+            "EJ/yr",
+            0.5,
+            3,
+            3.0,
+        ],
+        [
+            "a_model",
+            "a_iam",
+            "a_scenario2",
+            "World",
+            "Primary Energy",
+            "EJ/yr",
+            2,
+            7,
+            7.0,
+        ],
     ],
     columns=[
         "climate_model",
@@ -54,7 +115,7 @@ TEST_DF = pd.DataFrame(
         "unit",
         2005,
         2010,
-        2015
+        2015,
     ],
 )
 
@@ -73,7 +134,7 @@ def test_scm_datetime_df():
         {
             2005: datetime(2005, 6, 17, 12),
             2010: datetime(2010, 1, 3, 0),
-            2015: datetime(2015, 1, 4, 0)
+            2015: datetime(2015, 1, 4, 0),
         },
         axis="columns",
         inplace=True,
@@ -90,7 +151,7 @@ def test_ts():
 @pytest.fixture(scope="function")
 def test_iam_df():
     if IamDataFrame is None:
-        pytest.skip('pyam is not installed')
+        pytest.skip("pyam is not installed")
     yield IamDataFrame(TEST_DF.copy())
 
 
@@ -98,10 +159,18 @@ def test_iam_df():
     scope="function",
     params=[
         {"data": TEST_DF.copy()},
-        pytest.param({"data": IamDataFrame(TEST_DF.copy()).data},
-                     marks=pytest.mark.skipif(IamDataFrame is None, reason='pyam is not available')),
-        pytest.param({"data": IamDataFrame(TEST_DF.copy()).timeseries()},
-                     marks=pytest.mark.skipif(IamDataFrame is None, reason='pyam is not available')),
+        pytest.param(
+            {"data": IamDataFrame(TEST_DF.copy()).data},
+            marks=pytest.mark.skipif(
+                IamDataFrame is None, reason="pyam is not available"
+            ),
+        ),
+        pytest.param(
+            {"data": IamDataFrame(TEST_DF.copy()).timeseries()},
+            marks=pytest.mark.skipif(
+                IamDataFrame is None, reason="pyam is not available"
+            ),
+        ),
         {
             "data": TEST_TS.copy(),
             "columns": {
@@ -118,7 +187,7 @@ def test_iam_df():
 )
 def test_scm_df(request):
     if IamDataFrame is None:
-        pytest.skip('pyam is not installed')
+        pytest.skip("pyam is not installed")
     yield ScmDataFrame(**request.param)
 
 
@@ -149,7 +218,7 @@ def test_processing_scm_df():
 
 @pytest.fixture(scope="module")
 def rcp26():
-    fname = join(dirname(abspath(__file__)), 'test_data', 'rcp26_emissions.csv')
+    fname = join(dirname(abspath(__file__)), "test_data", "rcp26_emissions.csv")
     return ScmDataFrame(fname)
 
 
