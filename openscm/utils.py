@@ -1,14 +1,13 @@
 """
 Utility functions for openscm.
 """
-
+import datetime
 import warnings
-from datetime import datetime
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
 
-OPENSCM_REFERENCE_TIME = datetime(1970, 1, 1, 0, 0, 0)
+OPENSCM_REFERENCE_TIME = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
 
 def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
@@ -34,18 +33,18 @@ def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
     return inp
 
 
-def convert_datetime_to_openscm_time(dt_in: datetime) -> int:
+def convert_datetime_to_openscm_time(dt_in: datetime.datetime) -> int:
     """Convert a datetime.datetime instance to OpenSCM time i.e. seconds since 1970-1-1 00:00:00"""
     return int((dt_in - OPENSCM_REFERENCE_TIME).total_seconds())
 
 
-def convert_openscm_time_to_datetime(oscm_in: int) -> datetime:
+def convert_openscm_time_to_datetime(oscm_in: int) -> datetime.datetime:
     """Convert OpenSCM time to datetime.datetime"""
     return OPENSCM_REFERENCE_TIME + relativedelta(seconds=oscm_in)
 
 
-def round_to_nearest_year(dtin: datetime) -> datetime:
-    """Round a datetime to Jan 1st 00:00:00 of the nearest year
+def round_to_nearest_year(dtin: datetime.datetime) -> datetime.datetime:
+    """Round a datetime.datetime to Jan 1st 00:00:00 of the nearest year
 
         thank you https://stackoverflow.com/a/48108115"""
     dt_start_year = dtin.replace(
@@ -58,7 +57,7 @@ def round_to_nearest_year(dtin: datetime) -> datetime:
         return dt_start_year
 
 
-def is_floatlike(f) -> bool:
+def is_floatlike(f: Any) -> bool:
     """ Checks if input can be cast to a float
 
     This includes strings such as "6.03" which can be cast to a float

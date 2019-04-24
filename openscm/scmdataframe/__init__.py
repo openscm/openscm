@@ -5,14 +5,13 @@ data, easy setting of parameters and stochastic ensemble runs.
 """
 import numpy as np
 import pandas as pd
-from dateutil import parser
 
 from openscm.core import Core, ParameterSet
 from openscm.parameters import ParameterType
 from openscm.units import UnitConverter
 from openscm.utils import convert_openscm_time_to_datetime
 
-from .base import ScmDataFrameBase, IamDataFrame, df_append
+from .base import ScmDataFrameBase, df_append  # noqa: F401
 
 ONE_YEAR_IN_S_INTEGER = int(round(UnitConverter("year", "s").convert_from(1)))
 

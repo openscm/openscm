@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 import copy
-import os
 import datetime
+import os
 from logging import getLogger
-from typing import Dict, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from dateutil import parser
-try:
-    from pyam import IamDataFrame
-except ImportError:
-    IamDataFrame = None
 
 from openscm.core import Core
 from openscm.timeseries_converter import (
@@ -38,6 +34,14 @@ from .filters import (
 )
 from .offsets import generate_range, to_offset
 from .timeindex import TimeIndex
+
+try:
+    from pyam import IamDataFrame
+    from matplotlib.axes import Axes  # matplotlib is dependency of pyam
+except ImportError:
+    IamDataFrame = None
+    Axes = None
+
 
 logger = getLogger(__name__)
 
@@ -191,16 +195,16 @@ class ScmDataFrameBase(object):
 
     def __init__(
         self,
-        data: Union[IamDataFrame, pd.DataFrame, np.ndarray, str],
-        columns: Dict[str, list] = None,
+        data: Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray, str],
+        columns: Union[Dict[str, list], None] = None,
         climate_model: str = "unspecified",
-        **kwargs
+        **kwargs: Any
     ):
         """Initialize an instance of an ScmDataFrameBase
 
         Parameters
         ----------
-        data: IamDataFrame, pd.DataFrame, np.ndarray or string
+        data: ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray or string
             A pd.DataFrame or data file with IAMC-format data columns, or a numpy array of timeseries data if `columns` is specified.
             If a string is passed, data will be attempted to be read from file.
 
@@ -239,7 +243,9 @@ class ScmDataFrameBase(object):
         if columns is not None:
             (_df, _meta) = from_ts(data, **columns)
         elif isinstance(data, ScmDataFrameBase):
-            (_df, _meta) = (data._data.copy(), data._meta.copy())
+            # turn off mypy type checking here as ScmDataFrameBase isn't defined
+            # when mypy does type checking
+            (_df, _meta) = (data._data.copy(), data._meta.copy())  # type: ignore
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             (_df, _meta) = format_data(data.copy())
         else:
@@ -510,17 +516,6 @@ class ScmDataFrameBase(object):
         if not inplace:
             return ret
 
-    def append(self, other, inplace=False, **kwargs):
-        """Appends additional timeseries from a castable object to the current dataframe
-
-        See ``df_append``
-
-        Parameters
-        ----------
-        other: openscm.ScmDataFrame or something which can be cast to ScmDataFrameBase
-        """
-        raise NotImplementedError()
-
     def set_meta(self, meta, name=None, index=None):
         """Add metadata columns as pd.Series, list or value (int/float/str)
 
@@ -596,10 +591,10 @@ class ScmDataFrameBase(object):
 
     def interpolate(
         self,
-        target_times,
-        timeseries_type=ParameterType.POINT_TIMESERIES,
-        interpolation_type=InterpolationType.LINEAR,
-        extrapolation_type=ExtrapolationType.NONE,
+        target_times: List[Union[datetime.datetime, int]],
+        timeseries_type: ParameterType = ParameterType.POINT_TIMESERIES,
+        interpolation_type: InterpolationType = InterpolationType.LINEAR,
+        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
     ) -> ScmDataFrameBase:
         """
         Interpolate the dataframe onto a new time frame
@@ -619,14 +614,20 @@ class ScmDataFrameBase(object):
             convert_datetime_to_openscm_time(t) for t in self["time"]
         ]
         if isinstance(target_times[0], datetime.datetime):
+            # mypy confused about typing of target_times in this block, we must
+            # assume datetime
             target_times_openscm = [
-                convert_datetime_to_openscm_time(t) for t in target_times
+                convert_datetime_to_openscm_time(t)  # type: ignore
+                for t in target_times
             ]
             target_times_dt = target_times
         else:
-            target_times_openscm = target_times
+            # mypy confused about typing of target_times in this block, we must
+            # assume int
+            target_times_openscm = target_times  # type: ignore
             target_times_dt = [
-                convert_openscm_time_to_datetime(t) for t in target_times
+                convert_openscm_time_to_datetime(t)  # type: ignore
+                for t in target_times
             ]
 
         timeseries_converter = TimeseriesConverter(
@@ -649,7 +650,7 @@ class ScmDataFrameBase(object):
         )
         res["time"] = timeseries_index
 
-        return res
+        return type(self)(res)
 
     def resample(self, rule="AS", **kwargs):
         """Resample the time index of the timeseries data onto a custom grid
@@ -842,7 +843,9 @@ class ScmDataFrameBase(object):
 
         return res.set_index(ts.index.names)
 
-    def append(self, other: ScmDataFrameBase, inplace=False, **kwargs):
+    def append(
+        self, other: ScmDataFrameBase, inplace: bool = False, **kwargs: Any
+    ) -> Optional[ScmDataFrameBase]:
         """Appends additional timeseries from a castable object to the current dataframe
 
         See ``df_append``
@@ -893,7 +896,7 @@ class ScmDataFrameBase(object):
 
         return LongIamDataFrame(self.timeseries())
 
-    def to_csv(self, path: str, **kwargs):
+    def to_csv(self, path: str, **kwargs: Any) -> None:
         """Write timeseries data to a csv file
 
         Parameters
@@ -903,7 +906,7 @@ class ScmDataFrameBase(object):
         """
         self.to_iamdataframe().to_csv(path, **kwargs)
 
-    def line_plot(self, x: str = "time", y: str = "value", **kwargs):
+    def line_plot(self, x: str = "time", y: str = "value", **kwargs: Any) -> Axes:
         """Helper to generate line plots of timeseries
 
         See ``pyam.IamDataFrame.line_plot`` for more information
@@ -911,7 +914,7 @@ class ScmDataFrameBase(object):
         """
         return self.to_iamdataframe().line_plot(x, y, **kwargs)
 
-    def scatter(self, x: str, y: str, **kwargs):
+    def scatter(self, x: str, y: str, **kwargs: Any) -> Axes:
         """Plot a scatter chart using metadata columns
 
         see pyam.plotting.scatter() for all available options
@@ -932,7 +935,11 @@ class ScmDataFrameBase(object):
         """
         return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
 
-def df_append(dfs, inplace=False):
+
+def df_append(
+    dfs: List[Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray, str]],
+    inplace: bool = False,
+) -> Optional[ScmDataFrameBase]:
     """
     Append together many dataframes into a single ScmDataFrame
     When appending many dataframes it may be more efficient to call this routine once with a list of ScmDataFrames, then using
@@ -949,40 +956,42 @@ def df_append(dfs, inplace=False):
     ScmDataFrameBase-like object containing the merged data. The resultant class will be determined by the type of the first object
     in dfs
     """
-    dfs = [
+    scm_dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
     ]
-    joint_dfs = [df.copy() for df in dfs]
-    joint_meta = []
+    joint_dfs = [d.copy() for d in scm_dfs]
+    joint_meta = []  # type: List[str]
     for df in joint_dfs:
         joint_meta += df.meta.columns.tolist()
 
-    joint_meta = set(joint_meta)
+    joint_meta_set = set(joint_meta)
 
     # should probably solve this https://github.com/pandas-dev/pandas/issues/3729
     na_fill_value = -999
     for i, _ in enumerate(joint_dfs):
-        for col in joint_meta:
+        for col in joint_meta_set:
             if col not in joint_dfs[i].meta:
                 joint_dfs[i].set_meta(na_fill_value, name=col)
 
     # we want to put data into timeseries format and pass into format_ts instead of format_data
     data = pd.concat(
-        [d.timeseries().reorder_levels(joint_meta) for d in joint_dfs], sort=False
+        [d.timeseries().reorder_levels(joint_meta_set) for d in joint_dfs], sort=False
     )
 
     data = data.reset_index()
-    data[list(joint_meta)] = data[joint_meta].replace(
+    data[list(joint_meta_set)] = data[joint_meta_set].replace(
         to_replace=np.nan, value=na_fill_value
     )
-    data = data.set_index(list(joint_meta))
+    data = data.set_index(list(joint_meta_set))
 
     data = data.groupby(data.index.names).mean()
 
-    if not inplace:
-        ret = dfs[0].copy()
-    else:
+    if inplace:
+        if not isinstance(dfs[0], ScmDataFrameBase):
+            raise AssertionError("Can only append inplace to an ScmDataFrameBase")
         ret = dfs[0]
+    else:
+        ret = scm_dfs[0].copy()
 
     ret._data = data.reset_index(drop=True).T
     ret._data = ret._data.sort_index()
@@ -996,5 +1005,7 @@ def df_append(dfs, inplace=False):
     )
     ret._sort_meta_cols()
 
-    if not inplace:
+    if inplace:
+        return None
+    else:
         return ret
