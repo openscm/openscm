@@ -6,10 +6,12 @@ models
 """
 import functools
 from datetime import datetime
+from typing import Any, Iterable
 
 from pandas.tseries.frequencies import to_offset as pd_to_offset
 from pandas.tseries.offsets import (
     BusinessMixin,
+    DateOffset,
     NaT,
     as_datetime,
     conversion,
@@ -25,7 +27,7 @@ def apply_dt(func, self):
     """
 
     @functools.wraps(func)
-    def wrapper(other: datetime) -> datetime:
+    def wrapper(other: datetime) -> Any:
         if other is NaT:
             return NaT
 
@@ -109,7 +111,9 @@ def to_offset(rule):
     return offset
 
 
-def generate_range(start: datetime, end: datetime, offset):
+def generate_range(
+    start: datetime, end: datetime, offset: DateOffset
+) -> Iterable[datetime]:
     """
     Generates a range of datetime objects between start and end, using offset to determine the steps
 
@@ -141,7 +145,7 @@ def generate_range(start: datetime, end: datetime, offset):
         next_current = offset.apply(current)
         if next_current <= current:
             raise ValueError(
-                "Offset is not increasing datetime: {}".format(current.isotime())
+                "Offset is not increasing datetime: {}".format(current.isoformat())
             )
 
         current = next_current

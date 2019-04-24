@@ -178,7 +178,7 @@ def test_as_iam(test_iam_df, test_pd_df):
     pd.testing.assert_frame_equal(test_iam_df.data, tdf, check_like=True)
 
 
-@mock.patch("openscm.scmdataframe.IamDataFrame", None)
+@mock.patch("openscm.scmdataframe.base.IamDataFrame", None)
 def test_pyam_missing(test_scm_df):
     with pytest.raises(ImportError):
         test_scm_df.to_iamdataframe()
