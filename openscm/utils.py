@@ -34,7 +34,7 @@ def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
 
 
 def convert_datetime_to_openscm_time(dt_in: datetime.datetime) -> int:
-    """Convert a datetime.datetime instance to OpenSCM time i.e. seconds since 1970-1-1 00:00:00"""
+    """Convert a datetime.datetime instance to OpenSCM time i.e. seconds since OPENSCM_REFERENCE_TIME"""
     return int((dt_in - OPENSCM_REFERENCE_TIME).total_seconds())
 
 
@@ -44,9 +44,11 @@ def convert_openscm_time_to_datetime(oscm_in: int) -> datetime.datetime:
 
 
 def round_to_nearest_year(dtin: datetime.datetime) -> datetime.datetime:
-    """Round a datetime.datetime to Jan 1st 00:00:00 of the nearest year
+    """
+    Round a datetime.datetime to Jan 1st 00:00:00 of the nearest year
 
-        thank you https://stackoverflow.com/a/48108115"""
+    thank you https://stackoverflow.com/a/48108115
+    """
     dt_start_year = dtin.replace(
         month=1, day=1, minute=0, hour=0, second=0, microsecond=0
     )
@@ -58,7 +60,8 @@ def round_to_nearest_year(dtin: datetime.datetime) -> datetime.datetime:
 
 
 def is_floatlike(f: Any) -> bool:
-    """ Checks if input can be cast to a float
+    """
+    Check if input can be cast to a float
 
     This includes strings such as "6.03" which can be cast to a float
 
@@ -66,9 +69,10 @@ def is_floatlike(f: Any) -> bool:
     ----------
     f
         Input
+
     Returns
     -------
-    True if f can be cast to a float
+        True if f can be cast to a float
     """
     if isinstance(f, (int, float)):
         return True

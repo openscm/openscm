@@ -481,7 +481,7 @@ class ScmDataFrameBase(object):
 
             else:
                 raise ValueError("filter by `{}` not supported".format(col))
-
+        # TODO: rename keep_col to keep_meta
         return keep_ts, keep_col
 
     def head(self, *args, **kwargs):
