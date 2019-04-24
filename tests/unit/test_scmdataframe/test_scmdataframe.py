@@ -12,12 +12,10 @@ from pandas.errors import UnsupportedFunctionCall
 
 from openscm.scmdataframe import (
     ScmDataFrame,
-    convert_core_to_scmdataframe,
     df_append,
-    ONE_YEAR_IN_S_INTEGER,
 )
-from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_year
-from openscm.timeseries_converter import ExtrapolationType, ParameterType
+from openscm.utils import convert_datetime_to_openscm_time
+from openscm.timeseries_converter import ExtrapolationType
 
 from conftest import assert_core, IamDataFrame
 
@@ -1287,35 +1285,36 @@ def test_scmdataframe_to_core_raises(test_scm_df):
     with pytest.raises(ValueError, match="Not all timeseries have identical metadata"):
         test_scm_df.to_core()
 
-    core = test_scm_df.filter(scenario="a_scenario2").to_core()
-    pass
+    # make sure single scenario passes
+    test_scm_df.filter(scenario="a_scenario2").to_core()
 
 
 @pytest.mark.skip
 def test_convert_core_to_scmdataframe(rcp26):
-    tdata = rcp26
+    pass  # uncomment when ready (flake8 complains about undefined stuff)
+    # tdata = rcp26
 
-    intermediate = convert_scmdataframe_to_core(tdata)
+    # intermediate = convert_scmdataframe_to_core(tdata)
 
-    res = convert_core_to_scmdataframe(
-        intermediate,
-        period_length=ONE_YEAR_IN_S_INTEGER,
-        model="IMAGE",
-        scenario="RCP26",
-        climate_model="unspecified",
-    )
+    # res = convert_core_to_scmdataframe(
+    #     intermediate,
+    #     period_length=ONE_YEAR_IN_S_INTEGER,
+    #     model="IMAGE",
+    #     scenario="RCP26",
+    #     climate_model="unspecified",
+    # )
 
-    # necessary as moving from even timesteps in seconds does not match perfectly with
-    # yearly timesteps (which are not always the same number of seconds apart due to
-    # leap years)
-    tdata["time"] = tdata["time"].apply(round_to_nearest_year)
-    res["time"] = res["time"].apply(round_to_nearest_year)
+    # # necessary as moving from even timesteps in seconds does not match perfectly with
+    # # yearly timesteps (which are not always the same number of seconds apart due to
+    # # leap years)
+    # tdata["time"] = tdata["time"].apply(round_to_nearest_year)
+    # res["time"] = res["time"].apply(round_to_nearest_year)
 
-    pd.testing.assert_frame_equal(
-        tdata.timeseries().reset_index(),
-        res.timeseries().reset_index(),
-        check_like=True,
-    )
+    # pd.testing.assert_frame_equal(
+    #     tdata.timeseries().reset_index(),
+    #     res.timeseries().reset_index(),
+    #     check_like=True,
+    # )
 
 
 def test_resample(test_scm_df):

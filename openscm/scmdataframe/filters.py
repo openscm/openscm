@@ -24,20 +24,32 @@ def is_in(vals: np.array, items: list) -> np.array:
 def find_depth(data, s, level):
     # determine function for finding depth level =, >=, <= |s
     if not is_str(level):
-        test = lambda x: level == x
+
+        def test(x):
+            return level == x
+
     elif level[-1] == "-":
         level = int(level[:-1])
-        test = lambda x: level >= x
+
+        def test(x):
+            return level >= x
+
     elif level[-1] == "+":
         level = int(level[:-1])
-        test = lambda x: level <= x
+
+        def test(x):
+            return level <= x
+
     else:
         raise ValueError("Unknown level type: {}".format(level))
 
     # determine depth
     pipe = re.compile("\\|")
     regexp = str(s).replace("*", "")
-    apply_test = lambda val: test(len(pipe.findall(val.replace(regexp, ""))))
+
+    def apply_test(val):
+        return test(len(pipe.findall(val.replace(regexp, ""))))
+
     return list(map(apply_test, data))
 
 
@@ -60,11 +72,11 @@ def pattern_match(data, values, level=None, regexp=False, has_nan=True):
             _regexp = (
                 str(s)
                 .replace("|", "\\|")
-                .replace(".", "\.")  # `.` has to be replaced before `*`
+                .replace(".", r"\.")  # `.` has to be replaced before `*`
                 .replace("*", ".*")
-                .replace("+", "\+")
-                .replace("(", "\(")
-                .replace(")", "\)")
+                .replace("+", r"\+")
+                .replace("(", r"\(")
+                .replace(")", r"\)")
                 .replace("$", "\\$")
             ) + "$"
             pattern = re.compile(_regexp if not regexp else s)

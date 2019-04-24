@@ -112,11 +112,11 @@ def format_data(df):
                 try:
                     try:
                         # most common format
-                        d = datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
+                        datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
                         time_cols = True
                     except ValueError:
                         # this is super slow so avoid if possible
-                        d = parser.parse(str(i))  # this is datetime
+                        parser.parse(str(i))  # if no ValueError, this is datetime
                         time_cols = True
                 except ValueError:
                     extra_cols.append(i)  # some other string
@@ -259,9 +259,9 @@ class ScmDataFrameBase(object):
 
     def __getitem__(self, key):
         _key_check = [key] if is_str(key) else key
-        if key is "time":
+        if key == "time":
             return pd.Series(self._time_index.as_pd_index(), dtype="object")
-        elif key is "year":
+        elif key == "year":
             return pd.Series(self._time_index.years())
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
@@ -271,7 +271,7 @@ class ScmDataFrameBase(object):
     def __setitem__(self, key, value):
         _key_check = [key] if is_str(key) else key
 
-        if key is "time":
+        if key == "time":
             self._time_index = TimeIndex(py_dt=value)
             self._data.index = self._time_index.as_pd_index()
             return value
