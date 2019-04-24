@@ -378,7 +378,8 @@ class ScmDataFrameBase(object):
         """
         _keep_ts, _keep_cols = self._apply_filters(kwargs)
         idx = _keep_ts[:, np.newaxis] & _keep_cols
-        assert idx.shape == self._data.shape
+        if not idx.shape == self._data.shape:
+            raise AssertionError("Index shape does not match data shape")
         idx = idx if keep else ~idx
 
         ret = self.copy() if not inplace else self
@@ -387,7 +388,8 @@ class ScmDataFrameBase(object):
         ret._meta = ret._meta[(~d.isna()).sum(axis=0) > 0]
         ret["time"] = ret._data.index.values
 
-        assert len(ret._data.columns) == len(ret._meta)
+        if not (len(ret._data.columns) == len(ret._meta)):
+            raise AssertionError("Data and meta have become unaligned")
 
         if len(ret._meta) == 0:
             logger.warning("Filtered ScmDataFrame is empty!")

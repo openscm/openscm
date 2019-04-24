@@ -176,7 +176,8 @@ def convert_core_to_scmdataframe(
             if time_in is None:
                 time_in = time
             else:
-                assert (time_in == time).all()
+                if not (time_in == time).all():
+                    raise AssertionError("Time axes do not match")
 
             ts_in.append(values)
             ch_in["unit"].append(unit)
@@ -213,7 +214,6 @@ def convert_core_to_scmdataframe(
 
 
 def convert_config_dict_to_parameter_set(config):
-    assert isinstance(config, dict)
     parameters = ParameterSet()
     for key, (region, value) in config.items():
         view = parameters.get_writable_scalar_view(key, region, str(value.units))

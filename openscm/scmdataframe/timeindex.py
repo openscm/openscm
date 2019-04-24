@@ -67,7 +67,11 @@ class TimeIndex(object):
     """
 
     def __init__(self, py_dt=None, openscm_dt=None):
-        assert py_dt is not None or openscm_dt is not None, "Can only pass either python datetimes or openscm datetimes"
+        if not (py_dt is not None or openscm_dt is not None):
+            raise AssertionError(
+                "Can only pass either python datetimes or openscm datetimes"
+            )
+
         if py_dt is not None:
             py_dt = _format_datetime(np.asarray(py_dt))
             object.__setattr__(self, '_py', np.asarray(py_dt))
