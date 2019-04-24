@@ -10,7 +10,6 @@ from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
-from tests.conftest import assert_core
 from openscm.scmdataframe import (
     ScmDataFrame,
     convert_core_to_scmdataframe,
@@ -20,6 +19,7 @@ from openscm.scmdataframe import (
 from openscm.utils import convert_datetime_to_openscm_time, round_to_nearest_year
 from openscm.timeseries_converter import ExtrapolationType, ParameterType
 
+from conftest import assert_core, IamDataFrame
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
     res = ScmDataFrame(test_pd_df)
@@ -158,8 +158,7 @@ def test_init_self(test_iam_df):
 def test_as_iam(test_iam_df, test_pd_df):
     df = ScmDataFrame(test_pd_df).to_iamdataframe()
 
-    # test_iam_df would have already skipped test if pyam isn't installed
-    IamDataFrame = pytest.importorskip("pyam.IamDataFrame")
+    # test is skipped by test_iam_df fixture if pyam isn't installed
     assert isinstance(df, IamDataFrame)
 
     pd.testing.assert_frame_equal(test_iam_df.meta, df.meta)
