@@ -3,7 +3,7 @@ from types import GeneratorType
 
 import pytest
 
-from openscm.scmdataframe.offsets import to_offset, generate_range
+from openscm.scmdataframe.offsets import generate_range, to_offset
 
 
 @pytest.mark.parametrize(

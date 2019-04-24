@@ -6,18 +6,14 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
+from conftest import IamDataFrame, assert_core
 from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
-from openscm.scmdataframe import (
-    ScmDataFrame,
-    df_append,
-)
-from openscm.utils import convert_datetime_to_openscm_time
+from openscm.scmdataframe import ScmDataFrame, df_append
 from openscm.timeseries_converter import ExtrapolationType
-
-from conftest import assert_core, IamDataFrame
+from openscm.utils import convert_datetime_to_openscm_time
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):

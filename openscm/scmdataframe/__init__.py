@@ -13,6 +13,7 @@ from openscm.core import Core, ParameterSet
 from openscm.parameters import ParameterType
 from openscm.units import UnitConverter
 from openscm.utils import convert_openscm_time_to_datetime
+
 from .base import ScmDataFrameBase
 
 try:

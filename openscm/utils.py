@@ -3,10 +3,10 @@ Utility functions for openscm.
 """
 
 import warnings
-from typing import Tuple, Union
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from typing import Tuple, Union
 
+from dateutil.relativedelta import relativedelta
 
 OPENSCM_REFERENCE_TIME = datetime(1970, 1, 1, 0, 0, 0)
 

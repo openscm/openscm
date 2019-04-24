@@ -6,19 +6,19 @@ from collections import namedtuple
 from datetime import datetime
 from os.path import abspath, dirname, join
 
-import pytest
 import numpy as np
 import pandas as pd
-
-try:
-    from pyam import IamDataFrame
-except ImportError:
-    IamDataFrame = None
+import pytest
 
 from openscm import timeseries_converter
 from openscm.core import ParameterSet
 from openscm.parameters import ParameterType
 from openscm.scmdataframe import ScmDataFrame
+
+try:
+    from pyam import IamDataFrame
+except ImportError:
+    IamDataFrame = None
 
 
 TEST_DF_LONG_TIMES = pd.DataFrame(

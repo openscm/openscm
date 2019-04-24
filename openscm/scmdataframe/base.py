@@ -11,24 +11,25 @@ from dateutil import parser
 
 from openscm.core import Core
 from openscm.timeseries_converter import (
-    TimeseriesConverter,
-    ParameterType,
-    InterpolationType,
     ExtrapolationType,
+    InterpolationType,
+    ParameterType,
+    TimeseriesConverter,
 )
 from openscm.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,
     is_floatlike,
 )
+
 from .filters import (
-    years_match,
-    month_match,
-    day_match,
     datetime_match,
+    day_match,
     hour_match,
-    pattern_match,
     is_str,
+    month_match,
+    pattern_match,
+    years_match,
 )
 from .offsets import generate_range, to_offset
 from .timeindex import TimeIndex
