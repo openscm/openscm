@@ -3,13 +3,7 @@ The OpenSCM high-level API provides high-level functionality around
 single model runs.  This includes reading/writing input and output
 data, easy setting of parameters and stochastic ensemble runs.
 """
-# import numpy as np
-# import pandas as pd
-
-# from openscm.core import Core, ParameterSet
-# from openscm.parameters import ParameterType
 from openscm.units import UnitConverter
-# from openscm.utils import convert_openscm_time_to_datetime
 
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
@@ -31,6 +25,14 @@ class ScmDataFrame(ScmDataFrameBase):
 
 
 # TODO: decide what to do about this legacy code
+# import numpy as np
+# import pandas as pd
+
+# from openscm.core import Core, ParameterSet
+# from openscm.parameters import ParameterType
+
+# from openscm.utils import convert_openscm_time_to_datetime
+
 # def convert_core_to_scmdataframe(
 #     core: Core,
 #     period_length: int = ONE_YEAR_IN_S_INTEGER,
