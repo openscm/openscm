@@ -1,3 +1,6 @@
+"""
+Base and utilities for OpenSCM's custom DataFrame implementation.
+"""
 from __future__ import annotations
 
 import copy
@@ -42,9 +45,16 @@ logger = getLogger(__name__)
 REQUIRED_COLS = ["model", "scenario", "region", "variable", "unit"]
 
 
-def read_files(fnames, *args, **kwargs):
+def _read_file(
+    fnames: str, *args: Any, **kwargs: Any
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Read data from a snapshot file saved in the standard IAMC format or a table with year/value columns
+    Prepare data to initialise ``ScmDataFrameBase`` from a file
+
+    Returns
+    -------
+    :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
+        First dataframe is the data. Second dataframe is metadata
     """
     if not is_str(fnames):
         raise ValueError(
@@ -52,11 +62,14 @@ def read_files(fnames, *args, **kwargs):
             "please use `openscm.ScmDataFrame.append()`"
         )
     logger.info("Reading `{}`".format(fnames))
-    return format_data(read_pandas(fnames, *args, **kwargs))
+
+    return _format_data(_read_pandas(fnames, *args, **kwargs))
 
 
-def read_pandas(fname, *args, **kwargs):
-    """Read a file and return a pd.DataFrame"""
+def _read_pandas(fname: str, *args: Any, **kwargs: Any) -> pd.DataFrame:
+    """
+    Read a file and return a pd.DataFrame
+    """
     if not os.path.exists(fname):
         raise ValueError("no data file `{}` found!".format(fname))
     if fname.endswith("csv"):
@@ -66,11 +79,23 @@ def read_pandas(fname, *args, **kwargs):
         if len(xl.sheet_names) > 1 and "sheet_name" not in kwargs:
             kwargs["sheet_name"] = "data"
         df = pd.read_excel(fname, *args, **kwargs)
+
     return df
 
 
-def format_data(df):
-    """Convert an imported dataframe and check all required columns"""
+def _format_data(
+    df: Union[pd.DataFrame, pd.Series]
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Prepare data to initialise ``ScmDataFrameBase`` from ``pd.DataFrame`` or ``pd.Series``
+
+    See docstring of ``ScmDataFrameBase.__init__`` for details.
+
+    Returns
+    -------
+    :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
+        First dataframe is the data. Second dataframe is metadata
+    """
     if isinstance(df, pd.Series):
         df = df.to_frame()
 
@@ -139,7 +164,19 @@ def format_data(df):
     return df, meta
 
 
-def from_ts(df, index=None, **columns):
+def _from_ts(
+    df: Any, index: Any = None, **columns: List[str]
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Prepare data to initialise ``ScmDataFrameBase`` from wide timeseries
+
+    See docstring of ``ScmDataFrameBase.__init__`` for details.
+
+    Returns
+    -------
+    :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
+        First dataframe is the data. Second dataframe is metadata
+    """
     if not isinstance(df, pd.DataFrame):
         df = pd.DataFrame(df)
     if index is not None:
@@ -167,6 +204,7 @@ def from_ts(df, index=None, **columns):
         columns[c_name] = col * num_ts
 
     meta = pd.DataFrame(columns, index=df.columns)
+
     return df, meta
 
 
@@ -190,8 +228,8 @@ class ScmDataFrameBase(object):
     def __init__(
         self,
         data: Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray, str],
+        index: Any = None,
         columns: Union[Dict[str, list], None] = None,
-        climate_model: str = "unspecified",
         **kwargs: Any
     ):
         """
@@ -199,15 +237,26 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        data: ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray or string
-            A pd.DataFrame or data file with IAMC-format data columns, or a numpy array of timeseries data if `columns` is specified.
-            If a string is passed, data will be attempted to be read from file.
+        data
+            A pd.DataFrame or data file with IAMC-format data columns, or a numpy
+            array of timeseries data if `columns` is specified. If a string is passed,
+            data will be attempted to be read from file.
 
-        columns: dict
-            If None, ScmDataFrameBase will attempt to infer the values from the source.
-            Otherwise, use this dict to write the metadata for each timeseries in data. For each metadata key (e.g. "model", "scenario"), an array of values (one per time series) is expected.
-            Alternatively, providing an array of length 1 applies the same value to all timeseries in data. For example, if you had three
-            timeseries from 'rcp26' for 3 different models 'model', 'model2' and 'model3', the column dict would look like either `col_1` or `col_2`:
+        index
+            Only used if ``columns is not None``. If ``index is not None`` too then
+            this value sets the time index of the ``ScmDataFrameBase`` instance. If
+            ``index is None`` and `columns is not None``, the index is taken from
+            ``data``.
+
+        columns
+            If None, ScmDataFrameBase will attempt to infer the values from the
+            source. Otherwise, use this dict to write the metadata for each timeseries
+            in data. For each metadata key (e.g. "model", "scenario"), an array of
+            values (one per time series) is expected. Alternatively, providing a
+            list of length 1 applies the same value to all timeseries in data. For
+            example, if you had three timeseries from 'rcp26' for 3 different models
+            'model', 'model2' and 'model3', the column dict would look like either
+            `col_1` or `col_2`:
 
             .. code:: python
 
@@ -230,25 +279,31 @@ class ScmDataFrameBase(object):
                     ScmDataFrameBase(d, columns=col_2).meta
                 )
 
-            Metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is required, otherwise a ValueError will be raised.
+        **kwargs:
+            Additional parameters passed to `pyam.core._read_file` to read files
 
-        kwargs:
-            Additional parameters passed to `pyam.core.read_files` to read nonstandard files
+        Raises
+        ------
+        ValueError
+            If metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is not
+            found.
         """
         if columns is not None:
-            (_df, _meta) = from_ts(data, **columns)
+            (_df, _meta) = _from_ts(data, index=index, **columns)
         elif isinstance(data, ScmDataFrameBase):
             # turn off mypy type checking here as ScmDataFrameBase isn't defined
             # when mypy does type checking
             (_df, _meta) = (data._data.copy(), data._meta.copy())  # type: ignore
         elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
-            (_df, _meta) = format_data(data.copy())
+            (_df, _meta) = _format_data(data.copy())
         else:
             if isinstance(data, IamDataFrame):
-                # It might be a IamDataFrame?
-                (_df, _meta) = format_data(data.data.copy())
+                (_df, _meta) = _format_data(data.data.copy())
             else:
-                (_df, _meta) = read_files(data, **kwargs)
+                if not is_str(data):
+                    error_msg = "Cannot load {} from {}".format(type(self), type(data))
+                    raise TypeError(error_msg)
+                (_df, _meta) = _read_file(data, **kwargs)
         self._time_index = TimeIndex(py_dt=_df.index.values)
         _df.index = self._time_index.as_pd_index()
         _df = _df.astype(float)
@@ -257,6 +312,12 @@ class ScmDataFrameBase(object):
         self._sort_meta_cols()
 
     def copy(self):
+        """
+        Return a deepcopy of self
+
+        Documentation about deepcopy is available
+        `here <https://docs.python.org/2/library/copy.html#copy.deepcopy>`_.
+        """
         return copy.deepcopy(self)
 
     def _sort_meta_cols(self):
@@ -265,10 +326,20 @@ class ScmDataFrameBase(object):
             REQUIRED_COLS + sorted(list(set(self._meta.columns) - set(REQUIRED_COLS)))
         ]
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Get the number of timeseries.
+        """
         return len(self._meta)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
+        """
+        Get item of self with helpful direct access.
+
+        Provides direct access to "time", "year" as well as the columns in
+        ``self.meta``. If key is anything else, the key will be applied to
+        ``self._data``.
+        """
         _key_check = [key] if is_str(key) else key
         if key == "time":
             return pd.Series(self._time_index.as_pd_index(), dtype="object")
@@ -279,10 +350,17 @@ class ScmDataFrameBase(object):
         else:
             return self._data.__getitem__(key)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> Any:
+        """
+        Set item of self with helpful direct access.
+
+        Provides direct access to set "time" as well as the columns in
+        ``self.meta``.
+        """
         _key_check = [key] if is_str(key) else key
 
         if key == "time":
+            # TODO: double check if this will actually do what we want
             self._time_index = TimeIndex(py_dt=value)
             self._data.index = self._time_index.as_pd_index()
             return value
@@ -1055,7 +1133,7 @@ def df_append(
             if col not in joint_dfs[i].meta:
                 joint_dfs[i].set_meta(na_fill_value, name=col)
 
-    # we want to put data into timeseries format and pass into format_ts instead of format_data
+    # we want to put data into timeseries format and pass into format_ts instead of _format_data
     data = pd.concat(
         [d.timeseries().reorder_levels(joint_meta_set) for d in joint_dfs], sort=False
     )

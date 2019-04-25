@@ -174,7 +174,6 @@ def test_iam_df():
         {
             "data": TEST_TS.copy(),
             "columns": {
-                "index": [2005, 2010, 2015],
                 "model": ["a_iam"],
                 "climate_model": ["a_model"],
                 "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
@@ -182,6 +181,7 @@ def test_iam_df():
                 "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
                 "unit": ["EJ/yr"],
             },
+            "index": [2005, 2010, 2015],
         },
     ],
 )
@@ -196,11 +196,6 @@ def test_processing_scm_df():
     yield ScmDataFrame(
         data=np.array([[1, 6.0, 7], [0.5, 3, 2], [2, 7, 0], [-1, -2, 3]]).T,
         columns={
-            "index": [
-                datetime(2005, 1, 1),
-                datetime(2010, 1, 1),
-                datetime(2015, 6, 12),
-            ],
             "model": ["a_iam"],
             "climate_model": ["a_model"],
             "scenario": ["a_scenario", "a_scenario", "a_scenario2", "a_scenario3"],
@@ -213,6 +208,7 @@ def test_processing_scm_df():
             ],
             "unit": ["EJ/yr"],
         },
+        index=[datetime(2005, 1, 1), datetime(2010, 1, 1), datetime(2015, 6, 12)],
     )
 
 

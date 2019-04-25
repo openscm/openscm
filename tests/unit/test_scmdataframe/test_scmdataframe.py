@@ -45,7 +45,6 @@ def test_init_ts(test_ts, test_pd_df):
     df = ScmDataFrame(
         test_ts,
         columns={
-            "index": [2005, 2010, 2015],
             "model": ["a_iam"],
             "climate_model": ["a_model"],
             "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
@@ -53,6 +52,7 @@ def test_init_ts(test_ts, test_pd_df):
             "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
             "unit": ["EJ/yr"],
         },
+        index=[2005, 2010, 2015],
     )
 
     tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
