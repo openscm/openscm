@@ -17,7 +17,8 @@ ONE_YEAR_IN_S_INTEGER = int(round(UnitConverter("year", "s").convert_from(1)))
 
 
 class ScmDataFrame(ScmDataFrameBase):
-    """OpenSCM's custom DataFrame implementation.
+    """
+    OpenSCM's custom DataFrame implementation.
 
     The ScmDataFrame implements a subset of the functionality provided by `pyam`'s
     IamDataFrame, but is focused on the providing a performant way of storing

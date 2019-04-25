@@ -1,6 +1,7 @@
 import copy
 import datetime
 import re
+import sys
 from unittest import mock
 
 import numpy as np
@@ -178,10 +179,30 @@ def test_as_iam(test_iam_df, test_pd_df):
     pd.testing.assert_frame_equal(test_iam_df.data, tdf, check_like=True)
 
 
-@mock.patch("openscm.scmdataframe.base.IamDataFrame", None)
+@mock.patch("openscm.scmdataframe.base.LongDatetimeIamDataFrame", None)
 def test_pyam_missing(test_scm_df):
     with pytest.raises(ImportError):
         test_scm_df.to_iamdataframe()
+
+
+def test_pyam_missing_loading():
+    print([k for k in sys.modules.keys() if "pyam" in k])
+    print([k for k in sys.modules.keys() if "IamDataFrame" in k])
+    with mock.patch.dict(sys.modules, {"pyam": None}):
+        # not sure whether deleting like this is fine because of the context manager
+        # or a terrible idea...
+        del sys.modules["openscm.scmdataframe.pyam_compat"]
+        from openscm.scmdataframe.pyam_compat import IamDataFrame as res
+        from openscm.scmdataframe.pyam_compat import Axes as res_2
+        from openscm.scmdataframe.pyam_compat import LongDatetimeIamDataFrame as res_3
+
+        assert all([r is None for r in [res, res_2, res_3]])
+
+    from openscm.scmdataframe.pyam_compat import IamDataFrame as res
+    from openscm.scmdataframe.pyam_compat import Axes as res_2
+    from openscm.scmdataframe.pyam_compat import LongDatetimeIamDataFrame as res_3
+
+    assert all([r is not None for r in [res, res_2, res_3]])
 
 
 def test_get_item(test_scm_df):

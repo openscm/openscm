@@ -39,6 +39,7 @@ Schema
     adapter
     errors
     units
+    scmdataframe
 
 .. toctree::
     :maxdepth: 2

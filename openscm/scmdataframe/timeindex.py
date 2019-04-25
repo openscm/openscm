@@ -27,6 +27,7 @@ def to_int(x: NumpyArray) -> NumpyArray:
 
     Returns
     -------
+    :obj:`np.array` of :obj:`int`
         Input, converted to int
 
     Raises
@@ -168,8 +169,14 @@ class TimeIndex(object):
 
         Returns
         -------
+        :obj:`np.array` of :obj:`int`
             Datetime representation of each time point
         """
+        # TODO: put this in issue. I wonder if there's a way to fix our autodocs so
+        # that we can have a 'Returns' section in our docstring but have the type
+        # filled automatically with Sphinx. At the moment we have to do the type
+        # annotations twice, once in the function signature and once in the docstrings.
+
         # mypy isn't smart enough to work out ``._py`` attribute exists
         return self._openscm  # type: ignore
 
@@ -179,6 +186,7 @@ class TimeIndex(object):
 
         Returns
         -------
+        :obj:`np.array` of :obj:`datetime.datetime`
             Datetime representation of each time point
         """
         # mypy isn't smart enough to work out ``._py`` attribute exists

@@ -4,11 +4,12 @@ import copy
 import datetime
 import os
 from logging import getLogger
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from dateutil import parser
+from nptyping import Array as NumpyArray
 
 from openscm.core import Core
 from openscm.timeseries_converter import (
@@ -33,15 +34,8 @@ from .filters import (
     years_match,
 )
 from .offsets import generate_range, to_offset
+from .pyam_compat import Axes, IamDataFrame, LongDatetimeIamDataFrame
 from .timeindex import TimeIndex
-
-try:
-    from pyam import IamDataFrame
-    from matplotlib.axes import Axes  # matplotlib is dependency of pyam
-except ImportError:
-    IamDataFrame = None
-    Axes = None
-
 
 logger = getLogger(__name__)
 
@@ -49,8 +43,8 @@ REQUIRED_COLS = ["model", "scenario", "region", "variable", "unit"]
 
 
 def read_files(fnames, *args, **kwargs):
-    """Read data from a snapshot file saved in the standard IAMC format
-    or a table with year/value columns
+    """
+    Read data from a snapshot file saved in the standard IAMC format or a table with year/value columns
     """
     if not is_str(fnames):
         raise ValueError(
@@ -177,20 +171,20 @@ def from_ts(df, index=None, **columns):
 
 
 class ScmDataFrameBase(object):
-    """This base is the class other libraries can subclass
+    """
+    Base of OpenSCM's custom DataFrame implementation.
 
-    Having such a subclass avoids a potential circularity where e.g. openscm imports
-    ScmDataFrame as well as Pymagicc, but Pymagicc wants to import ScmDataFrame and
-    hence to try and import ScmDataFrame you have to import ScmDataFrame itself (hence
-    the circularity).
+    This base is the class other libraries can subclass. Having such a subclass avoids
+    a potential circularity where e.g. openscm imports ScmDataFrame as well as
+    Pymagicc, but Pymagicc wants to import ScmDataFrame and hence to try and import
+    ScmDataFrame you have to import ScmDataFrame itself (hence the circularity).
     """
 
-    DATA_HIERARCHY_SEPARATOR = "|"
+    data_hierarchy_separator = "|"
     """str: String used to define different levels in our data hierarchies.
 
-    For example, "Emissions|CO2|Energy|Coal".
-
-    We copy this straight from pyam
+    By default we follow pyam and use "|". In such a case, emissions of CO2 for energy
+    from coal would be "Emissions|CO2|Energy|Coal".
     """
 
     def __init__(
@@ -200,7 +194,8 @@ class ScmDataFrameBase(object):
         climate_model: str = "unspecified",
         **kwargs: Any
     ):
-        """Initialize an instance of an ScmDataFrameBase
+        """
+        Initialize an instance of an ScmDataFrameBase
 
         Parameters
         ----------
@@ -294,17 +289,22 @@ class ScmDataFrameBase(object):
         if set(_key_check).issubset(self.meta.columns):
             return self._meta.__setitem__(key, value)
 
-    def to_core(self, climate_model: str = "unspecified") -> Core:
-        """Convert a DataFrame to a Core object
+    def to_core(self) -> Core:
+        """
+        Convert ``self`` to a ``Core`` object
 
-        A ScmDataFrame can only be converted to a core object if all timeseries have the same metadata. This is typically the case
-        if all output comes from a single model run. If that is not the case, further filtering is needed to reduce
-        to a dataframe with identical metadata.
+        An ``ScmDataFrameBase`` can only be converted to a core object if all
+        timeseries have the same metadata. This is typically the case if all output
+        comes from a single model run. If that is not the case, further filtering is
+        needed to reduce to a dataframe with identical metadata.
 
         Raises
         ------
         ValueError
             Not all timeseries have the same metadata
+
+        KeyError
+            ``climate_model`` is not a column of ``self.meta`` [TODO: test this]
         """
         meta_values = self._meta.drop(
             ["variable", "region", "unit"], axis=1
@@ -312,8 +312,8 @@ class ScmDataFrameBase(object):
         if len(meta_values) > 1:
             raise ValueError("Not all timeseries have identical metadata")
         meta_values = meta_values.squeeze()
-        if "climate_model" in meta_values:
-            climate_model = meta_values.pop("climate_model")
+
+        climate_model = meta_values.pop("climate_model")
 
         core = Core(climate_model, self.time_points.min(), self.time_points.max())
 
@@ -324,8 +324,8 @@ class ScmDataFrameBase(object):
             region = metadata.pop("region")
             unit = metadata.pop("unit")
 
-            variable_openscm = tuple(variable.split(self.DATA_HIERARCHY_SEPARATOR))
-            region_openscm = tuple(region.split(self.DATA_HIERARCHY_SEPARATOR))
+            variable_openscm = tuple(variable.split(self.data_hierarchy_separator))
+            region_openscm = tuple(region.split(self.data_hierarchy_separator))
             emms_view = core.parameters.get_writable_timeseries_view(
                 variable_openscm,
                 region_openscm,
@@ -342,24 +342,34 @@ class ScmDataFrameBase(object):
         return core
 
     @property
-    def time_points(self):
+    def time_points(self) -> NumpyArray[int]:
+        """
+        Return the time axis of the data.
+
+        Returns the data as OpenSCM times.
+        """
         return self._time_index.as_openscm()
 
-    def timeseries(self, meta=None):
-        """Return a pandas dataframe in the same format as pyam.IamDataFrame.timeseries
+    def timeseries(self, meta: Union[List[str], None] = None) -> pd.DataFrame:
+        """
+        Return the data in wide format (same as the timeseries method of ``pyam.IamDataFrame``)
+
         Parameters
         ----------
-        meta: List of strings
-        The list of meta columns that will be included in the rows MultiIndex. If None (default), then all metadata will be used.
+        meta
+            The list of meta columns that will be included in the output's MultiIndex.
+            If None (default), then all metadata will be used.
 
         Returns
         -------
-        pd.DataFrame with datetimes as columns and each row being a timeseries
+        :obj:`pd.DataFrame`
+            DataFrame with datetimes as columns and timeseries as rows. Metadata is in
+            the index.
+
         Raises
         ------
-        ValueError:
-        - if the metadata are not unique between timeseries
-
+        ValueError
+            If the metadata are not unique between timeseries
         """
         d = self._data.copy()
         meta_subset = self._meta if meta is None else self._meta[meta]
@@ -373,35 +383,53 @@ class ScmDataFrameBase(object):
         return d.T
 
     @property
-    def values(self):
+    def values(self) -> NumpyArray:
+        """
+        Return timeseries values without metadata
+
+        Calls ``self.timeseries()``
+        """
         return self.timeseries().values
 
     @property
-    def meta(self):
+    def meta(self) -> pd.DataFrame:
+        """
+        Return metadata
+        """
         return self._meta.copy()
 
-    def filter(self, keep=True, inplace=False, **kwargs):
-        """Return a filtered ScmDataFrame (i.e., a subset of current data)
+    def filter(
+        self, keep: bool = True, inplace: bool = False, **kwargs: Any
+    ) -> Optional[ScmDataFrameBase]:
+        """
+        Return a filtered ScmDataFrame (i.e., a subset of the data).
 
         Parameters
         ----------
-        keep: bool, default True
-            keep all scenarios satisfying the filters (if True) or the inverse
-        inplace: bool, default False
-            if True, do operation inplace and return None
-        kwargs:
-            The following columns are available for filtering:
-             - metadata columns: filter by category assignment
-             - 'model', 'scenario', 'region', 'variable', 'unit':
-               string or list of strings, where `*` can be used as a wildcard
-             - 'level': the maximum "depth" of IAM variables (number of '|')
-               (exluding the strings given in the 'variable' argument)
-             - 'year': takes an integer, a list of integers or a range
-               note that the last year of a range is not included,
-               so `range(2010, 2015)` is interpreted as `[2010, ..., 2014]`
-             - arguments for filtering by `datetime.datetime`
-               ('month', 'hour', 'time')
-             - 'regexp=True' disables pseudo-regexp syntax in `pattern_match()`
+        keep
+            keep all data satisfying the filters (if True) or the inverse
+
+        inplace
+            If True, do operation inplace and return None
+
+        **kwargs
+            Argument names are keys with which to filter, values are used to do the
+            filtering. Filtering can be done on:
+
+            - all metadata columns with strings, `*` can be used as a wildcard in
+              search strings
+
+            - 'level': the maximum "depth" of IAM variables (number of
+              `self.data_hierarchy_separator`'s, excluding the strings given in the
+              'variable' argument)
+              ()
+
+            - 'time': takes a `datetime.datetime` or list of `datetime.datetime`'s
+
+            - 'year', 'month', 'day', hour': takes an `int` or list of `int`'s
+              ('month' and 'day' also accept `str` or list of `str`)
+
+            If `regexp=True` is included in ``kwargs`` then the pseudo-regexp syntax in `pattern_match` is disabled.
         """
         _keep_ts, _keep_cols = self._apply_filters(kwargs)
         idx = _keep_ts[:, np.newaxis] & _keep_cols
@@ -421,29 +449,42 @@ class ScmDataFrameBase(object):
         if len(ret._meta) == 0:
             logger.warning("Filtered ScmDataFrame is empty!")
 
-        if not inplace:
-            return ret
+        if inplace:
+            return None
+        else:
+            return ret  # type: ignore # mypy confused by setting of `ret`
 
-    def _apply_filters(self, filters):
-        """Determine rows to keep in data for given set of filters
+    def _apply_filters(
+        self, filters: Dict
+    ) -> Tuple[NumpyArray[bool], NumpyArray[bool]]:
+        """
+        Determine rows to keep in data for given set of filters
 
         Parameters
         ----------
-        filters: dict
-            dictionary of filters ({col: values}}); uses a pseudo-regexp syntax
-            by default, but accepts `regexp: True` to use regexp directly
+        filters
+            Dictionary of filters ({col: values}}); uses a pseudo-regexp syntax
+            by default but if ``filters["regexp"]`` is ``True``, regexp is used
+            directly.
+
+        Returns
+        -------
+        :obj:`np.array` of bool, :obj:`np.array` of bool
+            Two boolean `np.array`'s. The first contains the columns to keep (i.e.
+            which time points to keep). The second contains the rows to keep (i.e.
+            which metadata matched the filters).
         """
         regexp = filters.pop("regexp", False)
         keep_ts = np.array([True] * len(self._data))
-        keep_col = np.array([True] * len(self.meta))
+        keep_meta = np.array([True] * len(self.meta))
 
         # filter by columns and list of values
         for col, values in filters.items():
             if col == "variable":
                 level = filters["level"] if "level" in filters else None
-                keep_col &= pattern_match(self.meta[col], values, level, regexp).values
+                keep_meta &= pattern_match(self.meta[col], values, level, regexp).values
             elif col in self.meta.columns:
-                keep_col &= pattern_match(self.meta[col], values, regexp=regexp).values
+                keep_meta &= pattern_match(self.meta[col], values, regexp=regexp).values
             elif col == "year":
                 keep_ts &= years_match(self._time_index.years(), values)
 
@@ -473,7 +514,7 @@ class ScmDataFrameBase(object):
 
             elif col == "level":
                 if "variable" not in filters.keys():
-                    keep_col &= pattern_match(
+                    keep_meta &= pattern_match(
                         self.meta["variable"], "*", values, regexp=regexp
                     ).values
                 else:
@@ -481,17 +522,40 @@ class ScmDataFrameBase(object):
 
             else:
                 raise ValueError("filter by `{}` not supported".format(col))
-        # TODO: rename keep_col to keep_meta
-        return keep_ts, keep_col
+
+        return keep_ts, keep_meta
 
     def head(self, *args, **kwargs):
+        """
+        Return head of ``self.timeseries()``
+
+        Parameters
+        ----------
+        *args
+            Passed to ``self.timeseries().head()``
+
+        **kwargs
+            Passed to ``self.timeseries().head()``
+        """
         return self.timeseries().head(*args, **kwargs)
 
-    def tail(self, *args, **kwargs):
+    def tail(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
+        """
+        Return tail of ``self.timeseries()``
+
+        Parameters
+        ----------
+        *args
+            Passed to ``self.timeseries().tail()``
+
+        **kwargs
+            Passed to ``self.timeseries().tail()``
+        """
         return self.timeseries().tail(*args, **kwargs)
 
     def rename(self, mapping, inplace=False):
-        """Rename and aggregate column entries using `groupby.sum()` on values.
+        """
+        Rename and aggregate column entries using `groupby.sum()` on values.
         When renaming models or scenarios, the uniqueness of the index must be
         maintained, and the function will raise an error otherwise.
 
@@ -500,8 +564,11 @@ class ScmDataFrameBase(object):
         mapping: dict
             for each column where entries should be renamed, provide current
             name and target name
-            {<column name>: {<current_name_1>: <target_name_1>,
-                             <current_name_2>: <target_name_2>}}
+
+            .. code:: python
+
+                {<column name>: {<current_name_1>: <target_name_1>,
+                                 <current_name_2>: <target_name_2>}}
         inplace: bool, default False
             if True, do operation inplace and return None
         """
@@ -517,12 +584,16 @@ class ScmDataFrameBase(object):
             return ret
 
     def set_meta(self, meta, name=None, index=None):
-        """Add metadata columns as pd.Series, list or value (int/float/str)
+        """
+        Set metadata information
+
+        [TODO: re-write this to make it more sane and add type annotations @lewisjared]
 
         Parameters
         ----------
         meta: pd.Series, list, int, float or str
             column to be added to metadata
+
         name: str, optional
             meta column name (defaults to meta pd.Series.name);
             either a meta.name or the name kwarg must be defined
@@ -562,33 +633,6 @@ class ScmDataFrameBase(object):
             self._meta.drop("level_0", axis=1, inplace=True)
         self._sort_meta_cols()
 
-    def _get_resampled_datetimes(self, rule):
-        """
-        Calculates the datetimes to resample to given a rule.
-
-        A subset of
-        Parameters
-        ----------
-        rule
-
-        Returns
-        -------
-        list of datetimes
-        """
-        offset = to_offset(rule)
-        orig_dts = self["time"]
-
-        # Get the bounds
-        dt_0 = offset.rollback(orig_dts.iloc[0])
-        dt_1 = offset.rollforward(orig_dts.iloc[-1])
-
-        # Iterate to find all the required timesteps
-        res = [dt_0]
-        while res[-1] < dt_1:
-            res.append(res[-1] + offset)
-
-        return res
-
     def interpolate(
         self,
         target_times: List[Union[datetime.datetime, int]],
@@ -603,12 +647,23 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        target_times: listlike of datetimes or integers
-            If integers are provided, they should be in OpenSCM time i.e. seconds since 1970-1-1 00:00:00
+        target_times
+            Time grid onto which to interpolate
+
+        timeseries_type
+            Type of timeseries which is being interpolated
+
+        interpolation_type
+            How to interpolate the data between timepoints.
+
+        extrapolation_type
+            If and how to extrapolate the data beyond the data in `self.timeseries()`
 
         Returns
         -------
-        A new ScmDataFrame containing the data interpolated onto the target_times grid
+        :obj:`ScmDataFrameBase`
+            A new ``ScmDataFrameBase`` containing the data interpolated onto the
+            ``target_times`` grid
         """
         source_times_openscm = [
             convert_datetime_to_openscm_time(t) for t in self["time"]
@@ -652,31 +707,37 @@ class ScmDataFrameBase(object):
 
         return type(self)(res)
 
-    def resample(self, rule="AS", **kwargs):
-        """Resample the time index of the timeseries data onto a custom grid
+    def resample(self, rule: str = "AS", **kwargs: Any) -> ScmDataFrameBase:
+        """
+        Resample the time index of the timeseries data onto a custom grid
 
-        This helper function allows for values to be easily interpolated onto Annual or monthly timesteps using rule='AS' or 'MS'
-        respectively. Internally, the interpolate function performs the regridding.
+        This helper function allows for values to be easily interpolated onto Aanual
+        or monthly timesteps using the rules='AS' or 'MS' respectively. Internally,
+        the interpolate function performs the regridding.
 
         Parameters
         ----------
-        rule: string
+        rule
             See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>` for
-            a list of options. Note that Business-related offsets such as `BusinessDay` are not supported.
-        kwargs:
-            Other arguments to pass through to `interpolate`
+            a list of options. Note that Business-related offsets such as
+            `BusinessDay` are not supported.
+
+        **kwargs
+            Other arguments to pass through to ``self.interpolate``.
 
         Examples
         --------
-
-            # resample a dataframe to annual values
-        >>> scm_df = ScmDataFrame(pd.Series([1, 2, 10], index=(2000, 2001, 2009)), columns={
-            "model": ["a_iam"],
-            "scenario": ["a_scenario"],
-            "region": ["World"],
-            "variable": ["Primary Energy"],
-            "unit": ["EJ/y"],}
-        )
+        # resample a dataframe to annual values
+        >>> scm_df = ScmDataFrame(
+        ...     pd.Series([1, 2, 10], index=(2000, 2001, 2009)),
+        ...     columns={
+        ...         "model": ["a_iam"],
+        ...         "scenario": ["a_scenario"],
+        ...         "region": ["World"],
+        ...         "variable": ["Primary Energy"],
+        ...         "unit": ["EJ/y"],
+        ...     }
+        ... )
         >>> scm_df.timeseries().T
         model             a_iam
         scenario     a_scenario
@@ -687,8 +748,8 @@ class ScmDataFrameBase(object):
         2000                  1
         2010                 10
 
-        An annual timeseries can be the created by interpolating between to the start of years using the rule 'AS'.
-
+        An annual timeseries can be the created by interpolating to the start
+        of years using the rule 'AS'.
         >>> res = scm_df.resample('AS')
         >>> res.timeseries().T
         model                        a_iam
@@ -738,17 +799,14 @@ class ScmDataFrameBase(object):
         [109 rows x 1 columns]
 
 
-        Note that the values do not fall exactly on integer values due the period between years is not exactly the same
+        Note that the values do not fall exactly on integer values as not all years
+        are exactly the same length.
 
         References
         ----------
         See the pandas documentation for
         `resample <http://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.resample.html>` for more information about
         possible arguments.
-
-        Returns
-        -------
-
         """
         orig_dts = self["time"]
         target_dts = generate_range(
@@ -756,13 +814,15 @@ class ScmDataFrameBase(object):
         )
         return self.interpolate(list(target_dts), **kwargs)
 
-    def process_over(self, cols, operation, **kwargs):
+    def process_over(
+        self, cols: Union[str, List[str]], operation: str, **kwargs: Any
+    ) -> pd.DataFrame:
         """
         Process the data over the input columns.
 
         Parameters
         ----------
-        cols : str or list of str
+        cols
             Columns to perform the operation on. The timeseries will be grouped
             by all other columns in ``self.meta``.
 
@@ -779,7 +839,7 @@ class ScmDataFrameBase(object):
 
         Returns
         -------
-        pd.DataFrame
+        :obj:`pd.DataFrame`
             The quantiles of the timeseries, grouped by all columns in ``self.meta``
             other than ``cols``
 
@@ -802,7 +862,9 @@ class ScmDataFrameBase(object):
         else:
             raise ValueError("operation must be on of ['median', 'mean', 'quantile']")
 
-    def relative_to_ref_period_mean(self, append_str=None, **kwargs):
+    def relative_to_ref_period_mean(
+        self, append_str: Union[str, None] = None, **kwargs: Any
+    ) -> pd.DataFrame:
         """
         Return the timeseries relative to a given reference period mean.
 
@@ -811,7 +873,7 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        append_str : str
+        append_str
             String to append to the name of all the variables in the resulting
             DataFrame to indicate that they are relevant to a given reference period.
             E.g. `'rel. to 1961-1990'`. If None, this will be autofilled with the keys
@@ -824,11 +886,14 @@ class ScmDataFrameBase(object):
 
         Returns
         -------
-        pd.DataFrame
+        :obj:`pd.DataFrame`
             DataFrame containing the timeseries, adjusted to the reference period mean.
         """
         ts = self.timeseries()
-        ref_period_mean = self.filter(**kwargs).timeseries().mean(axis="columns")
+        # mypy confused by `inplace` default
+        ref_period_mean = (
+            self.filter(**kwargs).timeseries().mean(axis="columns")  # type: ignore
+        )
 
         res = ts.sub(ref_period_mean, axis="rows")
         res.reset_index(inplace=True)
@@ -846,68 +911,66 @@ class ScmDataFrameBase(object):
     def append(
         self, other: ScmDataFrameBase, inplace: bool = False, **kwargs: Any
     ) -> Optional[ScmDataFrameBase]:
-        """Appends additional timeseries from a castable object to the current dataframe
+        """
+        Append additional data from a castable object to the current dataframe.
 
-        See ``df_append``
+        For details, see ``df_append``.
 
         Parameters
         ----------
-        other: openscm.scmdataframe.ScmDataFrame or something which can be cast to ScmDataFrameBase
+        other
+            Data (in format which can be cast to ScmDataFrameBase) to append
+
+        inplace
+            If True, append data in place and return None. Otherwise, return a new ``ScmDataFrameBase`` instance with the appended data.
+
+        **kwargs
+            Keywords to pass to ``ScmDataFrameBase.__init__`` when reading ``other``
         """
         if not isinstance(other, ScmDataFrameBase):
             other = self.__class__(other, **kwargs)
 
         return df_append([self, other], inplace=inplace)
 
-    def to_iamdataframe(self):
-        """Convert to  IamDataFrame instance
+    def to_iamdataframe(self) -> LongDatetimeIamDataFrame:
+        """
+        Convert to a ``LongDatetimeIamDataFrame`` instance.
+
+        ``LongDatetimeIamDataFrame`` is a subclass of ``pyam.IamDataFrame``. We use
+        ``LongDatetimeIamDataFrame`` to ensure all times can be handled, see docstring
+        of ``LongDatetimeIamDataFrame`` for details.
 
         Returns
         -------
-        An pyam.IamDataFrame instance containing the same data
+        :obj:`LongDatetimeIamDataFrame`
+            ``LongDatetimeIamDataFrame`` instance containing the same data.
+
+        Raises
+        ------
+        ImportError
+            If `pyam <https://github.com/IAMconsortium/pyam>`_ is not installed.
         """
-        if IamDataFrame is None:
+        if LongDatetimeIamDataFrame is None:
             raise ImportError(
                 "pyam is not installed. Features involving IamDataFrame are unavailable"
             )
 
-        class LongIamDataFrame(IamDataFrame):
-            """This baseclass is a custom implementation of the IamDataFrame which handles datetime data which spans longer than pd.to_datetime
-            can handle
-            """
-
-            def _format_datetime_col(self):
-                if isinstance(self.data["time"].iloc[0], str):
-
-                    def convert_str_to_datetime(inp):
-                        return parser.parse(inp)
-
-                    self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
-
-                not_datetime = [
-                    not isinstance(x, datetime.datetime) for x in self.data["time"]
-                ]
-                if any(not_datetime):
-                    bad_values = self.data[not_datetime]["time"]
-                    error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
-                        bad_values
-                    )
-                    raise ValueError(error_msg)
-
-        return LongIamDataFrame(self.timeseries())
+        return LongDatetimeIamDataFrame(self.timeseries())
 
     def to_csv(self, path: str, **kwargs: Any) -> None:
-        """Write timeseries data to a csv file
+        """
+        Write timeseries data to a csv file
 
         Parameters
         ----------
-        path: string
-            file path
+        path
+            Path to write the file into
         """
         self.to_iamdataframe().to_csv(path, **kwargs)
 
     def line_plot(self, x: str = "time", y: str = "value", **kwargs: Any) -> Axes:
-        """Helper to generate line plots of timeseries
+        """
+        Plot a line chart.
 
         See ``pyam.IamDataFrame.line_plot`` for more information
 
@@ -915,23 +978,34 @@ class ScmDataFrameBase(object):
         return self.to_iamdataframe().line_plot(x, y, **kwargs)
 
     def scatter(self, x: str, y: str, **kwargs: Any) -> Axes:
-        """Plot a scatter chart using metadata columns
+        """
+        Plot a scatter chart using metadata columns.
 
-        see pyam.plotting.scatter() for all available options
+        See `pyam.plotting.scatter() <https://github.com/IAMconsortium/pyam>`_
+        for details.
         """
         self.to_iamdataframe().scatter(x, y, **kwargs)
 
-    def region_plot(self, **kwargs):
-        """Plot regional data for a single model, scenario, variable, and year
+    def region_plot(self, **kwargs: Any) -> Axes:
+        """
+        Plot regional data for a single model, scenario, variable, and year.
 
-        see ``pyam.plotting.region_plot()`` for all available options
+        See `pyam.plotting.region_plot() <https://github.com/IAMconsortium/pyam>`_
+        for details.
         """
         return self.to_iamdataframe().region_plot(**kwargs)
 
-    def pivot_table(self, index, columns, **kwargs):
-        """Returns a pivot table
+    def pivot_table(
+        self,
+        index: Union[str, List[str]],
+        columns: Union[str, List[str]],
+        **kwargs: Any
+    ) -> pd.DateFrame:
+        """
+        Pivot the underlying data series.
 
-        see ``pyam.core.IamDataFrame.pivot_table()`` for all available options
+        See `pyam.core.IamDataFrame.pivot_table() <https://github.com/IAMconsortium/pyam>`_
+        for details.
         """
         return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
 
@@ -941,20 +1015,28 @@ def df_append(
     inplace: bool = False,
 ) -> Optional[ScmDataFrameBase]:
     """
-    Append together many dataframes into a single ScmDataFrame
-    When appending many dataframes it may be more efficient to call this routine once with a list of ScmDataFrames, then using
-    `ScmDataFrame.append`. If timeseries with duplicate metadata are found, the timeseries are appended. For duplicate timeseries,
-    values fallings on the same timestep are averaged.
+    Append together many objects
+
+    When appending many objects, it may be more efficient to call this routine once
+    with a list of ScmDataFrames, than using ``ScmDataFrame.append`` multiple times.
+    If timeseries with duplicate metadata are found, the timeseries are appended and
+    values falling on the same timestep are averaged. [TODO: decide whether to raise a warning, which can be silenced, when this happens].
+
     Parameters
     ----------
-    dfs: list of ScmDataFrameBase object, string or pd.DataFrame.
-    The dataframes to append. Values will be attempted to be cast to non ScmDataFrameBase.
-    inplace : bool
-    If True, then the operation updates the first item in dfs
+    dfs
+        The dataframes to append. Values will be attempted to be cast to
+        ``ScmDataFrameBase``.
+
+    inplace
+        If True, then the operation updates the first item in ``dfs`` and returns
+        ``None``.
+
     Returns
     -------
-    ScmDataFrameBase-like object containing the merged data. The resultant class will be determined by the type of the first object
-    in dfs
+    :obj:`ScmDataFrameBase`
+        If not inplace, the return value is the object containing the merged data. The
+        resultant class will be determined by the type of the first object.
     """
     scm_dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs

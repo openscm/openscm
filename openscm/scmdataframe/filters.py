@@ -124,11 +124,11 @@ def pattern_match(
         Values to match
 
     level
-        Passed to ``find_depth``. For usage, see docstring of ``find_depth``
+        Passed to ``find_depth``. For usage, see docstring of ``find_depth``.
 
     regexp
         If True, match using regexp rather than pseudo regexp syntax developed by the
-        ``pyam <https://github.com/IAMconsortium/pyam>``_ developers.
+        `pyam <https://github.com/IAMconsortium/pyam>`_ developers.
 
     has_nan
         If True, convert all nan in ``meta_col`` to empty string before applying
