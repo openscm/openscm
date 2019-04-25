@@ -186,17 +186,22 @@ def test_pyam_missing(test_scm_df):
 
 
 def test_pyam_missing_loading():
-    print([k for k in sys.modules.keys() if "pyam" in k])
-    print([k for k in sys.modules.keys() if "IamDataFrame" in k])
     with mock.patch.dict(sys.modules, {"pyam": None}):
         # not sure whether deleting like this is fine because of the context manager
         # or a terrible idea...
         del sys.modules["openscm.scmdataframe.pyam_compat"]
         from openscm.scmdataframe.pyam_compat import IamDataFrame as res
-        from openscm.scmdataframe.pyam_compat import Axes as res_2
         from openscm.scmdataframe.pyam_compat import LongDatetimeIamDataFrame as res_3
 
-        assert all([r is None for r in [res, res_2, res_3]])
+        assert all([r is None for r in [res, res_3]])
+
+    with mock.patch.dict(sys.modules, {"matplotlib.axes": None}):
+        # not sure whether deleting like this is fine because of the context manager
+        # or a terrible idea...
+        del sys.modules["openscm.scmdataframe.pyam_compat"]
+        from openscm.scmdataframe.pyam_compat import Axes as res_2
+
+        assert all([r is None for r in [res_2]])
 
     from openscm.scmdataframe.pyam_compat import IamDataFrame as res
     from openscm.scmdataframe.pyam_compat import Axes as res_2

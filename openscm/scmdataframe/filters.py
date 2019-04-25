@@ -26,12 +26,18 @@ def is_str(s: Any) -> bool:
 
     Returns
     -------
+    bool
         True if the quantity is a string, False otherwise.
     """
     return isinstance(s, six.string_types)
 
 
-def is_in(vals: List, items: List) -> NumpyArray[bool]:
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def is_in(  # pylint: disable=missing-return-doc
+    vals: List, items: List
+) -> NumpyArray[bool]:
     """
     Find elements of vals which are in items
 
@@ -46,13 +52,19 @@ def is_in(vals: List, items: List) -> NumpyArray[bool]:
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array of the same length as ``vals`` where the element is True if the
         corresponding element of ``vals`` is in ``items`` and False otherwise
     """
     return np.array([v in items for v in vals])
 
 
-def find_depth(meta_col: pd.Series, s: str, level: Union[int, str]) -> NumpyArray[bool]:
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def find_depth(  # pylint: disable=missing-return-doc
+    meta_col: pd.Series, s: str, level: Union[int, str]
+) -> NumpyArray[bool]:
     """
     Find all values which match given depth from a filter keyword
 
@@ -72,7 +84,13 @@ def find_depth(meta_col: pd.Series, s: str, level: Union[int, str]) -> NumpyArra
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
+
+    Raises
+    ------
+    ValueError
+        If `level` cannot be understood.
     """
     # determine function for finding depth level
     if not is_str(level):
@@ -102,10 +120,13 @@ def find_depth(meta_col: pd.Series, s: str, level: Union[int, str]) -> NumpyArra
     def apply_test(val):
         return test(len(pipe.findall(val.replace(regexp, ""))))
 
-    return np.array([b for b in map(apply_test, meta_col)])
+    return np.array([b for b in [apply_test(m) for m in meta_col]])
 
 
-def pattern_match(
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def pattern_match(  # pylint: disable=missing-return-doc
     meta_col: pd.Series,
     values: Union[Iterable[str], str],
     level: Union[str, int, None] = None,
@@ -137,6 +158,7 @@ def pattern_match(
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
     """
     matches = np.array([False] * len(meta_col))
@@ -163,7 +185,7 @@ def pattern_match(
             ) + "$"
             pattern = re.compile(_regexp if not regexp else str(s))
 
-            subset = filter(pattern.match, _meta_col)
+            subset = [m for m in _meta_col if pattern.match(m)]
             depth = True if level is None else find_depth(_meta_col, str(s), level)
             matches |= _meta_col.isin(subset) & depth
         else:
@@ -172,7 +194,12 @@ def pattern_match(
     return matches
 
 
-def years_match(data: List, years: Union[List[int], int]) -> NumpyArray[bool]:
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def years_match(  # pylint: disable=missing-return-doc
+    data: List, years: Union[List[int], int]
+) -> NumpyArray[bool]:
     """
     Match years in time columns for data filtering
 
@@ -186,7 +213,13 @@ def years_match(data: List, years: Union[List[int], int]) -> NumpyArray[bool]:
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
+
+    Raises
+    ------
+    TypeError
+        If `years` is not `int` or list of `int`
     """
     years = [years] if isinstance(years, int) else years
     dt = datetime.datetime
@@ -196,7 +229,10 @@ def years_match(data: List, years: Union[List[int], int]) -> NumpyArray[bool]:
     return is_in(data, years)
 
 
-def month_match(
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def month_match(  # pylint: disable=missing-return-doc
     data: List, months: Union[List[str], List[int], int, str]
 ) -> NumpyArray[bool]:
     """
@@ -212,12 +248,16 @@ def month_match(
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
     """
     return time_match(data, months, ["%b", "%B"], "tm_mon", "months")
 
 
-def day_match(
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def day_match(  # pylint: disable=missing-return-doc
     data: List, days: Union[List[str], List[int], int, str]
 ) -> NumpyArray[bool]:
     """
@@ -233,12 +273,18 @@ def day_match(
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
     """
     return time_match(data, days, ["%a", "%A"], "tm_wday", "days")
 
 
-def hour_match(data: List, hours: Union[List[int], int]) -> NumpyArray[bool]:
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def hour_match(  # pylint: disable=missing-return-doc
+    data: List, hours: Union[List[int], int]
+) -> NumpyArray[bool]:
     """
     Match hours in time columns for data filtering
 
@@ -252,13 +298,17 @@ def hour_match(data: List, hours: Union[List[int], int]) -> NumpyArray[bool]:
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
     """
     hours_list = [hours] if isinstance(hours, int) else hours
     return is_in(data, hours_list)
 
 
-def time_match(
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def time_match(  # pylint: disable=missing-return-doc
     data: List,
     times: Union[List[str], List[int], int, str],
     conv_codes: List[str],
@@ -290,7 +340,15 @@ def time_match(
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
+
+    Raises
+    ------
+    ValueError
+        If input times cannot be converted understood or if input strings do not lead
+        to increasing integers (i.e. "Nov-Feb" will not work, one must use ["Nov-Dec",
+        "Jan-Feb"] instead).
     """
     times_list = [times] if isinstance(times, (int, str)) else times
 
@@ -337,7 +395,10 @@ def time_match(
     return is_in(data, times_list)
 
 
-def datetime_match(
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def datetime_match(  # pylint: disable=missing-return-doc
     data: List, dts: Union[List[datetime.datetime], datetime.datetime]
 ) -> NumpyArray[bool]:
     """
@@ -353,10 +414,16 @@ def datetime_match(
 
     Returns
     -------
+    :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
+
+    Raises
+    ------
+    TypeError
+        `dts` contains `int`
     """
     dts = [dts] if isinstance(dts, datetime.datetime) else dts
-    if isinstance(dts, int) or isinstance(dts[0], int):
+    if isinstance(dts, int) or any([isinstance(d, int) for d in dts]):
         error_msg = "`time` can only be filtered with datetimes or lists of datetimes"
         raise TypeError(error_msg)
     return is_in(data, dts)

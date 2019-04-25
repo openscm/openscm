@@ -7,7 +7,6 @@ from dateutil import parser
 
 try:
     from pyam import IamDataFrame
-    from matplotlib.axes import Axes  # matplotlib is dependency of pyam
 
     # mypy can't work out try-except block forces IamDataFrame to be ok here
     class LongDatetimeIamDataFrame(IamDataFrame):  # type: ignore
@@ -42,5 +41,9 @@ try:
 except ImportError:
     # mypy can't work out try-except block sets typing
     IamDataFrame = None
-    Axes = None
     LongDatetimeIamDataFrame = None  # type: ignore
+
+try:
+    from matplotlib.axes import Axes  # pylint: disable=unused-import
+except ImportError:
+    Axes = None
