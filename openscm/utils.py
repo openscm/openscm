@@ -56,6 +56,7 @@ def is_floatlike(f: Any) -> bool:
 
     Returns
     -------
+    bool
         True if f can be cast to a float
     """
     if isinstance(f, (int, float)):

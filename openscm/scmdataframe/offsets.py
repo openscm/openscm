@@ -43,7 +43,9 @@ def apply_dt(func, self):
             result = normalize_date(result)
 
         if tz is not None and result.tzinfo is None:
-            result = conversion.localize_pydatetime(result, tz)
+            result = conversion.localize_pydatetime(  # pylint: disable=c-extension-no-member
+                result, tz
+            )
 
         return result
 
@@ -95,7 +97,13 @@ def to_offset(rule: str) -> DateOffset:
 
     Returns
     -------
+    :obj:`DateOffset`
         Wrapped ``DateOffset`` class for the given rule.
+
+    Raises
+    ------
+    ValueError
+        If unsupported offset rule is requested e.g. all business related offsets
     """
     offset = pd_to_offset(rule)
 
@@ -142,9 +150,15 @@ def generate_range(
         Offset object for determining the timesteps. An offsetter obtained from
         `openscm.scmdataframe.offset.to_offset` *must* be used.
 
-    Returns
-    -------
-        Generator which will yield each timestep in the range.
+    Yields
+    ------
+    :obj:`datetime.datetime`
+        Next datetime in the range
+
+    Raises
+    ------
+    ValueError
+        Offset does not result in increasing ``datetime.datetime``'s.
 
     Examples
     --------
