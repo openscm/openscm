@@ -53,13 +53,18 @@ def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:
 
     Returns
     -------
+    :obj:`datetime.datetime`
         ``datetime.datetime`` equivalent of ``dt``
     """
     # pandas method doesn't contain type hint so mypy isn't happy
     return pd.Timestamp(dt).to_pydatetime()  # type: ignore
 
-
-def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def _format_datetime(  # pylint: disable=missing-return-doc
+    dts: List[Any]
+) -> List[datetime.datetime]:
     """
     Convert a list into a set of ``datetime.datetime``'s
 
@@ -70,6 +75,7 @@ def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:
 
     Returns
     -------
+    :obj:`list` of :obj:`datetime.datetime`
         Converted ``datetime.datetime``'s
 
     Raises
@@ -114,7 +120,7 @@ def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:
     return dts
 
 
-class TimeIndex(object):
+class TimeIndex:
     """
     Keeps track of both datetime and openscm datetimes and knows how to convert between the two formats
     """
@@ -160,7 +166,11 @@ class TimeIndex(object):
         """
         raise AttributeError("TimeIndex is immutable")
 
-    def as_openscm(self) -> NumpyArray[int]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def as_openscm(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
         """
         Get time points as OpenSCM times
 
@@ -177,10 +187,16 @@ class TimeIndex(object):
         # filled automatically with Sphinx. At the moment we have to do the type
         # annotations twice, once in the function signature and once in the docstrings.
 
-        # mypy isn't smart enough to work out ``._py`` attribute exists
-        return self._openscm  # type: ignore
+        # mypy and pylint aren't smart enough to work out ``._py`` attribute exists
+        return self._openscm  # type: ignore # pylint: disable=no-member
 
-    def as_py(self) -> NumpyArray[datetime.datetime]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def as_py(  # pylint: disable=missing-return-doc
+        self
+    ) -> NumpyArray[datetime.datetime]:
         """
         Get time points as Python datetimes
 
@@ -189,8 +205,8 @@ class TimeIndex(object):
         :obj:`np.array` of :obj:`datetime.datetime`
             Datetime representation of each time point
         """
-        # mypy isn't smart enough to work out ``._py`` attribute exists
-        return self._py  # type: ignore
+        # mypy and pylint aren't smart enough to work out ``._py`` attribute exists
+        return self._py  # type: ignore # pylint: disable=no-member
 
     def as_pd_index(self) -> pd.Index:
         """
@@ -198,56 +214,82 @@ class TimeIndex(object):
 
         Returns
         -------
+        :obj:`pd.Index`
             pd.Index of dtype "object" with name "time" made from the time points
         """
         return pd.Index(self.as_py(), dtype="object", name="time")
 
-    def years(self) -> NumpyArray[int]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def years(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
         """
         Get year of each time point
 
         Returns
         -------
+        :obj:`np.array` of :obj:`int`
             Year of each time point
         """
         return np.array([dt.year for dt in self.as_py()])
 
-    def months(self) -> NumpyArray[int]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def months(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
         """
         Get month of each time point
 
         Returns
         -------
+        :obj:`np.array` of :obj:`int`
             Month of each time point
         """
         return np.array([dt.month for dt in self.as_py()])
 
-    def days(self) -> NumpyArray[int]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def days(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
         """
         Get day of each time point
 
         Returns
         -------
+        :obj:`np.array` of :obj:`int`
             Day of each time point
         """
         return np.array([dt.day for dt in self.as_py()])
 
-    def hours(self) -> NumpyArray[int]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def hours(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
         """
         Get hour of each time point
 
         Returns
         -------
+        :obj:`np.array` of :obj:`int`
             Hour of each time point
         """
         return np.array([dt.hour for dt in self.as_py()])
 
-    def weekdays(self) -> NumpyArray[int]:
+    # pylint doesn't recognise return statements if they include 'of' but it should,
+    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
+    # :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def weekdays(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
         """
         Get weekday of each time point
 
         Returns
         -------
+        :obj:`np.array` of :obj:`int`
             Day of the week of each time point
         """
         return np.array([dt.weekday() for dt in self.as_py()])
