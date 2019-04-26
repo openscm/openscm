@@ -16,7 +16,10 @@ from openscm.utils import (
 )
 
 
-def to_int(x: NumpyArray) -> NumpyArray:
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def to_int(x: NumpyArray) -> NumpyArray:  # pylint: disable=missing-return-doc
     """
     Convert inputs to int and check conversion is sensible
 
@@ -35,9 +38,10 @@ def to_int(x: NumpyArray) -> NumpyArray:
     ValueError
         If the int representation of any of the values is not equal to its original representation (where equality is checked using the ``!=`` operator).
     """
-    cols = list(map(int, x))
+    cols = [int(v) for v in x]
     error = x[cols != x]
-    if len(error):
+    invalid_vals = error.size if isinstance(error, np.ndarray) else error
+    if invalid_vals:
         raise ValueError("invalid values `{}`".format(list(error)))
     return cols
 
@@ -58,6 +62,7 @@ def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:
     """
     # pandas method doesn't contain type hint so mypy isn't happy
     return pd.Timestamp(dt).to_pydatetime()  # type: ignore
+
 
 # pylint doesn't recognise return statements if they include 'of' but it should, see
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
@@ -83,7 +88,8 @@ def _format_datetime(  # pylint: disable=missing-return-doc
     ValueError
         If one of the values in ``dts`` cannot be converted to ``datetime.datetime``
     """
-    if not len(dts):
+    empty_input = not dts.size if isinstance(dts, np.ndarray) else not dts
+    if empty_input:
         return []
     dt_0 = dts[0]
 
