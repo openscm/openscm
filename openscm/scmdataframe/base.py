@@ -45,7 +45,8 @@ logger = getLogger(__name__)
 REQUIRED_COLS = ["model", "scenario", "region", "variable", "unit"]
 
 
-def _read_file(
+# pylint doesn't recognise return statements if they include ','
+def _read_file(  # pylint: disable=missing-return-doc
     fnames: str, *args: Any, **kwargs: Any
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -55,13 +56,19 @@ def _read_file(
     -------
     :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
         First dataframe is the data. Second dataframe is metadata
+
+    Raises
+    ------
+    ValueError
+        ``fnames`` is not a string (most commonly raised if you attempt to read
+        from more than one file)
     """
     if not is_str(fnames):
         raise ValueError(
             "reading multiple files not supported, "
             "please use `openscm.ScmDataFrame.append()`"
         )
-    logger.info("Reading `{}`".format(fnames))
+    logger.info("Reading %s", fnames)
 
     return _format_data(_read_pandas(fnames, *args, **kwargs))
 
@@ -83,7 +90,8 @@ def _read_pandas(fname: str, *args: Any, **kwargs: Any) -> pd.DataFrame:
     return df
 
 
-def _format_data(
+# pylint doesn't recognise return statements if they include ','
+def _format_data(  # pylint: disable=missing-return-doc
     df: Union[pd.DataFrame, pd.Series]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -91,10 +99,21 @@ def _format_data(
 
     See docstring of ``ScmDataFrameBase.__init__`` for details.
 
+    Parameters
+    ----------
+    df
+        Data to format.
+
     Returns
     -------
     :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
-        First dataframe is the data. Second dataframe is metadata
+        First dataframe is the data. Second dataframe is metadata.
+
+    Raises
+    ------
+    ValueError
+        Not all required metadata columns are present or the time axis cannot be
+        understood
     """
     if isinstance(df, pd.Series):
         df = df.to_frame()
@@ -104,58 +123,20 @@ def _format_data(
     df.rename(columns={c: str(c).lower() for c in str_cols}, inplace=True)
 
     # reset the index if meaningful entries are included there
-    if not list(df.index.names) == [None]:
+    if list(df.index.names) != [None]:
         # why is this so slow?
         df.reset_index(inplace=True)
 
-    # format columns to lower-case and check that all required columns exist
+    # check that all required columns exist
     if not set(REQUIRED_COLS).issubset(set(df.columns)):
         missing = list(set(REQUIRED_COLS) - set(df.columns))
         raise ValueError("missing required columns `{}`!".format(missing))
 
-    orig = df
-
     # check whether data in wide format (IAMC) or long format (`value` column)
     if "value" in df.columns:
-        # check if time column is given as `year` (int) or `time` (datetime)
-        cols = set(df.columns)
-        if "year" in cols and "time" not in cols:
-            time_col = "year"
-        elif "time" in cols and "year" not in cols:
-            time_col = "time"
-        else:
-            msg = "invalid time format, must have either `year` or `time`!"
-            raise ValueError(msg)
-        extra_cols = list(set(cols) - set(REQUIRED_COLS + [time_col, "value"]))
-        df = df.pivot_table(columns=REQUIRED_COLS + extra_cols, index=time_col).value
-        meta = df.columns.to_frame(index=None)
-        df.columns = meta.index
+        df, meta = _format_long_data(df)
     else:
-        # if in wide format, check if columns are years (int) or datetime
-        cols = set(df.columns) - set(REQUIRED_COLS)
-        time_cols, extra_cols = False, []
-        for i in cols:
-            if is_floatlike(i) or isinstance(i, datetime.datetime):
-                time_cols = True
-            else:
-                try:
-                    try:
-                        # most common format
-                        datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
-                        time_cols = True
-                    except ValueError:
-                        # this is super slow so avoid if possible
-                        parser.parse(str(i))  # if no ValueError, this is datetime
-                        time_cols = True
-                except ValueError:
-                    extra_cols.append(i)  # some other string
-        if not time_cols:
-            msg = "invalid column format, must contain some time (int, float or datetime) columns!"
-            raise ValueError(msg)
-
-        df = df.drop(REQUIRED_COLS + extra_cols, axis="columns").T
-        df.index.name = "time"
-        meta = orig[REQUIRED_COLS + extra_cols].set_index(df.columns)
+        df, meta = _format_wide_data(df)
 
     # cast value columns to numeric, drop NaN's, sort data
     # df.dropna(inplace=True, how="all")
@@ -164,7 +145,62 @@ def _format_data(
     return df, meta
 
 
-def _from_ts(
+def _format_long_data(df):
+    # check if time column is given as `year` (int) or `time` (datetime)
+    cols = set(df.columns)
+    if "year" in cols and "time" not in cols:
+        time_col = "year"
+    elif "time" in cols and "year" not in cols:
+        time_col = "time"
+    else:
+        msg = "invalid time format, must have either `year` or `time`!"
+        raise ValueError(msg)
+
+    extra_cols = list(set(cols) - set(REQUIRED_COLS + [time_col, "value"]))
+    df = df.pivot_table(columns=REQUIRED_COLS + extra_cols, index=time_col).value
+    meta = df.columns.to_frame(index=None)
+    df.columns = meta.index
+
+    return df, meta
+
+
+def _format_wide_data(df):
+    orig = df
+
+    cols = set(df.columns) - set(REQUIRED_COLS)
+    time_cols, extra_cols = False, []
+    for i in cols:
+        # if in wide format, check if columns are years (int) or datetime
+        if is_floatlike(i) or isinstance(i, datetime.datetime):
+            time_cols = True
+        else:
+            try:
+                try:
+                    # most common format
+                    datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
+                    time_cols = True
+                except ValueError:
+                    # this is super slow so avoid if possible
+                    parser.parse(str(i))  # if no ValueError, this is datetime
+                    time_cols = True
+            except ValueError:
+                extra_cols.append(i)  # some other string
+
+    if not time_cols:
+        msg = "invalid column format, must contain some time (int, float or datetime) columns!"
+        raise ValueError(msg)
+
+    df = df.drop(REQUIRED_COLS + extra_cols, axis="columns").T
+    df.index.name = "time"
+    meta = orig[REQUIRED_COLS + extra_cols].set_index(df.columns)
+
+    return df, meta
+
+
+# pylint doesn't recognise return statements if they include 'of' but it should, see
+# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
+# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+def _from_ts(  # pylint: disable=missing-return-doc
     df: Any, index: Any = None, **columns: List[str]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -176,6 +212,11 @@ def _from_ts(
     -------
     :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
         First dataframe is the data. Second dataframe is metadata
+
+    Raises
+    ------
+    ValueError
+        Not all required columns are present
     """
     if not isinstance(df, pd.DataFrame):
         df = pd.DataFrame(df)
@@ -208,7 +249,7 @@ def _from_ts(
     return df, meta
 
 
-class ScmDataFrameBase(object):
+class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     """
     Base of OpenSCM's custom DataFrame implementation.
 
@@ -287,23 +328,28 @@ class ScmDataFrameBase(object):
         ValueError
             If metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is not
             found.
+
+        TypeError
+            Timeseries cannot be read from ``data``
         """
         if columns is not None:
             (_df, _meta) = _from_ts(data, index=index, **columns)
         elif isinstance(data, ScmDataFrameBase):
             # turn off mypy type checking here as ScmDataFrameBase isn't defined
             # when mypy does type checking
-            (_df, _meta) = (data._data.copy(), data._meta.copy())  # type: ignore
-        elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
+            (_df, _meta) = (
+                data._data.copy(),  # type: ignore # pylint: disable=protected-access
+                data._meta.copy(),  # type: ignore # pylint: disable=protected-access
+            )
+        elif isinstance(data, (pd.DataFrame, pd.Series)):
             (_df, _meta) = _format_data(data.copy())
+        elif isinstance(data, IamDataFrame):
+            (_df, _meta) = _format_data(data.data.copy())
         else:
-            if isinstance(data, IamDataFrame):
-                (_df, _meta) = _format_data(data.data.copy())
-            else:
-                if not is_str(data):
-                    error_msg = "Cannot load {} from {}".format(type(self), type(data))
-                    raise TypeError(error_msg)
-                (_df, _meta) = _read_file(data, **kwargs)
+            if not is_str(data):
+                error_msg = "Cannot load {} from {}".format(type(self), type(data))
+                raise TypeError(error_msg)
+            (_df, _meta) = _read_file(data, **kwargs)
         self._time_index = TimeIndex(py_dt=_df.index.values)
         _df.index = self._time_index.as_pd_index()
         _df = _df.astype(float)
@@ -343,14 +389,17 @@ class ScmDataFrameBase(object):
         _key_check = [key] if is_str(key) else key
         if key == "time":
             return pd.Series(self._time_index.as_pd_index(), dtype="object")
-        elif key == "year":
+        if key == "year":
             return pd.Series(self._time_index.years())
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
-        else:
-            return self._data.__getitem__(key)
 
-    def __setitem__(self, key: Any, value: Any) -> Any:
+        return self._data.__getitem__(key)
+
+    # [TODO check with @lewisjared what happens at return point]
+    def __setitem__(  # pylint: disable=inconsistent-return-statements
+        self, key: Any, value: Any
+    ) -> Any:
         """
         Set item of self with helpful direct access.
 
@@ -375,6 +424,11 @@ class ScmDataFrameBase(object):
         timeseries have the same metadata. This is typically the case if all output
         comes from a single model run. If that is not the case, further filtering is
         needed to reduce to a dataframe with identical metadata.
+
+        Return
+        ------
+        :obj:`Core`
+            Core instance containing the data in ``self``
 
         Raises
         ------
@@ -507,7 +561,18 @@ class ScmDataFrameBase(object):
             - 'year', 'month', 'day', hour': takes an `int` or list of `int`'s
               ('month' and 'day' also accept `str` or list of `str`)
 
-            If `regexp=True` is included in ``kwargs`` then the pseudo-regexp syntax in `pattern_match` is disabled.
+            If `regexp=True` is included in ``kwargs`` then the pseudo-regexp
+            syntax in `pattern_match` is disabled.
+
+        Returns
+        -------
+        :obj:`ScmDataFrameBase`
+            If not inplace, return a new instance with the filtered data.
+
+        Raises
+        ------
+        AssertionError
+            Data and meta become unaligned.
         """
         _keep_ts, _keep_cols = self._apply_filters(kwargs)
         idx = _keep_ts[:, np.newaxis] & _keep_cols
@@ -516,23 +581,33 @@ class ScmDataFrameBase(object):
         idx = idx if keep else ~idx
 
         ret = self.copy() if not inplace else self
-        d = ret._data.where(idx)
-        ret._data = d.dropna(axis=1, how="all").dropna(axis=0, how="all")
-        ret._meta = ret._meta[(~d.isna()).sum(axis=0) > 0]
-        ret["time"] = ret._data.index.values
+        d = ret._data.where(idx)  # pylint: disable=protected-access
+        ret._data = d.dropna(  # pylint: disable=protected-access
+            axis=1, how="all"
+        ).dropna(axis=0, how="all")
+        ret._meta = ret._meta[  # pylint: disable=protected-access
+            (~d.isna()).sum(axis=0) > 0
+        ]
+        ret["time"] = ret._data.index.values  # pylint: disable=protected-access
 
-        if not (len(ret._data.columns) == len(ret._meta)):
+        if not (
+            len(ret._data.columns) == len(ret._meta)  # pylint: disable=protected-access
+        ):
             raise AssertionError("Data and meta have become unaligned")
 
-        if len(ret._meta) == 0:
+        if not ret._meta.shape[0]:  # pylint: disable=protected-access
             logger.warning("Filtered ScmDataFrame is empty!")
 
-        if inplace:
-            return None
-        else:
+        if not inplace:
             return ret  # type: ignore # mypy confused by setting of `ret`
 
-    def _apply_filters(
+        return None
+
+    # pylint doesn't recognise return statements if they include 'of' but it
+    # should, see https://github.com/PyCQA/pylint/pull/2884 and search for
+    # ':obj:`list` of :obj:`str`' in
+    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    def _apply_filters(  # pylint: disable=missing-return-doc
         self, filters: Dict
     ) -> Tuple[NumpyArray[bool], NumpyArray[bool]]:
         """
@@ -551,6 +626,11 @@ class ScmDataFrameBase(object):
             Two boolean `np.array`'s. The first contains the columns to keep (i.e.
             which time points to keep). The second contains the rows to keep (i.e.
             which metadata matched the filters).
+
+        Raises
+        ------
+        ValueError
+            Filtering cannot be performed on requested column.
         """
         regexp = filters.pop("regexp", False)
         keep_ts = np.array([True] * len(self._data))
@@ -570,19 +650,7 @@ class ScmDataFrameBase(object):
                 keep_ts &= month_match(self._time_index.months(), values)
 
             elif col == "day":
-                if isinstance(values, str):
-                    wday = True
-                elif isinstance(values, list) and isinstance(values[0], str):
-                    wday = True
-                else:
-                    wday = False
-
-                if wday:
-                    days = self._time_index.weekdays()
-                else:  # ints or list of ints
-                    days = self._time_index.days()
-
-                keep_ts &= day_match(days, values)
+                keep_ts &= self._day_match(values)
 
             elif col == "hour":
                 keep_ts &= hour_match(self._time_index.hours(), values)
@@ -603,6 +671,21 @@ class ScmDataFrameBase(object):
 
         return keep_ts, keep_meta
 
+    def _day_match(self, values):
+        if isinstance(values, str):
+            wday = True
+        elif isinstance(values, list) and isinstance(values[0], str):
+            wday = True
+        else:
+            wday = False
+
+        if wday:
+            days = self._time_index.weekdays()
+        else:  # ints or list of ints
+            days = self._time_index.days()
+
+        return day_match(days, values)
+
     def head(self, *args, **kwargs):
         """
         Return head of ``self.timeseries()``
@@ -614,6 +697,11 @@ class ScmDataFrameBase(object):
 
         **kwargs
             Passed to ``self.timeseries().head()``
+
+        Returns
+        -------
+        :obj:`pd.DataFrame`
+            Tail of ``self.timeseries()``
         """
         return self.timeseries().head(*args, **kwargs)
 
@@ -628,10 +716,17 @@ class ScmDataFrameBase(object):
 
         **kwargs
             Passed to ``self.timeseries().tail()``
+
+        Returns
+        -------
+        :obj:`pd.DataFrame`
+            Tail of ``self.timeseries()``
         """
         return self.timeseries().tail(*args, **kwargs)
 
-    def rename(self, mapping, inplace=False):
+    def rename(
+        self, mapping: Dict[str, Dict[str, str]], inplace: bool = False
+    ) -> Optional[ScmDataFrameBase]:
         """
         Rename and aggregate column entries using `groupby.sum()` on values.
         When renaming models or scenarios, the uniqueness of the index must be
@@ -639,29 +734,49 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        mapping: dict
-            for each column where entries should be renamed, provide current
+        mapping
+            For each column where entries should be renamed, provide current
             name and target name
 
             .. code:: python
 
                 {<column name>: {<current_name_1>: <target_name_1>,
                                  <current_name_2>: <target_name_2>}}
-        inplace: bool, default False
-            if True, do operation inplace and return None
+
+        inplace
+            If True, do operation inplace and return None.
+
+        Returns
+        -------
+        :obj:`ScmDataFrameBase`
+            If ``inplace`` is True, return a new ``ScmDataFrameBase`` instance.
+
+        Raises
+        ------
+        ValueError
+            Column is not in meta or renaming will cause non-unique metadata.
         """
         ret = copy.deepcopy(self) if not inplace else self
         for col, _mapping in mapping.items():
             if col not in self.meta.columns:
                 raise ValueError("Renaming by {} not supported!".format(col))
-            ret._meta[col] = ret._meta[col].replace(_mapping)
-            if ret._meta.duplicated().any():
+            ret._meta[col] = ret._meta[col].replace(  # pylint: disable=protected-access
+                _mapping
+            )
+            if ret._meta.duplicated().any():  # pylint: disable=protected-access
                 raise ValueError("Renaming to non-unique metadata for {}!".format(col))
 
         if not inplace:
             return ret
 
-    def set_meta(self, meta, name=None, index=None):
+        return None
+
+    def set_meta(
+        self,
+        meta: Union[pd.Series, list, int, float, str],
+        name: Union[str, None] = None,
+        index: Union[pd.DataFrame, pd.Series, pd.Index, pd.MultiIndex] = None,
+    ) -> None:
         """
         Set metadata information
 
@@ -669,21 +784,35 @@ class ScmDataFrameBase(object):
 
         Parameters
         ----------
-        meta: pd.Series, list, int, float or str
-            column to be added to metadata
+        meta
+            Column to be added to metadata.
 
-        name: str, optional
-            meta column name (defaults to meta pd.Series.name);
-            either a meta.name or the name kwarg must be defined
+        name
+            Meta column name (defaults to ``meta.name``).
+
+        index
+            The index to which the metadata is to be applied.
+
+        Raises
+        ------
+        ValueError
+            No name can be determined from inputs or index cannot be coerced to
+            pd.MultiIndex.
         """
         # check that name is valid and doesn't conflict with data columns
-        if (name or (hasattr(meta, "name") and meta.name)) in [None, False]:
+        # mypy doesn't recognise if
+        if (name or (hasattr(meta, "name") and meta.name)) in [  # type: ignore
+            None,
+            False,
+        ]:
             raise ValueError("Must pass a name or use a named pd.Series")
-        name = name or meta.name
+        # mpy doesn't recognise if checks
+        name = name or meta.name  # type: ignore
 
         # check if meta has a valid index and use it for further workflow
-        if hasattr(meta, "index") and hasattr(meta.index, "names"):
-            index = meta.index
+        # mypy doesn't recognise if
+        if hasattr(meta, "index") and hasattr(meta.index, "names"):  # type: ignore
+            index = meta.index  # type: ignore # mypy doesn't recognise if
         if index is None:
             self._meta[name] = meta
             return
@@ -771,12 +900,13 @@ class ScmDataFrameBase(object):
             extrapolation_type,
         )
 
-        # Need to keep an object index or pandas will not be able to handle a wide time range
+        # Need to keep an object index or pandas will not be able to handle a wide
+        # time range
         timeseries_index = pd.Index(target_times_dt, dtype="object", name="time")
 
         res = self.copy()
 
-        res._data = res._data.apply(
+        res._data = res._data.apply(  # pylint: disable=protected-access
             lambda col: pd.Series(
                 timeseries_converter.convert_from(col.values), index=timeseries_index
             )
@@ -796,12 +926,17 @@ class ScmDataFrameBase(object):
         Parameters
         ----------
         rule
-            See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>` for
-            a list of options. Note that Business-related offsets such as
+            See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>`_
+            for a list of options. Note that Business-related offsets such as
             `BusinessDay` are not supported.
 
         **kwargs
             Other arguments to pass through to ``self.interpolate``.
+
+        Returns
+        -------
+        :obj:`ScmDataFrameBase`
+            New ``ScmDataFrameBase`` object on a new time index.
 
         Examples
         --------
@@ -883,8 +1018,8 @@ class ScmDataFrameBase(object):
         References
         ----------
         See the pandas documentation for
-        `resample <http://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.resample.html>` for more information about
-        possible arguments.
+        `resample <http://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.resample.html>`
+        for more information about possible arguments.
         """
         orig_dts = self["time"]
         target_dts = generate_range(
@@ -933,12 +1068,12 @@ class ScmDataFrameBase(object):
 
         if operation == "median":
             return grouper.median(**kwargs)
-        elif operation == "mean":
+        if operation == "mean":
             return grouper.mean(**kwargs)
-        elif operation == "quantile":
+        if operation == "quantile":
             return grouper.quantile(**kwargs)
-        else:
-            raise ValueError("operation must be on of ['median', 'mean', 'quantile']")
+
+        raise ValueError("operation must be on of ['median', 'mean', 'quantile']")
 
     def relative_to_ref_period_mean(
         self, append_str: Union[str, None] = None, **kwargs: Any
@@ -1004,6 +1139,12 @@ class ScmDataFrameBase(object):
 
         **kwargs
             Keywords to pass to ``ScmDataFrameBase.__init__`` when reading ``other``
+
+        Returns
+        -------
+        :obj:`ScmDataFrameBase`
+            If not inplace, return a new ``ScmDataFrameBase`` object containing the
+            result of the append.
         """
         if not isinstance(other, ScmDataFrameBase):
             other = self.__class__(other, **kwargs)
@@ -1078,7 +1219,7 @@ class ScmDataFrameBase(object):
         index: Union[str, List[str]],
         columns: Union[str, List[str]],
         **kwargs: Any
-    ) -> pd.DateFrame:
+    ) -> pd.DataFrame:
         """
         Pivot the underlying data series.
 
@@ -1115,6 +1256,12 @@ def df_append(
     :obj:`ScmDataFrameBase`
         If not inplace, the return value is the object containing the merged data. The
         resultant class will be determined by the type of the first object.
+
+    Raises
+    ------
+    AssertionError
+        If ``inplace`` is True but the first element in ``dfs`` is not an instance of
+        ``ScmDataFrameBase``
     """
     scm_dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
@@ -1153,19 +1300,19 @@ def df_append(
     else:
         ret = scm_dfs[0].copy()
 
-    ret._data = data.reset_index(drop=True).T
-    ret._data = ret._data.sort_index()
-    ret["time"] = ret._data.index.values
-    ret._data = ret._data.astype(float)
+    ret._data = data.reset_index(drop=True).T  # pylint: disable=protected-access
+    ret._data = ret._data.sort_index()  # pylint: disable=protected-access
+    ret["time"] = ret._data.index.values  # pylint: disable=protected-access
+    ret._data = ret._data.astype(float)  # pylint: disable=protected-access
 
-    ret._meta = (
+    ret._meta = (  # pylint: disable=protected-access
         data.index.to_frame()
         .reset_index(drop=True)
         .replace(to_replace=na_fill_value, value=np.nan)
     )
-    ret._sort_meta_cols()
+    ret._sort_meta_cols()  # pylint: disable=protected-access
 
-    if inplace:
-        return None
-    else:
+    if not inplace:
         return ret
+
+    return None
