@@ -1,5 +1,6 @@
 import copy
 import datetime
+import os
 import re
 import sys
 from unittest import mock
@@ -28,6 +29,39 @@ def test_init_df_year_converted_to_datetime(test_pd_df):
             datetime.datetime(2015, 1, 1),
         ]
     ).all()
+
+
+def test_init_df_from_series(test_pd_df):
+    idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+    test_pd_series = test_pd_df.melt(id_vars=idx, var_name="year").set_index(
+        idx + ["year"]
+    )["value"]
+
+    res = ScmDataFrame(test_pd_series)
+    assert (res["year"].unique() == [2005, 2010, 2015]).all()
+    assert (
+        res["time"].unique()
+        == [
+            datetime.datetime(2005, 1, 1),
+            datetime.datetime(2010, 1, 1),
+            datetime.datetime(2015, 1, 1),
+        ]
+    ).all()
+
+    res_df = res.timeseries()
+    res_df.columns = res_df.columns.map(lambda x: x.year)
+    res_df = res_df.reset_index()
+
+    pd.testing.assert_frame_equal(
+        res_df[test_pd_df.columns.tolist()], test_pd_df, check_like=True
+    )
+
+
+def test_init_df_missing_col_error(test_pd_df):
+    test_pd_df = test_pd_df.drop("model", axis="columns")
+    error_msg = re.escape("missing required columns `['model']`!")
+    with pytest.raises(ValueError, match=error_msg):
+        ScmDataFrame(test_pd_df)
 
 
 def get_test_pd_df_with_datetime_columns(tpdf):
@@ -1435,4 +1469,60 @@ def test_interpolate_with_extrapolate(test_processing_scm_df):
     npt.assert_almost_equal(obs, exp, decimal=1)
     pd.testing.assert_index_equal(
         res.timeseries().columns, pd.Index(target_times, dtype="object", name="time")
+    )
+
+
+def test_init_no_file():
+    fname = "/path/to/nowhere"
+    error_msg = re.escape("no data file `{}` found!".format(fname))
+    with pytest.raises(OSError, match=error_msg):
+        ScmDataFrame(fname)
+
+
+@pytest.mark.parametrize(
+    ("test_file", "test_kwargs"),
+    [
+        (
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../..",
+                "test_data",
+                "rcp26_emissions.csv",
+            ),
+            {},
+        ),
+        (
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../..",
+                "test_data",
+                "rcp26_emissions.xls",
+            ),
+            {},
+        ),
+        (
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../..",
+                "test_data",
+                "rcp26_emissions_multi_sheet.xlsx",
+            ),
+            {"sheet_name": "rcp26_emissions"},
+        ),
+        (
+            os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "../..",
+                "test_data",
+                "rcp26_emissions_multi_sheet_data.xlsx",
+            ),
+            {},
+        ),
+    ],
+)
+def test_read_from_disk(test_file, test_kwargs):
+    loaded = ScmDataFrame(test_file, **test_kwargs)
+    assert (
+        loaded.filter(variable="Emissions|N2O", year=1767).timeseries().values.squeeze()
+        == 0.010116813
     )

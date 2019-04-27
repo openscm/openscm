@@ -14,13 +14,16 @@ class ScmDataFrame(ScmDataFrameBase):
     """
     OpenSCM's custom DataFrame implementation.
 
-    The ScmDataFrame implements a subset of the functionality provided by `pyam`'s
-    IamDataFrame, but is focused on the providing a performant way of storing
+    The ScmDataFrame implements a subset of the functionality provided by
+    `pyam <https://github.com/IAMconsortium/pyam>`_'s
+    IamDataFrame, but is focused on providing a performant way of storing
     time series data and the metadata associated with those time series.
 
     For users who wish to take advantage of all of Pyam's functionality, please cast
-    your data frame to an IamDataFrame first with `to_iamdataframe()`. Note: this
-    operation can be relatively computationally expensive for large data sets.
+    your ScmDataFrame to an IamDataFrame first with `to_iamdataframe()`. Note: this
+    operation can be computationally expensive for large data sets because
+    IamDataFrames stored data in long/tidy form internally rather than ScmDataFrames'
+    more compact internal format.
     """
 
 

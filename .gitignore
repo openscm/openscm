@@ -21,3 +21,4 @@ htmlcov/
 .pyre_configuration
 .mypy_cache
 *~lock*
+*~$*

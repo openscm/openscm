@@ -42,7 +42,8 @@ from .timeindex import TimeIndex
 
 logger = getLogger(__name__)
 
-REQUIRED_COLS = ["model", "scenario", "region", "variable", "unit"]
+REQUIRED_COLS: List[str] = ["model", "scenario", "region", "variable", "unit"]
+"""Minimum metadata columns required by an ScmDataFrame"""
 
 
 # pylint doesn't recognise return statements if they include ','
@@ -52,22 +53,19 @@ def _read_file(  # pylint: disable=missing-return-doc
     """
     Prepare data to initialise ``ScmDataFrameBase`` from a file
 
+    Parameters
+    ----------
+    *args
+        Passed to ``_read_pandas``.
+
+    **kwargs
+        Passed to ``_read_pandas``.
+
     Returns
     -------
     :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
         First dataframe is the data. Second dataframe is metadata
-
-    Raises
-    ------
-    ValueError
-        ``fnames`` is not a string (most commonly raised if you attempt to read
-        from more than one file)
     """
-    if not is_str(fnames):
-        raise ValueError(
-            "reading multiple files not supported, "
-            "please use `openscm.ScmDataFrame.append()`"
-        )
     logger.info("Reading %s", fnames)
 
     return _format_data(_read_pandas(fnames, *args, **kwargs))
@@ -76,9 +74,32 @@ def _read_file(  # pylint: disable=missing-return-doc
 def _read_pandas(fname: str, *args: Any, **kwargs: Any) -> pd.DataFrame:
     """
     Read a file and return a pd.DataFrame
+
+    Parameters
+    ----------
+    fname
+        Path from which to read data
+
+    *args
+        Passed to ``pd.read_csv`` if ``fname`` ends with '.csv', otherwise
+        passed to ``pd.read_excel``.
+
+    **kwargs
+        Passed to ``pd.read_csv`` if ``fname`` ends with '.csv', otherwise
+        passed to ``pd.read_excel``.
+
+    Returns
+    -------
+    :obj:`pd.DataFrame`
+        Read data
+
+    Raises
+    ------
+    OSError
+        Path specified by ``fname`` does not exist
     """
     if not os.path.exists(fname):
-        raise ValueError("no data file `{}` found!".format(fname))
+        raise OSError("no data file `{}` found!".format(fname))
     if fname.endswith("csv"):
         df = pd.read_csv(fname, *args, **kwargs)
     else:
@@ -124,22 +145,19 @@ def _format_data(  # pylint: disable=missing-return-doc
 
     # reset the index if meaningful entries are included there
     if list(df.index.names) != [None]:
-        # why is this so slow?
         df.reset_index(inplace=True)
 
-    # check that all required columns exist
     if not set(REQUIRED_COLS).issubset(set(df.columns)):
         missing = list(set(REQUIRED_COLS) - set(df.columns))
         raise ValueError("missing required columns `{}`!".format(missing))
 
-    # check whether data in wide format (IAMC) or long format (`value` column)
+    # check whether data in wide or long format
     if "value" in df.columns:
         df, meta = _format_long_data(df)
     else:
         df, meta = _format_wide_data(df)
 
-    # cast value columns to numeric, drop NaN's, sort data
-    # df.dropna(inplace=True, how="all")
+    # sort data
     df.sort_index(inplace=True)
 
     return df, meta
@@ -165,7 +183,7 @@ def _format_long_data(df):
 
 
 def _format_wide_data(df):
-    orig = df
+    orig = df.copy()
 
     cols = set(df.columns) - set(REQUIRED_COLS)
     time_cols, extra_cols = False, []
@@ -255,8 +273,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     This base is the class other libraries can subclass. Having such a subclass avoids
     a potential circularity where e.g. openscm imports ScmDataFrame as well as
-    Pymagicc, but Pymagicc wants to import ScmDataFrame and hence to try and import
-    ScmDataFrame you have to import ScmDataFrame itself (hence the circularity).
+    Pymagicc, but Pymagicc wants to import ScmDataFrame too. Hence, importing
+    ScmDataFrame requires importing ScmDataFrame, causing a circularity.
     """
 
     data_hierarchy_separator = "|"
@@ -268,13 +286,15 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     def __init__(
         self,
-        data: Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray, str],
+        data: Union[
+            ScmDataFrameBase, IamDataFrame, pd.DataFrame, pd.Series, np.ndarray, str
+        ],
         index: Any = None,
         columns: Union[Dict[str, list], None] = None,
         **kwargs: Any
     ):
         """
-        Initialize an instance of an ScmDataFrameBase
+        Initialize an ScmDataFrameBase instance
 
         Parameters
         ----------
@@ -327,7 +347,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         ------
         ValueError
             If metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is not
-            found.
+            found. A ``ValueError`` is also raised if you try to load from multiple
+            files at once. If you wish to do this, please use ``df_append`` instead.
 
         TypeError
             Timeseries cannot be read from ``data``
@@ -343,13 +364,19 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             )
         elif isinstance(data, (pd.DataFrame, pd.Series)):
             (_df, _meta) = _format_data(data.copy())
-        elif isinstance(data, IamDataFrame):
+        elif isinstance(data, IamDataFrame) and data is not None:
             (_df, _meta) = _format_data(data.data.copy())
         else:
             if not is_str(data):
+                if isinstance(data, list) and is_str(data[0]):
+                    raise ValueError(
+                        "Initialising from multiple files not supported, "
+                        "use `openscm.ScmDataFrame.append()`"
+                    )
                 error_msg = "Cannot load {} from {}".format(type(self), type(data))
                 raise TypeError(error_msg)
-            (_df, _meta) = _read_file(data, **kwargs)
+            # mypy doesn't recognise type control in `if` statements
+            (_df, _meta) = _read_file(data, **kwargs)  # type: ignore
         self._time_index = TimeIndex(py_dt=_df.index.values)
         _df.index = self._time_index.as_pd_index()
         _df = _df.astype(float)
@@ -357,12 +384,17 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         self._data, self._meta = (_df, _meta)
         self._sort_meta_cols()
 
-    def copy(self):
+    def copy(self) -> ScmDataFrameBase:
         """
-        Return a deepcopy of self
+        Return a ``copy.deepcopy`` of self
 
-        Documentation about deepcopy is available
+        Documentation about ``copy.deepcopy`` is available
         `here <https://docs.python.org/2/library/copy.html#copy.deepcopy>`_.
+
+        Returns
+        -------
+        :obj:`ScmDataFrameBase`
+            ``copy.deepcopy`` of self
         """
         return copy.deepcopy(self)
 
@@ -458,18 +490,16 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
             variable_openscm = tuple(variable.split(self.data_hierarchy_separator))
             region_openscm = tuple(region.split(self.data_hierarchy_separator))
-            emms_view = core.parameters.get_writable_timeseries_view(
+            core.parameters.get_writable_timeseries_view(
                 variable_openscm,
                 region_openscm,
                 unit,
                 self.time_points,
                 ParameterType.POINT_TIMESERIES,
-            )
-            emms_view.set(vals.values)
+            ).set(vals.values)
 
         for k, v in meta_values.iteritems():
-            meta_view = core.parameters.get_writable_generic_view(k, ("World",))
-            meta_view.set(v)
+            core.parameters.get_writable_generic_view(k, ("World",)).set(v)
 
         return core
 
@@ -539,7 +569,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Parameters
         ----------
         keep
-            keep all data satisfying the filters (if True) or the inverse
+            If True, keep all timeseries satisfying the filters, otherwise drop all
+            the timeseries satisfying the filters
 
         inplace
             If True, do operation inplace and return None
@@ -599,7 +630,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             logger.warning("Filtered ScmDataFrame is empty!")
 
         if not inplace:
-            return ret  # type: ignore # mypy confused by setting of `ret`
+            return ret
 
         return None
 
@@ -1122,10 +1153,15 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         return res.set_index(ts.index.names)
 
     def append(
-        self, other: ScmDataFrameBase, inplace: bool = False, **kwargs: Any
+        self,
+        other: Union[
+            ScmDataFrameBase, IamDataFrame, pd.DataFrame, pd.Series, np.ndarray, str
+        ],
+        inplace: bool = False,
+        **kwargs: Any
     ) -> Optional[ScmDataFrameBase]:
         """
-        Append additional data from a castable object to the current dataframe.
+        Append additional data to the current dataframe.
 
         For details, see ``df_append``.
 
@@ -1230,7 +1266,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
 
 def df_append(
-    dfs: List[Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, np.ndarray, str]],
+    dfs: List[
+        Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, pd.Series, np.ndarray, str]
+    ],
     inplace: bool = False,
 ) -> Optional[ScmDataFrameBase]:
     """
@@ -1239,7 +1277,8 @@ def df_append(
     When appending many objects, it may be more efficient to call this routine once
     with a list of ScmDataFrames, than using ``ScmDataFrame.append`` multiple times.
     If timeseries with duplicate metadata are found, the timeseries are appended and
-    values falling on the same timestep are averaged. [TODO: decide whether to raise a warning, which can be silenced, when this happens].
+    values falling on the same timestep are averaged. [TODO: decide whether to raise
+    a warning, which can be silenced, when this happens].
 
     Parameters
     ----------
