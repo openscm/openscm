@@ -36,7 +36,8 @@ def to_int(x: NumpyArray) -> NumpyArray:  # pylint: disable=missing-return-doc
     Raises
     ------
     ValueError
-        If the int representation of any of the values is not equal to its original representation (where equality is checked using the ``!=`` operator).
+        If the int representation of any of the values is not equal to its original
+        representation (where equality is checked using the ``!=`` operator).
     """
     cols = [int(v) for v in x]
     error = x[cols != x]

@@ -585,7 +585,6 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             - 'level': the maximum "depth" of IAM variables (number of
               `self.data_hierarchy_separator`'s, excluding the strings given in the
               'variable' argument)
-              ()
 
             - 'time': takes a `datetime.datetime` or list of `datetime.datetime`'s
 
@@ -1104,7 +1103,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         if operation == "quantile":
             return grouper.quantile(**kwargs)
 
-        raise ValueError("operation must be on of ['median', 'mean', 'quantile']")
+        raise ValueError("operation must be one of ['median', 'mean', 'quantile']")
 
     def relative_to_ref_period_mean(
         self, append_str: Union[str, None] = None, **kwargs: Any

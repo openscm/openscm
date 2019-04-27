@@ -206,7 +206,7 @@ def test_as_iam(test_iam_df, test_pd_df):
     assert isinstance(df, IamDataFrame)
 
     pd.testing.assert_frame_equal(test_iam_df.meta, df.meta)
-    # we don't provide year column, fine as pyam are considering dropping year too
+    # we switch to time so ensure sensible comparison of columns
     tdf = df.data.copy()
     tdf["year"] = tdf["time"].apply(lambda x: x.year)
     tdf.drop("time", axis="columns", inplace=True)
@@ -631,7 +631,7 @@ def test_median_over(test_processing_scm_df):
 
 
 def test_process_over_unrecognised_operation_error(test_scm_df):
-    error_msg = re.escape("operation must be on of ['median', 'mean', 'quantile']")
+    error_msg = re.escape("operation must be one of ['median', 'mean', 'quantile']")
     with pytest.raises(ValueError, match=error_msg):
         test_scm_df.process_over("scenario", "junk")
 
@@ -821,11 +821,10 @@ def test_append_inplace(test_scm_df):
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2, 7, 7]
     npt.assert_almost_equal(obs, exp)
-
+    # TODO: test for warning here
     test_scm_df.append(other, inplace=True)
 
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
-    # is this averaging business really what we want
     exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
     npt.assert_almost_equal(obs, exp)
 
@@ -1124,7 +1123,7 @@ def test_set_meta_as_series(test_scm_df):
     )
 
 
-def test_set_meta_as_int(test_scm_df):
+def test_set_meta_as_float(test_scm_df):
     test_scm_df.set_meta(3.2, "meta_int")
 
     exp = pd.Series(data=[3.2, 3.2, 3.2], index=test_scm_df.meta.index, name="meta_int")
@@ -1215,7 +1214,7 @@ def test_filter_by_bool(test_scm_df):
 
 def test_filter_by_int(test_scm_df):
     test_scm_df.set_meta([1, 2, 3], name="test")
-    obs = test_scm_df.filter(test=[1])
+    obs = test_scm_df.filter(test=1)
     assert obs["scenario"].unique() == "a_scenario"
 
 
@@ -1343,6 +1342,8 @@ def test_scmdataframe_to_core_raises(test_scm_df):
 
     # make sure single scenario passes
     test_scm_df.filter(scenario="a_scenario2").to_core()
+    # as long as this passes we're happy, test of conversion details is in
+    # `test_convert_core_to_scmdataframe`
 
 
 @pytest.mark.skip

@@ -164,7 +164,7 @@ def pattern_match(  # pylint: disable=missing-return-doc
     matches = np.array([False] * len(meta_col))
     _values = [values] if not isinstance(values, Iterable) or is_str(values) else values
 
-    # issue (#40) with string-to-nan comparison, replace nan by empty string
+    # pyam issue (#40) with string-to-nan comparison, replace nan by empty string
     # TODO: add docs and example of filtering/removing NaN given this internal
     #       conversion
     _meta_col = meta_col.copy()

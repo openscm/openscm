@@ -1,8 +1,9 @@
 """
 A simplified version of pandas DateOffset's which use datetime-like objects instead of pd.Timestamp.
 
-This differentiation allows for time's which exceed the range of pd.Timestamp which is particularly important for longer running
-models
+This differentiation allows for times which exceed the range of pd.Timestamp (see
+`here <https://stackoverflow.com/a/37226672>`_ ) which is particularly important for
+longer running models.
 """
 import datetime
 import functools
@@ -54,7 +55,7 @@ def apply_dt(func, self):
 
 def apply_rollforward(self):
     """
-    Roll provided date backward to next offset, only if not on offset.
+    Roll provided date forward to next offset, only if not on offset.
     """
     # custom wrapper
     def wrapper(dt: datetime.datetime) -> datetime.datetime:
@@ -68,7 +69,7 @@ def apply_rollforward(self):
 
 def apply_rollback(self):
     """
-    Roll provided date backward to next offset, only if not on offset.
+    Roll provided date backward to previous offset, only if not on offset.
     """
     # custom wrapper
     def wrapper(dt: datetime.datetime) -> datetime.datetime:
