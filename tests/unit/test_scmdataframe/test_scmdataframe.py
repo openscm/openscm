@@ -31,13 +31,67 @@ def test_init_df_year_converted_to_datetime(test_pd_df):
     ).all()
 
 
-def test_init_df_from_series(test_pd_df):
-    idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
-    test_pd_series = test_pd_df.melt(id_vars=idx, var_name="year").set_index(
-        idx + ["year"]
-    )["value"]
+@pytest.mark.parametrize(
+    "in_format",
+    [
+        "pd.Series",
+        "year_col",
+        "year_col_index",
+        "time_col",
+        "time_col_index",
+        "time_col_str_simple",
+        "time_col_str_complex",
+        "str_times",
+    ],
+)
+def test_init_df_formats(test_pd_df, in_format):
+    if in_format == "pd.Series":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year").set_index(
+            idx + ["year"]
+        )["value"]
+    elif in_format == "year_col":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year")
+    elif in_format == "year_col_index":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year").set_index(
+            idx + ["year"]
+        )
+    elif in_format == "time_col":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year")
+        test_init["time"] = test_init["year"].apply(
+            lambda x: datetime.datetime(x, 1, 1)
+        )
+        test_init = test_init.drop("year", axis="columns")
+    elif in_format == "time_col_index":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year")
+        test_init["time"] = test_init["year"].apply(
+            lambda x: datetime.datetime(x, 1, 1)
+        )
+        test_init = test_init.drop("year", axis="columns")
+        test_init = test_init.set_index(idx + ["time"])
+    elif in_format == "time_col_str_simple":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year")
+        test_init["time"] = test_init["year"].apply(
+            lambda x: "{}-1-1 00:00:00".format(x)
+        )
+        test_init = test_init.drop("year", axis="columns")
+    elif in_format == "time_col_str_complex":
+        idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+        test_init = test_pd_df.melt(id_vars=idx, var_name="year")
+        test_init["time"] = test_init["year"].apply(lambda x: "{}/1/1".format(x))
+        test_init = test_init.drop("year", axis="columns")
+    elif in_format == "str_times":
+        test_init = test_pd_df.copy()
+        test_init.columns = test_init.columns.map(
+            lambda x: "{}/1/1".format(x) if isinstance(x, int) else x
+        )
 
-    res = ScmDataFrame(test_pd_series)
+    res = ScmDataFrame(test_init)
     assert (res["year"].unique() == [2005, 2010, 2015]).all()
     assert (
         res["time"].unique()
@@ -57,11 +111,92 @@ def test_init_df_from_series(test_pd_df):
     )
 
 
+def test_init_df_missing_time_axis_error(test_pd_df):
+    idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
+    test_init = test_pd_df.melt(id_vars=idx, var_name="year")
+    test_init = test_init.drop("year", axis="columns")
+    error_msg = re.escape("invalid time format, must have either `year` or `time`!")
+    with pytest.raises(ValueError, match=error_msg):
+        ScmDataFrame(test_init)
+
+
+def test_init_df_missing_time_columns_error(test_pd_df):
+    test_init = test_pd_df.copy()
+    test_init = test_init.drop(
+        test_init.columns[test_init.columns.map(lambda x: isinstance(x, int))],
+        axis="columns",
+    )
+    error_msg = re.escape(
+        "invalid column format, must contain some time (int, float or datetime) columns!"
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        ScmDataFrame(test_init)
+
+
 def test_init_df_missing_col_error(test_pd_df):
     test_pd_df = test_pd_df.drop("model", axis="columns")
     error_msg = re.escape("missing required columns `['model']`!")
     with pytest.raises(ValueError, match=error_msg):
         ScmDataFrame(test_pd_df)
+
+
+def test_init_ts_missing_col_error(test_ts):
+    error_msg = re.escape("missing required columns `['model']`!")
+    with pytest.raises(ValueError, match=error_msg):
+        ScmDataFrame(
+            test_ts,
+            columns={
+                "climate_model": ["a_model"],
+                "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
+                "region": ["World"],
+                "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
+                "unit": ["EJ/yr"],
+            },
+            index=[2005, 2010, 2015],
+        )
+
+
+def test_init_multiple_file_error():
+    error_msg = re.escape(
+        "Initialising from multiple files not supported, use "
+        "`openscm.ScmDataFrame.append()`"
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        ScmDataFrame(["file_1", "filepath_2"])
+
+
+def test_init_unrecognised_type_error():
+    fail_type = {"dict": "key"}
+    error_msg = re.escape(
+        "Cannot load <class 'openscm.scmdataframe.ScmDataFrame'> from {}".format(
+            type(fail_type)
+        )
+    )
+    with pytest.raises(TypeError, match=error_msg):
+        ScmDataFrame(fail_type)
+
+
+@pytest.mark.parametrize("fail_setting", [["a_iam", "a_iam"], "a_iam"])
+def test_init_ts_col_wrong_length_error(test_ts, fail_setting):
+    correct_scenarios = ["a_scenario", "a_scenario", "a_scenario2"]
+    error_msg = re.escape(
+        "Length of column 'model' is incorrect. It should be length 1 or {}".format(
+            len(correct_scenarios)
+        )
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        ScmDataFrame(
+            test_ts,
+            columns={
+                "model": fail_setting,
+                "climate_model": ["a_model"],
+                "scenario": correct_scenarios,
+                "region": ["World"],
+                "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
+                "unit": ["EJ/yr"],
+            },
+            index=[2005, 2010, 2015],
+        )
 
 
 def get_test_pd_df_with_datetime_columns(tpdf):
@@ -248,10 +383,67 @@ def test_get_item(test_scm_df):
     assert test_scm_df["model"].unique() == ["a_iam"]
 
 
+@pytest.mark.xfail
+def test_get_item_not_in_meta(test_scm_df):
+    # TODO: decide what this should actually test for
+    assert test_scm_df[0] == test_scm_df._data[0]
+    with pytest.raises(KeyError):
+        test_scm_df[datetime.datetime(2005, 1, 1)]
+
+
+def test_set_item(test_scm_df):
+    test_scm_df["model"] = ["a_iam", "b_iam", "c_iam"]
+    assert all(test_scm_df["model"] == ["a_iam", "b_iam", "c_iam"])
+
+
+def test_len(test_scm_df):
+    assert len(test_scm_df) == len(test_scm_df._meta)
+
+
+def test_head(test_scm_df):
+    pd.testing.assert_frame_equal(test_scm_df.head(2), test_scm_df.timeseries().head(2))
+
+
+def test_tail(test_scm_df):
+    pd.testing.assert_frame_equal(test_scm_df.tail(1), test_scm_df.timeseries().tail(1))
+
+
+def test_values(test_scm_df):
+    np.testing.assert_array_equal(test_scm_df.values, test_scm_df.timeseries().values)
+
+
 def test_variable_depth_0(test_scm_df):
     obs = list(test_scm_df.filter(level=0)["variable"].unique())
     exp = ["Primary Energy"]
     assert obs == exp
+
+
+def test_variable_depth_0_with_base():
+    tdf = ScmDataFrame(
+        data=np.array([[1, 6.0, 7], [0.5, 3, 2], [2, 7, 0], [-1, -2, 3]]).T,
+        columns={
+            "model": ["a_iam"],
+            "climate_model": ["a_model"],
+            "scenario": ["a_scenario"],
+            "region": ["World"],
+            "variable": [
+                "Primary Energy",
+                "Primary Energy|Coal",
+                "Primary Energy|Coal|Electricity",
+                "Primary Energy|Gas|Heating",
+            ],
+            "unit": ["EJ/yr"],
+        },
+        index=[
+            datetime.datetime(2005, 1, 1),
+            datetime.datetime(2010, 1, 1),
+            datetime.datetime(2015, 6, 12),
+        ],
+    )
+
+    obs = list(tdf.filter(variable="Primary Energy|*", level=1)["variable"].unique())
+    exp = ["Primary Energy|Coal|Electricity", "Primary Energy|Gas|Heating"]
+    assert all([e in obs for e in exp]) and len(obs) == len(exp)
 
 
 def test_variable_depth_0_keep_false(test_scm_df):
@@ -303,6 +495,21 @@ def test_filter_year(test_scm_datetime_df):
     expected = datetime.datetime(2005, 6, 17, 12)
 
     unique_time = obs["time"].unique()
+    assert len(unique_time) == 1
+    assert unique_time[0] == expected
+
+
+def test_filter_year_error(test_scm_datetime_df):
+    error_msg = re.escape("`year` can only be filtered with ints or lists of ints")
+    with pytest.raises(TypeError, match=error_msg):
+        test_scm_datetime_df.filter(year=2005.0)
+
+
+def test_filter_inplace(test_scm_datetime_df):
+    test_scm_datetime_df.filter(year=2005, inplace=True)
+    expected = datetime.datetime(2005, 6, 17, 12)
+
+    unique_time = test_scm_datetime_df["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
 
@@ -392,6 +599,17 @@ def test_filter_time_range_month(test_scm_datetime_df, month_range):
     assert unique_time[0] == expected
 
 
+def test_filter_time_range_month_unrecognised_error(test_scm_datetime_df):
+    fail_filter = "Marb-Jun"
+    error_msg = re.escape(
+        "Could not convert month '{}' to integer".format(
+            [m for m in fail_filter.split("-")]
+        )
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        test_scm_datetime_df.filter(month=fail_filter)
+
+
 @pytest.mark.parametrize("month_range", [["Mar-Jun", "Nov-Feb"]])
 def test_filter_time_range_round_the_clock_error(test_scm_datetime_df, month_range):
     error_msg = re.escape(
@@ -409,6 +627,17 @@ def test_filter_time_range_day(test_scm_datetime_df, day_range):
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
+
+
+def test_filter_time_range_day_unrecognised_error(test_scm_datetime_df):
+    fail_filter = "Thud-Sat"
+    error_msg = re.escape(
+        "Could not convert day '{}' to integer".format(
+            [m for m in fail_filter.split("-")]
+        )
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        test_scm_datetime_df.filter(day=fail_filter)
 
 
 @pytest.mark.parametrize("hour_range", [range(10, 14)])
@@ -778,7 +1007,7 @@ def test_append_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     other["time"] = [2020, 2030, 2040]
 
-    res = test_scm_df.append(other)
+    res = test_scm_df.append(other.timeseries())
 
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 7.0]
@@ -902,6 +1131,12 @@ def test_append_column_order_time_interpolation(test_scm_df):
         exp.timeseries().reorder_levels(res.timeseries().index.names).sort_index(),
         check_like=True,
     )
+
+
+def test_df_append_inplace_wrong_base(test_scm_df):
+    error_msg = "Can only append inplace to an ScmDataFrameBase"
+    with pytest.raises(TypeError, match=error_msg):
+        df_append([test_scm_df.timeseries(), test_scm_df], inplace=True)
 
 
 def test_append_chain_column_order_time_interpolation(test_scm_df):
@@ -1206,6 +1441,12 @@ def test_set_meta_as_str_by_index(test_scm_df):
     )
 
 
+def test_set_meta_index_coerce_fail(test_scm_df):
+    error_msg = re.escape("index cannot be coerced to pd.MultiIndex")
+    with pytest.raises(ValueError, match=error_msg):
+        test_scm_df.set_meta("foo", "meta_str", np.array([1, 2]))
+
+
 def test_filter_by_bool(test_scm_df):
     test_scm_df.set_meta([True, False, False], name="exclude")
     obs = test_scm_df.filter(exclude=True)
@@ -1236,9 +1477,34 @@ def test_rename_variable(test_scm_df):
     )
 
 
+def test_rename_variable_inplace(test_scm_df):
+    mapping = {
+        "variable": {
+            "Primary Energy": "Primary Energy|Total",
+            "Primary Energy|Coal": "Primary Energy|Fossil",
+        }
+    }
+
+    test_scm_df.rename(mapping, inplace=True)
+
+    exp = pd.Series(
+        ["Primary Energy|Total", "Primary Energy|Fossil", "Primary Energy|Total"]
+    )
+    pd.testing.assert_series_equal(
+        test_scm_df["variable"], exp, check_index_type=False, check_names=False
+    )
+
+
 def test_rename_index_fail(test_scm_df):
     mapping = {"scenario": {"a_scenario": "a_scenario2"}}
     pytest.raises(ValueError, test_scm_df.rename, mapping)
+
+
+def test_rename_col_fail(test_scm_df):
+    fail_col = "junk"
+    error_msg = re.escape("Renaming by {} not supported!".format(fail_col))
+    with pytest.raises(ValueError, match=error_msg):
+        test_scm_df.rename({fail_col: {"hi": "bye"}})
 
 
 @pytest.mark.skip

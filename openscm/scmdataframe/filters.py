@@ -222,8 +222,12 @@ def years_match(  # pylint: disable=missing-return-doc
         If `years` is not `int` or list of `int`
     """
     years = [years] if isinstance(years, int) else years
-    dt = datetime.datetime
-    if isinstance(years, dt) or isinstance(years[0], dt):
+    usable_int = isinstance(years, int)
+    try:
+        usable_int |= all(isinstance(y, int) for y in years)
+    except TypeError:
+        pass  # not an iterable
+    if not usable_int:
         error_msg = "`year` can only be filtered with ints or lists of ints"
         raise TypeError(error_msg)
     return is_in(data, years)
@@ -251,7 +255,7 @@ def month_match(  # pylint: disable=missing-return-doc
     :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
     """
-    return time_match(data, months, ["%b", "%B"], "tm_mon", "months")
+    return time_match(data, months, ["%b", "%B"], "tm_mon", "month")
 
 
 # pylint doesn't recognise return statements if they include 'of' but it should, see
@@ -276,7 +280,7 @@ def day_match(  # pylint: disable=missing-return-doc
     :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
     """
-    return time_match(data, days, ["%a", "%A"], "tm_wday", "days")
+    return time_match(data, days, ["%a", "%A"], "tm_wday", "day")
 
 
 # pylint doesn't recognise return statements if they include 'of' but it should, see
@@ -365,7 +369,10 @@ def time_match(  # pylint: disable=missing-return-doc
                 continue
 
         if res is None:
-            raise ValueError("Could not convert {} to integer".format(name))
+            error_msg = "Could not convert {} '{}' to integer".format(
+                name, strs_to_convert
+            )
+            raise ValueError(error_msg)
         return res
 
     if isinstance(times_list[0], str):

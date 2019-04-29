@@ -255,11 +255,11 @@ def _from_ts(  # pylint: disable=missing-return-doc
         if len(col) == num_ts:
             continue
         if len(col) != 1:
-            raise ValueError(
-                "Length of column {} is incorrect. It should be length 1 or {}".format(
-                    c_name, num_ts
-                )
+            error_msg = (
+                "Length of column '{}' is incorrect. It should be length "
+                "1 or {}".format(c_name, num_ts)
             )
+            raise ValueError(error_msg)
         columns[c_name] = col * num_ts
 
     meta = pd.DataFrame(columns, index=df.columns)
@@ -447,6 +447,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             return value
         if set(_key_check).issubset(self.meta.columns):
             return self._meta.__setitem__(key, value)
+        # TODO: decide what should happen here...
 
     def to_core(self) -> Core:
         """
@@ -607,7 +608,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         _keep_ts, _keep_cols = self._apply_filters(kwargs)
         idx = _keep_ts[:, np.newaxis] & _keep_cols
         if not idx.shape == self._data.shape:
-            raise AssertionError("Index shape does not match data shape")
+            raise AssertionError(
+                "Index shape does not match data shape"
+            )  # pragma: no cover  # don't think it's possible to get here...
         idx = idx if keep else ~idx
 
         ret = self.copy() if not inplace else self
@@ -623,7 +626,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         if not (
             len(ret._data.columns) == len(ret._meta)  # pylint: disable=protected-access
         ):
-            raise AssertionError("Data and meta have become unaligned")
+            raise AssertionError(
+                "Data and meta have become unaligned"
+            )  # pragma: no cover  # don't think it's possible to get here...
 
         if not ret._meta.shape[0]:  # pylint: disable=protected-access
             logger.warning("Filtered ScmDataFrame is empty!")
@@ -693,8 +698,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                     keep_meta &= pattern_match(
                         self.meta["variable"], "*", values, regexp=regexp
                     ).values
-                else:
-                    continue
+                # else do nothing as level handled in variable filtering
 
             else:
                 raise ValueError("filter by `{}` not supported".format(col))
@@ -1229,7 +1233,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         See ``pyam.IamDataFrame.line_plot`` for more information
 
         """
-        return self.to_iamdataframe().line_plot(x, y, **kwargs)
+        return self.to_iamdataframe().line_plot(x, y, **kwargs)  # pragma: no cover
 
     def scatter(self, x: str, y: str, **kwargs: Any) -> Axes:
         """
@@ -1238,7 +1242,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         See `pyam.plotting.scatter() <https://github.com/IAMconsortium/pyam>`_
         for details.
         """
-        self.to_iamdataframe().scatter(x, y, **kwargs)
+        self.to_iamdataframe().scatter(x, y, **kwargs)  # pragma: no cover
 
     def region_plot(self, **kwargs: Any) -> Axes:
         """
@@ -1247,7 +1251,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         See `pyam.plotting.region_plot() <https://github.com/IAMconsortium/pyam>`_
         for details.
         """
-        return self.to_iamdataframe().region_plot(**kwargs)
+        return self.to_iamdataframe().region_plot(**kwargs)  # pragma: no cover
 
     def pivot_table(
         self,
@@ -1261,7 +1265,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         See `pyam.core.IamDataFrame.pivot_table() <https://github.com/IAMconsortium/pyam>`_
         for details.
         """
-        return self.to_iamdataframe().pivot_table(index, columns, **kwargs)
+        return self.to_iamdataframe().pivot_table(
+            index, columns, **kwargs
+        )  # pragma: no cover
 
 
 def df_append(
@@ -1297,7 +1303,7 @@ def df_append(
 
     Raises
     ------
-    AssertionError
+    TypeError
         If ``inplace`` is True but the first element in ``dfs`` is not an instance of
         ``ScmDataFrameBase``
     """
@@ -1333,7 +1339,7 @@ def df_append(
 
     if inplace:
         if not isinstance(dfs[0], ScmDataFrameBase):
-            raise AssertionError("Can only append inplace to an ScmDataFrameBase")
+            raise TypeError("Can only append inplace to an ScmDataFrameBase")
         ret = dfs[0]
     else:
         ret = scm_dfs[0].copy()
