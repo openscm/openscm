@@ -32,6 +32,7 @@ def apply_dt(func, self):
     # should self be renamed in the function signature to something else, `ipt`?
     @functools.wraps(func)
     def wrapper(other: datetime.datetime) -> Any:
+        # TODO: decide whether we can test line below or not
         if other is NaT:
             return NaT
 
@@ -39,11 +40,13 @@ def apply_dt(func, self):
 
         result = func(self, as_datetime(other))
 
+        # TODO: decide whether we can test line below or not
         if self.normalize:
             # normalize_date returns normal datetime
             result = normalize_date(result)
 
         if tz is not None and result.tzinfo is None:
+            # TODO: decide whether we can test line below or not
             result = conversion.localize_pydatetime(  # pylint: disable=c-extension-no-member
                 result, tz
             )
@@ -117,6 +120,7 @@ def to_offset(rule: str) -> DateOffset:
         # Checks if the function has been wrapped and replace with `apply_dt` wrapper
         func = getattr(offset, fname)
 
+        # TODO: decide whether we can test exit from here
         if hasattr(func, "__wrapped__"):
             orig_func = func.__wrapped__
             object.__setattr__(offset, fname, apply_dt(orig_func, offset))
@@ -236,7 +240,7 @@ def generate_range(
 
         next_current = offset.apply(current)
         if next_current <= current:
-            raise ValueError(
+            raise ValueError(  # pragma: no cover  # emergency valve
                 "Offset is not increasing datetime: {}".format(current.isoformat())
             )
 

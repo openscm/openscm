@@ -409,7 +409,7 @@ def test_tail(test_scm_df):
 
 
 def test_values(test_scm_df):
-    np.testing.assert_array_equal(test_scm_df.values, test_scm_df.timeseries().values)
+    npt.assert_array_equal(test_scm_df.values, test_scm_df.timeseries().values)
 
 
 def test_variable_depth_0(test_scm_df):
@@ -711,6 +711,52 @@ def test_filter_timeseries_different_length():
     obs = df.filter(year=2002)["scenario"]
     pd.testing.assert_series_equal(exp, obs)
     assert df.filter(scenario="a_scenario2", year=2002).timeseries().empty
+
+
+@pytest.mark.parametrize("has_nan", [True, False])
+def test_filter_timeseries_nan_meta(has_nan):
+    df = ScmDataFrame(
+        pd.DataFrame(
+            np.array([[1.0, 2.0], [4.0, 5.0], [7.0, 8.0]]).T, index=[2000, 2001]
+        ),
+        columns={
+            "model": ["a_iam"],
+            "climate_model": ["a_model"],
+            "scenario": ["a_scenario", "a_scenario2", np.nan],
+            "region": ["World"],
+            "variable": ["Primary Energy"],
+            "unit": ["EJ/yr"],
+        },
+    )
+
+    # not sure how we want to setup NaN filtering, empty string seems as good as any?
+    if not has_nan:
+        error_msg = re.escape(
+            "String filtering cannot be performed on column 'scenario', which "
+            "contains NaN's, unless `has_nan` is True"
+        )
+        with pytest.raises(TypeError, match=error_msg):
+            df.filter(scenario="*", has_nan=has_nan)
+        with pytest.raises(TypeError, match=error_msg):
+            df.filter(scenario="", has_nan=has_nan)
+
+    else:
+
+        def with_nan_assertion(a, b):
+            assert all(
+                [
+                    (v == b[i]) or (np.isnan(v) and np.isnan(b[i]))
+                    for i, v in enumerate(a)
+                ]
+            )
+
+        res = df.filter(scenario="*", has_nan=has_nan)["scenario"].unique()
+        exp = ["a_scenario", "a_scenario2", np.nan]
+        with_nan_assertion(res, exp)
+
+        res = df.filter(scenario="", has_nan=has_nan)["scenario"].unique()
+        exp = [np.nan]
+        with_nan_assertion(res, exp)
 
 
 def test_timeseries(test_scm_df):
@@ -1664,7 +1710,7 @@ def test_resample_long_datetimes(test_scm_df):
 
     assert res.timeseries().T.index[0] == datetime.datetime(1005, 1, 1)
     assert res.timeseries().T.index[-1] == datetime.datetime(3010, 1, 1)
-    np.testing.assert_array_equal(res["year"], np.arange(1005, 3010 + 1))
+    npt.assert_array_equal(res["year"], np.arange(1005, 3010 + 1))
 
 
 def test_interpolate_with_datetimes(test_processing_scm_df):

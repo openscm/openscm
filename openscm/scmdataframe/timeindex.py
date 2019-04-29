@@ -38,12 +38,20 @@ def to_int(x: NumpyArray) -> NumpyArray:  # pylint: disable=missing-return-doc
     ValueError
         If the int representation of any of the values is not equal to its original
         representation (where equality is checked using the ``!=`` operator).
+
+    TypeError
+        x is not a ``np.ndarray``
     """
-    cols = [int(v) for v in x]
-    error = x[cols != x]
-    invalid_vals = error.size if isinstance(error, np.ndarray) else error
-    if invalid_vals:
-        raise ValueError("invalid values `{}`".format(list(error)))
+    if not isinstance(x, np.ndarray):
+        raise TypeError(
+            "For our own sanity, this method only works with np.ndarray input. "
+            "x is type: {}".format(type(x))
+        )
+    cols = np.array([int(v) for v in x])
+    invalid_vals = x[cols != x]
+    if invalid_vals.size:
+        raise ValueError("invalid values `{}`".format(list(invalid_vals)))
+
     return cols
 
 
@@ -112,15 +120,19 @@ def _format_datetime(  # pylint: disable=missing-return-doc
 
         dts = [convert_float_to_datetime(float(t)) for t in dts]
     elif isinstance(dt_0, str):
-        dts = [parser.parse(dt) for dt in dts]
+        try:
+            dts = [parser.parse(dt) for dt in dts]
+        except ValueError:
+            pass  # can't convert, catch lower down
     elif isinstance(dt_0, pd.Timestamp):
         dts = [dt.to_pydatetime() for dt in dts]
 
     not_datetime = [not isinstance(x, datetime.datetime) for x in dts]
     if any(not_datetime):
         bad_values = np.asarray(dts)[not_datetime]
-        error_msg = "All time values must be convertible to datetime. The following values are not:\n{}".format(
-            bad_values
+        error_msg = (
+            "All time values must be convertible to datetime. The following "
+            "values are not:\n\t{}".format(bad_values)
         )
         raise ValueError(error_msg)
 
@@ -134,9 +146,7 @@ class TimeIndex:
 
     def __init__(self, py_dt=None, openscm_dt=None):
         if not (py_dt is not None or openscm_dt is not None):
-            raise AssertionError(
-                "Can only pass either python datetimes or openscm datetimes"
-            )
+            raise AssertionError("One of `py_dt` or `openscm_dt` must be supplied")
 
         if py_dt is not None:
             py_dt = _format_datetime(np.asarray(py_dt))

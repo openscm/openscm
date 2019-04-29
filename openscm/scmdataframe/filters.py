@@ -153,13 +153,20 @@ def pattern_match(  # pylint: disable=missing-return-doc
 
     has_nan
         If True, convert all nan in ``meta_col`` to empty string before applying
-        filters. This means that "*" will match rows with np.nan. If False, the
-        conversion is not applied and so "*" will not match rows with np.nan.
+        filters. This means that "" and "*" will match rows with ``np.nan``. If False,
+        the conversion is not applied and so a search in a string column which
+        contains ``np.nan`` will result in a ``TypeError``.
 
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
         Array where True indicates a match
+
+    Raises
+    ------
+    TypeError
+        Filtering is performed on a string metadata column which contains
+        ``np.nan`` and ``has_nan`` is ``False``.
     """
     matches = np.array([False] * len(meta_col))
     _values = [values] if not isinstance(values, Iterable) or is_str(values) else values
@@ -184,8 +191,20 @@ def pattern_match(  # pylint: disable=missing-return-doc
                 .replace("$", "\\$")
             ) + "$"
             pattern = re.compile(_regexp if not regexp else str(s))
+            try:
+                subset = [m for m in _meta_col if pattern.match(m)]
+            except TypeError as e:
+                # if it's not the cryptic pandas message we expect, raise
+                msg = str(e)
+                if msg != "expected string or bytes-like object":
+                    raise e  # pragma: no cover # emergency valve
 
-            subset = [m for m in _meta_col if pattern.match(m)]
+                error_msg = (
+                    "String filtering cannot be performed on column '{}', which "
+                    "contains NaN's, unless `has_nan` is True".format(_meta_col.name)
+                )
+                raise TypeError(error_msg)
+
             depth = True if level is None else find_depth(_meta_col, str(s), level)
             matches |= _meta_col.isin(subset) & depth
         else:

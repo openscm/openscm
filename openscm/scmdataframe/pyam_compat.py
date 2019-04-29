@@ -20,10 +20,13 @@ try:
         """
 
         def _format_datetime_col(self):
-            if isinstance(self.data["time"].iloc[0], str):
+            if self.data["time"].apply(lambda x: isinstance(x, str)).any():
 
                 def convert_str_to_datetime(inp):
-                    return parser.parse(inp)
+                    try:
+                        return parser.parse(inp)
+                    except ValueError:
+                        return inp
 
                 self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
 

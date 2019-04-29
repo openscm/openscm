@@ -562,7 +562,11 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         return self._meta.copy()
 
     def filter(
-        self, keep: bool = True, inplace: bool = False, **kwargs: Any
+        self,
+        keep: bool = True,
+        inplace: bool = False,
+        has_nan: bool = True,
+        **kwargs: Any
     ) -> Optional[ScmDataFrameBase]:
         """
         Return a filtered ScmDataFrame (i.e., a subset of the data).
@@ -575,6 +579,12 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         inplace
             If True, do operation inplace and return None
+
+        has_nan
+            If True, convert all nan in ``meta_col`` to empty string before applying
+            filters. This means that "" and "*" will match rows with ``np.nan``. If
+            False, the conversion is not applied and so a search in a string column
+            which contains ``np.nan`` will result in a ``TypeError``.
 
         **kwargs
             Argument names are keys with which to filter, values are used to do the
@@ -605,7 +615,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         AssertionError
             Data and meta become unaligned.
         """
-        _keep_ts, _keep_cols = self._apply_filters(kwargs)
+        _keep_ts, _keep_cols = self._apply_filters(kwargs, has_nan)
         idx = _keep_ts[:, np.newaxis] & _keep_cols
         if not idx.shape == self._data.shape:
             raise AssertionError(
@@ -643,7 +653,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     # ':obj:`list` of :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
     def _apply_filters(  # pylint: disable=missing-return-doc
-        self, filters: Dict
+        self, filters: Dict, has_nan: bool = True
     ) -> Tuple[NumpyArray[bool], NumpyArray[bool]]:
         """
         Determine rows to keep in data for given set of filters
@@ -654,6 +664,12 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             Dictionary of filters ({col: values}}); uses a pseudo-regexp syntax
             by default but if ``filters["regexp"]`` is ``True``, regexp is used
             directly.
+
+        has_nan
+            If True, convert all nan in ``meta_col`` to empty string before applying
+            filters. This means that "" and "*" will match rows with ``np.nan``. If
+            False, the conversion is not applied and so a search in a string column
+            which contains ``np.nan`` will result in a ``TypeError``.
 
         Returns
         -------
@@ -675,9 +691,13 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         for col, values in filters.items():
             if col == "variable":
                 level = filters["level"] if "level" in filters else None
-                keep_meta &= pattern_match(self.meta[col], values, level, regexp).values
+                keep_meta &= pattern_match(
+                    self.meta[col], values, level, regexp, has_nan=has_nan
+                ).values
             elif col in self.meta.columns:
-                keep_meta &= pattern_match(self.meta[col], values, regexp=regexp).values
+                keep_meta &= pattern_match(
+                    self.meta[col], values, regexp=regexp, has_nan=has_nan
+                ).values
             elif col == "year":
                 keep_ts &= years_match(self._time_index.years(), values)
 
@@ -696,7 +716,11 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             elif col == "level":
                 if "variable" not in filters.keys():
                     keep_meta &= pattern_match(
-                        self.meta["variable"], "*", values, regexp=regexp
+                        self.meta["variable"],
+                        "*",
+                        values,
+                        regexp=regexp,
+                        has_nan=has_nan,
                     ).values
                 # else do nothing as level handled in variable filtering
 
