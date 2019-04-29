@@ -1,12 +1,11 @@
 from datetime import datetime
 from types import GeneratorType
 
-import pytest
 import numpy as np
-import numpy.testing as npt
-from pandas.tseries.offsets import DateOffset, NaT, apply_wraps
+import pytest
+from pandas.tseries.offsets import DateOffset, NaT
 
-from openscm.scmdataframe.offsets import generate_range, to_offset, apply_dt
+from openscm.scmdataframe.offsets import apply_dt, generate_range, to_offset
 
 
 @pytest.mark.parametrize(

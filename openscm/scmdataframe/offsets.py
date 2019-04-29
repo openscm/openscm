@@ -2,7 +2,7 @@
 A simplified version of pandas DateOffset's which use datetime-like objects instead of pd.Timestamp.
 
 This differentiation allows for times which exceed the range of pd.Timestamp (see
-`here <https://stackoverflow.com/a/37226672>`_ ) which is particularly important for
+`here <https://stackoverflow.com/a/37226672>`__) which is particularly important for
 longer running models.
 """
 import datetime

@@ -418,11 +418,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         ``self.meta``. If key is anything else, the key will be applied to
         ``self._data``.
         """
-        _key_check = (
-            [key]
-            if is_str(key) or not isinstance(key, Iterable)
-            else key
-        )
+        _key_check = [key] if is_str(key) or not isinstance(key, Iterable) else key
         if key == "time":
             return pd.Series(self._time_index.as_pd_index(), dtype="object")
         if key == "year":
@@ -432,7 +428,6 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         raise KeyError("I don't know what to do with key: {}".format(key))
 
-    # [TODO check with @lewisjared what happens at return point]
     def __setitem__(  # pylint: disable=inconsistent-return-statements
         self, key: Any, value: Any
     ) -> Any:
@@ -442,15 +437,12 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Provides direct access to set "time" as well as the columns in
         ``self.meta``.
         """
-        _key_check = [key] if is_str(key) else key
-
         if key == "time":
             # TODO: double check if this will actually do what we want
             self._time_index = TimeIndex(py_dt=value)
             self._data.index = self._time_index.as_pd_index()
             return value
         return self.set_meta(value, name=key)
-
 
     def to_core(self) -> Core:
         """
