@@ -7,7 +7,7 @@ import copy
 import datetime
 import os
 from logging import getLogger
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -418,7 +418,11 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         ``self.meta``. If key is anything else, the key will be applied to
         ``self._data``.
         """
-        _key_check = [key] if is_str(key) else key
+        _key_check = (
+            [key]
+            if is_str(key) or not isinstance(key, Iterable)
+            else key
+        )
         if key == "time":
             return pd.Series(self._time_index.as_pd_index(), dtype="object")
         if key == "year":
@@ -426,7 +430,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
 
-        return self._data.__getitem__(key)
+        raise KeyError("I don't know what to do with key: {}".format(key))
 
     # [TODO check with @lewisjared what happens at return point]
     def __setitem__(  # pylint: disable=inconsistent-return-statements
@@ -445,9 +449,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             self._time_index = TimeIndex(py_dt=value)
             self._data.index = self._time_index.as_pd_index()
             return value
-        if set(_key_check).issubset(self.meta.columns):
-            return self._meta.__setitem__(key, value)
-        # TODO: decide what should happen here...
+        return self.set_meta(value, name=key)
+
 
     def to_core(self) -> Core:
         """

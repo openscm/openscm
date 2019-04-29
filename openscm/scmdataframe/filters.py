@@ -241,11 +241,12 @@ def years_match(  # pylint: disable=missing-return-doc
         If `years` is not `int` or list of `int`
     """
     years = [years] if isinstance(years, int) else years
-    usable_int = isinstance(years, int)
-    try:
-        usable_int |= all(isinstance(y, int) for y in years)
-    except TypeError:
-        pass  # not an iterable
+    usable_int = (
+        all(isinstance(y, int) for y in years)
+        if isinstance(years, Iterable)
+        else isinstance(years, int)
+    )
+
     if not usable_int:
         error_msg = "`year` can only be filtered with ints or lists of ints"
         raise TypeError(error_msg)

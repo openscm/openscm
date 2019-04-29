@@ -383,17 +383,24 @@ def test_get_item(test_scm_df):
     assert test_scm_df["model"].unique() == ["a_iam"]
 
 
-@pytest.mark.xfail
 def test_get_item_not_in_meta(test_scm_df):
-    # TODO: decide what this should actually test for
-    assert test_scm_df[0] == test_scm_df._data[0]
-    with pytest.raises(KeyError):
-        test_scm_df[datetime.datetime(2005, 1, 1)]
+    dud_key = 0
+    error_msg = re.escape("I don't know what to do with key: {}".format(dud_key))
+    with pytest.raises(KeyError, match=error_msg):
+        test_scm_df[dud_key]
 
 
 def test_set_item(test_scm_df):
     test_scm_df["model"] = ["a_iam", "b_iam", "c_iam"]
     assert all(test_scm_df["model"] == ["a_iam", "b_iam", "c_iam"])
+
+
+def test_set_item_not_in_meta(test_scm_df):
+    with pytest.raises(ValueError):
+        test_scm_df["junk"] = ["hi", "bye"]
+
+    test_scm_df["junk"] = ["hi", "bye", "ciao"]
+    assert all(test_scm_df["junk"] == ["hi", "bye", "ciao"])
 
 
 def test_len(test_scm_df):

@@ -9,6 +9,7 @@ import datetime
 import functools
 from typing import Any, Iterable
 
+import pandas as pd
 from pandas.tseries.frequencies import to_offset as pd_to_offset
 from pandas.tseries.offsets import (
     BusinessMixin,
@@ -33,7 +34,7 @@ def apply_dt(func, self):
     @functools.wraps(func)
     def wrapper(other: datetime.datetime) -> Any:
         # TODO: decide whether we can test line below or not
-        if other is NaT:
+        if pd.isnull(other):
             return NaT
 
         tz = getattr(other, "tzinfo", None)
@@ -46,8 +47,7 @@ def apply_dt(func, self):
             result = normalize_date(result)
 
         if tz is not None and result.tzinfo is None:
-            # TODO: decide whether we can test line below or not
-            result = conversion.localize_pydatetime(  # pylint: disable=c-extension-no-member
+            result = conversion.localize_pydatetime(  # pylint: disable=c-extension-no-member  # pragma: no cover
                 result, tz
             )
 
@@ -120,8 +120,7 @@ def to_offset(rule: str) -> DateOffset:
         # Checks if the function has been wrapped and replace with `apply_dt` wrapper
         func = getattr(offset, fname)
 
-        # TODO: decide whether we can test exit from here
-        if hasattr(func, "__wrapped__"):
+        if hasattr(func, "__wrapped__"):  # pragma: no cover
             orig_func = func.__wrapped__
             object.__setattr__(offset, fname, apply_dt(orig_func, offset))
 
