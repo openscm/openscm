@@ -33,7 +33,6 @@ def apply_dt(func, self):
     # should self be renamed in the function signature to something else, `ipt`?
     @functools.wraps(func)
     def wrapper(other: datetime.datetime) -> Any:
-        # TODO: decide whether we can test line below or not
         if pd.isnull(other):
             return NaT
 
@@ -41,7 +40,6 @@ def apply_dt(func, self):
 
         result = func(self, as_datetime(other))
 
-        # TODO: decide whether we can test line below or not
         if self.normalize:
             # normalize_date returns normal datetime
             result = normalize_date(result)
