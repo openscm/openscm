@@ -1131,7 +1131,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         raise ValueError("operation must be one of ['median', 'mean', 'quantile']")
 
-    def convert_unit(self, unit: str, inplace=False, **kwargs: Any) -> ScmDataFrameBase:
+    def convert_unit(self, unit: str, context: Optional[str] = None, inplace=False, **kwargs: Any) -> ScmDataFrameBase:
         """
         Convert the units of a selection of timeseries.
 
@@ -1141,6 +1141,10 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         ----------
         unit
             Unit to convert to. This must be recognised by UnitConverter.
+        context
+            Context to use for the conversion i.e. which metric to apply when performing
+            CO2-equivalent calculations. If ``None``, no metric will be applied and
+            CO2-equivalent calculations will raise ``DimensionalityError``.
         inplace
             If True, the operation is performed inplace, updating the underlying data.
             Otherwise a new ScmDataFrameBase is returned.
@@ -1156,7 +1160,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         to_convert = ret.filter(**kwargs)
         for orig_unit, grp in to_convert._meta.groupby('unit'):
-            uc = UnitConverter(orig_unit, unit)
+            uc = UnitConverter(orig_unit, unit, context=context)
 
             ret._data[grp.index] = ret._data[grp.index].apply(uc.convert_from)
             ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(unit=unit)

@@ -1606,6 +1606,21 @@ def test_convert_unit_inplace(test_scm_df):
     npt.assert_array_almost_equal(test_scm_df.filter(year=2005).values.squeeze(), [1000.0, 500.0, 2000.0])
 
 
+def test_convert_unit_context(test_scm_df):
+    test_scm_df = test_scm_df.filter(variable='Primary Energy') # Duplicated meta if set all 3 ts to the same variable name
+    test_scm_df['unit'] = "kg SF5CF3 / yr"
+    test_scm_df['variable'] = "SF5CF3"
+
+    obs = test_scm_df.convert_unit("kg CO2 / yr", context="AR4GWP100")
+    factor = 17700
+    expected = [1.0 * factor, 2.0 * factor]
+    npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
+
+    error_msg = "Cannot convert from 'SF5CF3 * kilogram / a' ([SF5CF3] * [mass] / [time]) to 'CO2 * kilogram / a' ([carbon] * [mass] / [time])"
+    with pytest.raises(DimensionalityError, match=re.escape(error_msg)):
+        test_scm_df.convert_unit("kg CO2 / yr")
+
+
 def test_scmdataframe_to_core(rcp26):
     tdata = rcp26
 
