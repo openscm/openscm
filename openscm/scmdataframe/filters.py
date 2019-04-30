@@ -15,6 +15,9 @@ import six
 from nptyping import Array as NumpyArray
 
 
+DEFAULT_SEPARATOR = '|'
+
+
 def is_str(s: Any) -> bool:
     """
     Determine, for our use cases, whether a quantity is a string or not.
@@ -63,7 +66,7 @@ def is_in(  # pylint: disable=missing-return-doc
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def find_depth(  # pylint: disable=missing-return-doc
-    meta_col: pd.Series, s: str, level: Union[int, str]
+    meta_col: pd.Series, s: str, level: Union[int, str], separator: str = DEFAULT_SEPARATOR
 ) -> NumpyArray[bool]:
     """
     Find all values which match given depth from a filter keyword
@@ -77,10 +80,13 @@ def find_depth(  # pylint: disable=missing-return-doc
         Filter keyword, from which level should be applied
 
     level
-        Depth of value to match as defined by the number of pipes ("|") in the value
+        Depth of value to match as defined by the number of separator in the value
         name. If an int, the depth is matched exactly. If a str, then the depth can be
         matched as either "X-", for all levels up to level "X", or "X+", for all
         levels above level "X".
+
+    separator
+        The string used to separate levels in s. Defaults to a pipe ("|").
 
     Returns
     -------
@@ -114,7 +120,7 @@ def find_depth(  # pylint: disable=missing-return-doc
         raise ValueError("Unknown level type: {}".format(level))
 
     # determine depth
-    pipe = re.compile("\\|")  # TODO: remove hard-coded pipe here
+    pipe = re.compile(re.escape(separator))
     regexp = str(s).replace("*", "")
 
     def apply_test(val):
@@ -132,6 +138,7 @@ def pattern_match(  # pylint: disable=missing-return-doc
     level: Union[str, int, None] = None,
     regexp: bool = False,
     has_nan: bool = True,
+    separator: str = DEFAULT_SEPARATOR,
 ) -> NumpyArray[bool]:
     """
     Filter data by matching metadata columns to given patterns
@@ -157,6 +164,8 @@ def pattern_match(  # pylint: disable=missing-return-doc
         the conversion is not applied and so a search in a string column which
         contains ``np.nan`` will result in a ``TypeError``.
 
+    separator
+        String used to separate the hierarchy levels in values. Defaults to '|'
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
@@ -205,7 +214,7 @@ def pattern_match(  # pylint: disable=missing-return-doc
                 )
                 raise TypeError(error_msg)
 
-            depth = True if level is None else find_depth(_meta_col, str(s), level)
+            depth = True if level is None else find_depth(_meta_col, str(s), level, separator=separator)
             matches |= _meta_col.isin(subset) & depth
         else:
             matches |= meta_col == s

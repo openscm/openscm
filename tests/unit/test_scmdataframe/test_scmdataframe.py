@@ -1846,3 +1846,22 @@ def test_read_from_disk(test_file, test_kwargs):
         loaded.filter(variable="Emissions|N2O", year=1767).timeseries().values.squeeze()
         == 0.010116813
     )
+
+@pytest.mark.parametrize(
+    "separator", ['|', '__', '/', '~', '_', '-']
+)
+def test_separator_changes(test_scm_df, separator):
+    variable = test_scm_df['variable']
+    test_scm_df['variable'] = [v.replace('|', separator) for v in variable]
+
+    test_scm_df.data_hierarchy_separator = separator
+
+    pd.testing.assert_series_equal(
+        test_scm_df.filter(level=0)['variable'],
+        pd.Series(['Primary Energy', 'Primary Energy'], index=[0, 2], name='variable')
+    )
+
+    pd.testing.assert_series_equal(
+        test_scm_df.filter(level=1)['variable'],
+        pd.Series(['Primary Energy{}Coal'.format(separator)], index=[1], name='variable')
+    )

@@ -30,6 +30,7 @@ from openscm.utils import (
 from .filters import (
     datetime_match,
     day_match,
+    DEFAULT_SEPARATOR,
     hour_match,
     is_str,
     month_match,
@@ -277,7 +278,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     ScmDataFrame requires importing ScmDataFrame, causing a circularity.
     """
 
-    data_hierarchy_separator = "|"
+    data_hierarchy_separator = DEFAULT_SEPARATOR
     """str: String used to define different levels in our data hierarchies.
 
     By default we follow pyam and use "|". In such a case, emissions of CO2 for energy
@@ -687,11 +688,11 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             if col == "variable":
                 level = filters["level"] if "level" in filters else None
                 keep_meta &= pattern_match(
-                    self.meta[col], values, level, regexp, has_nan=has_nan
+                    self.meta[col], values, level, regexp, has_nan=has_nan, separator=self.data_hierarchy_separator
                 ).values
             elif col in self.meta.columns:
                 keep_meta &= pattern_match(
-                    self.meta[col], values, regexp=regexp, has_nan=has_nan
+                    self.meta[col], values, regexp=regexp, has_nan=has_nan, separator=self.data_hierarchy_separator
                 ).values
             elif col == "year":
                 keep_ts &= years_match(self._time_index.years(), values)
@@ -716,6 +717,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                         values,
                         regexp=regexp,
                         has_nan=has_nan,
+                        separator=self.data_hierarchy_separator
                     ).values
                 # else do nothing as level handled in variable filtering
 
