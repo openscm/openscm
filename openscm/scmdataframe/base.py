@@ -1148,22 +1148,27 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         inplace
             If True, the operation is performed inplace, updating the underlying data.
             Otherwise a new ScmDataFrameBase is returned.
-        kwargs
+        **kwargs
             Extra arguments which are passed to :func:`~ScmDataFrameBase.filter` to
             limit the timeseries which are attempted to be converted. Defaults to
             selecting the entire ScmDataFrame, which will likely fail.
+
         Returns
         -------
         :obj:`ScmDataFrameBase` or None
         """
         ret = self if inplace else self.copy()
 
+        if 'unit_context' not in ret._meta:
+            ret._meta['unit_context'] = None
+            ret._sort_meta_cols()
+
         to_convert = ret.filter(**kwargs)
         for orig_unit, grp in to_convert._meta.groupby('unit'):
             uc = UnitConverter(orig_unit, unit, context=context)
-
             ret._data[grp.index] = ret._data[grp.index].apply(uc.convert_from)
-            ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(unit=unit)
+            # TODO: Check if unit_context has changed
+            ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(unit=unit, unit_context=context)
 
         if not inplace:
             return ret

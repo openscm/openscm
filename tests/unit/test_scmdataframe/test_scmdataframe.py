@@ -1615,6 +1615,7 @@ def test_convert_unit_context(test_scm_df):
     factor = 17700
     expected = [1.0 * factor, 2.0 * factor]
     npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
+    assert(all(obs['unit_context'] == "AR4GWP100"))
 
     error_msg = "Cannot convert from 'SF5CF3 * kilogram / a' ([SF5CF3] * [mass] / [time]) to 'CO2 * kilogram / a' ([carbon] * [mass] / [time])"
     with pytest.raises(DimensionalityError, match=re.escape(error_msg)):
