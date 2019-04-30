@@ -7,7 +7,7 @@ Borrowed from pyam.utils
 import datetime
 import re
 import time
-from typing import Any, Iterable, List, Union
+from typing import Any, Iterable, List, Union, Optional
 
 import numpy as np
 import pandas as pd  # noqa: F401
@@ -135,7 +135,7 @@ def find_depth(  # pylint: disable=missing-return-doc
 def pattern_match(  # pylint: disable=missing-return-doc
     meta_col: pd.Series,
     values: Union[Iterable[str], str],
-    level: Union[str, int, None] = None,
+    level: Optional[Union[str, int]] = None,
     regexp: bool = False,
     has_nan: bool = True,
     separator: str = DEFAULT_SEPARATOR,

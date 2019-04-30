@@ -292,7 +292,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             ScmDataFrameBase, IamDataFrame, pd.DataFrame, pd.Series, np.ndarray, str
         ],
         index: Any = None,
-        columns: Union[Dict[str, list], None] = None,
+        columns: Optional[Dict[str, list]] = None,
         **kwargs: Any
     ):
         """
@@ -510,7 +510,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         return self._time_index.as_openscm()
 
-    def timeseries(self, meta: Union[List[str], None] = None) -> pd.DataFrame:
+    def timeseries(self, meta: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Return the data in wide format (same as the timeseries method of ``pyam.IamDataFrame``)
 
@@ -830,8 +830,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     def set_meta(
         self,
         meta: Union[pd.Series, list, int, float, str],
-        name: Union[str, None] = None,
-        index: Union[pd.DataFrame, pd.Series, pd.Index, pd.MultiIndex] = None,
+        name: Optional[str] = None,
+        index: Optional[pd.DataFrame, pd.Series, pd.Index, pd.MultiIndex] = None,
     ) -> None:
         """
         Set metadata information
@@ -1174,7 +1174,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             return ret
 
     def relative_to_ref_period_mean(
-        self, append_str: Union[str, None] = None, **kwargs: Any
+        self, append_str: Optional[str] = None, **kwargs: Any
     ) -> pd.DataFrame:
         """
         Return the timeseries relative to a given reference period mean.
