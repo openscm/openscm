@@ -40,7 +40,9 @@ def convert_datetime_to_openscm_time(dt_in: datetime.datetime) -> int:
 
 def convert_openscm_time_to_datetime(oscm_in: int) -> datetime.datetime:
     """Convert OpenSCM time to datetime.datetime"""
-    return OPENSCM_REFERENCE_TIME + relativedelta(seconds=oscm_in)
+
+    # Need to cast to int as np.int64 from numpy arrays are unsupported
+    return OPENSCM_REFERENCE_TIME + relativedelta(seconds=int(oscm_in))
 
 
 def is_floatlike(f: Any) -> bool:

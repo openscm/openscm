@@ -13,7 +13,7 @@ from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
-from openscm.scmdataframe import ScmDataFrame, df_append
+from openscm.scmdataframe import ScmDataFrame, df_append, convert_core_to_scmdataframe
 from openscm.timeseries_converter import ExtrapolationType
 from openscm.units import UndefinedUnitError, DimensionalityError
 from openscm.utils import convert_datetime_to_openscm_time
@@ -1695,32 +1695,24 @@ def test_scmdataframe_to_core_raises(test_scm_df):
     # `test_convert_core_to_scmdataframe`
 
 
-@pytest.mark.skip
 def test_convert_core_to_scmdataframe(rcp26):
-    pass  # uncomment when ready (flake8 complains about undefined stuff)
-    # tdata = rcp26
+    tdata = rcp26
 
-    # intermediate = convert_scmdataframe_to_core(tdata)
+    intermediate = rcp26.to_core()
 
-    # res = convert_core_to_scmdataframe(
-    #     intermediate,
-    #     period_length=ONE_YEAR_IN_S_INTEGER,
-    #     model="IMAGE",
-    #     scenario="RCP26",
-    #     climate_model="unspecified",
-    # )
+    res = convert_core_to_scmdataframe(
+        intermediate,
+        [convert_datetime_to_openscm_time(dt) for dt in tdata['time']],
+        model="IMAGE",
+        scenario="RCP26",
+        climate_model="unspecified",
+    )
 
-    # # necessary as moving from even timesteps in seconds does not match perfectly with
-    # # yearly timesteps (which are not always the same number of seconds apart due to
-    # # leap years)
-    # tdata["time"] = tdata["time"].apply(round_to_nearest_year)
-    # res["time"] = res["time"].apply(round_to_nearest_year)
-
-    # pd.testing.assert_frame_equal(
-    #     tdata.timeseries().reset_index(),
-    #     res.timeseries().reset_index(),
-    #     check_like=True,
-    # )
+    pd.testing.assert_frame_equal(
+        tdata.timeseries().reset_index(),
+        res.timeseries().reset_index(),
+        check_like=True,
+    )
 
 
 def test_resample(test_scm_df):
@@ -1876,6 +1868,7 @@ def test_read_from_disk(test_file, test_kwargs):
         loaded.filter(variable="Emissions|N2O", year=1767).timeseries().values.squeeze()
         == 0.010116813
     )
+
 
 @pytest.mark.parametrize(
     "separator", ['|', '__', '/', '~', '_', '-']

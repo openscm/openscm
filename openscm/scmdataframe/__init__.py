@@ -3,11 +3,14 @@ The OpenSCM high-level API provides high-level functionality around
 single model runs.  This includes reading/writing input and output
 data, easy setting of parameters and stochastic ensemble runs.
 """
-from openscm.units import UnitConverter
+from typing import List
 
+import numpy as np
+
+from openscm.core import Core
+from openscm.parameters import ParameterType
+from openscm.utils import convert_openscm_time_to_datetime
 from .base import ScmDataFrameBase, df_append  # noqa: F401
-
-ONE_YEAR_IN_S_INTEGER = int(round(UnitConverter("year", "s").convert_from(1)))
 
 
 class ScmDataFrame(ScmDataFrameBase):
@@ -27,115 +30,83 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-# TODO: decide what to do about this legacy code
-# import numpy as np
-# import pandas as pd
+def convert_core_to_scmdataframe(
+        core: Core,
+        time_points: List[int],
+        model: str = "unspecified",
+        scenario: str = "unspecified",
+        climate_model: str = "unspecified",
+) -> ScmDataFrame:
+    """
+    Get an ScmDataFrame from a Core object
 
-# from openscm.core import Core, ParameterSet
-# from openscm.parameters import ParameterType
+    An ScmDataFrame is a view with a common time index for all time series. All metadata in Core must be represented as Generic
+    parameters with in the `World` region.
 
-# from openscm.utils import convert_openscm_time_to_datetime
+    Parameters
+    ----------
+    core
+        Core object containing time series and optional metadata.
+    time_points
+        List of OpenSCM time values to which all timeseries will be interpolated.
+    model
+        Default value for the model metadata value. This value is only used if the `model` parameter is not found.
+    scenario
+        Default value for the scenario metadata value. This value is only used if the `scenario` parameter is not found.
+    climate_model
+        Default value for the climate_model metadata value. This value is only used if the `climate_model` parameter is not found.
 
-# def convert_core_to_scmdataframe(
-#     core: Core,
-#     period_length: int = ONE_YEAR_IN_S_INTEGER,
-#     model: str = "unspecified",
-#     scenario: str = "unspecified",
-#     climate_model: str = "unspecified",
-# ) -> ScmDataFrame:
-#     def get_metadata(c, para):
-#         md = {}
-#         if para._children:
-#             for _, child_para in para._children.items():
-#                 md.update(get_metadata(c, child_para))
-#         is_time_data = para._info._type == ParameterType.TIMESERIES
-#         if (para._info._type is None) or is_time_data:
-#             return metadata
+    Returns
+    -------
+    :obj:`ScmDataFrame`
+    """
+    time_points = np.asarray(time_points)
 
-#         variable = value.info.name
-#         if para._info._type == ParameterType.BOOLEAN:
-#             values = para._data
-#             label = "{}".format(variable)
-#         elif para._info._type == ParameterType.ARRAY:
-#             values = tuple(para._data)  # pandas indexes must be hashable
-#             label = "{} ({})".format(variable, para.info.unit)
-#         else:
-#             values = para._data
-#             label = "{} ({})".format(variable, para.info.unit)
+    def walk_parameters(c, para, past=()):
+        md = {}
+        full_para_name = past + (para.info.name,)
+        if para._children:
+            for _, child_para in para._children.items():
+                md.update(walk_parameters(c, child_para, past=full_para_name))
+            return md
 
-#         metadata[label] = [values]
-#         return metadata
+        md[(full_para_name, para.info.region)] = para.info
+        return md
 
-#     def get_scmdataframe_timeseries_columns(core_in, metadata_in):
-#         def get_ts_ch(core_here, para_here, ts_in, time_in, ch_in):
-#             if para_here._children:
-#                 for _, child_para in para_here._children.items():
-#                     ts_in, time_in, ch_in = get_ts_ch(
-#                         core_here, child_para, ts_in, time_in, ch_in
-#                     )
-#             if not para_here._info._type == ParameterType.TIMESERIES:
-#                 return ts_in, time_in, ch_in
+    def parameter_name_to_scm(t):
+        return ScmDataFrame.data_hierarchy_separator.join(t)
 
-#             unit = para_here.info.unit
-#             tview = core.parameters.get_timeseries_view(
-#                 para_here.full_name,
-#                 para_here.info.region,
-#                 unit,
-#                 core_here.start_time,
-#                 period_length,
-#             )
-#             values = tview.get_series()
-#             time = np.array(
-#                 [convert_openscm_time_to_datetime(int(t)) for t in tview.get_times()]
-#             )
-#             if time_in is None:
-#                 time_in = time
-#             else:
-#                 if not (time_in == time).all():
-#                     raise AssertionError("Time axes do not match")
+    metadata = {
+        "climate_model": [climate_model],
+        "scenario": [scenario],
+        "model": [model],
+        "variable": [],
+        "region": [],
+        "unit": []
+    }
+    data = []
 
-#             ts_in.append(values)
-#             ch_in["unit"].append(unit)
-#             ch_in["variable"].append(
-#                 ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.full_name)
-#             )
-#             ch_in["region"].append(
-#                 ScmDataFrame.DATA_HIERARCHY_SEPARATOR.join(para_here.info.region)
-#             )
+    root_params = {}
+    for key, value in core.parameters._root._parameters.items():
+        root_params.update(walk_parameters(core, value))
 
-#             return ts_in, time_in, ch_in
+    for param_name, region in root_params:
+        p_info = root_params[param_name, region]
 
-#         ts = []
-#         time_axis = None
-#         column_headers = {"variable": [], "region": [], "unit": []}
-#         for key, value in core_in.parameters._root._parameters.items():
-#             ts, time_axis, column_headers = get_ts_ch(
-#                 core_in, value, ts, time_axis, column_headers
-#             )
+        # All meta values are stored as generic value (AKA no units)
+        if p_info.parameter_type == ParameterType.GENERIC:
+            assert (region == ('World',))
+            metadata[parameter_name_to_scm(param_name)] = [core.parameters.get_generic_view(param_name, region).get()]
+        else:
+            ts = core.parameters.get_timeseries_view(param_name, region, p_info.unit, time_points, p_info.parameter_type)
+            data.append(ts.get())
+            metadata['variable'].append(parameter_name_to_scm(param_name))
+            metadata['region'].append(parameter_name_to_scm(region))
+            metadata['unit'].append(p_info.unit)
 
-#         return (
-#             pd.DataFrame(np.vstack(ts).T, pd.Index(time_axis)),
-#             {**metadata, **column_headers},
-#         )
-
-#     metadata = {
-#         "climate_model": [climate_model],
-#         "scenario": [scenario],
-#         "model": [model],
-#     }
-
-#     for key, value in core.parameters._root._parameters.items():
-#         metadata.update(get_metadata(core, value))
-
-#     timeseries, columns = get_scmdataframe_timeseries_columns(core, metadata)
-#     # convert timeseries to dataframe with time index here
-#     return ScmDataFrame(timeseries, columns=columns)
-
-
-# def convert_config_dict_to_parameter_set(config):
-#     parameters = ParameterSet()
-#     for key, (region, value) in config.items():
-#         view = parameters.get_writable_scalar_view(key, region, str(value.units))
-#         view.set(value.magnitude)
-
-#     return parameters
+    # convert timeseries to dataframe with time index here
+    return ScmDataFrame(
+        np.atleast_2d(data).T,
+        columns=metadata,
+        index=[convert_openscm_time_to_datetime(t) for t in time_points]
+    )
