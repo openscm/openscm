@@ -15,6 +15,7 @@ from pandas.errors import UnsupportedFunctionCall
 
 from openscm.scmdataframe import ScmDataFrame, df_append
 from openscm.timeseries_converter import ExtrapolationType
+from openscm.units import UndefinedUnitError, DimensionalityError
 from openscm.utils import convert_datetime_to_openscm_time
 
 
@@ -1560,35 +1561,49 @@ def test_rename_col_fail(test_scm_df):
         test_scm_df.rename({fail_col: {"hi": "bye"}})
 
 
-@pytest.mark.skip
-def test_convert_unit():
-    df = ScmDataFrame(
-        pd.DataFrame(
-            [
-                ["model", "scen", "SST", "test_1", "A", 1, 5],
-                ["model", "scen", "SDN", "test_2", "unit", 2, 6],
-                ["model", "scen", "SST", "test_3", "C", 3, 7],
-            ],
-            columns=["model", "scenario", "region", "variable", "unit", 2005, 2010],
-        )
-    )
+@pytest.mark.parametrize(
+    ('target_unit', 'input_units', 'filter_kwargs', 'expected', 'expected_units'),
+    [
+        ('EJ/yr', 'EJ/yr', {}, [1.0, 0.5, 2.0], ['EJ/yr', 'EJ/yr', 'EJ/yr']),
+        ('PJ/yr', 'EJ/yr', {}, [1000.0, 500.0, 2000.0], ['PJ/yr', 'PJ/yr', 'PJ/yr']),
+        ('PJ/yr', 'EJ/yr', {'scenario': 'a_scenario2'}, [1.0, 0.5, 2000.0], ['EJ/yr', 'EJ/yr', 'PJ/yr']),
+        ('PJ/yr', ['EJ/yr', 'TJ/yr', 'Gt C / yr'], {'variable': 'Primary Energy|Coal'}, [1.0, 0.5 * 1E-3, 2.0], ['EJ/yr', 'PJ/yr', 'Gt C / yr'])
+    ]
+)
+def test_convert_unit(test_scm_df, target_unit, input_units, filter_kwargs, expected, expected_units):
+    test_scm_df['unit'] = input_units
+    obs = test_scm_df.convert_unit(target_unit, **filter_kwargs)
 
-    unit_conv = {"A": ["B", 5], "C": ["D", 3]}
+    exp_units = pd.Series(expected_units, name='unit')
 
-    obs = df.convert_unit(unit_conv).data.reset_index(drop=True)
+    pd.testing.assert_series_equal(obs['unit'], exp_units)
+    npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
+    assert ((test_scm_df['unit'] == input_units).all())
 
-    exp = ScmDataFrame(
-        pd.DataFrame(
-            [
-                ["model", "scen", "SST", "test_1", "B", 5, 25],
-                ["model", "scen", "SDN", "test_2", "unit", 2, 6],
-                ["model", "scen", "SST", "test_3", "D", 9, 21],
-            ],
-            columns=["model", "scenario", "region", "variable", "unit", 2005, 2010],
-        )
-    ).data.reset_index(drop=True)
 
-    pd.testing.assert_frame_equal(obs, exp, check_index_type=False)
+def test_convert_unit_unknown_unit(test_scm_df):
+    unknown_unit = 'Unknown'
+    test_scm_df['unit'] = unknown_unit
+
+    error_msg = re.escape("'{}' is not defined in the unit registry".format(unknown_unit))
+    with pytest.raises(UndefinedUnitError, match=error_msg):
+        test_scm_df.convert_unit('EJ/yr')
+
+
+def test_convert_unit_dimensionality(test_scm_df):
+    error_msg = "Cannot convert from 'exajoule / a' .* to 'kelvin'"
+    with pytest.raises(DimensionalityError, match=error_msg):
+        test_scm_df.convert_unit('kelvin')
+
+
+def test_convert_unit_inplace(test_scm_df):
+    units = test_scm_df['unit'].copy()
+
+    ret = test_scm_df.convert_unit('PJ/yr', inplace=True)
+    assert (ret is None)
+
+    assert ((test_scm_df['unit'] != units).all())
+    npt.assert_array_almost_equal(test_scm_df.filter(year=2005).values.squeeze(), [1000.0, 500.0, 2000.0])
 
 
 def test_scmdataframe_to_core(rcp26):

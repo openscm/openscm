@@ -21,6 +21,7 @@ from openscm.timeseries_converter import (
     ParameterType,
     TimeseriesConverter,
 )
+from openscm.units import UnitConverter
 from openscm.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,
@@ -1129,6 +1130,39 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             return grouper.quantile(**kwargs)
 
         raise ValueError("operation must be one of ['median', 'mean', 'quantile']")
+
+    def convert_unit(self, unit: str, inplace=False, **kwargs: Any) -> ScmDataFrameBase:
+        """
+        Convert the units of a selection of timeseries.
+
+        Uses :obj:`openscm.units.UnitConverter` to perform the conversion.
+
+        Parameters
+        ----------
+        unit
+            Unit to convert to. This must be recognised by UnitConverter.
+        inplace
+            If True, the operation is performed inplace, updating the underlying data.
+            Otherwise a new ScmDataFrameBase is returned.
+        kwargs
+            Extra arguments which are passed to :func:`~ScmDataFrameBase.filter` to
+            limit the timeseries which are attempted to be converted. Defaults to
+            selecting the entire ScmDataFrame, which will likely fail.
+        Returns
+        -------
+        :obj:`ScmDataFrameBase` or None
+        """
+        ret = self if inplace else self.copy()
+
+        to_convert = ret.filter(**kwargs)
+        for orig_unit, grp in to_convert._meta.groupby('unit'):
+            uc = UnitConverter(orig_unit, unit)
+
+            ret._data[grp.index] = ret._data[grp.index].apply(uc.convert_from)
+            ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(unit=unit)
+
+        if not inplace:
+            return ret
 
     def relative_to_ref_period_mean(
         self, append_str: Union[str, None] = None, **kwargs: Any
