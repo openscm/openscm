@@ -21,10 +21,10 @@ def test_short_data(combo):
 
 
 def test_none_extrapolation_error(combo):
-    combo.target = [combo.source[0] - 1, combo.source[0], combo.source[-1] + 1]
+    target = [combo.source[0] - 1, combo.source[0], combo.source[-1] + 1]
     timeseriesconverter = timeseries_converter.TimeseriesConverter(
         combo.source,
-        combo.target,
+        target,
         combo.timeseries_type,
         combo.interpolation_type,
         timeseries_converter.ExtrapolationType.NONE,
@@ -34,4 +34,4 @@ def test_none_extrapolation_error(combo):
         "extrapolation type other than None"
     )
     with pytest.raises(InsufficientDataError, match=error_msg):
-        timeseriesconverter._convert(combo.source_values, combo.source, combo.target)
+        timeseriesconverter._convert(combo.source_values, combo.source, target)
