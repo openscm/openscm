@@ -8,6 +8,7 @@ import datetime
 import os
 from logging import getLogger
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -39,6 +40,7 @@ from .filters import (
     years_match,
 )
 from .offsets import generate_range, to_offset
+from .parameter_type import guess_parameter_type
 from .pyam_compat import Axes, IamDataFrame, LongDatetimeIamDataFrame
 from .timeindex import TimeIndex
 
@@ -899,22 +901,21 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     def interpolate(
         self,
         target_times: List[Union[datetime.datetime, int]],
-        timeseries_type: ParameterType = ParameterType.POINT_TIMESERIES,
         interpolation_type: InterpolationType = InterpolationType.LINEAR,
-        extrapolation_type: ExtrapolationType = ExtrapolationType.NONE,
+        extrapolation_type: ExtrapolationType = ExtrapolationType.CONSTANT,
     ) -> ScmDataFrameBase:
         """
         Interpolate the dataframe onto a new time frame
 
-        Uses openscm.timeseries_converter.TimeseriesConverter internally
+        Uses openscm.timeseries_converter.TimeseriesConverter internally. For each time series
+        a ``ParameterType`` is guessed from the variable name. To override the guessed parameter
+        type, specify a `parameter_type` meta column before calling interpolate. The guessed
+        parameter types are returned in meta.
 
         Parameters
         ----------
         target_times
             Time grid onto which to interpolate
-
-        timeseries_type
-            Type of timeseries which is being interpolated
 
         interpolation_type
             How to interpolate the data between timepoints.
@@ -928,9 +929,6 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             A new ``ScmDataFrameBase`` containing the data interpolated onto the
             ``target_times`` grid
         """
-        source_times_openscm = [
-            convert_datetime_to_openscm_time(t) for t in self["time"]
-        ]
         if isinstance(target_times[0], datetime.datetime):
             # mypy confused about typing of target_times in this block, we must
             # assume datetime
@@ -948,13 +946,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 for t in target_times
             ]
 
-        timeseries_converter = TimeseriesConverter(
-            np.asarray(source_times_openscm),
-            np.asarray(target_times_openscm),
-            timeseries_type,
-            interpolation_type,
-            extrapolation_type,
-        )
+        target_times_openscm = np.asarray(target_times_openscm)
+        target_times_dt = np.asarray(target_times_dt)
 
         # Need to keep an object index or pandas will not be able to handle a wide
         # time range
@@ -962,14 +955,69 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         res = self.copy()
 
-        res._data = res._data.apply(  # pylint: disable=protected-access
-            lambda col: pd.Series(
-                timeseries_converter.convert_from(col.values), index=timeseries_index
-            )
-        )
-        res["time"] = timeseries_index
+        def _to_param_type(p: Union[ParameterType, str]) -> ParameterType:
+            if isinstance(p, ParameterType):
+                return p
+            if p == "average":
+                return ParameterType.AVERAGE_TIMESERIES
+            elif p == "point":
+                return ParameterType.POINT_TIMESERIES
 
-        return type(self)(res)
+            raise ValueError('Unknown parameter_type')
+
+        # Add in a parameter_type column if it doesn't exist
+        if 'parameter_type' not in res._meta:
+            res._meta['parameter_type'] = None
+            res._sort_meta_cols()
+
+        def guess(r):
+            if r.parameter_type is None:
+                warnings.warn('`parameter_type` metadata not available. Guessing parameter types where unavailable.')
+                parameter_type = guess_parameter_type(r.variable, r.unit)
+                r.parameter_type = "average" if parameter_type == ParameterType.AVERAGE_TIMESERIES else "point"
+            return r
+
+        res._meta.apply(guess, axis=1)
+
+        # Resize dataframe to new index length
+        old_data = res._data
+        res._data = pd.DataFrame(index=timeseries_index, columns=res._data.columns)
+
+        for parameter_type, grp in res._meta.groupby('parameter_type'):
+            p_type = _to_param_type(parameter_type)
+            time_points = self.time_points
+
+            if p_type == ParameterType.AVERAGE_TIMESERIES:
+                # With an average time series we are making the assumption that the last value is the
+                # average value between t[-1] and (t[-1] - t[-2]). This will ensure that both the
+                # point and average timeseries can use the same time grid.
+                delta_t = target_times_openscm[-1] - target_times_openscm[-2]
+                target_times_openscm = np.concatenate((target_times_openscm,
+                                                       [target_times_openscm[-1] + delta_t]))
+
+                delta_t = time_points[-1] - time_points[-2]
+                time_points = np.concatenate((time_points, [time_points[-1] + delta_t]))
+
+            timeseries_converter = TimeseriesConverter(
+                time_points,
+                target_times_openscm,
+                p_type,
+                interpolation_type,
+                extrapolation_type,
+            )
+
+            res._data[grp.index] = old_data[grp.index].apply(  # pylint: disable=protected-access
+                lambda col: pd.Series(
+                    timeseries_converter.convert_from(col.values), index=timeseries_index
+                )
+            )
+
+            # Convert from ParameterType to str
+            parameter_type_str = "average" if parameter_type == ParameterType.AVERAGE_TIMESERIES else "point"
+            res._meta.loc[grp.index] = res._meta.loc[grp.index].assign(parameter_type=parameter_type_str)
+
+        res["time"] = timeseries_index
+        return res
 
     def resample(self, rule: str = "AS", **kwargs: Any) -> ScmDataFrameBase:
         """

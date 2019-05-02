@@ -8,15 +8,16 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import IamDataFrame, assert_core
+from conftest import IamDataFrame, assert_core, doesnt_warn
 from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
 from openscm.scmdataframe import ScmDataFrame, df_append, convert_core_to_scmdataframe
+from openscm.parameters import ParameterType
 from openscm.timeseries_converter import ExtrapolationType
 from openscm.units import UndefinedUnitError, DimensionalityError
-from openscm.utils import convert_datetime_to_openscm_time
+from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
@@ -1243,25 +1244,59 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
     )
 
 
-@pytest.mark.skip
-def test_interpolate(test_scm_df):
-    test_scm_df.interpolate(2007)
-    dct = {
-        "model": ["a_model"] * 3,
-        "scenario": ["a_scenario"] * 3,
-        "years": [2005, 2007, 2010],
-        "value": [1, 3, 6],
-    }
-    exp = pd.DataFrame(dct).pivot_table(
-        index=["model", "scenario"], columns=["years"], values="value"
-    )
-    variable = {"variable": "Primary Energy"}
-    obs = test_scm_df.filter(**variable).timeseries()
-    npt.assert_array_equal(obs, exp)
+@pytest.mark.parametrize("with_openscm_time", [True, False])
+def test_interpolate(combo, with_openscm_time):
+    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
+    target = combo.target.copy()
 
-    # redo the inpolation and check that no duplicates are added
-    test_scm_df.interpolate(2007)
-    assert not test_scm_df.filter(**variable).data.duplicated().any()
+    # For average timeseries we drop the last time value so that the data and times are same length
+    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
+        df_dts = df_dts[:-1]
+        target = target[:-1]
+
+    df = ScmDataFrame(combo.source_values,
+                      columns={
+                          "scenario": ["a_scenario"],
+                          "model": ["a_model"],
+                          "region": ["World"],
+                          "variable": ["Emissions|BC"],
+                          "unit": ["Mg /yr"],
+                          "parameter_type": ["point" if combo.timeseries_type == ParameterType.POINT_TIMESERIES else "average"]
+                      }, index=df_dts)
+
+    if not with_openscm_time:
+        target = [convert_openscm_time_to_datetime(d) for d in target]
+
+    res = df.interpolate(target, interpolation_type=combo.interpolation_type, extrapolation_type=combo.extrapolation_type)
+
+    npt.assert_array_almost_equal(res.values.squeeze(), combo.target_values)
+
+
+@pytest.mark.parametrize("with_openscm_time", [True, False])
+def test_interpolate_missing_param_type(combo, with_openscm_time):
+    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
+    df = ScmDataFrame(combo.source_values,
+                      columns={
+                          "scenario": ["a_scenario"],
+                          "model": ["a_model"],
+                          "region": ["World"],
+                          "variable": ["Emissions|BC"],
+                          "unit": ["Mg /yr"]
+                      }, index=df_dts)
+
+    if with_openscm_time:
+        target = combo.target
+    else:
+        target = [convert_openscm_time_to_datetime(d) for d in combo.target]
+
+    warning_msg = '`parameter_type` metadata not available. Guessing parameter types where unavailable.'
+    with pytest.warns(UserWarning, match=warning_msg):
+        df.interpolate(target, interpolation_type=combo.interpolation_type, extrapolation_type=combo.extrapolation_type)
+
+    df.set_meta('point', 'parameter_type')
+    with doesnt_warn():
+        df.interpolate(target, interpolation_type=combo.interpolation_type, extrapolation_type=combo.extrapolation_type)
 
 
 def test_set_meta_no_name(test_scm_df):
@@ -1716,103 +1751,81 @@ def test_convert_core_to_scmdataframe(rcp26):
     )
 
 
-def test_resample(test_scm_df):
-    res = test_scm_df.resample("AS")
+def test_resample():
+    df_dts = [
+        datetime.datetime(2000, 1, 1),
+        datetime.datetime(2000, 6, 1),
+        datetime.datetime(2001, 1, 1),
+        datetime.datetime(2001, 6, 1),
+        datetime.datetime(2002, 1, 1),
+        datetime.datetime(2002, 6, 1),
+        datetime.datetime(2003, 1, 1),
+    ]
+    df = ScmDataFrame([1., 2., 3., 4., 5.,6., 7.],
+                      columns={
+                          "scenario": ["a_scenario"],
+                          "model": ["a_model"],
+                          "region": ["World"],
+                          "variable": ["Emissions|BC"],
+                          "unit": ["Mg /yr"],
+                          "parameter_type": ["point"]
+                      }, index=df_dts)
+    res = df.resample("AS")
 
-    obs = (
-        res.filter(scenario="a_scenario", variable="Primary Energy")
-        .timeseries()
-        .T.squeeze()
-    )
-    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0]
+    obs = res.values.squeeze()
+    exp = [1.0, 3.0, 5.0, 7.0]
     npt.assert_almost_equal(obs, exp, decimal=1)
 
 
 def test_resample_long_datetimes(test_scm_df):
-    dts = [
-        datetime.datetime(1005, 1, 1),
-        datetime.datetime(2000, 1, 1),
-        datetime.datetime(3010, 1, 1),
+    # THis is the usecase which will fail if we used pd.resample
+    df_dts = [datetime.datetime(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
+    df = ScmDataFrame(np.arange(1700, 2500 + 1, 100),
+                      columns={
+                          "scenario": ["a_scenario"],
+                          "model": ["a_model"],
+                          "region": ["World"],
+                          "variable": ["Emissions|BC"],
+                          "unit": ["Mg /yr"],
+                          "parameter_type": ["point"]
+                      }, index=df_dts)
+    res = df.resample("AS")
+
+    obs = res.values.squeeze()
+    exp = np.arange(1700, 2500 + 1)
+    npt.assert_almost_equal(obs, exp, decimal=1)
+
+
+def interpolate_with_meta(test_scm_df):
+    expected = [
+        'average',
+        'point',
+        'average'
     ]
-    test_scm_df["time"] = dts
 
-    res = test_scm_df.resample("AS")
-
-    assert res.timeseries().T.index[0] == datetime.datetime(1005, 1, 1)
-    assert res.timeseries().T.index[-1] == datetime.datetime(3010, 1, 1)
-    npt.assert_array_equal(res["year"], np.arange(1005, 3010 + 1))
+    test_scm_df.set_meta(expected, 'parameter_type')
+    res = test_scm_df.interpolate([6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4])
+    npt.assert_array_almost_equal(res['parameter_type'].values, expected)
 
 
-def test_interpolate_with_datetimes(test_processing_scm_df):
-    target_times = [datetime.datetime(y, 1, 1) for y in range(2005, 2010 + 1)]
+def interpolate_guessing(test_scm_df):
+    assert "parameter_type" not in test_scm_df.meta.columns
 
-    res = test_processing_scm_df.interpolate(target_times)
+    variables = [
+        'Emissions|BC',
+        'Surface Temperature',
+        'Radiative Forcing|Greenhouse Gases'
+    ]
+    test_scm_df['variable'] = variables
+    res = test_scm_df.interpolate([6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4])
 
-    obs = (
-        res.filter(scenario="a_scenario", variable="Primary Energy")
-        .timeseries()
-        .T.squeeze()
-    )
-    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-    npt.assert_almost_equal(obs, exp, decimal=1)
-    pd.testing.assert_index_equal(
-        res.timeseries().columns, pd.Index(target_times, dtype="object", name="time")
-    )
+    expected = [
+        'average',
+        'point',
+        'average'
+    ]
 
-
-def test_interpolate_with_ints(test_processing_scm_df):
-    target_times = [datetime.datetime(y, 1, 1) for y in range(2005, 2010 + 1)]
-    target_times_openscm = [convert_datetime_to_openscm_time(dt) for dt in target_times]
-
-    res = test_processing_scm_df.interpolate(target_times_openscm)
-
-    obs = (
-        res.filter(scenario="a_scenario", variable="Primary Energy")
-        .timeseries()
-        .T.squeeze()
-    )
-    exp = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-    npt.assert_almost_equal(obs, exp, decimal=1)
-    pd.testing.assert_index_equal(
-        res.timeseries().columns, pd.Index(target_times, dtype="object", name="time")
-    )
-
-
-def test_interpolate_with_extrapolate(test_processing_scm_df):
-    target_times = [datetime.datetime(y, 1, 1) for y in range(2010, 2017 + 1)]
-    target_times_openscm = [convert_datetime_to_openscm_time(dt) for dt in target_times]
-
-    # Default is to NOT extrapolate
-    with pytest.raises(ValueError):
-        test_processing_scm_df.interpolate(target_times_openscm)
-
-    res = test_processing_scm_df.interpolate(
-        target_times_openscm, extrapolation_type=ExtrapolationType.CONSTANT
-    )
-    obs = (
-        res.filter(scenario="a_scenario", variable="Primary Energy")
-        .timeseries()
-        .T.squeeze()
-    )
-    exp = [6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.0, 7.0]
-    npt.assert_almost_equal(obs, exp, decimal=1)
-    pd.testing.assert_index_equal(
-        res.timeseries().columns, pd.Index(target_times, dtype="object", name="time")
-    )
-
-    res = test_processing_scm_df.interpolate(
-        target_times_openscm, extrapolation_type=ExtrapolationType.LINEAR
-    )
-    obs = (
-        res.filter(scenario="a_scenario", variable="Primary Energy")
-        .timeseries()
-        .T.squeeze()
-    )
-    exp = [6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4]
-    npt.assert_almost_equal(obs, exp, decimal=1)
-    pd.testing.assert_index_equal(
-        res.timeseries().columns, pd.Index(target_times, dtype="object", name="time")
-    )
+    npt.assert_array_almost_equal(res['parameter_type'].values, expected)
 
 
 def test_init_no_file():
