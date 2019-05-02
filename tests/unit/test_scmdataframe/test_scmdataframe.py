@@ -1247,33 +1247,9 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
 
 
 @pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate(combo, with_openscm_time):
-    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
-    target = combo.target.copy()
-
-    # For average timeseries we drop the last time value so that the data and times are same length
-    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
-        df_dts = df_dts[:-1]
-        target = target[:-1]
-
-    df = ScmDataFrame(
-        combo.source_values,
-        columns={
-            "scenario": ["a_scenario"],
-            "model": ["a_model"],
-            "region": ["World"],
-            "variable": ["Emissions|BC"],
-            "unit": ["Mg /yr"],
-            "parameter_type": [
-                "point"
-                if combo.timeseries_type == ParameterType.POINT_TIMESERIES
-                else "average"
-            ],
-        },
-        index=df_dts,
-    )
-
+def test_interpolate(combo_df, with_openscm_time):
+    combo, df = combo_df
+    target = combo.target
     if not with_openscm_time:
         target = [convert_openscm_time_to_datetime(d) for d in target]
 
@@ -1287,38 +1263,23 @@ def test_interpolate(combo, with_openscm_time):
 
 
 @pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate_missing_param_type(combo, with_openscm_time):
-    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
-    target = combo.target.copy()
+def test_interpolate_missing_param_type(combo_df, with_openscm_time):
+    combo, df = combo_df
+    df._meta.pop("parameter_type")
 
-    # For average timeseries we drop the last time value so that the data and times are same length
-    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
-        df_dts = df_dts[:-1]
-        target = target[:-1]
-
-    df = ScmDataFrame(
-        combo.source_values,
-        columns={
-            "scenario": ["a_scenario"],
-            "model": ["a_model"],
-            "region": ["World"],
-            "variable": ["Emissions|BC"],
-            "unit": ["Mg /yr"],
-        },
-        index=df_dts,
-    )
-
+    target = combo.target
     if not with_openscm_time:
         target = [convert_openscm_time_to_datetime(d) for d in target]
 
     warning_msg = "`parameter_type` metadata not available. Guessing parameter types where unavailable."
     with pytest.warns(UserWarning, match=warning_msg):
-        df.interpolate(
+        res = df.interpolate(
             target,
             interpolation_type=combo.interpolation_type,
             extrapolation_type=combo.extrapolation_type,
         )
+
+    assert "parameter_type" in res.meta
 
     df.set_meta("point", "parameter_type")
     with doesnt_warn():
@@ -1327,6 +1288,27 @@ def test_interpolate_missing_param_type(combo, with_openscm_time):
             interpolation_type=combo.interpolation_type,
             extrapolation_type=combo.extrapolation_type,
         )
+
+
+def test_interpolate_parameter_type(combo_df):
+    combo, df = combo_df
+    df["parameter_type"] = combo.timeseries_type
+
+    res = df.interpolate(
+        combo.target,
+        interpolation_type=combo.interpolation_type,
+        extrapolation_type=combo.extrapolation_type,
+    )
+
+    npt.assert_array_almost_equal(res.values.squeeze(), combo.target_values)
+
+
+def test_interpolate_bad_type(combo_df):
+    combo, df = combo_df
+    df["parameter_type"] = "junk"
+
+    with pytest.raises(ValueError):
+        df.interpolate(combo.target)
 
 
 def test_set_meta_no_name(test_scm_df):

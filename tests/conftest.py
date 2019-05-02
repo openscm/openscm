@@ -4,6 +4,7 @@ Fixtures and data for tests.
 
 from collections import namedtuple
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime
 from os.path import abspath, dirname, join
 
@@ -15,6 +16,7 @@ from openscm import timeseries_converter
 from openscm.core import ParameterSet
 from openscm.parameters import ParameterType
 from openscm.scmdataframe import ScmDataFrame
+from openscm.utils import convert_openscm_time_to_datetime
 
 try:
     from pyam import IamDataFrame
@@ -256,10 +258,8 @@ def assert_core(expected, time, test_core, name, region, unit, time_points):
 
 @pytest.fixture(scope="function")
 def test_run_parameters():
-    run_parameters = namedtuple("RunParameters", ["start_time", "stop_time"])
-    run_parameters.start_time = 0
-    run_parameters.stop_time = 100 * 365 * 24 * 60 * 60
-    yield run_parameters
+    RunParameters = namedtuple("RunParameters", ["start_time", "stop_time"])
+    yield RunParameters(start_time=0, stop_time=100 * 365 * 24 * 60 * 60)
 
 
 possible_source_values = [[1, 5, 3, 5, 7, 3, 2, 9]]
@@ -353,39 +353,77 @@ possible_target_values = [
 
 test_combinations = []
 
+Combination = namedtuple(
+    "TestCombination",
+    [
+        "source",
+        "source_values",
+        "target",
+        "target_values",
+        "timeseries_type",
+        "interpolation_type",
+        "extrapolation_type",
+    ],
+)
 for index in possible_target_values:
-    combination = namedtuple(
-        "TestCombination",
-        [
-            "source",
-            "source_values",
-            "target",
-            "target_values",
-            "timeseries_type",
-            "interpolation_type",
-            "extrapolation_type",
-        ],
+    combination = Combination(
+        source_values=np.array(index["source_values"]),
+        source=timeseries_converter.create_time_points(
+            index["source_start_time"],
+            index["source_period_length"],
+            len(index["source_values"]),
+            index["timeseries_type"],
+        ),
+        target_values=np.array(index["target_values"]),
+        target=timeseries_converter.create_time_points(
+            index["target_start_time"],
+            index["target_period_length"],
+            len(index["target_values"]),
+            index["timeseries_type"],
+        ),
+        timeseries_type=index["timeseries_type"],
+        interpolation_type=index["interpolation_type"],
+        extrapolation_type=index["extrapolation_type"],
     )
-    combination.source_values = np.array(index["source_values"])
-    combination.source = timeseries_converter.create_time_points(
-        index["source_start_time"],
-        index["source_period_length"],
-        len(combination.source_values),
-        index["timeseries_type"],
-    )
-    combination.target_values = np.array(index["target_values"])
-    combination.target = timeseries_converter.create_time_points(
-        index["target_start_time"],
-        index["target_period_length"],
-        len(combination.target_values),
-        index["timeseries_type"],
-    )
-    combination.timeseries_type = index["timeseries_type"]
-    combination.interpolation_type = index["interpolation_type"]
-    combination.extrapolation_type = index["extrapolation_type"]
     test_combinations.append(combination)
 
 
 @pytest.fixture(params=test_combinations)
 def combo(request):
     return request.param
+
+
+@pytest.fixture(params=test_combinations, scope="function")
+def combo_df(request):
+    combo = deepcopy(request.param)
+    vals = combo._asdict()
+    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
+
+    # For average timeseries we drop the last time value so that the data and times are same length
+    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
+        df_dts = df_dts[:-1]
+        vals["target"] = combo.target.copy()[:-1]
+        assert len(vals["target"]) == len(combo.target_values)
+        assert len(df_dts) == len(combo.source_values)
+
+    df = ScmDataFrame(
+        combo.source_values,
+        columns={
+            "scenario": ["a_scenario"],
+            "model": ["a_model"],
+            "region": ["World"],
+            "variable": ["Emissions|BC"],
+            "unit": ["Mg /yr"],
+            "parameter_type": [
+                (
+                    "point"
+                    if combo.timeseries_type == ParameterType.POINT_TIMESERIES
+                    else "average"
+                )
+            ],
+        },
+        index=df_dts,
+    )
+
+    return Combination(**vals), df
