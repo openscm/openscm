@@ -1689,6 +1689,23 @@ def test_convert_unit_context(test_scm_df):
         test_scm_df.convert_unit("kg CO2 / yr")
 
 
+def test_convert_existing_unit_context(test_scm_df):
+    test_scm_df = test_scm_df.filter(
+        variable="Primary Energy"
+    )  # Duplicated meta if set all 3 ts to the same variable name
+    test_scm_df["unit"] = "kg SF5CF3 / yr"
+    test_scm_df["variable"] = "SF5CF3"
+    test_scm_df.set_meta("AR4GWP100", "unit_context")
+
+    obs = test_scm_df.convert_unit("kg CO2 / yr", context="AR4GWP100")
+    factor = 17700
+    expected = [1.0 * factor, 2.0 * factor]
+    npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
+    assert all(obs["unit_context"] == "AR4GWP100")
+
+    #TODO: warning if unit_context is different
+
+
 def test_scmdataframe_to_core(rcp26):
     tdata = rcp26
 
