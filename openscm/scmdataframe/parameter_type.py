@@ -11,15 +11,15 @@ from openscm.units import _unit_registry, UndefinedUnitError
 List of regex patterns for matching variable names to :obj:`ParameterType`
 """
 parameter_matches = [
-    (re.compile(r'^Emissions'), ParameterType.AVERAGE_TIMESERIES),
-    (re.compile(r'.*_(GWP)?EMIS'), ParameterType.AVERAGE_TIMESERIES),
-    (re.compile(r'.*Flux'), ParameterType.AVERAGE_TIMESERIES),
-    (re.compile(r'.*_(PEFF|EFF|S)?RF'), ParameterType.AVERAGE_TIMESERIES),
-    (re.compile(r'^Radiative Forcing'), ParameterType.AVERAGE_TIMESERIES),
-    (re.compile('HEATUPTAKE_EBALANCE_TOTAL'), ParameterType.AVERAGE_TIMESERIES),
-    (re.compile(r'^Atmospheric Concentrations'), ParameterType.POINT_TIMESERIES),
-    (re.compile(r'.*_CONC'), ParameterType.POINT_TIMESERIES),
-    (re.compile(r'(Surface Temperature|.*TEMP)'), ParameterType.POINT_TIMESERIES),
+    (re.compile(r"^Emissions"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r".*_(GWP)?EMIS"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r".*Flux"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r".*_(PEFF|EFF|S)?RF"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r"^Radiative Forcing"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile("HEATUPTAKE_EBALANCE_TOTAL"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r"^Atmospheric Concentrations"), ParameterType.POINT_TIMESERIES),
+    (re.compile(r".*_CONC"), ParameterType.POINT_TIMESERIES),
+    (re.compile(r"(Surface Temperature|.*TEMP)"), ParameterType.POINT_TIMESERIES),
 ]
 
 
@@ -46,7 +46,7 @@ def guess_parameter_type(variable_name: str, unit: Optional[str]) -> ParameterTy
         # try and determine if the unit contains a time dimension
         try:
             pint_unit = _unit_registry(unit).units
-            if '[time]' in str(pint_unit.dimensionality):
+            if "[time]" in str(pint_unit.dimensionality):
                 return ParameterType.AVERAGE_TIMESERIES
             else:
                 return ParameterType.POINT_TIMESERIES

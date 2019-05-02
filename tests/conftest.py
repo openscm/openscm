@@ -129,7 +129,11 @@ def doesnt_warn():
     with pytest.warns(None) as record:
         yield
     if len(record):
-        pytest.fail('The following warnings were raised: {}'.format([w.message for w in record.list]))
+        pytest.fail(
+            "The following warnings were raised: {}".format(
+                [w.message for w in record.list]
+            )
+        )
 
 
 @pytest.fixture(scope="function")

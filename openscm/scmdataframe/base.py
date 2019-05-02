@@ -691,11 +691,20 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             if col == "variable":
                 level = filters["level"] if "level" in filters else None
                 keep_meta &= pattern_match(
-                    self.meta[col], values, level, regexp, has_nan=has_nan, separator=self.data_hierarchy_separator
+                    self.meta[col],
+                    values,
+                    level,
+                    regexp,
+                    has_nan=has_nan,
+                    separator=self.data_hierarchy_separator,
                 ).values
             elif col in self.meta.columns:
                 keep_meta &= pattern_match(
-                    self.meta[col], values, regexp=regexp, has_nan=has_nan, separator=self.data_hierarchy_separator
+                    self.meta[col],
+                    values,
+                    regexp=regexp,
+                    has_nan=has_nan,
+                    separator=self.data_hierarchy_separator,
                 ).values
             elif col == "year":
                 keep_ts &= years_match(self._time_index.years(), values)
@@ -720,7 +729,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                         values,
                         regexp=regexp,
                         has_nan=has_nan,
-                        separator=self.data_hierarchy_separator
+                        separator=self.data_hierarchy_separator,
                     ).values
                 # else do nothing as level handled in variable filtering
 
@@ -963,18 +972,24 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             elif p == "point":
                 return ParameterType.POINT_TIMESERIES
 
-            raise ValueError('Unknown parameter_type')
+            raise ValueError("Unknown parameter_type")
 
         # Add in a parameter_type column if it doesn't exist
-        if 'parameter_type' not in res._meta:
-            res._meta['parameter_type'] = None
+        if "parameter_type" not in res._meta:
+            res._meta["parameter_type"] = None
             res._sort_meta_cols()
 
         def guess(r):
             if r.parameter_type is None:
-                warnings.warn('`parameter_type` metadata not available. Guessing parameter types where unavailable.')
+                warnings.warn(
+                    "`parameter_type` metadata not available. Guessing parameter types where unavailable."
+                )
                 parameter_type = guess_parameter_type(r.variable, r.unit)
-                r.parameter_type = "average" if parameter_type == ParameterType.AVERAGE_TIMESERIES else "point"
+                r.parameter_type = (
+                    "average"
+                    if parameter_type == ParameterType.AVERAGE_TIMESERIES
+                    else "point"
+                )
             return r
 
         res._meta.apply(guess, axis=1)
@@ -983,7 +998,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         old_data = res._data
         res._data = pd.DataFrame(index=timeseries_index, columns=res._data.columns)
 
-        for parameter_type, grp in res._meta.groupby('parameter_type'):
+        for parameter_type, grp in res._meta.groupby("parameter_type"):
             p_type = _to_param_type(parameter_type)
             time_points = self.time_points
 
@@ -992,8 +1007,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 # average value between t[-1] and (t[-1] - t[-2]). This will ensure that both the
                 # point and average timeseries can use the same time grid.
                 delta_t = target_times_openscm[-1] - target_times_openscm[-2]
-                target_times_openscm = np.concatenate((target_times_openscm,
-                                                       [target_times_openscm[-1] + delta_t]))
+                target_times_openscm = np.concatenate(
+                    (target_times_openscm, [target_times_openscm[-1] + delta_t])
+                )
 
                 delta_t = time_points[-1] - time_points[-2]
                 time_points = np.concatenate((time_points, [time_points[-1] + delta_t]))
@@ -1006,15 +1022,24 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 extrapolation_type,
             )
 
-            res._data[grp.index] = old_data[grp.index].apply(  # pylint: disable=protected-access
+            res._data[grp.index] = old_data[
+                grp.index
+            ].apply(  # pylint: disable=protected-access
                 lambda col: pd.Series(
-                    timeseries_converter.convert_from(col.values), index=timeseries_index
+                    timeseries_converter.convert_from(col.values),
+                    index=timeseries_index,
                 )
             )
 
             # Convert from ParameterType to str
-            parameter_type_str = "average" if parameter_type == ParameterType.AVERAGE_TIMESERIES else "point"
-            res._meta.loc[grp.index] = res._meta.loc[grp.index].assign(parameter_type=parameter_type_str)
+            parameter_type_str = (
+                "average"
+                if parameter_type == ParameterType.AVERAGE_TIMESERIES
+                else "point"
+            )
+            res._meta.loc[grp.index] = res._meta.loc[grp.index].assign(
+                parameter_type=parameter_type_str
+            )
 
         res["time"] = timeseries_index
         return res
@@ -1179,7 +1204,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         raise ValueError("operation must be one of ['median', 'mean', 'quantile']")
 
-    def convert_unit(self, unit: str, context: Optional[str] = None, inplace=False, **kwargs: Any) -> ScmDataFrameBase:
+    def convert_unit(
+        self, unit: str, context: Optional[str] = None, inplace=False, **kwargs: Any
+    ) -> ScmDataFrameBase:
         """
         Convert the units of a selection of timeseries.
 
@@ -1207,16 +1234,18 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         ret = self if inplace else self.copy()
 
-        if 'unit_context' not in ret._meta:
-            ret._meta['unit_context'] = None
+        if "unit_context" not in ret._meta:
+            ret._meta["unit_context"] = None
             ret._sort_meta_cols()
 
         to_convert = ret.filter(**kwargs)
-        for orig_unit, grp in to_convert._meta.groupby('unit'):
+        for orig_unit, grp in to_convert._meta.groupby("unit"):
             uc = UnitConverter(orig_unit, unit, context=context)
             ret._data[grp.index] = ret._data[grp.index].apply(uc.convert_from)
             # TODO: Check if unit_context has changed
-            ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(unit=unit, unit_context=context)
+            ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(
+                unit=unit, unit_context=context
+            )
 
         if not inplace:
             return ret

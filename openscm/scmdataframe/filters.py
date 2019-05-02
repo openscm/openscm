@@ -15,7 +15,7 @@ import six
 from nptyping import Array as NumpyArray
 
 
-DEFAULT_SEPARATOR = '|'
+DEFAULT_SEPARATOR = "|"
 
 
 def is_str(s: Any) -> bool:
@@ -66,7 +66,10 @@ def is_in(  # pylint: disable=missing-return-doc
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def find_depth(  # pylint: disable=missing-return-doc
-    meta_col: pd.Series, s: str, level: Union[int, str], separator: str = DEFAULT_SEPARATOR
+    meta_col: pd.Series,
+    s: str,
+    level: Union[int, str],
+    separator: str = DEFAULT_SEPARATOR,
 ) -> NumpyArray[bool]:
     """
     Find all values which match given depth from a filter keyword
@@ -214,7 +217,11 @@ def pattern_match(  # pylint: disable=missing-return-doc
                 )
                 raise TypeError(error_msg)
 
-            depth = True if level is None else find_depth(_meta_col, str(s), level, separator=separator)
+            depth = (
+                True
+                if level is None
+                else find_depth(_meta_col, str(s), level, separator=separator)
+            )
             matches |= _meta_col.isin(subset) & depth
         else:
             matches |= meta_col == s

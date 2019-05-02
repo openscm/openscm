@@ -31,11 +31,11 @@ class ScmDataFrame(ScmDataFrameBase):
 
 
 def convert_core_to_scmdataframe(
-        core: Core,
-        time_points: List[int],
-        model: str = "unspecified",
-        scenario: str = "unspecified",
-        climate_model: str = "unspecified",
+    core: Core,
+    time_points: List[int],
+    model: str = "unspecified",
+    scenario: str = "unspecified",
+    climate_model: str = "unspecified",
 ) -> ScmDataFrame:
     """
     Get an ScmDataFrame from a Core object
@@ -82,7 +82,7 @@ def convert_core_to_scmdataframe(
         "model": [model],
         "variable": [],
         "region": [],
-        "unit": []
+        "unit": [],
     }
     data = []
 
@@ -95,18 +95,22 @@ def convert_core_to_scmdataframe(
 
         # All meta values are stored as generic value (AKA no units)
         if p_info.parameter_type == ParameterType.GENERIC:
-            assert (region == ('World',))
-            metadata[parameter_name_to_scm(param_name)] = [core.parameters.get_generic_view(param_name, region).get()]
+            assert region == ("World",)
+            metadata[parameter_name_to_scm(param_name)] = [
+                core.parameters.get_generic_view(param_name, region).get()
+            ]
         else:
-            ts = core.parameters.get_timeseries_view(param_name, region, p_info.unit, time_points, p_info.parameter_type)
+            ts = core.parameters.get_timeseries_view(
+                param_name, region, p_info.unit, time_points, p_info.parameter_type
+            )
             data.append(ts.get())
-            metadata['variable'].append(parameter_name_to_scm(param_name))
-            metadata['region'].append(parameter_name_to_scm(region))
-            metadata['unit'].append(p_info.unit)
+            metadata["variable"].append(parameter_name_to_scm(param_name))
+            metadata["region"].append(parameter_name_to_scm(region))
+            metadata["unit"].append(p_info.unit)
 
     # convert timeseries to dataframe with time index here
     return ScmDataFrame(
         np.atleast_2d(data).T,
         columns=metadata,
-        index=[convert_openscm_time_to_datetime(t) for t in time_points]
+        index=[convert_openscm_time_to_datetime(t) for t in time_points],
     )

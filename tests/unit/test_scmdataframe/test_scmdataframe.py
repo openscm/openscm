@@ -15,9 +15,11 @@ from pandas.errors import UnsupportedFunctionCall
 
 from openscm.scmdataframe import ScmDataFrame, df_append, convert_core_to_scmdataframe
 from openscm.parameters import ParameterType
-from openscm.timeseries_converter import ExtrapolationType
 from openscm.units import UndefinedUnitError, DimensionalityError
-from openscm.utils import convert_datetime_to_openscm_time, convert_openscm_time_to_datetime
+from openscm.utils import (
+    convert_datetime_to_openscm_time,
+    convert_openscm_time_to_datetime,
+)
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
@@ -1255,20 +1257,31 @@ def test_interpolate(combo, with_openscm_time):
         df_dts = df_dts[:-1]
         target = target[:-1]
 
-    df = ScmDataFrame(combo.source_values,
-                      columns={
-                          "scenario": ["a_scenario"],
-                          "model": ["a_model"],
-                          "region": ["World"],
-                          "variable": ["Emissions|BC"],
-                          "unit": ["Mg /yr"],
-                          "parameter_type": ["point" if combo.timeseries_type == ParameterType.POINT_TIMESERIES else "average"]
-                      }, index=df_dts)
+    df = ScmDataFrame(
+        combo.source_values,
+        columns={
+            "scenario": ["a_scenario"],
+            "model": ["a_model"],
+            "region": ["World"],
+            "variable": ["Emissions|BC"],
+            "unit": ["Mg /yr"],
+            "parameter_type": [
+                "point"
+                if combo.timeseries_type == ParameterType.POINT_TIMESERIES
+                else "average"
+            ],
+        },
+        index=df_dts,
+    )
 
     if not with_openscm_time:
         target = [convert_openscm_time_to_datetime(d) for d in target]
 
-    res = df.interpolate(target, interpolation_type=combo.interpolation_type, extrapolation_type=combo.extrapolation_type)
+    res = df.interpolate(
+        target,
+        interpolation_type=combo.interpolation_type,
+        extrapolation_type=combo.extrapolation_type,
+    )
 
     npt.assert_array_almost_equal(res.values.squeeze(), combo.target_values)
 
@@ -1284,25 +1297,36 @@ def test_interpolate_missing_param_type(combo, with_openscm_time):
         df_dts = df_dts[:-1]
         target = target[:-1]
 
-    df = ScmDataFrame(combo.source_values,
-                      columns={
-                          "scenario": ["a_scenario"],
-                          "model": ["a_model"],
-                          "region": ["World"],
-                          "variable": ["Emissions|BC"],
-                          "unit": ["Mg /yr"]
-                      }, index=df_dts)
+    df = ScmDataFrame(
+        combo.source_values,
+        columns={
+            "scenario": ["a_scenario"],
+            "model": ["a_model"],
+            "region": ["World"],
+            "variable": ["Emissions|BC"],
+            "unit": ["Mg /yr"],
+        },
+        index=df_dts,
+    )
 
     if not with_openscm_time:
         target = [convert_openscm_time_to_datetime(d) for d in target]
 
-    warning_msg = '`parameter_type` metadata not available. Guessing parameter types where unavailable.'
+    warning_msg = "`parameter_type` metadata not available. Guessing parameter types where unavailable."
     with pytest.warns(UserWarning, match=warning_msg):
-        df.interpolate(target, interpolation_type=combo.interpolation_type, extrapolation_type=combo.extrapolation_type)
+        df.interpolate(
+            target,
+            interpolation_type=combo.interpolation_type,
+            extrapolation_type=combo.extrapolation_type,
+        )
 
-    df.set_meta('point', 'parameter_type')
+    df.set_meta("point", "parameter_type")
     with doesnt_warn():
-        df.interpolate(target, interpolation_type=combo.interpolation_type, extrapolation_type=combo.extrapolation_type)
+        df.interpolate(
+            target,
+            interpolation_type=combo.interpolation_type,
+            extrapolation_type=combo.extrapolation_type,
+        )
 
 
 def test_set_meta_no_name(test_scm_df):
@@ -1603,60 +1627,80 @@ def test_rename_col_fail(test_scm_df):
 
 
 @pytest.mark.parametrize(
-    ('target_unit', 'input_units', 'filter_kwargs', 'expected', 'expected_units'),
+    ("target_unit", "input_units", "filter_kwargs", "expected", "expected_units"),
     [
-        ('EJ/yr', 'EJ/yr', {}, [1.0, 0.5, 2.0], ['EJ/yr', 'EJ/yr', 'EJ/yr']),
-        ('PJ/yr', 'EJ/yr', {}, [1000.0, 500.0, 2000.0], ['PJ/yr', 'PJ/yr', 'PJ/yr']),
-        ('PJ/yr', 'EJ/yr', {'scenario': 'a_scenario2'}, [1.0, 0.5, 2000.0], ['EJ/yr', 'EJ/yr', 'PJ/yr']),
-        ('PJ/yr', ['EJ/yr', 'TJ/yr', 'Gt C / yr'], {'variable': 'Primary Energy|Coal'}, [1.0, 0.5 * 1E-3, 2.0], ['EJ/yr', 'PJ/yr', 'Gt C / yr'])
-    ]
+        ("EJ/yr", "EJ/yr", {}, [1.0, 0.5, 2.0], ["EJ/yr", "EJ/yr", "EJ/yr"]),
+        ("PJ/yr", "EJ/yr", {}, [1000.0, 500.0, 2000.0], ["PJ/yr", "PJ/yr", "PJ/yr"]),
+        (
+            "PJ/yr",
+            "EJ/yr",
+            {"scenario": "a_scenario2"},
+            [1.0, 0.5, 2000.0],
+            ["EJ/yr", "EJ/yr", "PJ/yr"],
+        ),
+        (
+            "PJ/yr",
+            ["EJ/yr", "TJ/yr", "Gt C / yr"],
+            {"variable": "Primary Energy|Coal"},
+            [1.0, 0.5 * 1e-3, 2.0],
+            ["EJ/yr", "PJ/yr", "Gt C / yr"],
+        ),
+    ],
 )
-def test_convert_unit(test_scm_df, target_unit, input_units, filter_kwargs, expected, expected_units):
-    test_scm_df['unit'] = input_units
+def test_convert_unit(
+    test_scm_df, target_unit, input_units, filter_kwargs, expected, expected_units
+):
+    test_scm_df["unit"] = input_units
     obs = test_scm_df.convert_unit(target_unit, **filter_kwargs)
 
-    exp_units = pd.Series(expected_units, name='unit')
+    exp_units = pd.Series(expected_units, name="unit")
 
-    pd.testing.assert_series_equal(obs['unit'], exp_units)
+    pd.testing.assert_series_equal(obs["unit"], exp_units)
     npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
-    assert ((test_scm_df['unit'] == input_units).all())
+    assert (test_scm_df["unit"] == input_units).all()
 
 
 def test_convert_unit_unknown_unit(test_scm_df):
-    unknown_unit = 'Unknown'
-    test_scm_df['unit'] = unknown_unit
+    unknown_unit = "Unknown"
+    test_scm_df["unit"] = unknown_unit
 
-    error_msg = re.escape("'{}' is not defined in the unit registry".format(unknown_unit))
+    error_msg = re.escape(
+        "'{}' is not defined in the unit registry".format(unknown_unit)
+    )
     with pytest.raises(UndefinedUnitError, match=error_msg):
-        test_scm_df.convert_unit('EJ/yr')
+        test_scm_df.convert_unit("EJ/yr")
 
 
 def test_convert_unit_dimensionality(test_scm_df):
     error_msg = "Cannot convert from 'exajoule / a' .* to 'kelvin'"
     with pytest.raises(DimensionalityError, match=error_msg):
-        test_scm_df.convert_unit('kelvin')
+        test_scm_df.convert_unit("kelvin")
 
 
 def test_convert_unit_inplace(test_scm_df):
-    units = test_scm_df['unit'].copy()
+    units = test_scm_df["unit"].copy()
 
-    ret = test_scm_df.convert_unit('PJ/yr', inplace=True)
-    assert (ret is None)
+    ret = test_scm_df.convert_unit("PJ/yr", inplace=True)
+    assert ret is None
 
-    assert ((test_scm_df['unit'] != units).all())
-    npt.assert_array_almost_equal(test_scm_df.filter(year=2005).values.squeeze(), [1000.0, 500.0, 2000.0])
+    assert (test_scm_df["unit"] != units).all()
+    npt.assert_array_almost_equal(
+        test_scm_df.filter(year=2005).values.squeeze(), [1000.0, 500.0, 2000.0]
+    )
 
 
 def test_convert_unit_context(test_scm_df):
-    test_scm_df = test_scm_df.filter(variable='Primary Energy') # Duplicated meta if set all 3 ts to the same variable name
-    test_scm_df['unit'] = "kg SF5CF3 / yr"
-    test_scm_df['variable'] = "SF5CF3"
+    test_scm_df = test_scm_df.filter(
+        variable="Primary Energy"
+    )  # Duplicated meta if set all 3 ts to the same variable name
+    test_scm_df["unit"] = "kg SF5CF3 / yr"
+    test_scm_df["variable"] = "SF5CF3"
 
     obs = test_scm_df.convert_unit("kg CO2 / yr", context="AR4GWP100")
     factor = 17700
     expected = [1.0 * factor, 2.0 * factor]
     npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
-    assert(all(obs['unit_context'] == "AR4GWP100"))
+    assert all(obs["unit_context"] == "AR4GWP100")
 
     error_msg = "Cannot convert from 'SF5CF3 * kilogram / a' ([SF5CF3] * [mass] / [time]) to 'CO2 * kilogram / a' ([carbon] * [mass] / [time])"
     with pytest.raises(DimensionalityError, match=re.escape(error_msg)):
@@ -1744,7 +1788,7 @@ def test_convert_core_to_scmdataframe(rcp26):
 
     res = convert_core_to_scmdataframe(
         intermediate,
-        [convert_datetime_to_openscm_time(dt) for dt in tdata['time']],
+        [convert_datetime_to_openscm_time(dt) for dt in tdata["time"]],
         model="IMAGE",
         scenario="RCP26",
         climate_model="unspecified",
@@ -1767,15 +1811,18 @@ def test_resample():
         datetime.datetime(2002, 6, 1),
         datetime.datetime(2003, 1, 1),
     ]
-    df = ScmDataFrame([1., 2., 3., 4., 5.,6., 7.],
-                      columns={
-                          "scenario": ["a_scenario"],
-                          "model": ["a_model"],
-                          "region": ["World"],
-                          "variable": ["Emissions|BC"],
-                          "unit": ["Mg /yr"],
-                          "parameter_type": ["point"]
-                      }, index=df_dts)
+    df = ScmDataFrame(
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+        columns={
+            "scenario": ["a_scenario"],
+            "model": ["a_model"],
+            "region": ["World"],
+            "variable": ["Emissions|BC"],
+            "unit": ["Mg /yr"],
+            "parameter_type": ["point"],
+        },
+        index=df_dts,
+    )
     res = df.resample("AS")
 
     obs = res.values.squeeze()
@@ -1786,15 +1833,18 @@ def test_resample():
 def test_resample_long_datetimes(test_scm_df):
     # THis is the usecase which will fail if we used pd.resample
     df_dts = [datetime.datetime(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
-    df = ScmDataFrame(np.arange(1700, 2500 + 1, 100),
-                      columns={
-                          "scenario": ["a_scenario"],
-                          "model": ["a_model"],
-                          "region": ["World"],
-                          "variable": ["Emissions|BC"],
-                          "unit": ["Mg /yr"],
-                          "parameter_type": ["point"]
-                      }, index=df_dts)
+    df = ScmDataFrame(
+        np.arange(1700, 2500 + 1, 100),
+        columns={
+            "scenario": ["a_scenario"],
+            "model": ["a_model"],
+            "region": ["World"],
+            "variable": ["Emissions|BC"],
+            "unit": ["Mg /yr"],
+            "parameter_type": ["point"],
+        },
+        index=df_dts,
+    )
     res = df.resample("AS")
 
     obs = res.values.squeeze()
@@ -1803,35 +1853,27 @@ def test_resample_long_datetimes(test_scm_df):
 
 
 def interpolate_with_meta(test_scm_df):
-    expected = [
-        'average',
-        'point',
-        'average'
-    ]
+    expected = ["average", "point", "average"]
 
-    test_scm_df.set_meta(expected, 'parameter_type')
+    test_scm_df.set_meta(expected, "parameter_type")
     res = test_scm_df.interpolate([6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4])
-    npt.assert_array_almost_equal(res['parameter_type'].values, expected)
+    npt.assert_array_almost_equal(res["parameter_type"].values, expected)
 
 
 def interpolate_guessing(test_scm_df):
     assert "parameter_type" not in test_scm_df.meta.columns
 
     variables = [
-        'Emissions|BC',
-        'Surface Temperature',
-        'Radiative Forcing|Greenhouse Gases'
+        "Emissions|BC",
+        "Surface Temperature",
+        "Radiative Forcing|Greenhouse Gases",
     ]
-    test_scm_df['variable'] = variables
+    test_scm_df["variable"] = variables
     res = test_scm_df.interpolate([6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4])
 
-    expected = [
-        'average',
-        'point',
-        'average'
-    ]
+    expected = ["average", "point", "average"]
 
-    npt.assert_array_almost_equal(res['parameter_type'].values, expected)
+    npt.assert_array_almost_equal(res["parameter_type"].values, expected)
 
 
 def test_init_no_file():
@@ -1890,21 +1932,21 @@ def test_read_from_disk(test_file, test_kwargs):
     )
 
 
-@pytest.mark.parametrize(
-    "separator", ['|', '__', '/', '~', '_', '-']
-)
+@pytest.mark.parametrize("separator", ["|", "__", "/", "~", "_", "-"])
 def test_separator_changes(test_scm_df, separator):
-    variable = test_scm_df['variable']
-    test_scm_df['variable'] = [v.replace('|', separator) for v in variable]
+    variable = test_scm_df["variable"]
+    test_scm_df["variable"] = [v.replace("|", separator) for v in variable]
 
     test_scm_df.data_hierarchy_separator = separator
 
     pd.testing.assert_series_equal(
-        test_scm_df.filter(level=0)['variable'],
-        pd.Series(['Primary Energy', 'Primary Energy'], index=[0, 2], name='variable')
+        test_scm_df.filter(level=0)["variable"],
+        pd.Series(["Primary Energy", "Primary Energy"], index=[0, 2], name="variable"),
     )
 
     pd.testing.assert_series_equal(
-        test_scm_df.filter(level=1)['variable'],
-        pd.Series(['Primary Energy{}Coal'.format(separator)], index=[1], name='variable')
+        test_scm_df.filter(level=1)["variable"],
+        pd.Series(
+            ["Primary Energy{}Coal".format(separator)], index=[1], name="variable"
+        ),
     )
