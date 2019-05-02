@@ -1276,6 +1276,14 @@ def test_interpolate(combo, with_openscm_time):
 @pytest.mark.parametrize("with_openscm_time", [True, False])
 def test_interpolate_missing_param_type(combo, with_openscm_time):
     df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
+    target = combo.target.copy()
+
+    # For average timeseries we drop the last time value so that the data and times are same length
+    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
+        df_dts = df_dts[:-1]
+        target = target[:-1]
+
     df = ScmDataFrame(combo.source_values,
                       columns={
                           "scenario": ["a_scenario"],
@@ -1285,10 +1293,8 @@ def test_interpolate_missing_param_type(combo, with_openscm_time):
                           "unit": ["Mg /yr"]
                       }, index=df_dts)
 
-    if with_openscm_time:
-        target = combo.target
-    else:
-        target = [convert_openscm_time_to_datetime(d) for d in combo.target]
+    if not with_openscm_time:
+        target = [convert_openscm_time_to_datetime(d) for d in target]
 
     warning_msg = '`parameter_type` metadata not available. Guessing parameter types where unavailable.'
     with pytest.warns(UserWarning, match=warning_msg):
