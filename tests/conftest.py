@@ -3,6 +3,7 @@ Fixtures and data for tests.
 """
 
 from collections import namedtuple
+from contextlib import contextmanager
 from datetime import datetime
 from os.path import abspath, dirname, join
 
@@ -20,6 +21,7 @@ try:
 except ImportError:
     IamDataFrame = None
 
+TEST_DATA = join(dirname(abspath(__file__)), "test_data")
 
 TEST_DF_LONG_TIMES = pd.DataFrame(
     [
@@ -122,6 +124,14 @@ TEST_DF = pd.DataFrame(
 TEST_TS = np.array([[1, 6.0, 6], [0.5, 3, 3], [2, 7, 7]]).T
 
 
+@contextmanager
+def doesnt_warn():
+    with pytest.warns(None) as record:
+        yield
+    if len(record):
+        pytest.fail('The following warnings were raised: {}'.format([w.message for w in record.list]))
+
+
 @pytest.fixture(scope="function")
 def test_pd_df():
     yield TEST_DF.copy()
@@ -214,7 +224,7 @@ def test_processing_scm_df():
 
 @pytest.fixture(scope="module")
 def rcp26():
-    fname = join(dirname(abspath(__file__)), "test_data", "rcp26_emissions.csv")
+    fname = join(TEST_DATA, "rcp26_emissions.csv")
     return ScmDataFrame(fname)
 
 
