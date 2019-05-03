@@ -44,7 +44,7 @@ from .parameter_type import guess_parameter_type
 from .pyam_compat import Axes, IamDataFrame, LongDatetimeIamDataFrame
 from .timeindex import TimeIndex
 
-logger = getLogger(__name__)
+_logger = getLogger(__name__)
 
 REQUIRED_COLS: List[str] = ["model", "scenario", "region", "variable", "unit"]
 """Minimum metadata columns required by an ScmDataFrame"""
@@ -70,7 +70,7 @@ def _read_file(  # pylint: disable=missing-return-doc
     :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
         First dataframe is the data. Second dataframe is metadata
     """
-    logger.info("Reading %s", fnames)
+    _logger.info("Reading %s", fnames)
 
     return _format_data(_read_pandas(fnames, *args, **kwargs))
 
@@ -640,7 +640,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             )  # pragma: no cover  # don't think it's possible to get here...
 
         if not ret._meta.shape[0]:  # pylint: disable=protected-access
-            logger.warning("Filtered ScmDataFrame is empty!")
+            _logger.warning("Filtered ScmDataFrame is empty!")
 
         if not inplace:
             return ret
