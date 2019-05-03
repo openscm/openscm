@@ -55,29 +55,29 @@ def apply_dt(func, self):
     return wrapper
 
 
-def apply_rollforward(self):
+def apply_rollforward(obj):
     """
     Roll provided date forward to next offset, only if not on offset.
     """
     # custom wrapper
     def wrapper(dt: datetime.datetime) -> datetime.datetime:
         dt = as_datetime(dt)
-        if not self.onOffset(dt):
-            dt = dt + self.__class__(1, normalize=self.normalize, **self.kwds)
+        if not obj.onOffset(dt):
+            dt = dt + obj.__class__(1, normalize=obj.normalize, **obj.kwds)
         return as_datetime(dt)  # type: ignore # pandas doesn't have type annotations
 
     return wrapper
 
 
-def apply_rollback(self):
+def apply_rollback(obj):
     """
     Roll provided date backward to previous offset, only if not on offset.
     """
     # custom wrapper
     def wrapper(dt: datetime.datetime) -> datetime.datetime:
         dt = as_datetime(dt)
-        if not self.onOffset(dt):
-            dt = dt - self.__class__(1, normalize=self.normalize, **self.kwds)
+        if not obj.onOffset(dt):
+            dt = dt - obj.__class__(1, normalize=obj.normalize, **obj.kwds)
         return as_datetime(dt)  # type: ignore # pandas doesn't have type annotations
 
     return wrapper
