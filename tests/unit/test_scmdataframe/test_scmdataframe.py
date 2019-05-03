@@ -192,13 +192,13 @@ def test_init_ts_col_string(test_ts):
         },
         index=[2005, 2010, 2015],
     )
-    assert res["model"].unique().tolist() == "an_iam"
-    assert res["climate_model"].unique().tolist() == "an_iam"
-    assert res["region"].unique().tolist() == "an_iam"
-    assert res["unit"].unique().tolist() == "an_iam"
+    npt.assert_array_equal(res["model"].unique(), "an_iam")
+    npt.assert_array_equal(res["climate_model"].unique(), "a_model")
+    npt.assert_array_equal(res["region"].unique(), "World")
+    npt.assert_array_equal(res["unit"].unique(), "EJ/yr")
 
 
-@pytest.mark.parametrize("fail_setting", [["a_iam", "a_iam"], "a_iam"])
+@pytest.mark.parametrize("fail_setting", [["a_iam", "a_iam"]])
 def test_init_ts_col_wrong_length_error(test_ts, fail_setting):
     correct_scenarios = ["a_scenario", "a_scenario", "a_scenario2"]
     error_msg = re.escape(

@@ -223,7 +223,7 @@ def _format_wide_data(df):
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def _from_ts(  # pylint: disable=missing-return-doc
-    df: Any, index: Any = None, **columns: List[str]
+    df: Any, index: Any = None, **columns: Union[str, List[str]]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Prepare data to initialise ``ScmDataFrameBase`` from wide timeseries
@@ -255,6 +255,7 @@ def _from_ts(  # pylint: disable=missing-return-doc
     num_ts = len(df.columns)
     for c_name in columns:
         col = columns[c_name]
+        col = [col] if is_str(col) else col  # type: ignore # mypy can't handle if
 
         if len(col) == num_ts:
             continue
