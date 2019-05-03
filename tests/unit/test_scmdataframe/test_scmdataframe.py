@@ -179,6 +179,25 @@ def test_init_unrecognised_type_error():
         ScmDataFrame(fail_type)
 
 
+def test_init_ts_col_string(test_ts):
+    res = ScmDataFrame(
+        test_ts,
+        columns={
+            "model": "an_iam",
+            "climate_model": "a_model",
+            "scenario": ["a_scenario", "a_scenario", "a_scenario2"],
+            "region": "World",
+            "variable": ["Primary Energy", "Primary Energy|Coal", "Primary Energy"],
+            "unit": "EJ/yr",
+        },
+        index=[2005, 2010, 2015],
+    )
+    assert res["model"].unique().tolist() == "an_iam"
+    assert res["climate_model"].unique().tolist() == "an_iam"
+    assert res["region"].unique().tolist() == "an_iam"
+    assert res["unit"].unique().tolist() == "an_iam"
+
+
 @pytest.mark.parametrize("fail_setting", [["a_iam", "a_iam"], "a_iam"])
 def test_init_ts_col_wrong_length_error(test_ts, fail_setting):
     correct_scenarios = ["a_scenario", "a_scenario", "a_scenario2"]
