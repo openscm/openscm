@@ -2,8 +2,8 @@ from os.path import join
 
 import pandas as pd
 import pytest
-
 from conftest import TEST_DATA
+
 from openscm.parameters import ParameterType
 from openscm.scmdataframe.parameter_type import guess_parameter_type
 

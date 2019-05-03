@@ -6,9 +6,9 @@ from __future__ import annotations
 import copy
 import datetime
 import os
+import warnings
 from logging import getLogger
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -30,9 +30,9 @@ from openscm.utils import (
 )
 
 from .filters import (
+    DEFAULT_SEPARATOR,
     datetime_match,
     day_match,
-    DEFAULT_SEPARATOR,
     hour_match,
     is_str,
     month_match,
@@ -842,7 +842,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         self,
         meta: Union[pd.Series, list, int, float, str],
         name: Optional[str] = None,
-        index: Optional[pd.DataFrame, pd.Series, pd.Index, pd.MultiIndex] = None,
+        index: Optional[Union[pd.DataFrame, pd.Series, pd.Index, pd.MultiIndex]] = None,
     ) -> None:
         """
         Set metadata information
@@ -938,6 +938,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             A new ``ScmDataFrameBase`` containing the data interpolated onto the
             ``target_times`` grid
         """
+        # pylint: disable=protected-access
         if isinstance(target_times[0], datetime.datetime):
             # mypy confused about typing of target_times in this block, we must
             # assume datetime
@@ -969,7 +970,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 return p
             if p == "average":
                 return ParameterType.AVERAGE_TIMESERIES
-            elif p == "point":
+            if p == "point":
                 return ParameterType.POINT_TIMESERIES
 
             raise ValueError("Unknown parameter_type")
@@ -1026,7 +1027,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 grp.index
             ].apply(  # pylint: disable=protected-access
                 lambda col: pd.Series(
-                    timeseries_converter.convert_from(col.values),
+                    timeseries_converter.convert_from(  # pylint: disable=cell-var-from-loop
+                        col.values
+                    ),
                     index=timeseries_index,
                 )
             )
@@ -1204,9 +1207,13 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         raise ValueError("operation must be one of ['median', 'mean', 'quantile']")
 
-    def convert_unit(
-        self, unit: str, context: Optional[str] = None, inplace=False, **kwargs: Any
-    ) -> ScmDataFrameBase:
+    def convert_unit(  # pylint: disable=missing-return-doc
+        self,
+        unit: str,
+        context: Optional[str] = None,
+        inplace: bool = False,
+        **kwargs: Any
+    ) -> Optional[ScmDataFrameBase]:
         """
         Convert the units of a selection of timeseries.
 
@@ -1232,6 +1239,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         -------
         :obj:`ScmDataFrameBase` or None
         """
+        # pylint: disable=protected-access
         ret = self if inplace else self.copy()
 
         if "unit_context" not in ret._meta:
@@ -1239,7 +1247,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             ret._sort_meta_cols()
 
         to_convert = ret.filter(**kwargs)
-        for orig_unit, grp in to_convert._meta.groupby("unit"):
+        for orig_unit, grp in to_convert._meta.groupby("unit"):  # type: ignore
             uc = UnitConverter(orig_unit, unit, context=context)
             ret._data[grp.index] = ret._data[grp.index].apply(uc.convert_from)
             # TODO: Check if unit_context has changed
@@ -1249,6 +1257,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         if not inplace:
             return ret
+        return None
 
     def relative_to_ref_period_mean(
         self, append_str: Optional[str] = None, **kwargs: Any

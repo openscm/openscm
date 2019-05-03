@@ -13,8 +13,8 @@ from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
-from openscm.scmdataframe import ScmDataFrame, df_append, convert_core_to_scmdataframe
-from openscm.units import UndefinedUnitError, DimensionalityError
+from openscm.scmdataframe import ScmDataFrame, convert_core_to_scmdataframe, df_append
+from openscm.units import DimensionalityError, UndefinedUnitError
 from openscm.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,

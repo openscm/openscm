@@ -1,15 +1,17 @@
 """
-The OpenSCM high-level API provides high-level functionality around
-single model runs.  This includes reading/writing input and output
-data, easy setting of parameters and stochastic ensemble runs.
+ScmDataFrame provides a high level analysis tool for simple climate
+model relevant data. It provides a simple interface for reading/writing,
+subsetting and visualising model data. ScmDataFrames are able to hold
+multiple model runs which aids in analysis of ensembles of model runs.
 """
-from typing import List
+from typing import Dict, List, Tuple
 
 import numpy as np
 
 from openscm.core import Core
-from openscm.parameters import ParameterType
+from openscm.parameters import ParameterInfo, ParameterType
 from openscm.utils import convert_openscm_time_to_datetime
+
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
 
@@ -30,7 +32,7 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-def convert_core_to_scmdataframe(
+def convert_core_to_scmdataframe(  # pylint: disable=missing-return-doc
     core: Core,
     time_points: List[int],
     model: str = "unspecified",
@@ -68,11 +70,16 @@ def convert_core_to_scmdataframe(
     """
     time_points = np.asarray(time_points)
 
-    def walk_parameters(c, para, past=()):
+    def walk_parameters(  # type: ignore
+        c: Core, para, past=()
+    ) -> Dict[Tuple, ParameterInfo]:
         md = {}
         full_para_name = past + (para.info.name,)
-        if para._children:
-            for _, child_para in para._children.items():
+        if para._children:  # pylint: disable=protected-access
+            for (
+                _,
+                child_para,
+            ) in para._children.items():  # pylint: disable=protected-access
                 md.update(walk_parameters(c, child_para, past=full_para_name))
             return md
 
@@ -82,7 +89,7 @@ def convert_core_to_scmdataframe(
     def parameter_name_to_scm(t):
         return ScmDataFrame.data_hierarchy_separator.join(t)
 
-    metadata = {
+    metadata: Dict[str, List] = {
         "climate_model": [climate_model],
         "scenario": [scenario],
         "model": [model],
@@ -92,8 +99,11 @@ def convert_core_to_scmdataframe(
     }
     data = []
 
-    root_params = {}
-    for key, value in core.parameters._root._parameters.items():
+    root_params: Dict[Tuple, ParameterInfo] = {}
+    for (
+        _,
+        value,
+    ) in core.parameters._root._parameters.items():  # pylint: disable=protected-access
         root_params.update(walk_parameters(core, value))
 
     for param_name, region in root_params:
@@ -101,7 +111,7 @@ def convert_core_to_scmdataframe(
 
         # All meta values are stored as generic value (AKA no units)
         if p_info.parameter_type == ParameterType.GENERIC:
-            if region != ("World",):
+            if region != ("World",):  # pragma: no cover
                 raise ValueError(
                     "Only generic types with Region=World can be extracted"
                 )
@@ -109,7 +119,7 @@ def convert_core_to_scmdataframe(
                 core.parameters.get_generic_view(param_name, region).get()
             ]
         else:
-            ts = core.parameters.get_timeseries_view(
+            ts = core.parameters.get_timeseries_view(  # type: ignore
                 param_name, region, p_info.unit, time_points, p_info.parameter_type
             )
             data.append(ts.get())

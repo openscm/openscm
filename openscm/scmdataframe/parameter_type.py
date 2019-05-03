@@ -5,7 +5,7 @@ import re
 from typing import Optional
 
 from openscm.parameters import ParameterType
-from openscm.units import _unit_registry, UndefinedUnitError
+from openscm.units import UndefinedUnitError, _unit_registry
 
 """
 List of regex patterns for matching variable names to :obj:`ParameterType`
@@ -23,7 +23,9 @@ parameter_matches = [
 ]
 
 
-def guess_parameter_type(variable_name: str, unit: Optional[str]) -> ParameterType:
+def guess_parameter_type(  # pylint: disable=missing-return-doc
+    variable_name: str, unit: Optional[str]
+) -> ParameterType:
     """
     Attempt to guess the parameter of timeseries from a variable name and unit.
 
@@ -39,24 +41,23 @@ def guess_parameter_type(variable_name: str, unit: Optional[str]) -> ParameterTy
 
     Returns
     -------
-    :obj:`ParameterType` either ``ParameterType.AVERAGE_TIMESERIES`` or ``ParameterType.POINT_TIMESERIES``
+    :obj:`ParameterType`
     """
-
-    if unit is not None and len(unit):
+    if unit:
         # try and determine if the unit contains a time dimension
         try:
             pint_unit = _unit_registry(unit).units
             if "[time]" in str(pint_unit.dimensionality):
                 return ParameterType.AVERAGE_TIMESERIES
-            else:
-                return ParameterType.POINT_TIMESERIES
+
+            return ParameterType.POINT_TIMESERIES
         except UndefinedUnitError:
             # default to trying to parse from variable name
             pass
 
-    for regex, type in parameter_matches:
-        if regex.match(variable_name):
-            return type
+    for r, t in parameter_matches:
+        if r.match(variable_name):
+            return t
 
     # Default to Point time series if unknown
     return ParameterType.POINT_TIMESERIES

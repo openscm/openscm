@@ -7,13 +7,12 @@ Borrowed from pyam.utils
 import datetime
 import re
 import time
-from typing import Any, Iterable, List, Union, Optional
+from typing import Any, Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd  # noqa: F401
 import six
 from nptyping import Array as NumpyArray
-
 
 DEFAULT_SEPARATOR = "|"
 
@@ -135,7 +134,7 @@ def find_depth(  # pylint: disable=missing-return-doc
 # pylint doesn't recognise return statements if they include 'of' but it should, see
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def pattern_match(  # pylint: disable=missing-return-doc
+def pattern_match(  # pylint: disable=missing-return-doc,too-many-arguments
     meta_col: pd.Series,
     values: Union[Iterable[str], str],
     level: Optional[Union[str, int]] = None,
