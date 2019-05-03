@@ -1,5 +1,6 @@
 """
-A simplified version of pandas DateOffset's which use datetime-like objects instead of pd.Timestamp.
+A simplified version of pandas `DateOffset's https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects`
+ which use datetime-like objects instead of pd.Timestamp.
 
 This differentiation allows for times which exceed the range of pd.Timestamp (see
 `here <https://stackoverflow.com/a/37226672>`__) which is particularly important for
