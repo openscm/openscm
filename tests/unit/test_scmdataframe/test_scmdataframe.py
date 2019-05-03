@@ -14,7 +14,6 @@ from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
 from openscm.scmdataframe import ScmDataFrame, df_append, convert_core_to_scmdataframe
-from openscm.parameters import ParameterType
 from openscm.units import UndefinedUnitError, DimensionalityError
 from openscm.utils import (
     convert_datetime_to_openscm_time,
@@ -1703,7 +1702,7 @@ def test_convert_existing_unit_context(test_scm_df):
     npt.assert_array_almost_equal(obs.filter(year=2005).values.squeeze(), expected)
     assert all(obs["unit_context"] == "AR4GWP100")
 
-    #TODO: warning if unit_context is different
+    # TODO: warning if unit_context is different
 
 
 def test_scmdataframe_to_core(rcp26):

@@ -56,6 +56,12 @@ def convert_core_to_scmdataframe(
     climate_model
         Default value for the climate_model metadata value. This value is only used if the `climate_model` parameter is not found.
 
+    Raises
+    ------
+    ValueError
+        If a generic parameter cannot be mapped to an ScmDataFrame meta table. This happens if the parameter has a region which is
+        not `('World',)`
+
     Returns
     -------
     :obj:`ScmDataFrame`
@@ -95,7 +101,10 @@ def convert_core_to_scmdataframe(
 
         # All meta values are stored as generic value (AKA no units)
         if p_info.parameter_type == ParameterType.GENERIC:
-            assert region == ("World",)
+            if region != ("World",):
+                raise ValueError(
+                    "Only generic types with Region=World can be extracted"
+                )
             metadata[parameter_name_to_scm(param_name)] = [
                 core.parameters.get_generic_view(param_name, region).get()
             ]
