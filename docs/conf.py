@@ -10,9 +10,6 @@
 
 import os
 import sys
-import warnings
-
-from sphinx.ext.napoleon import NumpyDocstring
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../openscm"))
@@ -145,34 +142,3 @@ intersphinx_mapping = {
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 set_type_checking_flag = True
-
-
-# -- Hack to get return type automatically filled from type hints -----------
-
-def _openscm_consume_returns_section(self):
-    self._consume_empty()
-    fields = []
-    while not self._is_section_break():
-        _name, _type, _desc = self._consume_returns_field()
-        if _name or _type or _desc:
-            fields.append((_name, _type, _desc,))
-
-    return fields
-
-def _openscm_consume_returns_field(self):
-    lines = self._consume_to_next_section()
-    indented_bit = any([self._get_indent(l) for l in lines])
-    if indented_bit:
-        _type, _, _name = self._partition_field_on_colon(lines[0])
-        _desc = self._dedent(lines[1:])
-    else:
-        _name, _type = '', ''
-        _desc = self._dedent(lines)
-
-    _name, _type = _name.strip(), _type.strip()
-    _desc = self.__class__(_desc, self._config).lines()
-
-    return _name, _type, _desc
-
-NumpyDocstring._consume_returns_section = _openscm_consume_returns_section
-NumpyDocstring._consume_returns_field = _openscm_consume_returns_field

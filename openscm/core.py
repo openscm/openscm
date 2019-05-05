@@ -56,7 +56,8 @@ class ParameterSet:
 
         Returns
         -------
-        Found or created region
+        _Region
+            Found or created region
 
         Raises
         ------
@@ -94,7 +95,8 @@ class ParameterSet:
 
         Returns
         -------
-        Region or ``None`` if not found
+        Optional[_Region]
+            Region or ``None`` if not found
         """
         name_tuple = ensure_input_is_tuple(name)
         if name_tuple[0] != self._root.name:
@@ -117,7 +119,8 @@ class ParameterSet:
 
         Returns
         -------
-        Parameter found or newly created.
+        _Parameter
+            Parameter found or newly created.
 
         Raises
         ------
@@ -154,7 +157,8 @@ class ParameterSet:
 
         Returns
         -------
-        Read-only view to the parameter
+        ScalarView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -188,7 +192,8 @@ class ParameterSet:
 
         Returns
         -------
-        Writable view to the parameter
+        WritableScalarView
+            Writable view to the parameter
 
         Raises
         ------
@@ -241,7 +246,8 @@ class ParameterSet:
 
         Returns
         -------
-        Read-only view to the parameter
+        TimeseriesView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -297,7 +303,8 @@ class ParameterSet:
 
         Returns
         -------
-        Writable view to the parameter
+        WritableTimeseriesView
+            Writable view to the parameter
 
         Raises
         ------
@@ -338,7 +345,8 @@ class ParameterSet:
 
         Returns
         -------
-        Read-only view to the parameter
+        GenericView
+            Read-only view to the parameter
 
         Raises
         ------
@@ -372,7 +380,8 @@ class ParameterSet:
 
         Returns
         -------
-        Writable view to the parameter
+        WritableGenericView
+            Writable view to the parameter
 
         Raises
         ------
@@ -411,7 +420,8 @@ class ParameterSet:
 
         Returns
         -------
-        Parameter or ``None`` if the parameter has not been created yet
+        _Parameter
+            Parameter or ``None`` if the parameter has not been created yet
         """
         region = self._get_region(region_name)
         if region is not None:
@@ -515,6 +525,7 @@ class Core:
 
         Returns
         -------
-        Current time (seconds since ``1970-01-01 00:00:00``)
+        int
+            Current time (seconds since ``1970-01-01 00:00:00``)
         """
         raise NotImplementedError

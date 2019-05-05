@@ -126,7 +126,8 @@ class Adapter(metaclass=ABCMeta):
 
         Returns
         -------
-        Current time (seconds since ``1970-01-01 00:00:00``)
+        int
+            Current time (seconds since ``1970-01-01 00:00:00``)
         """
         self._step()
         return self._current_time
