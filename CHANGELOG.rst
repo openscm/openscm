@@ -4,7 +4,7 @@ Changelog
 master
 ******
 
-- (`#153 <https://github.com/openclimatedata/openscm/pull/153>`_) Add ``ScmDataFrame``, a high-level data and analysis class
+- (`#158 <https://github.com/openclimatedata/openscm/pull/158>`_) Add ``ScmDataFrame``, a high-level data and analysis class
 - (`#147 <https://github.com/openclimatedata/openscm/pull/147>`_) Remove pyam dependency
 - (`#142 <https://github.com/openclimatedata/openscm/pull/142>`_) Add boolean and string parameters
 - (`#140 <https://github.com/openclimatedata/openscm/pull/140>`_) Add SARGWP100, AR4GWP100 and AR5GWP100 conversion contexts
