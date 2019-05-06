@@ -53,6 +53,7 @@ action "Linters" {
 action "Tests" {
   uses = "swillner/actions/python-run@master"
   args = [
+    "touch tests/__init__.py",
     "pytest tests -r a --cov=openscm --cov-report=''",
   ]
   env = {
