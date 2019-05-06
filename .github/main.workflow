@@ -53,7 +53,7 @@ action "Linters" {
 action "Tests" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "pytest tests -r a --cov=openscm --cov-report=''",
+    "pytest tests -r a --cov= --cov-report=''",
     "cat .coverage",
     "if ! coverage report --fail-under=\"$MIN_COVERAGE\" --show-missing",
     "then",
