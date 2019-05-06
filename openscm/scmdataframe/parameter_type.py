@@ -23,14 +23,20 @@ parameter_matches = [
 ]
 
 
-def guess_parameter_type(
-    variable_name: str, unit: Optional[str]
-) -> ParameterType:
+def guess_parameter_type(variable_name: str, unit: Optional[str]) -> ParameterType:
     """
     Attempt to guess the parameter of timeseries from a variable name and unit.
 
-    This ``ParameterType`` is used to ensure the right assumptions are being made when interpolating. If the units are available
-    and the units include a `time` dimension, then ``ParameterType.AVERAGE_TIMESERIES`` is always returned.
+    This ``ParameterType`` is required when interpolating. We only use this function
+    if the user has not already specified which ``ParameterType`` to use, hence
+    forcing us to guess.
+
+    If the units are available and the units include a `time` dimension, then
+    ``ParameterType.AVERAGE_TIMESERIES`` is always returned, otherwise
+    ``ParameterType.POINT_TIMESERIES`` is returned.
+
+    If the units are not available, we will guess based on the ``variable_name``. If
+    we don't recognise the name, ``ParameterType.POINT_TIMESERIES`` is returned.
 
     Parameters
     ----------
@@ -42,6 +48,8 @@ def guess_parameter_type(
     Returns
     -------
     :obj:`ParameterType`
+        Our guess of the parameter type which should be used for this
+        ``variable_name`` and ``unit``
     """
     if unit:
         # try and determine if the unit contains a time dimension

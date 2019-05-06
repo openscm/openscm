@@ -58,7 +58,7 @@ clean-notebooks: venv  ## clean the notebooks of spurious changes to prepare for
 	rm "$${tmp}"
 
 coverage: venv  ## run all the tests and show code coverage
-	./venv/bin/pytest tests -r a --cov=openscm --cov-report=''
+	./venv/bin/pytest tests -r a --cov=openscm --cov-report='' --durations=10
 	./venv/bin/coverage html
 	./venv/bin/coverage report --show-missing
 

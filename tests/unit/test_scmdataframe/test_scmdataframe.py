@@ -3,6 +3,7 @@ import datetime
 import os
 import re
 import sys
+import warnings
 from unittest import mock
 
 import numpy as np
@@ -288,7 +289,7 @@ def test_col_order(test_scm_df):
     )
 
 
-def test_init_ts_with_index(test_pd_df):
+def test_init_with_year_columns(test_pd_df):
     df = ScmDataFrame(test_pd_df)
     tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
     pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
@@ -1111,7 +1112,15 @@ def test_append_duplicate_times(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     other._data *= 2
 
-    res = test_scm_df.append(other)
+    warn_msg = (
+        "Detected duplicate data during append, the result will be the average "
+        "of the provided values"
+    )
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        res = test_scm_df.append(other)
+
+    assert len(mock_warn_taking_average)
+    assert str(mock_warn_taking_average[0].message) == warn_msg
 
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
