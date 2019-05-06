@@ -100,13 +100,12 @@ with open("README.rst", "r", encoding="utf-8") as f:
     README_LINES = ["OpenSCM", "=======", ""]
     add_line = False
     for line in f:
-        if line == ".. sec-begin-long-description":
+        if line.strip() == ".. sec-begin-long-description":
             add_line = True
-        elif line == ".. sec-end-long-description":
+        elif line.strip() == ".. sec-end-long-description":
             break
         elif add_line:
             README_LINES.append(line)
-
 
 class OpenSCMTest(TestCommand):
     def finalize_options(self):
