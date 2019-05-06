@@ -1,6 +1,6 @@
 workflow "Continuous Integration" {
   on = "push"
-  resolves = ["Tests", "Documentation", "Notebooks"]
+  resolves = ["Coverage", "Documentation"]
 }
 
 action "Documentation" {
@@ -53,18 +53,10 @@ action "Linters" {
 action "Tests" {
   uses = "swillner/actions/python-run@master"
   args = [
-    "pytest tests -r a --cov= --cov-report=''",
-    "cat .coverage",
-    "if ! coverage report --fail-under=\"$MIN_COVERAGE\" --show-missing",
-    "then",
-    "    echo",
-    "    echo \"Error: Test coverage has to be at least ${MIN_COVERAGE}%\"",
-    "    exit 1",
-    "fi"
+    "pytest tests -r a --cov=openscm --cov-report=''",
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    MIN_COVERAGE = "100"
     PIP_PACKAGES = ".[tests]"
   }
   needs = ["Formatting", "Linters"]
@@ -80,6 +72,24 @@ action "Notebooks" {
     PIP_PACKAGES = ".[tests,notebooks]"
   }
   needs = ["Documentation", "Formatting", "Linters"]
+}
+
+action "Coverage" {	
+  uses = "swillner/actions/python-run@master"	
+  args = [	
+    "if ! coverage report --fail-under=\"$MIN_COVERAGE\" --show-missing",	
+    "then",	
+    "    echo",	
+    "    echo \"Error: Test coverage has to be at least ${MIN_COVERAGE}%\"",	
+    "    exit 1",	
+    "fi"	
+  ]	
+  env = {	
+    PYTHON_VERSION = "3.7"	
+    MIN_COVERAGE = "100"	
+    PIP_PACKAGES = "coverage"	
+  }	
+  needs = ["Tests", "Notebooks"]	
 }
 
 workflow "Deployment" {
