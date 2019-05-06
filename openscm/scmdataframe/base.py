@@ -1312,6 +1312,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             ScmDataFrameBase, IamDataFrame, pd.DataFrame, pd.Series, np.ndarray, str
         ],
         inplace: bool = False,
+        duplicate_msg: Union[str, bool] = "warn",
         **kwargs: Any
     ) -> Optional[ScmDataFrameBase]:
         """
@@ -1325,7 +1326,14 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             Data (in format which can be cast to ScmDataFrameBase) to append
 
         inplace
-            If True, append data in place and return None. Otherwise, return a new ``ScmDataFrameBase`` instance with the appended data.
+            If True, append data in place and return None. Otherwise, return a new
+            ``ScmDataFrameBase`` instance with the appended data.
+
+        duplicate_msg
+            If "warn", raise a warning if duplicate data is detected. If "return",
+            return the joint dataframe (including duplicate timeseries) so the user
+            can inspect further. If ``False``, take the average and do not raise a
+            warning.
 
         **kwargs
             Keywords to pass to ``ScmDataFrameBase.__init__`` when reading ``other``
@@ -1339,7 +1347,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         if not isinstance(other, ScmDataFrameBase):
             other = self.__class__(other, **kwargs)
 
-        return df_append([self, other], inplace=inplace)
+        return df_append([self, other], inplace=inplace, duplicate_msg=duplicate_msg)
 
     def to_iamdataframe(self) -> LongDatetimeIamDataFrame:
         """
@@ -1426,6 +1434,7 @@ def df_append(
         Union[ScmDataFrameBase, IamDataFrame, pd.DataFrame, pd.Series, np.ndarray, str]
     ],
     inplace: bool = False,
+    duplicate_msg: Union[str, bool] = "warn",
 ) -> Optional[ScmDataFrameBase]:
     """
     Append together many objects
@@ -1446,17 +1455,26 @@ def df_append(
         If True, then the operation updates the first item in ``dfs`` and returns
         ``None``.
 
+    duplicate_msg
+        If "warn", raise a warning if duplicate data is detected. If "return", return
+        the joint dataframe (including duplicate timeseries) so the user can inspect
+        further. If ``False``, take the average and do not raise a warning.
+
     Returns
     -------
     :obj:`ScmDataFrameBase`
         If not inplace, the return value is the object containing the merged data. The
-        resultant class will be determined by the type of the first object.
+        resultant class will be determined by the type of the first object. If
+        ``duplicate_msg == "return"``, a ``pd.DataFrame`` will be returned instead.
 
     Raises
     ------
     TypeError
         If ``inplace`` is True but the first element in ``dfs`` is not an instance of
         ``ScmDataFrameBase``
+
+    ValueError
+        ``duplicate_msg`` option is not recognised
     """
     scm_dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
@@ -1475,7 +1493,8 @@ def df_append(
             if col not in joint_dfs[i].meta:
                 joint_dfs[i].set_meta(na_fill_value, name=col)
 
-    # we want to put data into timeseries format and pass into format_ts instead of _format_data
+    # we want to put data into timeseries format and pass into format_ts instead of
+    # _format_data
     data = pd.concat(
         [d.timeseries().reorder_levels(joint_meta_set) for d in joint_dfs], sort=False
     )
@@ -1485,6 +1504,21 @@ def df_append(
         to_replace=np.nan, value=na_fill_value
     )
     data = data.set_index(list(joint_meta_set))
+    if duplicate_msg and data.index.duplicated().any():
+        if duplicate_msg == "warn":
+            warn_msg = (
+                "Duplicate time points detected, the output will be the average of "
+                "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+                "timeseries (the duplicates can be found by looking at "
+                "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
+                "`duplicate_msg=False` to silence this message."
+            )
+            warnings.warn(warn_msg)
+        elif duplicate_msg == "return":
+            warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
+            return data  # type: ignore  # only for special use case
+        else:
+            raise ValueError("Unrecognised value for duplicate_msg")
 
     data = data.groupby(data.index.names).mean()
 

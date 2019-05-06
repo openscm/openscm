@@ -1108,23 +1108,57 @@ def test_append_duplicates_order_doesnt_matter(test_scm_df):
     npt.assert_almost_equal(obs, exp)
 
 
-def test_append_duplicate_times(test_scm_df):
+@pytest.mark.parametrize("duplicate_msg", ("warn", "return", False))
+def test_append_duplicate_times(test_scm_df, duplicate_msg):
     other = copy.deepcopy(test_scm_df)
     other._data *= 2
 
-    warn_msg = (
-        "Detected duplicate data during append, the result will be the average "
-        "of the provided values"
-    )
     with warnings.catch_warnings(record=True) as mock_warn_taking_average:
-        res = test_scm_df.append(other)
+        res = test_scm_df.append(other, duplicate_msg=duplicate_msg)
 
-    assert len(mock_warn_taking_average)
-    assert str(mock_warn_taking_average[0].message) == warn_msg
+    if duplicate_msg == "warn":
+        warn_msg = (
+            "Duplicate time points detected, the output will be the average of the "
+            "duplicates. Set `dulicate_msg='return'` to examine the "
+            "joint timeseries (the duplicates can be found by looking at "
+            "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
+            "`duplicate_msg=False` to silence this message."
+        )
+        assert len(mock_warn_taking_average) == 1
+        assert str(mock_warn_taking_average[0].message) == warn_msg
+    elif duplicate_msg == "return":
+        warn_msg = "returning a `pd.DataFrame`, not an `ScmDataFrame`"
+        assert len(mock_warn_taking_average) == 1
+        assert str(mock_warn_taking_average[0].message) == warn_msg
+    else:
+        assert len(mock_warn_taking_average) == 0
 
-    obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
-    exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
-    npt.assert_almost_equal(obs, exp)
+    if duplicate_msg == "return":
+        assert res.shape[0] == other.timeseries().shape[0] * 2
+        look_df = res[res.index.duplicated(keep=False)].sort_index()
+        expected = pd.concat([other.timeseries(), test_scm_df.timeseries()])
+        look_df_reshaped = (
+            look_df.reset_index()
+            .set_index(expected.index.names)
+            .sort_values(by=expected.columns[0])
+            .sort_index()
+        )
+        pd.testing.assert_frame_equal(
+            expected.sort_values(by=expected.columns[0]).sort_index(), look_df_reshaped
+        )
+    else:
+        obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
+        exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
+        npt.assert_almost_equal(obs, exp)
+
+
+def test_append_duplicate_times_error_msg(test_scm_df):
+    other = copy.deepcopy(test_scm_df)
+    other._data *= 2
+
+    error_msg = re.escape("Unrecognised value for duplicate_msg")
+    with pytest.raises(ValueError, match=error_msg):
+        test_scm_df.append(other, duplicate_msg="junk")
 
 
 def test_append_inplace(test_scm_df):
