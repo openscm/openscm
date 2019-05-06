@@ -107,6 +107,9 @@ with open("README.rst", "r", encoding="utf-8") as f:
         elif add_line:
             README_LINES.append(line)
 
+assert len(README_LINES) > 2  # some description should appear
+
+
 class OpenSCMTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
