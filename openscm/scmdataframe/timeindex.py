@@ -7,7 +7,6 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 from dateutil import parser
-from nptyping import Array as NumpyArray
 
 from openscm.utils import (
     convert_datetime_to_openscm_time,
@@ -19,7 +18,7 @@ from openscm.utils import (
 # pylint doesn't recognise return statements if they include 'of' but it should, see
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def to_int(x: NumpyArray) -> NumpyArray:  # pylint: disable=missing-return-doc
+def to_int(x: np.ndarray) -> np.ndarray:  # pylint: disable=missing-return-doc
     """
     Convert inputs to int and check conversion is sensible
 
@@ -187,7 +186,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def as_openscm(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
+    def as_openscm(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get time points as OpenSCM times
 
@@ -199,11 +198,6 @@ class TimeIndex:
         :obj:`np.array` of :obj:`int`
             Datetime representation of each time point
         """
-        # TODO: put this in issue. I wonder if there's a way to fix our autodocs so
-        # that we can have a 'Returns' section in our docstring but have the type
-        # filled automatically with Sphinx. At the moment we have to do the type
-        # annotations twice, once in the function signature and once in the docstrings.
-
         # mypy and pylint aren't smart enough to work out ``._py`` attribute exists
         return self._openscm  # type: ignore # pylint: disable=no-member
 
@@ -211,9 +205,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def as_py(  # pylint: disable=missing-return-doc
-        self
-    ) -> NumpyArray[datetime.datetime]:
+    def as_py(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get time points as Python datetimes
 
@@ -240,7 +232,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def years(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
+    def years(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get year of each time point
 
@@ -255,7 +247,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def months(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
+    def months(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get month of each time point
 
@@ -270,7 +262,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def days(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
+    def days(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get day of each time point
 
@@ -285,7 +277,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def hours(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
+    def hours(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get hour of each time point
 
@@ -300,7 +292,7 @@ class TimeIndex:
     # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
     # :obj:`str`' in
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def weekdays(self) -> NumpyArray[int]:  # pylint: disable=missing-return-doc
+    def weekdays(self) -> np.ndarray:  # pylint: disable=missing-return-doc
         """
         Get weekday of each time point
 

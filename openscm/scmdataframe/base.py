@@ -13,7 +13,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 from dateutil import parser
-from nptyping import Array as NumpyArray
 
 from openscm.core import Core
 from openscm.timeseries_converter import (
@@ -505,11 +504,15 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         return core
 
     @property
-    def time_points(self) -> NumpyArray[int]:
+    def time_points(self) -> np.ndarray:
         """
         Return the time axis of the data.
 
         Returns the data as OpenSCM times.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`int`
         """
         return self._time_index.as_openscm()
 
@@ -546,7 +549,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         return d.T
 
     @property
-    def values(self) -> NumpyArray:
+    def values(self) -> np.ndarray:
         """
         Return timeseries values without metadata
 
@@ -654,7 +657,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
     def _apply_filters(  # pylint: disable=missing-return-doc
         self, filters: Dict, has_nan: bool = True
-    ) -> Tuple[NumpyArray[bool], NumpyArray[bool]]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Determine rows to keep in data for given set of filters
 

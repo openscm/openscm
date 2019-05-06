@@ -12,7 +12,6 @@ from typing import Any, Iterable, List, Optional, Union
 import numpy as np
 import pandas as pd  # noqa: F401
 import six
-from nptyping import Array as NumpyArray
 
 DEFAULT_SEPARATOR = "|"
 
@@ -37,9 +36,7 @@ def is_str(s: Any) -> bool:
 # pylint doesn't recognise return statements if they include 'of' but it should, see
 # https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def is_in(  # pylint: disable=missing-return-doc
-    vals: List, items: List
-) -> NumpyArray[bool]:
+def is_in(vals: List, items: List) -> np.ndarray:
     """
     Find elements of vals which are in items
 
@@ -69,7 +66,7 @@ def find_depth(  # pylint: disable=missing-return-doc
     s: str,
     level: Union[int, str],
     separator: str = DEFAULT_SEPARATOR,
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Find all values which match given depth from a filter keyword
 
@@ -141,7 +138,7 @@ def pattern_match(  # pylint: disable=missing-return-doc,too-many-arguments
     regexp: bool = False,
     has_nan: bool = True,
     separator: str = DEFAULT_SEPARATOR,
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Filter data by matching metadata columns to given patterns
 
@@ -168,6 +165,7 @@ def pattern_match(  # pylint: disable=missing-return-doc,too-many-arguments
 
     separator
         String used to separate the hierarchy levels in values. Defaults to '|'
+
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
@@ -233,7 +231,7 @@ def pattern_match(  # pylint: disable=missing-return-doc,too-many-arguments
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def years_match(  # pylint: disable=missing-return-doc
     data: List, years: Union[List[int], int]
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Match years in time columns for data filtering
 
@@ -273,7 +271,7 @@ def years_match(  # pylint: disable=missing-return-doc
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def month_match(  # pylint: disable=missing-return-doc
     data: List, months: Union[List[str], List[int], int, str]
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Match months in time columns for data filtering
 
@@ -298,7 +296,7 @@ def month_match(  # pylint: disable=missing-return-doc
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def day_match(  # pylint: disable=missing-return-doc
     data: List, days: Union[List[str], List[int], int, str]
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Match days in time columns for data filtering
 
@@ -323,7 +321,7 @@ def day_match(  # pylint: disable=missing-return-doc
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def hour_match(  # pylint: disable=missing-return-doc
     data: List, hours: Union[List[int], int]
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Match hours in time columns for data filtering
 
@@ -353,7 +351,7 @@ def time_match(  # pylint: disable=missing-return-doc
     conv_codes: List[str],
     strptime_attr: str,
     name: str,
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Match times by applying conversion codes to filtering list
 
@@ -442,7 +440,7 @@ def time_match(  # pylint: disable=missing-return-doc
 # in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def datetime_match(  # pylint: disable=missing-return-doc
     data: List, dts: Union[List[datetime.datetime], datetime.datetime]
-) -> NumpyArray[bool]:
+) -> np.ndarray:
     """
     Match datetimes in time columns for data filtering
 
