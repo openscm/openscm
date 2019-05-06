@@ -46,7 +46,7 @@ action "Linters" {
   ]
   env = {
     PYTHON_VERSION = "3.7"
-    PIP_PACKAGES = "bandit flake8 mypy pylint ."
+    PIP_PACKAGES = ".[dev]"
   }
 }
 
