@@ -218,9 +218,7 @@ def _format_wide_data(df):
     return df, meta
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+# pylint doesn't recognise ',' in returns type definition
 def _from_ts(  # pylint: disable=missing-return-doc
     df: Any, index: Any = None, **columns: Union[str, List[str]]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -651,10 +649,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         return None
 
-    # pylint doesn't recognise return statements if they include 'of' but it
-    # should, see https://github.com/PyCQA/pylint/pull/2884 and search for
-    # ':obj:`list` of :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
+    # pylint doesn't recognise ',' in returns type definition
     def _apply_filters(  # pylint: disable=missing-return-doc
         self, filters: Dict, has_nan: bool = True
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -1211,7 +1206,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         raise ValueError("operation must be one of ['median', 'mean', 'quantile']")
 
-    def convert_unit(  # pylint: disable=missing-return-doc
+    def convert_unit(
         self,
         unit: str,
         context: Optional[str] = None,
@@ -1241,7 +1236,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         Returns
         -------
-        :obj:`ScmDataFrameBase` or None
+        :obj:`ScmDataFrameBase`
+            If ``inplace`` is not ``False``, a new ``ScmDataFrameBase`` instance with
+            the converted units.
         """
         # pylint: disable=protected-access
         ret = self if inplace else self.copy()

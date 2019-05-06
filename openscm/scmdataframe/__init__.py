@@ -32,7 +32,7 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-def convert_core_to_scmdataframe(  # pylint: disable=missing-return-doc
+def convert_core_to_scmdataframe(
     core: Core,
     time_points: List[int],
     model: str = "unspecified",
@@ -67,6 +67,7 @@ def convert_core_to_scmdataframe(  # pylint: disable=missing-return-doc
     Returns
     -------
     :obj:`ScmDataFrame`
+        ``ScmDataFrame`` containing the data from ``core``
     """
     time_points = np.asarray(time_points)
 
@@ -106,9 +107,7 @@ def convert_core_to_scmdataframe(  # pylint: disable=missing-return-doc
     ) in core.parameters._root._parameters.items():  # pylint: disable=protected-access
         root_params.update(walk_parameters(core, value))
 
-    for param_name, region in root_params:
-        p_info = root_params[param_name, region]
-
+    for (param_name, region), p_info in root_params.items():
         # All meta values are stored as generic value (AKA no units)
         if p_info.parameter_type == ParameterType.GENERIC:
             if region != ("World",):  # pragma: no cover

@@ -48,7 +48,16 @@ REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
 REQUIREMENTS_DOCS = ["sphinx>=1.8", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 REQUIREMENTS_DEV = (
-    ["black", "bandit", "coverage", "flake8", "isort", "mypy", "pydocstyle", "pylint"]
+    [
+        "black",
+        "bandit",
+        "coverage",
+        "flake8",
+        "isort",
+        "mypy",
+        "pydocstyle",
+        "pylint @ git+https://github.com/PyCQA/pylint.git@master",  # TODO: change when new release comes out
+    ]
     + REQUIREMENTS_NOTEBOOKS
     + REQUIREMENTS_TESTS
     + REQUIREMENTS_DOCS

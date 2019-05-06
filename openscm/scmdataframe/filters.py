@@ -33,9 +33,6 @@ def is_str(s: Any) -> bool:
     return isinstance(s, six.string_types)
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
 def is_in(vals: List, items: List) -> np.ndarray:
     """
     Find elements of vals which are in items
@@ -58,10 +55,7 @@ def is_in(vals: List, items: List) -> np.ndarray:
     return np.array([v in items for v in vals])
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def find_depth(  # pylint: disable=missing-return-doc
+def find_depth(
     meta_col: pd.Series,
     s: str,
     level: Union[int, str],
@@ -128,10 +122,7 @@ def find_depth(  # pylint: disable=missing-return-doc
     return np.array([b for b in [apply_test(m) for m in meta_col]])
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def pattern_match(  # pylint: disable=missing-return-doc,too-many-arguments
+def pattern_match(  # pylint: disable=too-many-arguments
     meta_col: pd.Series,
     values: Union[Iterable[str], str],
     level: Optional[Union[str, int]] = None,
@@ -226,12 +217,7 @@ def pattern_match(  # pylint: disable=missing-return-doc,too-many-arguments
     return matches
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def years_match(  # pylint: disable=missing-return-doc
-    data: List, years: Union[List[int], int]
-) -> np.ndarray:
+def years_match(data: List, years: Union[List[int], int]) -> np.ndarray:
     """
     Match years in time columns for data filtering
 
@@ -266,10 +252,7 @@ def years_match(  # pylint: disable=missing-return-doc
     return is_in(data, years)
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def month_match(  # pylint: disable=missing-return-doc
+def month_match(
     data: List, months: Union[List[str], List[int], int, str]
 ) -> np.ndarray:
     """
@@ -291,12 +274,7 @@ def month_match(  # pylint: disable=missing-return-doc
     return time_match(data, months, ["%b", "%B"], "tm_mon", "month")
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def day_match(  # pylint: disable=missing-return-doc
-    data: List, days: Union[List[str], List[int], int, str]
-) -> np.ndarray:
+def day_match(data: List, days: Union[List[str], List[int], int, str]) -> np.ndarray:
     """
     Match days in time columns for data filtering
 
@@ -316,12 +294,7 @@ def day_match(  # pylint: disable=missing-return-doc
     return time_match(data, days, ["%a", "%A"], "tm_wday", "day")
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def hour_match(  # pylint: disable=missing-return-doc
-    data: List, hours: Union[List[int], int]
-) -> np.ndarray:
+def hour_match(data: List, hours: Union[List[int], int]) -> np.ndarray:
     """
     Match hours in time columns for data filtering
 
@@ -342,10 +315,7 @@ def hour_match(  # pylint: disable=missing-return-doc
     return is_in(data, hours_list)
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def time_match(  # pylint: disable=missing-return-doc
+def time_match(
     data: List,
     times: Union[List[str], List[int], int, str],
     conv_codes: List[str],
@@ -435,10 +405,7 @@ def time_match(  # pylint: disable=missing-return-doc
     return is_in(data, times_list)
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def datetime_match(  # pylint: disable=missing-return-doc
+def datetime_match(
     data: List, dts: Union[List[datetime.datetime], datetime.datetime]
 ) -> np.ndarray:
     """

@@ -15,10 +15,7 @@ from openscm.utils import (
 )
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def to_int(x: np.ndarray) -> np.ndarray:  # pylint: disable=missing-return-doc
+def to_int(x: np.ndarray) -> np.ndarray:
     """
     Convert inputs to int and check conversion is sensible
 
@@ -72,12 +69,7 @@ def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:
     return pd.Timestamp(dt).to_pydatetime()  # type: ignore
 
 
-# pylint doesn't recognise return statements if they include 'of' but it should, see
-# https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of :obj:`str`'
-# in https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-def _format_datetime(  # pylint: disable=missing-return-doc
-    dts: List[Any]
-) -> List[datetime.datetime]:
+def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:
     """
     Convert a list into a set of ``datetime.datetime``'s
 
@@ -182,11 +174,7 @@ class TimeIndex:
         """
         raise AttributeError("TimeIndex is immutable")
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def as_openscm(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def as_openscm(self) -> np.ndarray:
         """
         Get time points as OpenSCM times
 
@@ -201,11 +189,7 @@ class TimeIndex:
         # mypy and pylint aren't smart enough to work out ``._py`` attribute exists
         return self._openscm  # type: ignore # pylint: disable=no-member
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def as_py(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def as_py(self) -> np.ndarray:
         """
         Get time points as Python datetimes
 
@@ -228,11 +212,7 @@ class TimeIndex:
         """
         return pd.Index(self.as_py(), dtype="object", name="time")
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def years(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def years(self) -> np.ndarray:
         """
         Get year of each time point
 
@@ -243,11 +223,7 @@ class TimeIndex:
         """
         return np.array([dt.year for dt in self.as_py()])
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def months(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def months(self) -> np.ndarray:
         """
         Get month of each time point
 
@@ -258,11 +234,7 @@ class TimeIndex:
         """
         return np.array([dt.month for dt in self.as_py()])
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def days(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def days(self) -> np.ndarray:
         """
         Get day of each time point
 
@@ -273,11 +245,7 @@ class TimeIndex:
         """
         return np.array([dt.day for dt in self.as_py()])
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def hours(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def hours(self) -> np.ndarray:
         """
         Get hour of each time point
 
@@ -288,11 +256,7 @@ class TimeIndex:
         """
         return np.array([dt.hour for dt in self.as_py()])
 
-    # pylint doesn't recognise return statements if they include 'of' but it should,
-    # see https://github.com/PyCQA/pylint/pull/2884 and search for ':obj:`list` of
-    # :obj:`str`' in
-    # https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html
-    def weekdays(self) -> np.ndarray:  # pylint: disable=missing-return-doc
+    def weekdays(self) -> np.ndarray:
         """
         Get weekday of each time point
 
