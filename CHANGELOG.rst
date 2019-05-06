@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#160 <https://github.com/openclimatedata/openscm/pull/160>`_) Update ``setup.py`` so project description is right
 - (`#158 <https://github.com/openclimatedata/openscm/pull/158>`_) Add ``ScmDataFrame``, a high-level data and analysis class
 - (`#147 <https://github.com/openclimatedata/openscm/pull/147>`_) Remove pyam dependency
 - (`#142 <https://github.com/openclimatedata/openscm/pull/142>`_) Add boolean and string parameters
