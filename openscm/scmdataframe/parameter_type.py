@@ -23,7 +23,7 @@ parameter_matches = [
 ]
 
 
-def guess_parameter_type(  # pylint: disable=missing-return-doc
+def guess_parameter_type(
     variable_name: str, unit: Optional[str]
 ) -> ParameterType:
     """
