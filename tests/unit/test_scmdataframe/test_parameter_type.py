@@ -1,22 +1,7 @@
-from os.path import join
-
-import pandas as pd
 import pytest
-from conftest import TEST_DATA
 
 from openscm.parameters import ParameterType
 from openscm.scmdataframe.parameter_type import guess_parameter_type
-
-
-def read_magicc7_variables():
-    df = pd.read_csv(join(TEST_DATA, "magicc7_parameter_types.txt"), delimiter=",")
-
-    return df.to_dict("records")
-
-
-@pytest.fixture(scope="module", params=(read_magicc7_variables()))
-def magicc7_variable(request):
-    yield request.param
 
 
 def test_with_units(magicc7_variable):

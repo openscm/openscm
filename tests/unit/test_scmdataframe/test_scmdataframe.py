@@ -9,7 +9,6 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import IamDataFrame, assert_core, doesnt_warn
 from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
@@ -357,11 +356,11 @@ def test_init_self(test_iam_df):
     pd.testing.assert_frame_equal(a._data, b._data)
 
 
-def test_as_iam(test_iam_df, test_pd_df):
+def test_as_iam(test_iam_df, test_pd_df, iamdf_type):
     df = ScmDataFrame(test_pd_df).to_iamdataframe()
 
     # test is skipped by test_iam_df fixture if pyam isn't installed
-    assert isinstance(df, IamDataFrame)
+    assert isinstance(df, iamdf_type)
 
     pd.testing.assert_frame_equal(test_iam_df.meta, df.meta)
     # we switch to time so ensure sensible comparison of columns
@@ -1324,7 +1323,7 @@ def test_interpolate(combo_df, with_openscm_time):
 
 
 @pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate_missing_param_type(combo_df, with_openscm_time):
+def test_interpolate_missing_param_type(combo_df, with_openscm_time, doesnt_warn):
     combo, df = combo_df
     df._meta.pop("parameter_type")
 
@@ -1767,7 +1766,7 @@ def test_convert_existing_unit_context(test_scm_df):
     # TODO: warning if unit_context is different
 
 
-def test_scmdataframe_to_core(rcp26):
+def test_scmdataframe_to_core(rcp26, assert_core):
     tdata = rcp26
 
     res = tdata.to_core()

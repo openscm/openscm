@@ -126,16 +126,25 @@ TEST_DF = pd.DataFrame(
 TEST_TS = np.array([[1, 6.0, 6], [0.5, 3, 3], [2, 7, 7]]).T
 
 
-@contextmanager
+@pytest.fixture
+def test_data_path():
+    return TEST_DATA
+
+
+@pytest.fixture
 def doesnt_warn():
-    with pytest.warns(None) as record:
-        yield
-    if len(record):
-        pytest.fail(
-            "The following warnings were raised: {}".format(
-                [w.message for w in record.list]
+    @contextmanager
+    def check_context():
+        with pytest.warns(None) as record:
+            yield
+        if len(record):
+            pytest.fail(
+                "The following warnings were raised: {}".format(
+                    [w.message for w in record.list]
+                )
             )
-        )
+
+    return check_context
 
 
 @pytest.fixture(scope="function")
@@ -228,6 +237,11 @@ def test_processing_scm_df():
     )
 
 
+@pytest.fixture
+def iamdf_type():
+    return IamDataFrame
+
+
 @pytest.fixture(scope="module")
 def rcp26():
     fname = join(TEST_DATA, "rcp26_emissions.csv")
@@ -248,12 +262,16 @@ def test_adapter(request):
         pytest.skip("{} cannot be instantiated".format(str(request.cls.tadapter)))
 
 
-def assert_core(expected, time, test_core, name, region, unit, time_points):
-    pview = test_core.parameters.get_timeseries_view(
-        name, region, unit, time_points, ParameterType.POINT_TIMESERIES
-    )
-    relevant_idx = (np.abs(time_points - time)).argmin()
-    np.testing.assert_allclose(pview.get()[relevant_idx], expected)
+@pytest.fixture
+def assert_core():
+    def check_func(expected, time, test_core, name, region, unit, time_points):
+        pview = test_core.parameters.get_timeseries_view(
+            name, region, unit, time_points, ParameterType.POINT_TIMESERIES
+        )
+        relevant_idx = (np.abs(time_points - time)).argmin()
+        np.testing.assert_allclose(pview.get()[relevant_idx], expected)
+
+    return check_func
 
 
 @pytest.fixture(scope="function")
@@ -427,3 +445,14 @@ def combo_df(request):
     )
 
     return Combination(**vals), df
+
+
+def read_magicc7_variables():
+    df = pd.read_csv(join(TEST_DATA, "magicc7_parameter_types.txt"), delimiter=",")
+
+    return df.to_dict("records")
+
+
+@pytest.fixture(scope="module", params=(read_magicc7_variables()))
+def magicc7_variable(request):
+    yield request.param
