@@ -3,7 +3,7 @@
 Standard parameters
 ===================
 
-In OpenSCM a ':ref:`parameter <parameter-hierarchy>`' is any named input or output variable of a mode, e.g. |CO2| emissions, equilibrium climate sensitivity, aerosol forcing scaling.
+In OpenSCM a ':ref:`parameter <parameter-hierarchy>`' is any named input or output variable of a model, e.g. |CO2| emissions, equilibrium climate sensitivity, aerosol forcing scaling.
 As described :ref:`here <parameter-hierarchy>`, parameters are given in a hierarchy, e.g. ``Emissions`` -> ``CO2`` -> ``Industrial``.
 
 Simple climate models come in many different shapes and forms hence we do not expect them to all be able to do everything.
@@ -32,7 +32,7 @@ Parameters in OpenSCM come as part of a hierarchy, in the following separated by
 For example, ``Emissions|CO2|Energy``.
 ``Emissions|CO2|Energy`` is emissions of |CO2| from the energy sub-sector (whatever 'energy' happens to mean in this context).
 As far as it makes sense, parameters that are higher in the hierarchy (e.g. ``Emissions|CO2`` is 'higher' than ``Emissions|CO2|Energy``) are the sum of all the variables which are one level below them in the hierarchy.
-For example, for ``Emissions|CO2|Energy``, ``Emissions|CO2|Transport`` and ``Emissions|CO2|Agriculture`` given, ``Emissions|CO2`` would be the sum of these.
+For example, if ``Emissions|CO2|Energy``, ``Emissions|CO2|Transport`` and ``Emissions|CO2|Agriculture`` are provided, ``Emissions|CO2`` would be the sum of these.
 
 
 Standards
@@ -51,7 +51,7 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
     :header: "Parameter name 0", "Parameter name 1", "Parameter name 2", "Unit type", "Note"
 
     ``Emissions``, ``<GAS>``,, "mass <GAS> / time"
-    ``Atmospheric Concentrations``, ``<GAS>``,, "concentration (e.g. parts per X)", "Aggregation possible, but does not always make sense"
+    ``Atmospheric Concentrations``, ``<GAS>``,, "parts per X where X is million, billion, trillion etc.", "Aggregation possible, but does not always make sense"
     ``Pool``, ``<GAS>``,, "mass <GAS>"
     ``Radiative Forcing``,,, "power / area", "Aggregation gives total forcing, but be carful of double reporting, e.g. providing ``Radiative Forcing|Aerosols|Direct Effect`` and ``Radiative Forcing|Aerosols|NOx``"
     ``Radiative Forcing``, ``<GAS>``
