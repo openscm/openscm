@@ -180,6 +180,8 @@ which are higher in the hierarchy are the sum of all the regions which
 are one level below them in the hierarchy (be careful of this when
 looking at e.g. |CO2| concentration data at a regional level).
 
+TODO: Add description and links
+
 .. csv-table:: Gases
     :header: "Name 0", "Name 1", "Name 2, "Description"
 
