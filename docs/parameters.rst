@@ -3,36 +3,55 @@
 Standard parameters
 ===================
 
-In OpenSCM a ':ref:`parameter <parameter-hierarchy>`' is any named input or output variable of a model, e.g. |CO2| emissions, equilibrium climate sensitivity, aerosol forcing scaling.
-As described :ref:`here <parameter-hierarchy>`, parameters are given in a hierarchy, e.g. ``Emissions`` -> ``CO2`` -> ``Industrial``.
+In OpenSCM a ':ref:`parameter <parameter-hierarchy>`' is any named
+input or output variable of a model, e.g. |CO2| emissions, equilibrium
+climate sensitivity, aerosol forcing scaling. As described :ref:`here
+<parameter-hierarchy>`, parameters are given in a hierarchy, e.g.
+``Emissions`` -> ``CO2`` -> ``Industrial``.
 
-Simple climate models come in many different shapes and forms hence we do not expect them to all be able to do everything.
-However, to be included in OpenSCM they should make sure their parameters fit into these standard parameters as far as possible to ensure models can be interchanged easily.
-Of course, also model-specific parameters are possible (see also :ref:`writing-adapters`).
+Simple climate models come in many different shapes and forms hence we
+do not expect them to all be able to do everything. However, to be
+included in OpenSCM they should make sure their parameters fit into
+these standard parameters as far as possible to ensure models can be
+interchanged easily. Of course, also model-specific parameters are
+possible (see also :ref:`writing-adapters`).
 
 
 Conventions
 -----------
 
-In the following, 'pre-industrial' refers to an unperturbed state of the climate.
-Individual adapters can translate this into whatever year they need to for their model, but they should do such translations with this definition in mind.
+In the following, 'pre-industrial' refers to an unperturbed state of
+the climate. Individual adapters can translate this into whatever year
+they need to for their model, but they should do such translations
+with this definition in mind.
 
-'Reference period' refers to the period a given variable is reported relative to the mean of.
-For example, 'surface temperature relative to a 1961-1990 reference period' refers to surface temperatures relative to the mean of the period 1961-1990.
-Adapters can report variables without reference periods if these are not used internally by the models.
-However, if the model uses an internal reference period then this should be indicated in the reported variable names by appending ``(rel. to XXXX-YYYY)`` to the variable name.
-Hence, 'surface temperature relative to a 1961-1990 reference period' would become ``Surface Temperature (rel. to 1961-1990)``.
-[TODO: discuss with other authors how we want this to play out]
+'Reference period' refers to the period a given variable is reported
+relative to the mean of. For example, 'surface temperature relative to
+a 1961-1990 reference period' refers to surface temperatures relative
+to the mean of the period 1961-1990. Adapters can report variables
+without reference periods if these are not used internally by the
+models. However, if the model uses an internal reference period then
+this should be indicated in the reported variable names by appending
+``(rel. to XXXX-YYYY)`` to the variable name. Hence, 'surface
+temperature relative to a 1961-1990 reference period' would become
+``Surface Temperature (rel. to 1961-1990)``. [TODO: discuss with other
+authors how we want this to play out]
 
 
 Aggregation
 -----------
 
-Parameters in OpenSCM come as part of a hierarchy, in the following separated by the ``|`` character.
-For example, ``Emissions|CO2|Energy``.
-``Emissions|CO2|Energy`` is emissions of |CO2| from the energy sub-sector (whatever 'energy' happens to mean in this context).
-As far as it makes sense, parameters that are higher in the hierarchy (e.g. ``Emissions|CO2`` is 'higher' than ``Emissions|CO2|Energy``) are the sum of all the variables which are one level below them in the hierarchy.
-For example, if ``Emissions|CO2|Energy``, ``Emissions|CO2|Transport`` and ``Emissions|CO2|Agriculture`` are provided, ``Emissions|CO2`` would be the sum of these.
+Parameters in OpenSCM come as part of a hierarchy, in the following
+separated by the ``|`` character. For example,
+``Emissions|CO2|Energy``. ``Emissions|CO2|Energy`` is emissions of
+|CO2| from the energy sub-sector (whatever 'energy' happens to mean in
+this context). As far as it makes sense, parameters that are higher in
+the hierarchy (e.g. ``Emissions|CO2`` is 'higher' than
+``Emissions|CO2|Energy``) are the sum of all the variables which are
+one level below them in the hierarchy. For example, if
+``Emissions|CO2|Energy``, ``Emissions|CO2|Transport`` and
+``Emissions|CO2|Agriculture`` are provided, ``Emissions|CO2`` would be
+the sum of these.
 
 
 Standards
@@ -41,9 +60,11 @@ Standards
 Standard parameters
 *******************
 
-Below we provide a list of the OpenSCM standard parameters adapters must adhere to as far as a specific variable concerns them.
-Alongside we give the type of unit that the parameter should be given in and how it should be expected by adapters.
-Conversion between particular units is done automatically if possible.
+Below we provide a list of the OpenSCM standard parameters adapters
+must adhere to as far as a specific variable concerns them. Alongside
+we give the type of unit that the parameter should be given in and how
+it should be expected by adapters. Conversion between particular units
+is done automatically if possible.
 
 In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
 
@@ -141,18 +162,23 @@ Gases
 Material Fluxes
 ***************
 
-These variables can be used to store the flux of material within the model.
-They should be of the form ``X to Y Flux`` where the material is flowing from ``X`` into ``Y`` (and hence negative values represent flows from ``Y`` into ``X``):
+These variables can be used to store the flux of material within the
+model. They should be of the form ``X to Y Flux`` where the material
+is flowing from ``X`` into ``Y`` (and hence negative values represent
+flows from ``Y`` into ``X``):
 
-- ``Land to Air Flux|CO2|Permafrost`` (mass carbon / time) - land to air flux of |CO2| from permafrost
+- ``Land to Air Flux|CO2|Permafrost`` (mass carbon / time) - land to
+  air flux of |CO2| from permafrost
 - ``Land to Air Flux|CH4|Permafrost`` (mass methane / time)
 
 
 Standard regions
 ----------------
 
-Similarly to variables, regions are also given in a hierarchy.
-Regions which are higher in the hierarchy are the sum of all the regions which are one level below them in the hierarchy (be careful of this when looking at e.g. |CO2| concentration data at a regional level).
+Similarly to variables, regions are also given in a hierarchy. Regions
+which are higher in the hierarchy are the sum of all the regions which
+are one level below them in the hierarchy (be careful of this when
+looking at e.g. |CO2| concentration data at a regional level).
 
 .. csv-table:: Gases
     :header: "Name 0", "Name 1", "Name 2, "Description"
