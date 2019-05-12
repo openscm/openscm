@@ -107,7 +107,8 @@ with open("README.rst", "r", encoding="utf-8") as f:
         elif add_line:
             README_LINES.append(line)
 
-assert len(README_LINES) > 2  # some description should appear
+if len(README_LINES) < 3:
+    raise RuntimeError("Insufficient description given")
 
 
 class OpenSCMTest(TestCommand):
