@@ -14,7 +14,7 @@ def test_to_int_value_error(test_iam_df):
     bad_vals = idf[idf["time"] == bad_val]["time"]
     error_msg = re.escape(
         "All time values must be convertible to datetime. The following values are "
-        "not:\n{}".format(bad_vals)
+        "not:\n"
     )
     with pytest.raises(ValueError, match=error_msg):
         LongDatetimeIamDataFrame(idf)
