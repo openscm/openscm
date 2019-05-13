@@ -11,7 +11,6 @@ def test_to_int_value_error(test_iam_df):
     bad_val = "20311/123/1"
     idf.loc[4, "time"] = bad_val
 
-    bad_vals = idf[idf["time"] == bad_val]["time"]
     error_msg = re.escape(
         "All time values must be convertible to datetime. The following values are "
         "not:\n"
