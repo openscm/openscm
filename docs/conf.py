@@ -63,8 +63,9 @@ def skip_init(app, what, name, obj, skip, options):
 def setup(app):
     app.connect("autodoc-skip-member", skip_init)
 
+
 rst_epilog = """
-.. include:: _custom_shortcuts.rst
+.. |CO2| replace:: CO\ :sub:`2`\
 """
 
 # -- Options for HTML output -------------------------------------------------
