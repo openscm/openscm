@@ -8,14 +8,14 @@ import numpy as np
 import pandas as pd
 from dateutil import parser
 
-from openscm.utils import (
+from openscm.core.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,
     is_floatlike,
 )
 
 
-def to_int(x: np.ndarray) -> np.ndarray:
+def to_int(x: np.ndarray) -> np.ndarray:  # TODO obsolete!
     """
     Convert inputs to int and check conversion is sensible
 
@@ -51,7 +51,7 @@ def to_int(x: np.ndarray) -> np.ndarray:
     return cols
 
 
-def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:
+def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:  # TODO obsolete!
     """
     Convert a ``numpy.datetime64`` instance to a ``datetime.datetime``
 

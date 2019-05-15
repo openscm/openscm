@@ -37,7 +37,7 @@ class _AdapterTester:
 
     def test_initialize_model_input_non_model_parameter(self, test_adapter):
         tname = ("junk",)
-        test_adapter._parameters.get_writable_scalar_view(tname, ("World",), "K").set(4)
+        test_adapter._parameters.scalar(tname, "K", writable=True).value = 4
         test_adapter.initialize_model_input()
         # TODO test that "junk" has not been used
 
@@ -56,7 +56,7 @@ class _AdapterTester:
         self, test_adapter, test_run_parameters
     ):
         tname = ("junk",)
-        test_adapter._parameters.get_writable_scalar_view(tname, ("World",), "K").set(4)
+        test_adapter._parameters.scalar(tname, "K", writable=True).value = 4
         test_adapter.initialize_run_parameters(
             test_run_parameters.start_time, test_run_parameters.stop_time
         )

@@ -12,11 +12,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from openscm import timeseries_converter
-from openscm.core import ParameterSet
-from openscm.parameters import ParameterType
+from openscm.core import time
+from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
+from openscm.core.utils import convert_openscm_time_to_datetime
 from openscm.scmdataframe import ScmDataFrame
-from openscm.utils import convert_openscm_time_to_datetime
 
 try:
     from pyam import IamDataFrame
@@ -253,8 +253,8 @@ def test_adapter(request):
     Get an initialized instance of an the requesting classes ``tadapter`` property.
     """
     parameters = ParameterSet()
-    parameters.get_writable_scalar_view(("ecs",), ("World",), "K").set(3)
-    parameters.get_writable_scalar_view(("rf2xco2",), ("World",), "W / m^2").set(4.0)
+    parameters.scalar("ecs", "K", writable=True).value = 3
+    parameters.scalar("rf2xco2", "W / m^2", writable=True).value = 4
     output_parameters = ParameterSet()
     try:
         yield request.cls.tadapter(parameters, output_parameters)
@@ -265,11 +265,11 @@ def test_adapter(request):
 @pytest.fixture
 def assert_core():
     def check_func(expected, time, test_core, name, region, unit, time_points):
-        pview = test_core.parameters.get_timeseries_view(
-            name, region, unit, time_points, ParameterType.POINT_TIMESERIES
+        pview = test_core.parameters.timeseries(
+            name, unit, time_points, region=region, timeseries_type="point"
         )
         relevant_idx = (np.abs(time_points - time)).argmin()
-        np.testing.assert_allclose(pview.get()[relevant_idx], expected)
+        np.testing.assert_allclose(pview.values[relevant_idx], expected)
 
     return check_func
 
@@ -291,8 +291,8 @@ possible_target_values = [
         source_values=possible_source_values[0],
         target_values=[-1, 1, 3, 5, 4, 3, 4, 5, 6, 7, 5, 3, 2.5, 2, 5.5, 9, 12.5],
         timeseries_type=ParameterType.POINT_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
         source_start_time=0,
@@ -302,8 +302,8 @@ possible_target_values = [
         source_values=possible_source_values[0],
         target_values=[1, 1, 3, 9],
         timeseries_type=ParameterType.POINT_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.CONSTANT,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.CONSTANT,
     ),
     dict(
         source_start_time=0,
@@ -325,8 +325,8 @@ possible_target_values = [
             10.75,
         ],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
         source_start_time=0,
@@ -353,8 +353,8 @@ possible_target_values = [
             10.75,
         ],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
         source_start_time=3,
@@ -364,8 +364,8 @@ possible_target_values = [
         source_values=possible_source_values[0],
         target_values=[-1.66666667, 4.13333333, 4.13333333, 5.51666667, 3.01666667],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
 ]
 
@@ -386,14 +386,14 @@ Combination = namedtuple(
 for index in possible_target_values:
     combination = Combination(
         source_values=np.array(index["source_values"]),
-        source=timeseries_converter.create_time_points(
+        source=time.create_time_points(
             index["source_start_time"],
             index["source_period_length"],
             len(index["source_values"]),
             index["timeseries_type"],
         ),
         target_values=np.array(index["target_values"]),
-        target=timeseries_converter.create_time_points(
+        target=time.create_time_points(
             index["target_start_time"],
             index["target_period_length"],
             len(index["target_values"]),

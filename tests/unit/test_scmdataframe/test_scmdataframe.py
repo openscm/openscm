@@ -13,11 +13,15 @@ from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
-from openscm.scmdataframe import ScmDataFrame, convert_core_to_scmdataframe, df_append
-from openscm.units import DimensionalityError, UndefinedUnitError
-from openscm.utils import (
+from openscm.core.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,
+)
+from openscm.errors import DimensionalityError, UndefinedUnitError
+from openscm.scmdataframe import (
+    ScmDataFrame,
+    convert_openscm_to_scmdataframe,
+    df_append,
 )
 
 
@@ -1766,10 +1770,10 @@ def test_convert_existing_unit_context(test_scm_df):
     # TODO: warning if unit_context is different
 
 
-def test_scmdataframe_to_core(rcp26, assert_core):
+def test_scmdataframe_to_openscm(rcp26, assert_core):
     tdata = rcp26
 
-    res = tdata.to_core()
+    res = tdata.to_openscm()
     time_points = tdata.time_points
 
     tstart_dt = tdata["time"].min()
@@ -1830,22 +1834,22 @@ def test_scmdataframe_to_core(rcp26, assert_core):
     )
 
 
-def test_scmdataframe_to_core_raises(test_scm_df):
+def test_scmdataframe_to_openscm_raises(test_scm_df):
     with pytest.raises(ValueError, match="Not all timeseries have identical metadata"):
-        test_scm_df.to_core()
+        test_scm_df.to_openscm()
 
     # make sure single scenario passes
-    test_scm_df.filter(scenario="a_scenario2").to_core()
+    test_scm_df.filter(scenario="a_scenario2").to_openscm()
     # as long as this passes we're happy, test of conversion details is in
-    # `test_convert_core_to_scmdataframe`
+    # `test_convert_openscm_to_scmdataframe`
 
 
-def test_convert_core_to_scmdataframe(rcp26):
+def test_convert_openscm_to_scmdataframe(rcp26):
     tdata = rcp26
 
-    intermediate = rcp26.to_core()
+    intermediate = rcp26.to_openscm()
 
-    res = convert_core_to_scmdataframe(
+    res = convert_openscm_to_scmdataframe(
         intermediate,
         [convert_datetime_to_openscm_time(dt) for dt in tdata["time"]],
         model="IMAGE",

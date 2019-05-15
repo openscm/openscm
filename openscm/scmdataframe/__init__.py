@@ -8,9 +8,9 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from openscm.core import Core
-from openscm.parameters import ParameterInfo, ParameterType
-from openscm.utils import convert_openscm_time_to_datetime
+from openscm import OpenSCM
+from openscm.core.parameters import ParameterInfo, ParameterType
+from openscm.core.utils import convert_openscm_time_to_datetime
 
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
@@ -32,8 +32,8 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-def convert_core_to_scmdataframe(
-    core: Core,
+def convert_openscm_to_scmdataframe(
+    core: OpenSCM,
     time_points: List[int],
     model: str = "unspecified",
     scenario: str = "unspecified",
@@ -72,15 +72,12 @@ def convert_core_to_scmdataframe(
     time_points = np.asarray(time_points)
 
     def walk_parameters(  # type: ignore
-        c: Core, para, past=()
+        c: OpenSCM, para, past=()
     ) -> Dict[Tuple, ParameterInfo]:
         md = {}
         full_para_name = past + (para.info.name,)
-        if para._children:  # pylint: disable=protected-access
-            for (
-                _,
-                child_para,
-            ) in para._children.items():  # pylint: disable=protected-access
+        if para.children:
+            for (_, child_para) in para.children.items():
                 md.update(walk_parameters(c, child_para, past=full_para_name))
             return md
 
@@ -115,13 +112,17 @@ def convert_core_to_scmdataframe(
                     "Only generic types with Region=World can be extracted"
                 )
             metadata[parameter_name_to_scm(param_name)] = [
-                core.parameters.get_generic_view(param_name, region).get()
+                core.parameters.generic(param_name, region=region).value
             ]
         else:
-            ts = core.parameters.get_timeseries_view(  # type: ignore
-                param_name, region, p_info.unit, time_points, p_info.parameter_type
+            ts = core.parameters.timeseries(  # type: ignore
+                param_name,
+                p_info.unit,
+                time_points,
+                region=region,
+                timeseries_type=p_info.parameter_type,
             )
-            data.append(ts.get())
+            data.append(ts.values)
             metadata["variable"].append(parameter_name_to_scm(param_name))
             metadata["region"].append(parameter_name_to_scm(region))
             metadata["unit"].append(p_info.unit)

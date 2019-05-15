@@ -2,17 +2,19 @@
 Utility functions for openscm.
 """
 import datetime
-import warnings
-from typing import Any, Tuple, Union
+from typing import Any, Sequence, Union
 
 from dateutil.relativedelta import relativedelta
 
+HierarchicalName = Union[str, Sequence[str]]
+
+# TODO get rid of:
 OPENSCM_REFERENCE_TIME = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
 
-def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
+def hierarchical_name_as_sequence(inp: HierarchicalName) -> Sequence[str]:
     """
-    Return parameter as a tuple.
+    TODO Return parameter as a tuple.
 
     Parameters
     ----------
@@ -21,23 +23,23 @@ def ensure_input_is_tuple(inp: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
 
     Returns
     -------
-    Tuple[str, ...]
-        A tuple with a single string `inp` if `inp` is a string, otherwise return `inp`
+    Sequence[str]
+        A sequence with a single string `inp` if `inp` is a string, otherwise return
+        `inp`
     """
     if isinstance(inp, str):
-        if not getattr(ensure_input_is_tuple, "calls", 0):
-            setattr(ensure_input_is_tuple, "calls", 1)
-            warnings.warn("Converting input {} from string to tuple".format(inp))
-        return (inp,)
+        return inp.split("|")
 
     return inp
 
 
+# TODO get rid of:
 def convert_datetime_to_openscm_time(dt_in: datetime.datetime) -> int:
     """Convert a datetime.datetime instance to OpenSCM time i.e. seconds since OPENSCM_REFERENCE_TIME"""
     return int((dt_in - OPENSCM_REFERENCE_TIME).total_seconds())
 
 
+# TODO get rid of:
 def convert_openscm_time_to_datetime(oscm_in: int) -> datetime.datetime:
     """Convert OpenSCM time to datetime.datetime"""
     # Need to cast to int as np.int64 from numpy arrays are unsupported
@@ -46,7 +48,7 @@ def convert_openscm_time_to_datetime(oscm_in: int) -> datetime.datetime:
 
 def is_floatlike(f: Any) -> bool:
     """
-    Check if input can be cast to a float
+    Check if input can be cast to a float.
 
     This includes strings such as "6.03" which can be cast to a float
 

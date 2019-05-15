@@ -2,9 +2,13 @@
 Unit handling.
 
 Unit handling makes use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
-allows us to easily define units as well as contexts. Contexts allow us to perform conversions which would not normally be allowed e.g. in the 'AR4GWP100' context we can convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
+allows us to easily define units as well as contexts. Contexts allow us to perform
+conversions which would not normally be allowed e.g. in the 'AR4GWP100'
+context we can
+convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
 
-In general, you should not use Pint with OpenSCM explicitly. As illustration of how units are used internally, we provide the following example:
+In general, you should not use Pint with OpenSCM explicitly. As illustration of how
+units are used internally, we provide the following example:
 
 .. code:: python
 
@@ -356,7 +360,12 @@ class ScmUnitRegistry(pint.UnitRegistry):  # type: ignore
         from os import path
 
         metric_conversions = pd.read_csv(
-            path.join(path.dirname(path.abspath(__file__)), "metric_conversions.csv"),
+            path.join(
+                path.dirname(path.abspath(__file__)),
+                "..",
+                "data",
+                "metric_conversions.csv",
+            ),
             skiprows=1,  # skip source row
             header=0,
             index_col=0,
@@ -569,3 +578,17 @@ class UnitConverter:
             Unit registry used by this unit converter
         """
         return _unit_registry
+
+    @property
+    def source(self) -> str:
+        """
+        Source unit.
+        """
+        return self._source
+
+    @property
+    def target(self) -> str:
+        """
+        Target unit.
+        """
+        return self._target

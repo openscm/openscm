@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from openscm import timeseries_converter
+from openscm.core.parameters import ParameterType
+from openscm.core.time import TimeseriesConverter
 from openscm.errors import InsufficientDataError
-from openscm.parameters import ParameterType
 
 
 def test_conversion_to_same_timeseries(combo):
-    timeseriesconverter = timeseries_converter.TimeseriesConverter(
+    timeseriesconverter = TimeseriesConverter(
         combo.source,
         combo.source,
         combo.timeseries_type,
@@ -28,7 +28,7 @@ def test_conversion_to_same_timeseries(combo):
 
 def test_insufficient_overlap(combo):
     with pytest.raises(InsufficientDataError):
-        timeseries_converter.TimeseriesConverter(
+        TimeseriesConverter(
             combo.source,
             combo.target - 1e6,
             combo.timeseries_type,
@@ -38,7 +38,7 @@ def test_insufficient_overlap(combo):
 
 
 def test_conversion(combo):
-    timeseriesconverter = timeseries_converter.TimeseriesConverter(
+    timeseriesconverter = TimeseriesConverter(
         combo.source,
         combo.target,
         combo.timeseries_type,
@@ -52,7 +52,7 @@ def test_conversion(combo):
 
 
 def test_timeseriesconverter(combo):
-    timeseriesconverter = timeseries_converter.TimeseriesConverter(
+    timeseriesconverter = TimeseriesConverter(
         combo.source,
         combo.target,
         combo.timeseries_type,
@@ -62,7 +62,7 @@ def test_timeseriesconverter(combo):
     values = timeseriesconverter.convert_from(combo.source_values)
     np.testing.assert_allclose(values, combo.target_values, atol=1e-10 * values.max())
 
-    timeseriesconverter = timeseries_converter.TimeseriesConverter(
+    timeseriesconverter = TimeseriesConverter(
         combo.target,
         combo.source,
         combo.timeseries_type,

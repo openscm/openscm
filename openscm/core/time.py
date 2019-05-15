@@ -1,24 +1,22 @@
 """
 Different climate models often use different time frames for their input and output
-data. This includes different 'meanings' of time steps (e.g. beginning vs middle of year) and
-different lengths of the time steps (e.g. years vs months). Accordingly, OpenSCM
-supports the conversion of timeseries data between such timeseries, which is handled in
-this module. A thorough explaination of the procedure used is given in a dedicated
-`Jupyter Notebook
+data. This includes different 'meanings' of time steps (e.g. beginning vs middle of
+year) and different lengths of the time steps (e.g. years vs months). Accordingly,
+OpenSCM supports the conversion of timeseries data between such timeseries, which is
+handled in this module. A thorough explaination of the procedure used is given in a
+dedicated `Jupyter Notebook
 <https://github.com/openclimatedata/openscm/blob/master/notebooks/timeseries.ipynb>`_.
 """
 
 from enum import Enum
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Union
 
 import numpy as np
 import scipy.integrate as integrate
 import scipy.interpolate as interpolate
 
-from .errors import InsufficientDataError
+from ..errors import InsufficientDataError
 from .parameters import ParameterType
-
-# pylint: disable=too-many-arguments
 
 
 class ExtrapolationType(Enum):
@@ -31,6 +29,14 @@ class ExtrapolationType(Enum):
     LINEAR = 1
     # TODO support CUBIC = 3
 
+    @classmethod
+    def from_extrapolation_type(
+        cls, extrapolation_type: Union["ExtrapolationType", str]
+    ) -> "ExtrapolationType":
+        if isinstance(extrapolation_type, str):
+            return cls[extrapolation_type.upper()]
+        return extrapolation_type
+
 
 class InterpolationType(Enum):
     """
@@ -40,9 +46,20 @@ class InterpolationType(Enum):
     LINEAR = 1
     # TODO support CUBIC = 3
 
+    @classmethod
+    def from_interpolation_type(
+        cls, interpolation_type: Union["InterpolationType", str]
+    ) -> "InterpolationType":
+        if isinstance(interpolation_type, str):
+            return cls[interpolation_type.upper()]
+        return interpolation_type
+
 
 def create_time_points(
-    start_time: int, period_length: int, points_num: int, timeseries_type: ParameterType
+    start_time: int,
+    period_length: int,
+    points_num: int,
+    timeseries_type: Union[ParameterType, str],
 ) -> np.ndarray:
     """
     Create time points for an equi-distant time series.
@@ -63,6 +80,7 @@ def create_time_points(
     np.ndarray
         Array of the timeseries time points
     """
+    timeseries_type = ParameterType.from_timeseries_type(timeseries_type)
     points_num_output = (
         (points_num + 1)  # +1 for averages as we need to give the full last interval
         if timeseries_type == ParameterType.AVERAGE_TIMESERIES
@@ -316,7 +334,6 @@ class TimeseriesConverter:
         ------
         InsufficientDataError
             Length of the time series is too short to convert
-
         InsufficientDataError
             Target time points are outside the source time points and
             ``self._extrapolation_type`` is ``ExtrapolationType.None``

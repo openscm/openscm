@@ -14,15 +14,15 @@ import numpy as np
 import pandas as pd
 from dateutil import parser
 
-from openscm.core import Core
-from openscm.timeseries_converter import (
+from openscm import OpenSCM
+from openscm.core.time import (
     ExtrapolationType,
     InterpolationType,
     ParameterType,
     TimeseriesConverter,
 )
-from openscm.units import UnitConverter
-from openscm.utils import (
+from openscm.core.units import UnitConverter
+from openscm.core.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,
     is_floatlike,
@@ -446,7 +446,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             return value
         return self.set_meta(value, name=key)
 
-    def to_core(self) -> Core:
+    def to_openscm(self) -> OpenSCM:
         """
         Convert ``self`` to a ``Core`` object
 
@@ -477,7 +477,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         climate_model = meta_values.pop("climate_model")
 
-        core = Core(climate_model, self.time_points.min(), self.time_points.max())
+        core = OpenSCM(climate_model)
 
         for i in self._data:
             vals = self._data[i]
@@ -488,16 +488,17 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
             variable_openscm = tuple(variable.split(self.data_hierarchy_separator))
             region_openscm = tuple(region.split(self.data_hierarchy_separator))
-            core.parameters.get_writable_timeseries_view(
+            core.parameters.timeseries(  # type: ignore
                 variable_openscm,
-                region_openscm,
                 unit,
                 self.time_points,
-                ParameterType.POINT_TIMESERIES,
-            ).set(vals.values)
+                region=region_openscm,
+                timeseries_type=ParameterType.POINT_TIMESERIES,
+                writable=True,
+            ).values = vals.values
 
         for k, v in meta_values.iteritems():
-            core.parameters.get_writable_generic_view(k, ("World",)).set(v)
+            core.parameters.generic(k, writable=True).value = v  # type: ignore
 
         return core
 

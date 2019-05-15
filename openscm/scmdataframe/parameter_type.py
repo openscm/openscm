@@ -4,8 +4,8 @@ Functionality for guessing the parameter types from variable names and unit
 import re
 from typing import Optional
 
-from openscm.parameters import ParameterType
-from openscm.units import UndefinedUnitError, _unit_registry
+from openscm.core.parameters import ParameterType
+from openscm.core.units import UndefinedUnitError, _unit_registry
 
 """
 List of regex patterns for matching variable names to :obj:`ParameterType`

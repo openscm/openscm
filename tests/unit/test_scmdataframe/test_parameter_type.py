@@ -1,6 +1,6 @@
 import pytest
 
-from openscm.parameters import ParameterType
+from openscm.core.parameters import ParameterType
 from openscm.scmdataframe.parameter_type import guess_parameter_type
 
 
