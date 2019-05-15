@@ -15,6 +15,7 @@ disable=
     invalid-name,
     pointless-string-statement,
     too-few-public-methods,
+    too-many-arguments,
     too-many-locals,
     # handled by black
     format

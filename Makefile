@@ -24,17 +24,17 @@ black: venv  ## apply black formatter to source and tests
 	fi;
 
 checks: venv  ## run all the checks
-	./venv/bin/bandit -c .bandit.yml -r openscm
-	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
-	./venv/bin/flake8 openscm tests setup.py
-	./venv/bin/isort --check-only --quiet --recursive openscm tests setup.py
-	./venv/bin/mypy openscm
-	./venv/bin/pydocstyle openscm
-	./venv/bin/pylint openscm
-	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
-	./venv/bin/pytest tests -r a --cov=openscm --cov-report='' \
-		&& ./venv/bin/coverage report --fail-under=100
-	./venv/bin/sphinx-build -M html docs docs/build -EW
+	@echo "=== bandit ==="; ./venv/bin/bandit -c .bandit.yml -r openscm || echo "--- bandit failed ---" >&2; \
+		echo "\n\n=== black ==="; ./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py || echo "--- black failed ---" >&2; \
+		echo "\n\n=== flake8 ==="; ./venv/bin/flake8 openscm tests setup.py || echo "--- flake8 failed ---" >&2; \
+		echo "\n\n=== isort ==="; ./venv/bin/isort --check-only --quiet --recursive openscm tests setup.py || echo "--- isort failed ---" >&2; \
+		echo "\n\n=== mypy ==="; ./venv/bin/mypy openscm || echo "--- mypy failed ---" >&2; \
+		echo "\n\n=== pydocstyle ==="; ./venv/bin/pydocstyle openscm || echo "--- pydocstyle failed ---" >&2; \
+		echo "\n\n=== pylint ==="; ./venv/bin/pylint openscm || echo "--- pylint failed ---" >&2; \
+		echo "\n\n=== notebook tests ==="; ./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg || echo "--- notebook tests failed ---" >&2; \
+		echo "\n\n=== tests ==="; ./venv/bin/pytest tests -r a --cov=openscm --cov-report='' \
+			&& ./venv/bin/coverage report --fail-under=100 || echo "--- tests failed ---" >&2; \
+		echo "\n\n=== sphinx ==="; ./venv/bin/sphinx-build -M html docs docs/build -EW || echo "--- sphinx failed ---" >&2
 
 check-docs: venv  ## check that the docs build successfully
 	./venv/bin/sphinx-build -M html docs docs/build -En
