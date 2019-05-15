@@ -35,7 +35,7 @@ def is_str(s: Any) -> bool:
 
 def is_in(vals: List, items: List) -> np.ndarray:
     """
-    Find elements of vals which are in items
+    Find elements of vals which are in items.
 
     Parameters
     ----------
@@ -62,7 +62,7 @@ def find_depth(
     separator: str = DEFAULT_SEPARATOR,
 ) -> np.ndarray:
     """
-    Find all values which match given depth from a filter keyword
+    Find all values which match given depth from a filter keyword.
 
     Parameters
     ----------
@@ -73,10 +73,10 @@ def find_depth(
         Filter keyword, from which level should be applied
 
     level
-        Depth of value to match as defined by the number of separator in the value
-        name. If an int, the depth is matched exactly. If a str, then the depth can be
-        matched as either "X-", for all levels up to level "X", or "X+", for all
-        levels above level "X".
+        Depth of value to match as defined by the number of separator in the value name.
+        If an int, the depth is matched exactly. If a str, then the depth can be matched
+        as either "X-", for all levels up to level "X", or "X+", for all levels above
+        level "X".
 
     separator
         The string used to separate levels in s. Defaults to a pipe ("|").
@@ -89,7 +89,7 @@ def find_depth(
     Raises
     ------
     ValueError
-        If `level` cannot be understood.
+        If `level` cannot be understood
     """
     # determine function for finding depth level
     if not is_str(level):
@@ -122,7 +122,7 @@ def find_depth(
     return np.array([b for b in [apply_test(m) for m in meta_col]])
 
 
-def pattern_match(  # pylint: disable=too-many-arguments
+def pattern_match(
     meta_col: pd.Series,
     values: Union[Iterable[str], str],
     level: Optional[Union[str, int]] = None,
@@ -131,7 +131,7 @@ def pattern_match(  # pylint: disable=too-many-arguments
     separator: str = DEFAULT_SEPARATOR,
 ) -> np.ndarray:
     """
-    Filter data by matching metadata columns to given patterns
+    Filter data by matching metadata columns to given patterns.
 
     Parameters
     ----------
@@ -151,8 +151,8 @@ def pattern_match(  # pylint: disable=too-many-arguments
     has_nan
         If True, convert all nan in ``meta_col`` to empty string before applying
         filters. This means that "" and "*" will match rows with ``np.nan``. If False,
-        the conversion is not applied and so a search in a string column which
-        contains ``np.nan`` will result in a ``TypeError``.
+        the conversion is not applied and so a search in a string column which contains
+        ``np.nan`` will result in a ``TypeError``.
 
     separator
         String used to separate the hierarchy levels in values. Defaults to '|'
@@ -166,7 +166,7 @@ def pattern_match(  # pylint: disable=too-many-arguments
     ------
     TypeError
         Filtering is performed on a string metadata column which contains
-        ``np.nan`` and ``has_nan`` is ``False``.
+        ``np.nan`` and ``has_nan`` is ``False``
     """
     matches = np.array([False] * len(meta_col))
     _values = [values] if not isinstance(values, Iterable) or is_str(values) else values
@@ -219,7 +219,7 @@ def pattern_match(  # pylint: disable=too-many-arguments
 
 def years_match(data: List, years: Union[List[int], int]) -> np.ndarray:
     """
-    Match years in time columns for data filtering
+    Match years in time columns for data filtering.
 
     Parameters
     ----------
@@ -256,7 +256,7 @@ def month_match(
     data: List, months: Union[List[str], List[int], int, str]
 ) -> np.ndarray:
     """
-    Match months in time columns for data filtering
+    Match months in time columns for data filtering.
 
     Parameters
     ----------
@@ -276,7 +276,7 @@ def month_match(
 
 def day_match(data: List, days: Union[List[str], List[int], int, str]) -> np.ndarray:
     """
-    Match days in time columns for data filtering
+    Match days in time columns for data filtering.
 
     Parameters
     ----------
@@ -296,7 +296,7 @@ def day_match(data: List, days: Union[List[str], List[int], int, str]) -> np.nda
 
 def hour_match(data: List, hours: Union[List[int], int]) -> np.ndarray:
     """
-    Match hours in time columns for data filtering
+    Match hours in time columns for data filtering.
 
     Parameters
     ----------
@@ -323,7 +323,7 @@ def time_match(
     name: str,
 ) -> np.ndarray:
     """
-    Match times by applying conversion codes to filtering list
+    Match times by applying conversion codes to filtering list.
 
     Parameters
     ----------
@@ -338,7 +338,7 @@ def time_match(
         ``time.strptime`` to convert ``times`` to ``datetime.datetime``'s
 
     strptime_attr
-        If ``times`` contains strings, the ``datetime.datetime`` attribute to finalise
+        If ``times`` contains strings, the ``datetime.datetime`` attribute to finalize
         the conversion of strings to integers
 
     name
@@ -353,9 +353,9 @@ def time_match(
     Raises
     ------
     ValueError
-        If input times cannot be converted understood or if input strings do not lead
-        to increasing integers (i.e. "Nov-Feb" will not work, one must use ["Nov-Dec",
-        "Jan-Feb"] instead).
+        If input times cannot be converted understood or if input strings do not lead to
+        increasing integers (i.e. "Nov-Feb" will not work, one must use ["Nov-Dec",
+        "Jan-Feb"] instead)
     """
     times_list = [times] if isinstance(times, (int, str)) else times
 
@@ -409,7 +409,7 @@ def datetime_match(
     data: List, dts: Union[List[datetime.datetime], datetime.datetime]
 ) -> np.ndarray:
     """
-    Match datetimes in time columns for data filtering
+    Match datetimes in time columns for data filtering.
 
     Parameters
     ----------

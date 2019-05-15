@@ -17,7 +17,7 @@ from openscm.core.utils import (
 
 def to_int(x: np.ndarray) -> np.ndarray:  # TODO obsolete!
     """
-    Convert inputs to int and check conversion is sensible
+    Convert inputs to int and check conversion is sensible.
 
     Parameters
     ----------
@@ -53,7 +53,7 @@ def to_int(x: np.ndarray) -> np.ndarray:  # TODO obsolete!
 
 def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:  # TODO obsolete!
     """
-    Convert a ``numpy.datetime64`` instance to a ``datetime.datetime``
+    Convert a ``numpy.datetime64`` instance to a ``datetime.datetime``.
 
     Parameters
     ----------
@@ -71,7 +71,7 @@ def npdt64_to_datetime(dt: np.datetime64) -> datetime.datetime:  # TODO obsolete
 
 def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:
     """
-    Convert a list into a set of ``datetime.datetime``'s
+    Convert a list into a set of ``datetime.datetime``'s.
 
     Parameters
     ----------
@@ -132,7 +132,8 @@ def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:
 
 class TimeIndex:
     """
-    Keeps track of both datetime and openscm datetimes and knows how to convert between the two formats
+    Keeps track of both datetime and openscm datetimes and knows how to convert between
+    the two formats.
     """
 
     def __init__(self, py_dt=None, openscm_dt=None):
@@ -157,7 +158,7 @@ class TimeIndex:
 
     def __setattr__(self, key: str, value: Any) -> None:
         """
-        Set an attribute of self
+        Set an attribute of self.
 
         Parameters
         ----------
@@ -170,13 +171,13 @@ class TimeIndex:
         Raises
         ------
         AttributeError
-            ``TimeIndex`` is immutable and hence no attributes can be set.
+            ``TimeIndex`` is immutable and hence no attributes can be set
         """
         raise AttributeError("TimeIndex is immutable")
 
     def as_openscm(self) -> np.ndarray:
         """
-        Get time points as OpenSCM times
+        Get time points as OpenSCM times.
 
         For details of how to convert between datetime.datetime and OpenSCM time, see
         docstring of ``convert_datetime_to_openscm_time``.
@@ -191,7 +192,7 @@ class TimeIndex:
 
     def as_py(self) -> np.ndarray:
         """
-        Get time points as Python datetimes
+        Get time points as Python datetimes.
 
         Returns
         -------
@@ -203,7 +204,7 @@ class TimeIndex:
 
     def as_pd_index(self) -> pd.Index:
         """
-        Get time points as pd.Index
+        Get time points as ``pd.Index``.
 
         Returns
         -------
@@ -214,7 +215,7 @@ class TimeIndex:
 
     def years(self) -> np.ndarray:
         """
-        Get year of each time point
+        Get year of each time point.
 
         Returns
         -------
@@ -225,7 +226,7 @@ class TimeIndex:
 
     def months(self) -> np.ndarray:
         """
-        Get month of each time point
+        Get month of each time point.
 
         Returns
         -------
@@ -236,7 +237,7 @@ class TimeIndex:
 
     def days(self) -> np.ndarray:
         """
-        Get day of each time point
+        Get day of each time point.
 
         Returns
         -------
@@ -247,7 +248,7 @@ class TimeIndex:
 
     def hours(self) -> np.ndarray:
         """
-        Get hour of each time point
+        Get hour of each time point.
 
         Returns
         -------
@@ -258,7 +259,7 @@ class TimeIndex:
 
     def weekdays(self) -> np.ndarray:
         """
-        Get weekday of each time point
+        Get weekday of each time point.
 
         Returns
         -------

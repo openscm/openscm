@@ -3,17 +3,18 @@ Usage
 
 OpenSCM defines and provides three interfaces for its users.
 
-Its **Core** interface is targeted to users who want to include
+Its **core** interface is targeted to users who want to include
 OpenSCM in their model, e.g. integrated assessment modellers. This
 interface provides the basic functionality necessary to run all SCMs
 included in OpenSCM. It includes functions for getting and setting
-parameters as well as to run and reset the model.
+parameters as well as to run and reset the model. Additionally, it
+allows for reading and writing parameters from and to standardized and
+other file formats, including whole scenario definitions.
 
-The **Pythonic** interface adds several convenience functions on top
-of the core interface. It allows for reading and writing parameters
-from and to standardized and other file formats, including whole
-scenario definitions. It also provides functions for running ensembles
-of model runs.
+The **ensemble** interface provides functions for running ensembles of
+model runs.
+
+TODO describe ScmDataFrame
 
 The **command line** interface lets users run models with specified
 parameters and model input directly from the command line without
@@ -61,13 +62,11 @@ corresponding period. This implies that values that are not averages
 but, for instance, absolute values, such as emissions need to be given
 as a rate, e.g. ``tC/a`` rather than ``tC``.
 
-In the core and pythonic API time points are given in seconds since
-``1970-01-01 00:00:00``, while time period lengths are specified in
-seconds. The pythonic API additionally accepts string values and
-``datetime.datetime`` objects.
+In the core API time points are given in seconds since ``1970-01-01
+00:00:00``, while time period lengths are specified in seconds.
 
 
-Core interface
+Main interface
 --------------
 
 (see :ref:`core-reference` for an API reference)
@@ -75,19 +74,19 @@ Core interface
 Setting up a model run
 **********************
 
-A model run is represented by a :class:`openscm.core.Core` object
+A model run is represented by a :class:`openscm.OpenSCM` object
 specifying the underlying SCM and start and end time:
 
 .. code:: python
 
-    from openscm.core import Core as ModelRun
+    from openscm import OpenSCM
     from datetime import datetime, timedelta
 
     start_time = datetime(2006, 1, 1).timestamp()
     year_seconds = timedelta(365).total_seconds()
     # use year_seconds since models do not account for leap years
     stop_time = start_time + (2100 - 2006) * year_seconds
-    model_run = ModelRun("DICE", start_time, stop_time)
+    model_run = OpenSCM("DICE", start_time, stop_time)
 
 .. _get-set-parameters:
 
@@ -104,7 +103,7 @@ timeseries, a specific time frame.
 
 Unit and time frame have to be specified when requesting a
 :class:`~openscm.parameter_views.ParameterView` from the
-:class:`~openscm.core.Core`'s :class:`~openscm.core.ParameterSet`
+:class:`~openscm.OpenSCM`'s :class:`~openscm.core.ParameterSet`
 property called ``parameters`` using one of the following functions:
 
 - :func:`~openscm.core.ParameterSet.get_scalar_view` returns a
@@ -190,7 +189,7 @@ step-wise would create large overhead).
 Running the model
 *****************
 
-The model is simply run by calling the :func:`~openscm.core.Core.run`
+The model is simply run by calling the :func:`~openscm.OpenSCM.run`
 function:
 
 .. code:: python
@@ -204,7 +203,7 @@ for units and time frames is done by the corresponding
 the model itself.
 
 After the run the model is reset, so the
-:func:`~openscm.core.Core.run` function can be called again (setting
+:func:`~openscm.OpenSCM.run` function can be called again (setting
 parameters to new values before, if desired).
 
 Getting output parameters
@@ -220,9 +219,3 @@ read-only :class:`~openscm.parameter_views.ParameterView` objects:
         ("Temperature", "Surface"), ("World",), "degC", start_time, year_seconds
     )
     print(gmt.get())
-
-
-Pythonic interface
-------------------
-
-(see :ref:`openscm-python-reference` for an API reference)

@@ -21,10 +21,6 @@ reading and writing such files. It further adds convenience functions
 and easily enables ensemble runs, e.g. for scenario assessment or
 model tuning.
 
-Being designed as a programming-language agnostic interface and
-standard in mind, this will be the reference implementation in
-Python 3.
-
 This OpenSCM implementation comes with a command line tool
 ``openscm``.
 

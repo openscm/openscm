@@ -35,7 +35,6 @@ Schema
     :caption: API reference
 
     core
-    openscm
     adapter
     errors
     units

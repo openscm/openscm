@@ -1,8 +1,8 @@
 """
-ScmDataFrame provides a high level analysis tool for simple climate
-model relevant data. It provides a simple interface for reading/writing,
-subsetting and visualising model data. ScmDataFrames are able to hold
-multiple model runs which aids in analysis of ensembles of model runs.
+ScmDataFrame provides a high level analysis tool for simple climate model relevant
+data. It provides a simple interface for reading/writing, subsetting and visualising
+model data. ScmDataFrames are able to hold multiple model runs which aids in analysis of
+ensembles of model runs.
 """
 from typing import Dict, List, Tuple
 
@@ -19,16 +19,16 @@ class ScmDataFrame(ScmDataFrameBase):
     """
     OpenSCM's custom DataFrame implementation.
 
-    The ScmDataFrame implements a subset of the functionality provided by
-    `pyam <https://github.com/IAMconsortium/pyam>`_'s
-    IamDataFrame, but is focused on providing a performant way of storing
-    time series data and the metadata associated with those time series.
+    The ScmDataFrame implements a subset of the functionality provided by `pyam
+    <https://github.com/IAMconsortium/pyam>`_'s IamDataFrame, but is focused on
+    providing a performant way of storing time series data and the metadata associated
+    with those time series.
 
     For users who wish to take advantage of all of Pyam's functionality, please cast
     your ScmDataFrame to an IamDataFrame first with `to_iamdataframe()`. Note: this
-    operation can be computationally expensive for large data sets because
-    IamDataFrames stored data in long/tidy form internally rather than ScmDataFrames'
-    more compact internal format.
+    operation can be computationally expensive for large data sets because IamDataFrames
+    stored data in long/tidy form internally rather than ScmDataFrames' more compact
+    internal format.
     """
 
 
@@ -40,29 +40,32 @@ def convert_openscm_to_scmdataframe(
     climate_model: str = "unspecified",
 ) -> ScmDataFrame:
     """
-    Get an ScmDataFrame from a Core object
+    Get an ScmDataFrame from a OpenSCM object.
 
-    An ScmDataFrame is a view with a common time index for all time series. All metadata in Core must be represented as Generic
-    parameters with in the `World` region.
+    An ScmDataFrame is a view with a common time index for all time series. All metadata
+    in OpenSCM must be represented as Generic parameters with in the `World` region.
 
     Parameters
     ----------
     core
-        Core object containing time series and optional metadata.
+        OpenSCM object containing time series and optional metadata.
     time_points
         List of OpenSCM time values to which all timeseries will be interpolated.
     model
-        Default value for the model metadata value. This value is only used if the `model` parameter is not found.
+        Default value for the model metadata value. This value is only used if the
+        `model` parameter is not found.
     scenario
-        Default value for the scenario metadata value. This value is only used if the `scenario` parameter is not found.
+        Default value for the scenario metadata value. This value is only used if the
+        `scenario` parameter is not found.
     climate_model
-        Default value for the climate_model metadata value. This value is only used if the `climate_model` parameter is not found.
+        Default value for the climate_model metadata value. This value is only used if
+        the `climate_model` parameter is not found.
 
     Raises
     ------
     ValueError
-        If a generic parameter cannot be mapped to an ScmDataFrame meta table. This happens if the parameter has a region which is
-        not `('World',)`
+        If a generic parameter cannot be mapped to an ScmDataFrame meta table. This
+        happens if the parameter has a region which is not `('World',)`.
 
     Returns
     -------
