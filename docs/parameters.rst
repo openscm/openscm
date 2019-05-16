@@ -13,8 +13,8 @@ Simple climate models come in many different shapes and forms hence we
 do not expect them to all be able to do everything. However, to be
 included in OpenSCM they should make sure their parameters fit into
 these standard parameters as far as possible to ensure models can be
-interchanged easily. Of course, also model-specific parameters are
-possible (see also :ref:`writing-adapters`).
+interchanged easily. Of course, model-specific parameters are also
+able to be used (see also :ref:`writing-adapters`).
 
 
 Conventions
@@ -180,28 +180,40 @@ which are higher in the hierarchy are the sum of all the regions which
 are one level below them in the hierarchy (be careful of this when
 looking at e.g. |CO2| concentration data at a regional level).
 
-TODO: Add description and links
+The hemispheric regions should be fairly obvious and well-defined.
+The land/ocean split is somewhat fuzzily defined as the transition between land and ocean does not have a precise definition.
+We don't provide a clear definition because a) there isn't an agreed one in the literature and b) no simple climate model is detailed enough for the slight fuzziness around these definitions to matter.
+We choose to put the hemispheres before the ocean/land split in the hierarchy because it makes more sense to us but are happy to discuss further if desired (raise an issue).
+
+Descriptions of the rest of the regions can be found in the 'Description' column below.
+
+**Warning** Be careful, if you mix multiple regional conventions (e.g. reporting both ``("World", "Land")`` and ``("World", "R5ASIA")``), then your ``("World")`` total will double count some quantities and so may provide misleading information. There is no way for OpenSCM to reasonably keep track of what overlaps with what so we can't automate this process (if you think you have an idea of how to do this, please make a PR :D).
 
 .. csv-table:: Gases
-    :header: "Name 0", "Name 1", "Name 2, "Description"
+    :header: "Name 0", "Name 1", "Name 2", "Description"
 
-    ``World``
-    ``World``, ``Northern Hemisphere``
-    ``World``, ``Northern Hemisphere``, ``Ocean``
-    ``World``, ``Northern Hemisphere``, ``Land``
-    ``World``, ``Southern Hemisphere``
-    ``World``, ``Southern Hemisphere``, ``Ocean``
-    ``World``, ``Southern Hemisphere``, ``Land``
-    ``World``, ``Ocean``
-    ``World``, ``Land``
-    ``World``, ``R5ASIA``
-    ``World``, ``R5REF``
-    ``World``, ``R5MAF``
-    ``World``, ``R5OECD``
-    ``World``, ``R5LAM``
-    ``World``, ``R5.2ASIA``
-    ``World``, ``R5.2REF``
-    ``World``, ``R5.2MAF``
-    ``World``, ``R5.2OECD``
-    ``World``, ``R5.2LAM``
-    ``World``, ``Bunkers``
+    ``World``, , , Entire globe
+    ``World``, ``Northern Hemisphere``, , Northern hemisphere
+    ``World``, ``Northern Hemisphere``, ``Ocean``, Northern hemisphere ocean
+    ``World``, ``Northern Hemisphere``, ``Land``, Northern hemisphere land
+    ``World``, ``Southern Hemisphere``, , Southern hemisphere
+    ``World``, ``Southern Hemisphere``, ``Ocean``, Southern hemisphere ocean
+    ``World``, ``Southern Hemisphere``, ``Land``, Southern hemisphere land
+    ``World``, ``Ocean``, , Ocean
+    ``World``, ``Land``, , Land
+    ``World``, ``R5ASIA``, , Non-OECD Asia - see `IIASA AR5 database`_
+    ``World``, ``R5REF``, , Reforming economies of Eastern Europe and the Former Soviet Union (also known as ``R5EIT`` i.e. economies in transition) - see `IIASA AR5 database`_
+    ``World``, ``R5MAF``, , Middle East and Africa - see `IIASA AR5 database`_
+    ``World``, ``R5OECD``, , OECD - see `IIASA AR5 database`_
+    ``World``, ``R5LAM``, , Latin America and the Caribbean - see `IIASA AR5 database`_
+    ``World``, ``R5.2ASIA``, , Most Asian countries - see `IIASA SSP database`_
+    ``World``, ``R5.2REF``, , Reforming economies of Eastern Europe and the Former Soviet Union - see `IIASA SSP database`_
+    ``World``, ``R5.2MAF``, , Middle East and Africa - see `IIASA SSP database`_
+    ``World``, ``R5.2OECD``, , OECD - see `IIASA SSP database`_
+    ``World``, ``R5.2LAM``, , Latin America and the Caribbean - see `IIASA SSP database`_
+    ``World``, ``Bunkers``, , Typically used to capture all non-country associated emissions i.e. international shipping (and sometimes aviation) - be careful with definition
+
+
+.. _IIASA AR5 database: https://tntcat.iiasa.ac.at/AR5DB/dsd?Action=htmlpage&page=about#regiondefs
+
+.. _IIASA SSP database: https://tntcat.iiasa.ac.at/SspDb/dsd?Action=htmlpage&page=about#regiondefs
