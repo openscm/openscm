@@ -4,7 +4,7 @@ Changelog
 master
 ******
 
-- (`#163 <https://github.com/openclimatedata/openscm/pull/163>`_) Add ``openscm.scenarios`` module with commonly used scenarios
+- (`#165 <https://github.com/openclimatedata/openscm/pull/165>`_) Add ``openscm.scenarios`` module with commonly used scenarios
 - (`#163 <https://github.com/openclimatedata/openscm/pull/163>`_) Lock ``pyam`` version to pypi versions
 - (`#160 <https://github.com/openclimatedata/openscm/pull/160>`_) Update ``setup.py`` so project description is right
 - (`#158 <https://github.com/openclimatedata/openscm/pull/158>`_) Add ``ScmDataFrame``, a high-level data and analysis class
