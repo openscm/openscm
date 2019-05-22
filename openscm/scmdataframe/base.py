@@ -366,9 +366,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             )
         elif isinstance(data, (pd.DataFrame, pd.Series)):
             (_df, _meta) = _format_data(data.copy())
-        elif IamDataFrame is not None:
-            if isinstance(data, IamDataFrame) and data is not None:
-                (_df, _meta) = _format_data(data.data.copy())
+        elif (IamDataFrame is not None) and isinstance(data, IamDataFrame):
+            (_df, _meta) = _format_data(data.data.copy())
         else:
             if not is_str(data):
                 if isinstance(data, list) and is_str(data[0]):
@@ -379,7 +378,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 error_msg = "Cannot load {} from {}".format(type(self), type(data))
                 raise TypeError(error_msg)
             # mypy doesn't recognise type control in `if` statements
-            (_df, _meta) = _read_file(data, **kwargs)  # type: ignore
+            (_df, _meta) = _read_file(data, **kwargs)
         self._time_index = TimeIndex(py_dt=_df.index.values)
         _df.index = self._time_index.as_pd_index()
         _df = _df.astype(float)
