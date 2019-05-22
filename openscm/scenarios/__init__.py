@@ -1,9 +1,9 @@
 """
 Scenarios included as part of OpenSCM.
 
-These are largely limited to a select few scenarios which are widely used. This module
-also provides a useful set of scenarios with which we can run tests and make example
-notebooks.
+These are limited to a select few scenarios which are widely used. They are included
+because they provide a useful set of scenarios with which we can run tests, make
+example notebooks and allow users to easily get started.
 """
 from os.path import dirname, join, realpath
 
