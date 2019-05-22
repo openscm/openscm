@@ -366,8 +366,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             )
         elif isinstance(data, (pd.DataFrame, pd.Series)):
             (_df, _meta) = _format_data(data.copy())
-        elif isinstance(data, IamDataFrame) and data is not None:
-            (_df, _meta) = _format_data(data.data.copy())
+        elif IamDataFrame is not None:
+            if isinstance(data, IamDataFrame) and data is not None:
+                (_df, _meta) = _format_data(data.data.copy())
         else:
             if not is_str(data):
                 if isinstance(data, list) and is_str(data[0]):
