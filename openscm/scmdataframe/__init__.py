@@ -78,13 +78,13 @@ def convert_openscm_to_scmdataframe(
         c: OpenSCM, para, past=()
     ) -> Dict[Tuple, ParameterInfo]:
         md = {}
-        full_para_name = past + (para.info.name,)
+        full_para_name = past + (para.name,)
         if para.children:
             for (_, child_para) in para.children.items():
                 md.update(walk_parameters(c, child_para, past=full_para_name))
             return md
 
-        md[(full_para_name, para.info.region)] = para.info
+        md[(full_para_name, para.region.full_name)] = ParameterInfo(para)
         return md
 
     def parameter_name_to_scm(t):

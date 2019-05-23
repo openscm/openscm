@@ -37,6 +37,9 @@ class ParameterType(Enum):
     def from_timeseries_type(
         cls, timeseries_type: Union["ParameterType", str]
     ) -> "ParameterType":
+        """
+        TODO Docs
+        """
         if isinstance(timeseries_type, str):
             if timeseries_type.lower() == "average":
                 return cls.AVERAGE_TIMESERIES
@@ -46,68 +49,6 @@ class ParameterType(Enum):
         if timeseries_type not in [cls.AVERAGE_TIMESERIES, cls.POINT_TIMESERIES]:
             raise ValueError("Timeseries type expected")
         return timeseries_type
-
-
-class ParameterInfo:
-    """
-    Information for a :ref:`parameter <parameters>`.
-    """
-
-    _name: str
-    """Name"""
-
-    _region: "regions._Region"
-    """Region this parameter belongs to"""
-
-    _type: Optional[ParameterType]
-    """Parameter type"""
-
-    _unit: Optional[str]
-    """Unit"""
-
-    def __init__(self, name: str, region: "regions._Region"):
-        """
-        Initialize.
-
-        Parameters
-        ----------
-        name
-            Name
-        region
-            Region
-        """
-        self._name = name
-        self._region = region
-        self._type = None
-        self._unit = None
-
-    @property
-    def name(self) -> str:
-        """
-        Name
-        """
-        return self._name
-
-    @property
-    def parameter_type(self) -> Optional[ParameterType]:
-        """
-        Parameter type
-        """
-        return self._type
-
-    @property
-    def region(self) -> Tuple[str, ...]:
-        """
-        Hierarchichal name of the region this parameter belongs to
-        """
-        return self._region.full_name
-
-    @property
-    def unit(self) -> Optional[str]:
-        """
-        Parameter unit
-        """
-        return self._unit
 
 
 class _Parameter:
@@ -128,16 +69,26 @@ class _Parameter:
     has_been_written_to: bool
     """If True, parameter data has already been changed"""
 
-    info: ParameterInfo
-    """Information about the parameter"""
+    name: str
+    """Name"""
+
+    parameter_type: Optional[ParameterType]
+    """Parameter type"""
 
     parent: Optional["_Parameter"]
     """Parent parameter"""
 
+    region: "regions._Region"
+    """Region this parameter belongs to"""
+
     time_points: Optional[np.ndarray]
     """Timeseries time points; only for timeseries parameters"""
 
+    unit: Optional[str]
+    """Unit"""
+
     version: int
+    """Internal version (incremented by each write operation)"""
 
     def __init__(self, name: str, region: "regions._Region"):
         """
@@ -151,8 +102,11 @@ class _Parameter:
         self.children = {}
         self.has_been_read_from = False
         self.has_been_written_to = False
-        self.info = ParameterInfo(name, region)
+        self.name = name
+        self.parameter_type = None
         self.parent = None
+        self.region = region
+        self.unit = None
         self.version = 0
 
     def get_or_create_child_parameter(self, name: str) -> "_Parameter":
@@ -164,10 +118,6 @@ class _Parameter:
         ----------
         name
             Name
-        unit
-            Unit for the parameter if it is going to be created
-        parameter_type
-            Parameter type if it is going to be created
 
         Returns
         -------
@@ -189,7 +139,7 @@ class _Parameter:
                 raise ParameterWrittenError
             if self.has_been_read_from:
                 raise ParameterReadError
-            res = _Parameter(name, self.info._region)
+            res = _Parameter(name, self.region)
             res.parent = self
             self.children[name] = res
         return res
@@ -246,11 +196,11 @@ class _Parameter:
             If parameter has child parameters which cannot be aggregated (for boolean
             and string parameters)
         """
-        if self.info._type is not None and self.info._type != parameter_type:
+        if self.parameter_type is not None and self.parameter_type != parameter_type:
             raise ParameterTypeError
-        if self.info._type is None:
-            self.info._unit = unit
-            self.info._type = parameter_type
+        if self.parameter_type is None:
+            self.unit = unit
+            self.parameter_type = parameter_type
             if parameter_type == ParameterType.SCALAR:
                 self.data = float("NaN")
             elif parameter_type == ParameterType.GENERIC:
@@ -305,6 +255,85 @@ class _Parameter:
         p: Optional["_Parameter"] = self
         r = []
         while p is not None:
-            r.append(p.info._name)
+            r.append(p.name)
             p = p.parent
         return tuple(reversed(r))
+
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        region_name = self.region.full_name
+        return "{} in {}{}".format(
+            "|".join(self.full_name),
+            self.unit if self.unit is not None else "undefined",
+            " for {}".format("|".join(region_name)) if len(region_name) > 1 else "",
+        )
+
+
+class ParameterInfo:
+    """
+    Information for a :ref:`parameter <parameters>`.
+    """
+
+    _parameter: _Parameter
+    """Parameter"""
+
+    def __init__(self, parameter: _Parameter):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        parameter
+            Parameter
+        """
+        self._parameter = parameter
+
+    @property
+    def name(self) -> Tuple[str, ...]:
+        """
+        Hierarchical name of the parameter
+        """
+        return self._parameter.full_name
+
+    @property
+    def parameter_type(self) -> Optional[ParameterType]:
+        """
+        Parameter type
+        """
+        return self._parameter.parameter_type
+
+    @property
+    def region(self) -> Tuple[str, ...]:
+        """
+        Hierarchichal name of the region this parameter belongs to
+        """
+        return self._parameter.region.full_name
+
+    @property
+    def unit(self) -> Optional[str]:
+        """
+        Parameter unit
+        """
+        return self._parameter.unit
+
+    @property
+    def empty(self) -> bool:
+        """
+        Check if parameter is empty, i.e. has not yet been written to.
+        """
+        return not self._parameter.has_been_written_to
+
+    @property
+    def version(self) -> int:
+        """
+        Get internal version number of parameter.
+        """
+        return self._parameter.version
+
+    def ensure(self) -> None:
+        """
+        TODO Docs
+        """
+        # TODO

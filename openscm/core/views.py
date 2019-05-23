@@ -11,7 +11,7 @@ from numpy.lib.mixins import NDArrayOperatorsMixin
 from pandas.core.arrays.base import ExtensionOpsMixin
 
 from ..errors import ParameterEmptyError, TimeseriesPointsValuesMismatchError
-from .parameters import ParameterType, _Parameter
+from .parameters import ParameterInfo, ParameterType, _Parameter
 from .time import ExtrapolationType, InterpolationType, TimeseriesConverter
 from .units import UnitConverter
 
@@ -121,34 +121,7 @@ _Timeseries._add_arithmetic_ops()
 _Timeseries._add_comparison_ops()
 
 
-class ParameterView:
-    """
-    Generic view to a :ref:`parameter <parameters>` (scalar or timeseries).
-    """
-
-    _parameter: _Parameter
-    """Parameter"""
-
-    def __init__(self, parameter: _Parameter):
-        """
-        Initialize.
-
-        Parameters
-        ----------
-        parameter
-            Parameter
-        """
-        self._parameter = parameter
-
-    @property
-    def empty(self) -> bool:
-        """
-        Check if parameter is empty, i.e. has not yet been written to.
-        """
-        return not self._parameter.has_been_written_to
-
-
-class ScalarView(ParameterView):
+class ScalarView(ParameterInfo):
     """
     Read-only view of a scalar parameter.
     """
@@ -171,7 +144,7 @@ class ScalarView(ParameterView):
             Unit for the values in the view
         """
         super().__init__(parameter)
-        self._unit_converter = UnitConverter(cast(str, parameter.info.unit), unit)
+        self._unit_converter = UnitConverter(cast(str, parameter.unit), unit)
 
         def get_data_views_for_children_or_parameter(
             parameter: _Parameter
@@ -217,6 +190,12 @@ class ScalarView(ParameterView):
 
         return self._unit_converter.convert_from(cast(float, self._parameter.data))
 
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        return "Read-only view of scalar {}".format(str(self._parameter))
+
 
 class WritableScalarView(ScalarView):
     """
@@ -255,11 +234,18 @@ class WritableScalarView(ScalarView):
             Value
         """
         self._parameter.data = self._unit_converter.convert_to(v)
+        self._parameter.version += 1
+
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        return "Writable view of scalar {}".format(str(self._parameter))
 
 
-class TimeseriesView(ParameterView):
+class TimeseriesView(ParameterInfo):
     """
-    Read-only :class:`ParameterView` of a timeseries.
+    Read-only view of a timeseries.
     """
 
     _child_data_views: Sequence["TimeseriesView"]
@@ -303,7 +289,7 @@ class TimeseriesView(ParameterView):
             Extrapolation type
         """
         super().__init__(parameter)
-        self._unit_converter = UnitConverter(cast(str, parameter.info.unit), unit)
+        self._unit_converter = UnitConverter(cast(str, parameter.unit), unit)
         self._timeseries_converter = TimeseriesConverter(
             parameter.time_points,
             time_points,
@@ -399,6 +385,12 @@ class TimeseriesView(ParameterView):
         """
         return self._timeseries_converter.target_length
 
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        return "Read-only view of timeseries {}".format(str(self._parameter))
+
 
 class WritableTimeseriesView(TimeseriesView):
     """
@@ -457,8 +449,14 @@ class WritableTimeseriesView(TimeseriesView):
             np.copyto(self._data, np.asarray(v))
         self._write()
 
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        return "Writable view of timeseries {}".format(str(self._parameter))
 
-class GenericView(ParameterView):
+
+class GenericView(ParameterInfo):
     """
     Read-only view of a generic parameter.
     """
@@ -482,6 +480,12 @@ class GenericView(ParameterView):
             raise ParameterEmptyError
 
         return self._parameter.data
+
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        return "Read-only view of {}".format(str(self._parameter))
 
 
 class WritableGenericView(GenericView):
@@ -517,3 +521,10 @@ class WritableGenericView(GenericView):
             Value
         """
         self._parameter.data = v
+        self._parameter.version += 1
+
+    def __str__(self) -> str:
+        """
+        Return string representation / description.
+        """
+        return "Writable view of {}".format(str(self._parameter))

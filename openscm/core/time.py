@@ -33,6 +33,9 @@ class ExtrapolationType(Enum):
     def from_extrapolation_type(
         cls, extrapolation_type: Union["ExtrapolationType", str]
     ) -> "ExtrapolationType":
+        """
+        TODO Docs
+        """
         if isinstance(extrapolation_type, str):
             return cls[extrapolation_type.upper()]
         return extrapolation_type
@@ -50,6 +53,9 @@ class InterpolationType(Enum):
     def from_interpolation_type(
         cls, interpolation_type: Union["InterpolationType", str]
     ) -> "InterpolationType":
+        """
+        TODO Docs
+        """
         if isinstance(interpolation_type, str):
             return cls[interpolation_type.upper()]
         return interpolation_type

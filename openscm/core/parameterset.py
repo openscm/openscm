@@ -1,3 +1,6 @@
+"""
+TODO Docs
+"""
 from typing import Optional, Sequence, Union
 
 from .parameters import ParameterInfo, ParameterType, _Parameter
@@ -317,5 +320,5 @@ class ParameterSet:
         if region_ is not None:
             parameter = region_.get_parameter(name)
             if parameter is not None:
-                return parameter.info
+                return ParameterInfo(parameter)
         return None

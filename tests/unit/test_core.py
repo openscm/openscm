@@ -91,17 +91,15 @@ def test_parameter(core):
         assert param_co2.parent.get_subparameter(accessor) == param_co2
     assert region_ber.get_parameter(("Emissions", "CO2")) == param_co2
     assert param_co2.full_name == ("Emissions", "CO2")
-    assert param_co2.info.region == ("World", "DEU", "BER")
-    assert param_co2.info.name == "CO2"
-    assert (
-        parameterset.info(("Emissions", "CO2"), ("World", "DEU", "BER"))
-        == param_co2.info
-    )
+    assert param_co2.region.full_name == ("World", "DEU", "BER")
+    assert param_co2.name == "CO2"
+    info = parameterset.info(("Emissions", "CO2"), ("World", "DEU", "BER"))
+    assert info.name == param_co2.full_name
+    assert info.region == param_co2.region.full_name
     for accessor in ["Emissions", ("Emissions"), ("Emissions",), ["Emissions"]]:
-        assert (
-            parameterset.info(accessor, ("World", "DEU", "BER"))
-            == param_co2.parent.info
-        )
+        info = parameterset.info(accessor, ("World", "DEU", "BER"))
+        assert info.name == param_co2.parent.full_name
+        assert info.region == param_co2.parent.region.full_name
     assert parameterset.info(("Emissions", "NOx"), ("World", "DEU", "BER")) is None
     assert parameterset.info(("Emissions",), ("World", "DEU", "BRB")) is None
 
@@ -112,22 +110,22 @@ def test_parameter(core):
 
     param_emissions = param_co2.parent
     assert param_emissions.full_name == ("Emissions",)
-    assert param_emissions.info.name == "Emissions"
+    assert param_emissions.name == "Emissions"
     # Before any read/write attempt these should be None:
-    assert param_emissions.info.parameter_type is None
-    assert param_emissions.info.unit is None
+    assert param_emissions.parameter_type is None
+    assert param_emissions.unit is None
 
     param_industry = parameterset._get_or_create_parameter(
         ("Emissions", "CO2", "Industry"), region_ber
     )
     assert param_industry.full_name == ("Emissions", "CO2", "Industry")
-    assert param_industry.info.name == "Industry"
+    assert param_industry.name == "Industry"
 
     param_industry.attempt_read(
         ParameterType.AVERAGE_TIMESERIES, "GtCO2/a", np.array([0])
     )
-    assert param_industry.info.parameter_type == ParameterType.AVERAGE_TIMESERIES
-    assert param_industry.info.unit == "GtCO2/a"
+    assert param_industry.parameter_type == ParameterType.AVERAGE_TIMESERIES
+    assert param_industry.unit == "GtCO2/a"
 
     with pytest.raises(ParameterReadonlyError):
         param_co2.attempt_write(
