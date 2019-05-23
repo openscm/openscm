@@ -1,5 +1,5 @@
-from openscm.adapter import Adapter
-from openscm.core import ParameterSet
+from openscm.adapters import Adapter
+from openscm.core.parameterset import ParameterSet
 
 
 def test_adapter_base_class_init():

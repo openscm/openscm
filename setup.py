@@ -36,15 +36,9 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = ["numpy", "scipy", "pint", "pandas"]
-REQUIREMENTS_NOTEBOOKS = [
-    "matplotlib",
-    "notebook",
-    "seaborn",
-    # TODO use pypi version
-    "pyam-iamc @ git+https://github.com/IAMconsortium/pyam.git@a6ac0c574c3d5363fb8dba7d8b42a845fd3dbe87",
-]
-REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov"]
+REQUIREMENTS_INSTALL = ["numpy", "scipy", "pint", "pandas", "python-dateutil"]
+REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0"]
+REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov", "pyam-iamc>=0.2.0"]
 REQUIREMENTS_DOCS = ["sphinx>=1.8", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 REQUIREMENTS_DEV = (
@@ -84,12 +78,15 @@ with open("README.rst", "r", encoding="utf-8") as f:
     README_LINES = ["OpenSCM", "=======", ""]
     add_line = False
     for line in f:
-        if line == ".. sec-begin-long-description":
+        if line.strip() == ".. sec-begin-long-description":
             add_line = True
-        elif line == ".. sec-end-long-description":
+        elif line.strip() == ".. sec-end-long-description":
             break
         elif add_line:
             README_LINES.append(line)
+
+if len(README_LINES) < 3:
+    raise RuntimeError("Insufficient description given")
 
 
 class OpenSCMTest(TestCommand):

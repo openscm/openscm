@@ -1,22 +1,45 @@
-.PHONY: checks check-docs clean clean-notebooks coverage docs format test test-all test-notebooks
+.PHONY: black checks clean clean-notebooks coverage docs flake8 format publish-on-pypi test test-all test-pypi-install
+.DEFAULT_GOAL := help
 
-checks: venv
-	./venv/bin/bandit -c .bandit.yml -r openscm
-	./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py
-	./venv/bin/flake8 openscm tests setup.py
-	./venv/bin/isort --check-only --quiet --recursive openscm tests setup.py
-	./venv/bin/mypy openscm
-	./venv/bin/pydocstyle openscm
-	./venv/bin/pylint openscm
-	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
-	./venv/bin/pytest tests -r a --cov=openscm --cov-report='' \
-		&& ./venv/bin/coverage report --fail-under=100
-	./venv/bin/sphinx-build -M html docs docs/build -EW
+define PRINT_HELP_PYSCRIPT
+import re, sys
 
-check-docs: venv
+for line in sys.stdin:
+	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
+	if match:
+		target, help = match.groups()
+		print("%-20s %s" % (target, help))
+endef
+export PRINT_HELP_PYSCRIPT
+
+help:
+	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
+
+black: venv  ## apply black formatter to source and tests
+	@status=$$(git status --porcelain openscm tests); \
+	if test "x$${status}" = x; then \
+		./venv/bin/black --exclude _version.py setup.py openscm tests; \
+	else \
+		echo Not trying any formatting. Working directory is dirty ... >&2; \
+	fi;
+
+checks: venv  ## run all the checks
+	@echo "=== bandit ==="; ./venv/bin/bandit -c .bandit.yml -r openscm || echo "--- bandit failed ---" >&2; \
+		echo "\n\n=== black ==="; ./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py || echo "--- black failed ---" >&2; \
+		echo "\n\n=== flake8 ==="; ./venv/bin/flake8 openscm tests setup.py || echo "--- flake8 failed ---" >&2; \
+		echo "\n\n=== isort ==="; ./venv/bin/isort --check-only --quiet --recursive openscm tests setup.py || echo "--- isort failed ---" >&2; \
+		echo "\n\n=== mypy ==="; ./venv/bin/mypy openscm || echo "--- mypy failed ---" >&2; \
+		echo "\n\n=== pydocstyle ==="; ./venv/bin/pydocstyle openscm || echo "--- pydocstyle failed ---" >&2; \
+		echo "\n\n=== pylint ==="; ./venv/bin/pylint openscm || echo "--- pylint failed ---" >&2; \
+		echo "\n\n=== notebook tests ==="; ./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg || echo "--- notebook tests failed ---" >&2; \
+		echo "\n\n=== tests ==="; ./venv/bin/pytest tests -r a --cov=openscm --cov-report='' \
+			&& ./venv/bin/coverage report --fail-under=100 || echo "--- tests failed ---" >&2; \
+		echo "\n\n=== sphinx ==="; ./venv/bin/sphinx-build -M html docs docs/build -EW || echo "--- sphinx failed ---" >&2
+
+check-docs: venv  ## check that the docs build successfully
 	./venv/bin/sphinx-build -M html docs docs/build -En
 
-clean:
+clean:  ## remove the virtual environment
 	@rm -rf venv
 
 define clean_notebooks_code
@@ -26,7 +49,7 @@ define clean_notebooks_code
 	| .cells[].metadata = {}
 endef
 
-clean-notebooks: venv
+clean-notebooks: venv  ## clean the notebooks of spurious changes to prepare for a PR
 	@tmp=$$(mktemp); \
 	for notebook in notebooks/*.ipynb; do \
 		jq --indent 1 '${clean_notebooks_code}' "$${notebook}" > "$${tmp}"; \
@@ -34,19 +57,27 @@ clean-notebooks: venv
 	done; \
 	rm "$${tmp}"
 
-coverage: venv
-	./venv/bin/pytest tests -r a --cov=openscm --cov-report=''
+coverage: venv  ## run all the tests and show code coverage
+	./venv/bin/pytest tests -r a --cov=openscm --cov-report='' --durations=10
 	./venv/bin/coverage html
 	./venv/bin/coverage report --show-missing
 
-docs: venv
+docs: venv  ## build the docs
 	./venv/bin/sphinx-build -M html docs docs/build
 
 format: venv clean-notebooks
 	./venv/bin/isort --recursive openscm tests setup.py
 	./venv/bin/black openscm tests setup.py --exclude openscm/_version.py
 
-test-all: test test-notebooks
+publish-on-pypi: venv  ## publish a release on PyPI
+	-rm -rf build dist
+	@status=$$(git status --porcelain); \
+	if test "x$${status}" = x; then \
+		./venv/bin/python setup.py bdist_wheel --universal; \
+		./venv/bin/twine upload dist/*; \
+	else \
+		echo Working directory is dirty >&2; \
+	fi;
 
 test: venv
 	./venv/bin/pytest -sx tests
@@ -54,7 +85,16 @@ test: venv
 test-notebooks: venv
 	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
 
-venv: setup.py
+test-all: test test-notebooks  ## run the testsuite and the notebook tests
+
+test-pypi-install: venv  ## test openscm installs from the test PyPI server
+	$(eval TEMPVENV := $(shell mktemp -d))
+	python3 -m venv $(TEMPVENV)
+	$(TEMPVENV)/bin/pip install pip --upgrade
+	$(TEMPVENV)/bin/pip install openscm
+	$(TEMPVENV)/bin/python -c "import sys; sys.path.remove(''); import openscm; print(openscm.__version__)"
+
+venv: setup.py  ## install a development virtual environment
 	[ -d ./venv ] || python3 -m venv ./venv
 	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install -e .[dev]

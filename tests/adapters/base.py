@@ -70,11 +70,3 @@ class _AdapterTester:
             assert new_time > test_run_parameters.start_time
         except NotImplementedError:
             pass
-
-    def prepare_run_input(self, test_adapter, start_time, stop_time):
-        """
-        Overload this in your adapter test if you need to set required input parameters.
-        This method is called directly after ``test_adapter.initialize_run_parameters``
-        and before ``test_adapter.run`` or ``test_adapter.step`` during tests.
-        """
-        pass

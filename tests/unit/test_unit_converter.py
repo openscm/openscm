@@ -3,18 +3,14 @@ import warnings
 import numpy as np
 import pytest
 
-from openscm.units import (
-    DimensionalityError,
-    UndefinedUnitError,
-    UnitConverter,
-    _unit_registry,
-)
+from openscm.core.units import UnitConverter, _unit_registry
+from openscm.errors import DimensionalityError, UndefinedUnitError
 
 
 def test_conversion_without_offset():
     uc = UnitConverter("kg", "t")
-    assert uc._source == "kg"
-    assert uc._target == "t"
+    assert uc.source == "kg"
+    assert uc.target == "t"
     np.testing.assert_allclose(uc.convert_from(1000), 1)
     np.testing.assert_allclose(uc.convert_to(1), 1000)
 

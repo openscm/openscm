@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from openscm.units import DimensionalityError, _unit_registry
+from openscm.core.units import _unit_registry
+from openscm.errors import DimensionalityError
 
 
 def test_unit_registry():

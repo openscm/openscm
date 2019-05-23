@@ -3,7 +3,8 @@ Unit handling.
 
 Unit handling makes use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
 allows us to easily define units as well as contexts. Contexts allow us to perform
-conversions which would not normally be allowed e.g. in the 'AR4GWP100' context we can
+conversions which would not normally be allowed e.g. in the 'AR4GWP100'
+context we can
 convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
 
 In general, you should not use Pint with OpenSCM explicitly. As illustration of how
@@ -86,8 +87,8 @@ However, it can be performed within the context 'CH4_conversions' as shown below
 *NOx*
 
 Like for methane, NOx emissions also suffer from a namespace collision. In order to
-prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <--> 'N'
-is by default forbidden. It can be performed within the 'NOx_conversions' context:
+prevent inadvertent conversions from 'NOx' to e.g. 'N2O', the conversion 'NOx' <-->
+'N' is by default forbidden. It can be performed within the 'NOx_conversions' context:
 
 .. code:: python
 
@@ -359,7 +360,12 @@ class ScmUnitRegistry(pint.UnitRegistry):  # type: ignore
         from os import path
 
         metric_conversions = pd.read_csv(
-            path.join(path.dirname(path.abspath(__file__)), "metric_conversions.csv"),
+            path.join(
+                path.dirname(path.abspath(__file__)),
+                "..",
+                "data",
+                "metric_conversions.csv",
+            ),
             skiprows=1,  # skip source row
             header=0,
             index_col=0,
@@ -572,3 +578,17 @@ class UnitConverter:
             Unit registry used by this unit converter
         """
         return _unit_registry
+
+    @property
+    def source(self) -> str:
+        """
+        Source unit.
+        """
+        return self._source
+
+    @property
+    def target(self) -> str:
+        """
+        Target unit.
+        """
+        return self._target

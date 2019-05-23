@@ -11,19 +11,19 @@ Core
 Parameters
 **********
 
-.. automodule:: openscm.parameters
+.. automodule:: openscm.core.parameters
 
 Parameter views
 ***************
 
-.. automodule:: openscm.parameter_views
+.. automodule:: openscm.core.views
 
 Regions
 *******
 
-.. automodule:: openscm.regions
+.. automodule:: openscm.core.regions
 
 Timeseries converter
 ********************
 
-.. automodule:: openscm.timeseries_converter
+.. automodule:: openscm.core.time

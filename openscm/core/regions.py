@@ -2,11 +2,11 @@
 Handling of region information.
 """
 
-from typing import Dict, Optional, Tuple, cast
+from typing import Dict, Optional, Tuple
 
+from ..errors import RegionAggregatedError
 from . import parameters
-from .errors import RegionAggregatedError
-from .utils import ensure_input_is_tuple
+from .utils import HierarchicalName, hierarchical_name_as_sequence
 
 # pylint: disable=protected-access
 
@@ -79,7 +79,7 @@ class _Region:
             self._children[name] = res
         return res
 
-    def get_subregion(self, name: Tuple[str, ...]) -> Optional["_Region"]:
+    def get_subregion(self, name: HierarchicalName) -> Optional["_Region"]:
         """
         Get a subregion of this region or ``None`` if not found.
 
@@ -93,7 +93,7 @@ class _Region:
         Optional[_Region]
             Subregion or ``None`` if not found
         """
-        name = ensure_input_is_tuple(name)
+        name = hierarchical_name_as_sequence(name)
         if name:
             res = self._children.get(name[0], None)
             if res is not None:
@@ -122,7 +122,9 @@ class _Region:
             self._parameters[name] = res
         return res
 
-    def get_parameter(self, name: Tuple[str, ...]) -> Optional["parameters._Parameter"]:
+    def get_parameter(
+        self, name: HierarchicalName
+    ) -> Optional["parameters._Parameter"]:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
 
@@ -141,7 +143,7 @@ class _Region:
         ValueError
             Name not given
         """
-        name = ensure_input_is_tuple(name)
+        name = hierarchical_name_as_sequence(name)
         if not name:
             raise ValueError("No parameter name given")
         root_parameter = self._parameters.get(name[0], None)
@@ -157,7 +159,7 @@ class _Region:
         self._has_been_aggregated = True
 
     @property
-    def full_name(self) -> Tuple[str]:
+    def full_name(self) -> Tuple[str, ...]:
         """
         Full hierarchical name
         """
@@ -167,7 +169,7 @@ class _Region:
             r.append(p.name)
             p = p._parent
         r.append(p.name)
-        return cast(Tuple[str], tuple(reversed(r)))
+        return tuple(reversed(r))
 
     @property
     def name(self) -> str:

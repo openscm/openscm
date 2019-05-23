@@ -1,0 +1,361 @@
+name,unit,contains_time_dim
+REALIZED_WARMING,FRACTION,False
+PFTHAWED_AREA,FRACTION PERMAFROST AREA THAWED,False
+CH4T_EMIS,Gt C / yr,True
+CO2I_GWPEMIS,Gt C / yr,True
+CO2I_INCLCH4OX_EMIS,Gt C / yr,True
+CO2T_EMIS,Gt C / yr,True
+Emissions|CO2|MAGICC AFOLU,Gt C / yr,True
+Emissions|CO2|MAGICC Fossil and Industrial,Gt C / yr,True
+Land to Air Flux|CO2|MAGICC Permafrost,Gt C / yr,True
+N2OT_EMIS,Gt C / yr,True
+ALLGHGS_GWPEMIS,Gt CO2 / yr,True
+C2F6_GWPEMIS,Gt CO2 / yr,True
+C3F8_GWPEMIS,Gt CO2 / yr,True
+C4F10_GWPEMIS,Gt CO2 / yr,True
+C5F12_GWPEMIS,Gt CO2 / yr,True
+C6F14_GWPEMIS,Gt CO2 / yr,True
+C7F16_GWPEMIS,Gt CO2 / yr,True
+C8F18_GWPEMIS,Gt CO2 / yr,True
+CC4F8_GWPEMIS,Gt CO2 / yr,True
+CCL4_GWPEMIS,Gt CO2 / yr,True
+CF4_GWPEMIS,Gt CO2 / yr,True
+CFC113_GWPEMIS,Gt CO2 / yr,True
+CFC114_GWPEMIS,Gt CO2 / yr,True
+CFC115_GWPEMIS,Gt CO2 / yr,True
+CFC11_GWPEMIS,Gt CO2 / yr,True
+CFC12_GWPEMIS,Gt CO2 / yr,True
+CH2CL2_GWPEMIS,Gt CO2 / yr,True
+CH3BR_GWPEMIS,Gt CO2 / yr,True
+CH3CCL3_GWPEMIS,Gt CO2 / yr,True
+CH3CL_GWPEMIS,Gt CO2 / yr,True
+CH4B_GWPEMIS,Gt CO2 / yr,True
+CH4I_GWPEMIS,Gt CO2 / yr,True
+CH4N_GWPEMIS,Gt CO2 / yr,True
+CHCL3_GWPEMIS,Gt CO2 / yr,True
+CO2B_GWPEMIS,Gt CO2 / yr,True
+FGASSUM_GWPEMIS,Gt CO2 / yr,True
+HALON1202_GWPEMIS,Gt CO2 / yr,True
+HALON1211_GWPEMIS,Gt CO2 / yr,True
+HALON1301_GWPEMIS,Gt CO2 / yr,True
+HALON2402_GWPEMIS,Gt CO2 / yr,True
+HCFC141B_GWPEMIS,Gt CO2 / yr,True
+HCFC142B_GWPEMIS,Gt CO2 / yr,True
+HCFC22_GWPEMIS,Gt CO2 / yr,True
+HFC125_GWPEMIS,Gt CO2 / yr,True
+HFC134A_GWPEMIS,Gt CO2 / yr,True
+HFC143A_GWPEMIS,Gt CO2 / yr,True
+HFC152A_GWPEMIS,Gt CO2 / yr,True
+HFC227EA_GWPEMIS,Gt CO2 / yr,True
+HFC236FA_GWPEMIS,Gt CO2 / yr,True
+HFC23_GWPEMIS,Gt CO2 / yr,True
+HFC245FA_GWPEMIS,Gt CO2 / yr,True
+HFC32_GWPEMIS,Gt CO2 / yr,True
+HFC365MFC_GWPEMIS,Gt CO2 / yr,True
+HFC4310_GWPEMIS,Gt CO2 / yr,True
+KYOTOGHGS_GWPEMIS,Gt CO2 / yr,True
+KYOTOGHGS_NOCO2B_GWPEMIS,Gt CO2 / yr,True
+MHALOSUM_GWPEMIS,Gt CO2 / yr,True
+N2OB_GWPEMIS,Gt CO2 / yr,True
+N2OI_GWPEMIS,Gt CO2 / yr,True
+N2ON_GWPEMIS,Gt CO2 / yr,True
+NF3_GWPEMIS,Gt CO2 / yr,True
+SF6_GWPEMIS,Gt CO2 / yr,True
+SO2F2_GWPEMIS,Gt CO2 / yr,True
+SUMCO2N2OCH4_GWPEMIS,Gt CO2 / yr,True
+SUMCO2N2OCH4_NOCOB_GWPEMIS,Gt CO2 / yr,True
+GROUND_TEMP,K,False
+Ocean Temperature|Layer 1,K,False
+Ocean Temperature|Layer 10,K,False
+Ocean Temperature|Layer 11,K,False
+Ocean Temperature|Layer 12,K,False
+Ocean Temperature|Layer 13,K,False
+Ocean Temperature|Layer 14,K,False
+Ocean Temperature|Layer 15,K,False
+Ocean Temperature|Layer 16,K,False
+Ocean Temperature|Layer 17,K,False
+Ocean Temperature|Layer 18,K,False
+Ocean Temperature|Layer 19,K,False
+Ocean Temperature|Layer 2,K,False
+Ocean Temperature|Layer 20,K,False
+Ocean Temperature|Layer 21,K,False
+Ocean Temperature|Layer 22,K,False
+Ocean Temperature|Layer 23,K,False
+Ocean Temperature|Layer 24,K,False
+Ocean Temperature|Layer 25,K,False
+Ocean Temperature|Layer 26,K,False
+Ocean Temperature|Layer 27,K,False
+Ocean Temperature|Layer 28,K,False
+Ocean Temperature|Layer 29,K,False
+Ocean Temperature|Layer 3,K,False
+Ocean Temperature|Layer 30,K,False
+Ocean Temperature|Layer 31,K,False
+Ocean Temperature|Layer 32,K,False
+Ocean Temperature|Layer 33,K,False
+Ocean Temperature|Layer 34,K,False
+Ocean Temperature|Layer 35,K,False
+Ocean Temperature|Layer 36,K,False
+Ocean Temperature|Layer 37,K,False
+Ocean Temperature|Layer 38,K,False
+Ocean Temperature|Layer 39,K,False
+Ocean Temperature|Layer 4,K,False
+Ocean Temperature|Layer 40,K,False
+Ocean Temperature|Layer 41,K,False
+Ocean Temperature|Layer 42,K,False
+Ocean Temperature|Layer 43,K,False
+Ocean Temperature|Layer 44,K,False
+Ocean Temperature|Layer 45,K,False
+Ocean Temperature|Layer 46,K,False
+Ocean Temperature|Layer 47,K,False
+Ocean Temperature|Layer 48,K,False
+Ocean Temperature|Layer 49,K,False
+Ocean Temperature|Layer 5,K,False
+Ocean Temperature|Layer 50,K,False
+Ocean Temperature|Layer 6,K,False
+Ocean Temperature|Layer 7,K,False
+Ocean Temperature|Layer 8,K,False
+Ocean Temperature|Layer 9,K,False
+SURFACE_ANNUALMEANTEMP,K,False
+SURFACE_ANNUALMEAN_MIXLTEMP,K,False
+SURFACE_EQUILIBRIUMTEMP,K,False
+SURFACE_MIXEDLAYERTEMP,K,False
+Surface Temperature,K,False
+Emissions|CCl4,Mg /yr,True
+Emissions|CFC11,Mg /yr,True
+Emissions|CFC113,Mg /yr,True
+Emissions|CFC114,Mg /yr,True
+Emissions|CFC115,Mg /yr,True
+Emissions|CFC12,Mg /yr,True
+Emissions|CH2Cl2,Mg /yr,True
+Emissions|CH3Br,Mg /yr,True
+Emissions|CH3CCl3,Mg /yr,True
+Emissions|CH3Cl,Mg /yr,True
+Emissions|CHCl3,Mg /yr,True
+Emissions|HCFC141b,Mg /yr,True
+Emissions|HCFC142b,Mg /yr,True
+Emissions|HCFC22,Mg /yr,True
+Emissions|Halon1202,Mg /yr,True
+Emissions|Halon1211,Mg /yr,True
+Emissions|Halon1301,Mg /yr,True
+Emissions|Halon2402,Mg /yr,True
+Emissions|BC|MAGICC AFOLU,Mt /yr,True
+Emissions|BC|MAGICC Fossil and Industrial,Mt /yr,True
+Emissions|NMVOC|MAGICC AFOLU,Mt /yr,True
+Emissions|NMVOC|MAGICC Fossil and Industrial,Mt /yr,True
+Emissions|OC|MAGICC AFOLU,Mt /yr,True
+Emissions|OC|MAGICC Fossil and Industrial,Mt /yr,True
+CH4CLATHRATE_EMIS,Mt CH4 / yr,True
+CH4N_EMIS,Mt CH4 / yr,True
+CH4PF_EMIS,Mt CH4 / yr,True
+Emissions|CH4|MAGICC AFOLU,Mt CH4 / yr,True
+Emissions|CH4|MAGICC Fossil and Industrial,Mt CH4 / yr,True
+Emissions|CO|MAGICC AFOLU,Mt CO / yr,True
+Emissions|CO|MAGICC Fossil and Industrial,Mt CO / yr,True
+Emissions|NH3|MAGICC AFOLU,Mt N / yr,True
+Emissions|NH3|MAGICC Fossil and Industrial,Mt N / yr,True
+Emissions|NOx|MAGICC AFOLU,Mt N / yr,True
+Emissions|NOx|MAGICC Fossil and Industrial,Mt N / yr,True
+NOXAIRINSCEN_EMIS,Mt N / yr,True
+NOXAIRNEW_EMIS,Mt N / yr,True
+Emissions|N2O|MAGICC AFOLU,Mt N2ON / yr,True
+Emissions|N2O|MAGICC Fossil and Industrial,Mt N2ON / yr,True
+N2ON_EMIS,Mt N2ON / yr,True
+Emissions|SOx|MAGICC AFOLU,Mt S / yr,True
+Emissions|SOx|MAGICC Fossil and Industrial,Mt S / yr,True
+SOXN_EMIS,Mt S / yr,True
+AIR_CIRRUS_RF,W / m^2,True
+AIR_CONTRAIL_RF,W / m^2,True
+AIR_H2O_RF,W / m^2,True
+BIOMASSAER_SRF,W / m^2,True
+CH4_EFFRF,W / m^2,True
+CLOUD_ALBEDO_EFFRF,W / m^2,True
+CLOUD_ALBEDO_RF,W / m^2,True
+CLOUD_COVER_EFFRF,W / m^2,True
+CLOUD_COVER_RF,W / m^2,True
+CLOUD_TOT_EFFRF,W / m^2,True
+CLOUD_TOT_SRF,W / m^2,True
+CO2CH4N2O_EFFRF,W / m^2,True
+CO2CH4N2O_SRF,W / m^2,True
+CO2_EFFRF,W / m^2,True
+GHG_EFFRF,W / m^2,True
+GHG_PRECIP_PEFFRF,W / m^2,True
+GHG_SRF,W / m^2,True
+HALOSUM_RF,W / m^2,True
+HEATUPTAKE_EBALANCE_TOTAL,W / m^2,True
+KYOTOGHG_EFFRF,W / m^2,True
+N2O_EFFRF,W / m^2,True
+NH3T_RF,W / m^2,True
+NOXT_RF,W / m^2,True
+Radiative Forcing,W / m^2,True
+Radiative Forcing|Aerosols|Direct Effect,W / m^2,True
+Radiative Forcing|Aerosols|Indirect Effect,W / m^2,True
+Radiative Forcing|Aerosols|MAGICC AFOLU,W / m^2,True
+Radiative Forcing|Anthropogenic,W / m^2,True
+Radiative Forcing|BC|MAGICC AFOLU,W / m^2,True
+Radiative Forcing|BC|MAGICC Fossil and Industrial,W / m^2,True
+Radiative Forcing|Black Carbon on Snow,W / m^2,True
+Radiative Forcing|C2F6,W / m^2,True
+Radiative Forcing|C3F8,W / m^2,True
+Radiative Forcing|C4F10,W / m^2,True
+Radiative Forcing|C5F12,W / m^2,True
+Radiative Forcing|C6F14,W / m^2,True
+Radiative Forcing|C7F16,W / m^2,True
+Radiative Forcing|C8F18,W / m^2,True
+Radiative Forcing|CC4F8,W / m^2,True
+Radiative Forcing|CCl4,W / m^2,True
+Radiative Forcing|CF4,W / m^2,True
+Radiative Forcing|CFC11,W / m^2,True
+Radiative Forcing|CFC113,W / m^2,True
+Radiative Forcing|CFC114,W / m^2,True
+Radiative Forcing|CFC115,W / m^2,True
+Radiative Forcing|CFC12,W / m^2,True
+Radiative Forcing|CH2Cl2,W / m^2,True
+Radiative Forcing|CH3Br,W / m^2,True
+Radiative Forcing|CH3CCl3,W / m^2,True
+Radiative Forcing|CH3Cl,W / m^2,True
+Radiative Forcing|CH4,W / m^2,True
+Radiative Forcing|CH4 Oxidation Stratospheric H2O,W / m^2,True
+Radiative Forcing|CHCl3,W / m^2,True
+Radiative Forcing|CO2_W / m^2,True
+Radiative Forcing|CO2_CH4 and N2O,W / m^2,True
+Radiative Forcing|Extra,W / m^2,True
+Radiative Forcing|F Gases,W / m^2,True
+Radiative Forcing|Greenhouse Gases,W / m^2,True
+Radiative Forcing|Greenhouse Gases|Kyoto Gases,W / m^2,True
+Radiative Forcing|HCFC141b,W / m^2,True
+Radiative Forcing|HCFC142b,W / m^2,True
+Radiative Forcing|HCFC22,W / m^2,True
+Radiative Forcing|HFC125,W / m^2,True
+Radiative Forcing|HFC134a,W / m^2,True
+Radiative Forcing|HFC143a,W / m^2,True
+Radiative Forcing|HFC152a,W / m^2,True
+Radiative Forcing|HFC227ea,W / m^2,True
+Radiative Forcing|HFC23,W / m^2,True
+Radiative Forcing|HFC236fa,W / m^2,True
+Radiative Forcing|HFC245fa,W / m^2,True
+Radiative Forcing|HFC32,W / m^2,True
+Radiative Forcing|HFC365mfc,W / m^2,True
+Radiative Forcing|HFC4310,W / m^2,True
+Radiative Forcing|Halon1202,W / m^2,True
+Radiative Forcing|Halon1211,W / m^2,True
+Radiative Forcing|Halon1301,W / m^2,True
+Radiative Forcing|Halon2402,W / m^2,True
+Radiative Forcing|Land-use Change,W / m^2,True
+Radiative Forcing|Mineral Dust,W / m^2,True
+Radiative Forcing|Montreal Protocol Halogen Gases,W / m^2,True
+Radiative Forcing|N2O,W / m^2,True
+Radiative Forcing|NF3,W / m^2,True
+Radiative Forcing|NH3|MAGICC AFOLU,W / m^2,True
+Radiative Forcing|NH3|MAGICC Fossil and Industrial,W / m^2,True
+Radiative Forcing|NOx|MAGICC AFOLU,W / m^2,True
+Radiative Forcing|NOx|MAGICC Fossil and Industrial,W / m^2,True
+Radiative Forcing|OC|MAGICC AFOLU,W / m^2,True
+Radiative Forcing|OC|MAGICC Fossil and Industrial,W / m^2,True
+Radiative Forcing|SF6,W / m^2,True
+Radiative Forcing|SO2F2,W / m^2,True
+Radiative Forcing|SOx|MAGICC AFOLU,W / m^2,True
+Radiative Forcing|SOx|MAGICC Fossil and Industrial,W / m^2,True
+Radiative Forcing|Solar,W / m^2,True
+Radiative Forcing|Stratospheric Ozone,W / m^2,True
+Radiative Forcing|Tropospheric Ozone,W / m^2,True
+Radiative Forcing|Volcanic,W / m^2,True
+TOTAER_DIR_EFFRF,W / m^2,True
+TOTAER_DIR_SRF,W / m^2,True
+TOTAL_ANTHRO_EFFRF,W / m^2,True
+TOTAL_ANTHRO_SRF,W / m^2,True
+TOTAL_EFFRF,W / m^2,True
+TOTAL_INCLVOLCANIC_EFFRF,W / m^2,True
+TOTAL_INCLVOLCANIC_SRF,W / m^2,True
+TOTAL_RF,W / m^2,True
+TOTAL_SRF,W / m^2,True
+SLR_SEMIEMPI_RATE,cm,False
+SLR_SEMIEMPI_TOT,cm,False
+Emissions|C2F6,kt /yr,True
+Emissions|C3F8,kt /yr,True
+Emissions|C4F10,kt /yr,True
+Emissions|C5F12,kt /yr,True
+Emissions|C6F14,kt /yr,True
+Emissions|C7F16,kt /yr,True
+Emissions|C8F18,kt /yr,True
+Emissions|CC4F8,kt /yr,True
+Emissions|CF4,kt /yr,True
+Emissions|HFC125,kt /yr,True
+Emissions|HFC134a,kt /yr,True
+Emissions|HFC143a,kt /yr,True
+Emissions|HFC152a,kt /yr,True
+Emissions|HFC227ea,kt /yr,True
+Emissions|HFC23,kt /yr,True
+Emissions|HFC236fa,kt /yr,True
+Emissions|HFC245fa,kt /yr,True
+Emissions|HFC32,kt /yr,True
+Emissions|HFC365mfc,kt /yr,True
+Emissions|HFC4310,kt /yr,True
+Emissions|NF3,kt /yr,True
+Emissions|SF6,kt /yr,True
+Emissions|SO2F2,kt /yr,True
+SLR_AIS_SID,mm,False
+SLR_AIS_SMB,mm,False
+SLR_EXPANSION,mm,False
+SLR_GIS_SID,mm,False
+SLR_GIS_SMB,mm,False
+SLR_GL,mm,False
+SLR_LANDWATER,mm,False
+SLR_TOT,mm,False
+ZEROED_SLR_AIS_SID,mm,False
+ZEROED_SLR_AIS_SMB,mm,False
+ZEROED_SLR_EXPANSION,mm,False
+ZEROED_SLR_GIS_SID,mm,False
+ZEROED_SLR_GIS_SMB,mm,False
+ZEROED_SLR_GL,mm,False
+ZEROED_SLR_LANDWATER,mm,False
+ZEROED_SLR_TOT,mm,False
+Atmospheric Concentrations|CH4,ppb,False
+Atmospheric Concentrations|N2O,ppb,False
+Atmospheric Concentrations|CO2,ppm,False
+PCO2S_CONC,ppm,False
+Atmospheric Concentrations|C2F6,ppt,False
+Atmospheric Concentrations|C3F8,ppt,False
+Atmospheric Concentrations|C4F10,ppt,False
+Atmospheric Concentrations|C5F12,ppt,False
+Atmospheric Concentrations|C6F14,ppt,False
+Atmospheric Concentrations|C7F16,ppt,False
+Atmospheric Concentrations|C8F18,ppt,False
+Atmospheric Concentrations|CC4F8,ppt,False
+Atmospheric Concentrations|CCl4,ppt,False
+Atmospheric Concentrations|CF4,ppt,False
+Atmospheric Concentrations|CFC11,ppt,False
+Atmospheric Concentrations|CFC113,ppt,False
+Atmospheric Concentrations|CFC114,ppt,False
+Atmospheric Concentrations|CFC115,ppt,False
+Atmospheric Concentrations|CFC12,ppt,False
+Atmospheric Concentrations|CFC12 Equivalent|Montreal Protocol Halogen Gases,ppt,False
+Atmospheric Concentrations|CH2Cl2,ppt,False
+Atmospheric Concentrations|CH3Br,ppt,False
+Atmospheric Concentrations|CH3CCl3,ppt,False
+Atmospheric Concentrations|CH3Cl,ppt,False
+Atmospheric Concentrations|CHCl3,ppt,False
+Atmospheric Concentrations|HCFC141b,ppt,False
+Atmospheric Concentrations|HCFC142b,ppt,False
+Atmospheric Concentrations|HCFC22,ppt,False
+Atmospheric Concentrations|HFC125,ppt,False
+Atmospheric Concentrations|HFC134a,ppt,False
+Atmospheric Concentrations|HFC134a Equivalent|F Gases,ppt,False
+Atmospheric Concentrations|HFC143a,ppt,False
+Atmospheric Concentrations|HFC152a,ppt,False
+Atmospheric Concentrations|HFC227ea,ppt,False
+Atmospheric Concentrations|HFC23,ppt,False
+Atmospheric Concentrations|HFC236fa,ppt,False
+Atmospheric Concentrations|HFC245fa,ppt,False
+Atmospheric Concentrations|HFC32,ppt,False
+Atmospheric Concentrations|HFC365mfc,ppt,False
+Atmospheric Concentrations|HFC4310,ppt,False
+Atmospheric Concentrations|Halon1202,ppt,False
+Atmospheric Concentrations|Halon1211,ppt,False
+Atmospheric Concentrations|Halon1301,ppt,False
+Atmospheric Concentrations|Halon2402,ppt,False
+Atmospheric Concentrations|NF3,ppt,False
+Atmospheric Concentrations|SF6,ppt,False
+Atmospheric Concentrations|SO2F2,ppt,False
+EESC_CONC,ppt,False
+ESBR_CONC,ppt,False
+ESC_CONC,ppt,False

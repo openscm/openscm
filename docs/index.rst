@@ -35,10 +35,10 @@ Schema
     :caption: API reference
 
     core
-    openscm
     adapter
     errors
     units
+    scmdataframe
 
 .. toctree::
     :maxdepth: 2

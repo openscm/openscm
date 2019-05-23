@@ -123,6 +123,9 @@ babel
         climate model as well as getting and setting its parameter
         values. Mapping of parameter names as well as conversion of
         time frames and units is done internally.
+
+        Main entry point is the \texttt{openscm.OpenSCM} class
+        representing a model run.
       \end{minipage}
     };
 
@@ -130,7 +133,7 @@ babel
     interface,
     anchor=north,
     minimum width=\componentwidth,
-    ] at (core.north) {Core interface};
+    ] at (core.north) {OpenSCM core interface};
   \end{scope}
   \node[outline,fit=(core)] {};
 
@@ -249,42 +252,7 @@ babel
     fill=tableaulightred,
     minimum width=\componentwidth,
     minimum height=100pt,
-    above right=\distancey and 0pt of core.north west,
-    ] (pythonic) {};
-
-    \node[
-    interface,
-    anchor=north,
-    minimum width=\componentwidth,
-    ] at (pythonic.north) {\texttt{openscm.openscm}};
-
-    \node[
-    interface,
-    fill=none,
-    text=black,
-    opacity=1,
-    yshift=10pt,
-    anchor=south,
-    minimum width=\componentwidth,
-    ] at (pythonic.south) {
-      \begin{minipage}{0.9\componentwidth}
-        \centering
-        Provides pythonic convenience functions for single model runs
-        including I/O and easy setting of parameters.
-      \end{minipage}
-    };
-  \end{scope}
-  \node[outline,fit=(pythonic)] {};
-  \draw[connect] let \p1=(core.north), \p2=(pythonic.south) in (\x2,\y1) -- (\x2,\y2);
-
-  \setlength{\componentwidth}{130pt}
-  \begin{scope}
-    \node[
-    component,
-    fill=tableaulightred,
-    minimum width=\componentwidth,
-    minimum height=100pt,
-    right=\distancex of pythonic,
+    above right=\distancey and 89.75pt of core.north west,
     ] (dataframe) {};
 
     \node[
@@ -355,7 +323,7 @@ babel
     fill=tableaulightgreen,
     minimum width=\componentwidth,
     minimum height=50pt,
-    above right=\distancey and 0pt of pythonic.north west,
+    above right=\distancey and -89.75pt of dataframe.north west,
     ] (users) {};
 
     \node[
@@ -392,8 +360,8 @@ babel
   \end{scope}
   \node[outline,fit=(users)] {};
 
-  \draw[connect] let \p1=(users.south), \p2=(core.north), \p3=(modeldots.north) in (\x3,\y1) -- (\x3,\y2);
-  \draw[connect] let \p1=(users.south), \p2=(pythonic.north) in (\x2,\y1) -- (\x2,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(core.north), \p3=($(core.north west)+(50pt,0)$) in (\x3,\y1) -- (\x3,\y2);
+  \draw[connect] let \p1=(users.south), \p2=(core.north), \p3=($(core.north east)+(-50pt,0)$) in (\x3,\y1) -- (\x3,\y2);
   \draw[connect] let \p1=(users.south), \p2=(dataframe.north) in (\x2,\y1) -- (\x2,\y2);
   \draw[connect] let \p1=(users.south), \p2=(ensemble.north) in (\x2,\y1) -- (\x2,\y2);
 \end{tikzpicture}
