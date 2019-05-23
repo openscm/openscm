@@ -73,7 +73,7 @@ action "Coverage" {
     "fi"
   ]
   env = {
-    MIN_COVERAGE = "100"
+    MIN_COVERAGE = "80"
     PIP_PACKAGES = "coverage"
   }
   needs = ["Tests"]
