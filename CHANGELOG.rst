@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#146 <https://github.com/openclimatedata/openscm/pull/146>`_) Refactor the core interface
 - (`#163 <https://github.com/openclimatedata/openscm/pull/163>`_) Lock ``pyam`` version to pypi versions
 - (`#160 <https://github.com/openclimatedata/openscm/pull/160>`_) Update ``setup.py`` so project description is right
 - (`#158 <https://github.com/openclimatedata/openscm/pull/158>`_) Add ``ScmDataFrame``, a high-level data and analysis class
