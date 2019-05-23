@@ -1035,9 +1035,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
             # Convert from ParameterType to str
             parameter_type_str = (
-                "average"
-                if p_type == ParameterType.AVERAGE_TIMESERIES
-                else "point"
+                "average" if p_type == ParameterType.AVERAGE_TIMESERIES else "point"
             )
             res._meta.loc[grp.index] = res._meta.loc[grp.index].assign(
                 parameter_type=parameter_type_str
