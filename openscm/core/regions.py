@@ -5,7 +5,7 @@ Handling of region information.
 from typing import Dict, Optional, Tuple
 
 from ..errors import RegionAggregatedError
-from .parameters import _Parameter
+from . import parameters
 from .utils import HierarchicalName, hierarchical_name_as_sequence
 
 # pylint: disable=protected-access
@@ -28,7 +28,7 @@ class _Region:
     _name: str
     """Name"""
 
-    _parameters: Dict[str, "_Parameter"]
+    _parameters: Dict[str, "parameters._Parameter"]
     """Parameters"""
 
     _parent: Optional["_Region"]
@@ -102,7 +102,7 @@ class _Region:
 
         return self
 
-    def get_or_create_parameter(self, name: str) -> "_Parameter":
+    def get_or_create_parameter(self, name: str) -> "parameters._Parameter":
         """
         Get a root parameter for this region. Create and add it if not found.
 
@@ -113,16 +113,18 @@ class _Region:
 
         Returns
         -------
-        _Parameter
+        parameters._Parameter
             Root parameter found or newly created
         """
         res = self._parameters.get(name, None)
         if res is None:
-            res = _Parameter(name, self)
+            res = parameters._Parameter(name, self)
             self._parameters[name] = res
         return res
 
-    def get_parameter(self, name: HierarchicalName) -> Optional["_Parameter"]:
+    def get_parameter(
+        self, name: HierarchicalName
+    ) -> Optional["parameters._Parameter"]:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
 
@@ -133,7 +135,7 @@ class _Region:
 
         Returns
         -------
-        Optional[_Parameter]
+        Optional[parameters._Parameter]
             Parameter of ``None`` if not found
 
         Raises

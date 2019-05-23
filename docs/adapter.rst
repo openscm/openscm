@@ -1,4 +1,4 @@
 Adapter base class
 ------------------
 
-.. automodule:: openscm.adapter
+.. autoclass:: openscm.adapters.Adapter

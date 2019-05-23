@@ -1471,7 +1471,7 @@ def df_append(
     ------
     TypeError
         If ``inplace`` is True but the first element in ``dfs`` is not an instance of
-        ``ScmDataFrameBase`
+        ``ScmDataFrameBase``
 
     ValueError
         ``duplicate_msg`` option is not recognised.
