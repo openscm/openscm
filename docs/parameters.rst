@@ -28,14 +28,9 @@ with this definition in mind.
 'Reference period' refers to the period a given variable is reported
 relative to the mean of. For example, 'surface temperature relative to
 a 1961-1990 reference period' refers to surface temperatures relative
-to the mean of the period 1961-1990. Adapters can report variables
-without reference periods if these are not used internally by the
-models. However, if the model uses an internal reference period then
-this should be indicated in the reported variable names by appending
-``(rel. to XXXX-YYYY)`` to the variable name. Hence, 'surface
-temperature relative to a 1961-1990 reference period' would become
-``Surface Temperature (rel. to 1961-1990)``. [TODO: discuss with other
-authors how we want this to play out]
+to the mean of the period 1961-1990. We are not yet sure how best to
+handle these reference periods in variables, if you have ideas please
+contribute to the discussions in `#167 <https://github.com/openclimatedata/openscm/issues/167>`_.
 
 
 Aggregation
