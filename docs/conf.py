@@ -64,6 +64,10 @@ def setup(app):
     app.connect("autodoc-skip-member", skip_init)
 
 
+rst_epilog = """
+.. |CO2| replace:: CO\ :sub:`2`\
+"""
+
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = "sphinx_rtd_theme"
