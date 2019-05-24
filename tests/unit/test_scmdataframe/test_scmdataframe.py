@@ -1152,6 +1152,17 @@ def test_append_duplicate_times(test_scm_df, duplicate_msg):
         npt.assert_almost_equal(obs, exp)
 
 
+def test_append_continous_times_doesnt_raise_if_continuous(test_scm_df):
+    join_year = 2011
+    base = test_scm_df.filter(year=range(1, join_year))
+    other = test_scm_df.filter(year=range(join_year, 30000))
+
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        base.append(other)
+
+    assert len(mock_warn_taking_average) == 0
+
+
 def test_append_duplicate_times_error_msg(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     other._data *= 2
