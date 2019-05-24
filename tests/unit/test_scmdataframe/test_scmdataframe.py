@@ -13,6 +13,7 @@ from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
+from openscm.core.parameters import ParameterType
 from openscm.core.utils import (
     convert_datetime_to_openscm_time,
     convert_openscm_time_to_datetime,
@@ -1357,7 +1358,6 @@ def test_interpolate_missing_param_type(combo_df, with_openscm_time, doesnt_warn
 def test_interpolate_parameter_type(combo_df):
     combo, df = combo_df
     df["parameter_type"] = combo.timeseries_type
-
     res = df.interpolate(
         combo.target,
         interpolation_type=combo.interpolation_type,
@@ -1365,6 +1365,21 @@ def test_interpolate_parameter_type(combo_df):
     )
 
     npt.assert_array_almost_equal(res.values.squeeze(), combo.target_values)
+    if combo.timeseries_type == ParameterType.POINT_TIMESERIES:
+        assert (res["parameter_type"] == "point").all()
+    else:
+        assert (res["parameter_type"] == "average").all()
+
+    res_rerun = res.interpolate(
+        combo.target,
+        interpolation_type=combo.interpolation_type,
+        extrapolation_type=combo.extrapolation_type,
+    )
+    npt.assert_array_almost_equal(res_rerun.values.squeeze(), combo.target_values)
+    if combo.timeseries_type == ParameterType.POINT_TIMESERIES:
+        assert (res_rerun["parameter_type"] == "point").all()
+    else:
+        assert (res_rerun["parameter_type"] == "average").all()
 
 
 def test_interpolate_bad_type(combo_df):

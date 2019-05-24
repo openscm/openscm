@@ -38,6 +38,7 @@ Schema
     adapter
     errors
     units
+    scenarios
     scmdataframe
 
 .. toctree::

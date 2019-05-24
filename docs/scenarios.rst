@@ -1,0 +1,4 @@
+Scenarios
+---------
+
+.. automodule:: openscm.scenarios
