@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#166 <https://github.com/openclimatedata/openscm/pull/166>`_) Add usage guidelines
 - (`#165 <https://github.com/openclimatedata/openscm/pull/165>`_) Add ``openscm.scenarios`` module with commonly used scenarios
 - (`#163 <https://github.com/openclimatedata/openscm/pull/163>`_) Lock ``pyam`` version to pypi versions
 - (`#160 <https://github.com/openclimatedata/openscm/pull/160>`_) Update ``setup.py`` so project description is right
