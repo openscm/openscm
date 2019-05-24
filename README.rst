@@ -53,6 +53,9 @@ Current maintainers of OpenSCM are:
 -  `Sven Willner <http://github.com/swillner>`__
    <`sven.willner@pik-potsdam.de
    <mailto:sven.willner@pik-potsdam.de>`__>
+-  `Jared Lewis <http://github.com/lewisjared>`__
+   <`jared.lewis@climate-energy-college.org
+   <mailto:jared.lewis@climate-energy-college.org>`__>
 
 .. sec-end-index
 
