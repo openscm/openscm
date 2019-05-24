@@ -10,6 +10,7 @@ master
 - (`#147 <https://github.com/openclimatedata/openscm/pull/147>`_) Remove pyam dependency
 - (`#142 <https://github.com/openclimatedata/openscm/pull/142>`_) Add boolean and string parameters
 - (`#140 <https://github.com/openclimatedata/openscm/pull/140>`_) Add SARGWP100, AR4GWP100 and AR5GWP100 conversion contexts
+- (`#139 <https://github.com/openclimatedata/openscm/pull/139>`_) Add initial definition of parameters
 - (`#138 <https://github.com/openclimatedata/openscm/pull/138>`_) Add support for linear point interpolation as well as linear and constant extrapolation
 - (`#134 <https://github.com/openclimatedata/openscm/pull/134>`_) Fix type annotations and add a static checker
 - (`#133 <https://github.com/openclimatedata/openscm/pull/133>`_) Cleanup and advance timeseries converter
