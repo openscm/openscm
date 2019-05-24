@@ -28,6 +28,32 @@ Python 3.
 This OpenSCM implementation comes with a command line tool
 ``openscm``.
 
+Use guidelines
+--------------
+
+We encourage use of OpenSCM as much as possible.
+If you plan to publish using OpenSCM, please be respectful of the work and the authors' willingness to open source their code under a permissive license.
+Please contact the `Maintainers`_ to discuss how best to acknowledge their work.
+There is a balance, and no single rule will fit all situations: in most cases simply citing OpenSCM will be sufficient, in others co-authorship may be the appropriate route.
+To recognise this, **our preferred policy is that you communicate your intentions early i.e. before drafting a manuscript**.
+
+Thanks to Anthony Walker and his `MAAT <https://github.com/walkeranthonyp/MAAT>`_ project for inspiring these use guidelines.
+
+Maintainers
+-----------
+
+Current maintainers of OpenSCM are:
+
+-  `Robert Gieseke <http://github.com/rgieseke>`__
+   <`robert.gieseke@pik-potsdam.de
+   <mailto:robert.gieseke@pik-potsdam.de>`__>
+-  `Zebedee Nicholls <http://github.com/znicholls>`__
+   <`zebedee.nicholls@climate-energy-college.org
+   <mailto:zebedee.nicholls@climate-energy-college.org>`__>
+-  `Sven Willner <http://github.com/swillner>`__
+   <`sven.willner@pik-potsdam.de
+   <mailto:sven.willner@pik-potsdam.de>`__>
+
 .. sec-end-index
 
 Documentation
@@ -91,21 +117,6 @@ Tests can be run locally with
     python setup.py test
 
 .. sec-end-development
-
-Maintainers
------------
-
-Current maintainers of OpenSCM are:
-
--  `Robert Gieseke <http://github.com/rgieseke>`__
-   <`robert.gieseke@pik-potsdam.de
-   <mailto:robert.gieseke@pik-potsdam.de>`__>
--  `Zeb Nicholls <http://github.com/znicholls>`__
-   <`zebedee.nicholls@climate-energy-college.org
-   <mailto:zebedee.nicholls@climate-energy-college.org>`__>
--  `Sven Willner <http://github.com/swillner>`__
-   <`sven.willner@pik-potsdam.de
-   <mailto:sven.willner@pik-potsdam.de>`__>
 
 .. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
     :target: https://openscm.readthedocs.io/en/latest/
