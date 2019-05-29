@@ -76,19 +76,11 @@ def test_generate_range():
 @pytest.mark.parametrize("inp", [np.nan, NaT])
 def test_nan_apply_dt_errors(inp):
     offset = DateOffset()
-
-    def tmp_return(s, x):
-        return x
-
-    test_func = apply_dt(tmp_return, offset)
+    test_func = apply_dt(lambda _, x: x, offset)
     assert test_func(inp) is NaT
 
 
 def test_nan_apply_dt_normalize():
     offset = DateOffset(normalize=True)
-
-    def tmp_return(s, x):
-        return x
-
-    test_func = apply_dt(tmp_return, offset)
+    test_func = apply_dt(lambda _, x: x, offset)
     assert test_func(datetime(2000, 1, 1, 13, 10, 1)) == datetime(2000, 1, 1, 0, 0, 0)

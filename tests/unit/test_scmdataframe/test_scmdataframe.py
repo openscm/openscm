@@ -1123,7 +1123,7 @@ def test_append_duplicate_times(test_scm_df, duplicate_msg):
     if duplicate_msg == "warn":
         warn_msg = (
             "Duplicate time points detected, the output will be the average of the "
-            "duplicates. Set `dulicate_msg='return'` to examine the "
+            "duplicates. Set `duplicate_msg='return'` to examine the "
             "joint timeseries (the duplicates can be found by looking at "
             "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
             "`duplicate_msg=False` to silence this message."
@@ -1135,7 +1135,7 @@ def test_append_duplicate_times(test_scm_df, duplicate_msg):
         assert len(mock_warn_taking_average) == 1
         assert str(mock_warn_taking_average[0].message) == warn_msg
     else:
-        assert len(mock_warn_taking_average) == 0
+        assert not mock_warn_taking_average
 
     if duplicate_msg == "return":
         assert res.shape[0] == other.timeseries().shape[0] * 2
@@ -1908,8 +1908,7 @@ def test_resample():
     npt.assert_almost_equal(obs, exp, decimal=1)
 
 
-def test_resample_long_datetimes(test_scm_df):
-    # THis is the usecase which will fail if we used pd.resample
+def test_resample_long_datetimes():
     df_dts = [datetime.datetime(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
     df = ScmDataFrame(
         np.arange(1700, 2500 + 1, 100),

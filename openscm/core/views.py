@@ -261,7 +261,7 @@ class TimeseriesView(ParameterInfo):
     _unit_converter: UnitConverter
     """Unit converter"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         parameter: _Parameter,
         unit: str,

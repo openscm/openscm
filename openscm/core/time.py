@@ -196,7 +196,7 @@ class TimeseriesConverter:
     _extrapolation_type: ExtrapolationType
     """Extrapolation type"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         source_time_points: np.ndarray,
         target_time_points: np.ndarray,

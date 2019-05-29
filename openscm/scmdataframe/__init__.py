@@ -32,7 +32,7 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-def convert_openscm_to_scmdataframe(
+def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     core: OpenSCM,
     time_points: List[int],
     model: str = "unspecified",

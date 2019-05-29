@@ -902,7 +902,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             self._meta.drop("level_0", axis=1, inplace=True)
         self._sort_meta_cols()
 
-    def interpolate(
+    def interpolate(  # pylint: disable=too-many-locals
         self,
         target_times: List[Union[datetime.datetime, int]],
         interpolation_type: InterpolationType = InterpolationType.LINEAR,
@@ -1506,7 +1506,7 @@ def df_append(
         if duplicate_msg == "warn":
             warn_msg = (
                 "Duplicate time points detected, the output will be the average of "
-                "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+                "the duplicates. Set `duplicate_msg='return'` to examine the joint "
                 "timeseries (the duplicates can be found by looking at "
                 "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
                 "`duplicate_msg=False` to silence this message."

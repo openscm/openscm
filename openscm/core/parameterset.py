@@ -178,7 +178,7 @@ class ParameterSet:
         parameter.attempt_read(ParameterType.SCALAR, unit)
         return ScalarView(parameter, unit)
 
-    def timeseries(
+    def timeseries(  # pylint: disable=too-many-arguments
         self,
         name: HierarchicalName,
         unit: str,

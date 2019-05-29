@@ -122,7 +122,7 @@ def find_depth(
     return np.array([b for b in [apply_test(m) for m in meta_col]])
 
 
-def pattern_match(
+def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
     meta_col: pd.Series,
     values: Union[Iterable[str], str],
     level: Optional[Union[str, int]] = None,
