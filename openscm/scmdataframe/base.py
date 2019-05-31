@@ -28,7 +28,6 @@ from .filters import (
     datetime_match,
     day_match,
     hour_match,
-    is_str,
     month_match,
     pattern_match,
     years_match,
@@ -134,7 +133,7 @@ def _format_data(  # pylint: disable=missing-return-doc
         df = df.to_frame()
 
     # all lower case
-    str_cols = [c for c in df.columns if is_str(c)]
+    str_cols = [c for c in df.columns if isinstance(c, str)]
     df.rename(columns={c: str(c).lower() for c in str_cols}, inplace=True)
 
     # reset the index if meaningful entries are included there
@@ -248,7 +247,9 @@ def _from_ts(
     num_ts = len(df.columns)
     for c_name in columns:
         col = columns[c_name]
-        col = [col] if is_str(col) else col  # type: ignore # mypy can't handle if
+        col = (
+            [col] if isinstance(col, str) else col
+        )  # type: ignore # mypy can't handle if
 
         if len(col) == num_ts:
             continue
@@ -373,8 +374,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         elif (IamDataFrame is not None) and isinstance(data, IamDataFrame):
             (_df, _meta) = _format_data(data.data.copy())
         else:
-            if not is_str(data):
-                if isinstance(data, list) and is_str(data[0]):
+            if not isinstance(data, str):
+                if isinstance(data, list) and isinstance(data[0], str):
                     raise ValueError(
                         "Initialising from multiple files not supported, "
                         "use `openscm.ScmDataFrame.append()`"
@@ -423,7 +424,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Provides direct access to "time", "year" as well as the columns in `self.meta`.
         If key is anything else, the key will be applied to `self._data`.
         """
-        _key_check = [key] if is_str(key) or not isinstance(key, Iterable) else key
+        _key_check = (
+            [key] if isinstance(key, str) or not isinstance(key, Iterable) else key
+        )
         if key == "time":
             return pd.Series(self._time_points.to_index(), dtype="object")
         if key == "year":

@@ -11,26 +11,8 @@ from typing import Any, Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-import six
 
 from ..core.parameters import HIERARCHY_SEPARATOR
-
-
-def is_str(s: Any) -> bool:  # TODO get rid off as we only support py3.7
-    """
-    Determine, for our use cases, whether a quantity is a string or not.
-
-    Parameters
-    ----------
-    s
-        Quantity to check
-
-    Returns
-    -------
-    bool
-        True if the quantity is a string, False otherwise.
-    """
-    return isinstance(s, six.string_types)
 
 
 def is_in(vals: List, items: List) -> np.ndarray:
@@ -92,7 +74,7 @@ def find_depth(
         If `level` cannot be understood
     """
     # determine function for finding depth level
-    if not is_str(level):
+    if not isinstance(level, str):
 
         def test(x):
             return level == x
@@ -169,17 +151,23 @@ def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
         `np.nan` and `has_nan` is ``False``
     """
     matches = np.array([False] * len(meta_col))
-    _values = [values] if not isinstance(values, Iterable) or is_str(values) else values
+    _values = (
+        [values]
+        if not isinstance(values, Iterable) or isinstance(values, str)
+        else values
+    )
 
     # pyam issue (#40) with string-to-nan comparison, replace nan by empty string
     # TODO: add docs and example of filtering/removing NaN given this internal
     #       conversion
     _meta_col = meta_col.copy()
     if has_nan:
-        _meta_col.loc[[np.isnan(i) if not is_str(i) else False for i in _meta_col]] = ""
+        _meta_col.loc[
+            [np.isnan(i) if not isinstance(i, str) else False for i in _meta_col]
+        ] = ""
 
     for s in _values:
-        if is_str(s):
+        if isinstance(s, str):
             _regexp = (
                 str(s)
                 .replace("|", "\\|")
