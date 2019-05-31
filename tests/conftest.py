@@ -15,7 +15,6 @@ import pytest
 from openscm.core import time
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
-from openscm.core.utils import convert_openscm_time_to_datetime
 from openscm.scmdataframe import ScmDataFrame
 
 try:
@@ -415,7 +414,7 @@ def combo(request):
 def combo_df(request):
     combination = deepcopy(request.param)
     vals = combination._asdict()
-    df_dts = [convert_openscm_time_to_datetime(d) for d in combination.source]
+    df_dts = combination.source
 
     # For average timeseries we drop the last time value so that the data and times are same length
     if combination.timeseries_type == ParameterType.AVERAGE_TIMESERIES:

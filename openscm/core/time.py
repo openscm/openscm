@@ -8,15 +8,21 @@ dedicated `Jupyter Notebook
 <https://github.com/openclimatedata/openscm/blob/master/notebooks/timeseries.ipynb>`_.
 """
 
+import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import numpy as np
+import pandas as pd
 import scipy.integrate as integrate
 import scipy.interpolate as interpolate
+from dateutil import parser
 
 from ..errors import InsufficientDataError
 from .parameters import ParameterType
+from .utils import NumpyArrayHandler, is_floatlike
+
+TARGET_TYPE = np.int64
 
 
 class ExtrapolationType(Enum):
@@ -61,7 +67,155 @@ class InterpolationType(Enum):
         return interpolation_type
 
 
-def create_time_points(
+def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:  # TODO types
+    """
+    Convert a list into a set of ``datetime.datetime``'s.
+
+    Parameters
+    ----------
+    dts
+        Input to attempt to convert
+
+    Returns
+    -------
+    :obj:`list` of :obj:`datetime.datetime`
+        Converted ``datetime.datetime``'s
+
+    Raises
+    ------
+    ValueError
+        If one of the values in ``dts`` cannot be converted to ``datetime.datetime``
+    """
+    empty_input = not dts.size if isinstance(dts, np.ndarray) else not dts  # TODO
+    if empty_input:
+        return np.asarray([])
+    dt_0 = dts[0]
+
+    print("dtype", np.asarray(dts).dtype)  # TODO proper type recognition
+    print("type", type(dt_0))
+
+    if isinstance(dt_0, np.datetime64):
+        return np.asarray(dts, dtype="datetime64[s]")
+    if is_floatlike(dt_0):
+
+        def convert_float_to_datetime(inp):
+            year = int(inp)
+            fractional_part = inp - year
+            base = datetime.datetime(year, 1, 1)
+            return base + datetime.timedelta(
+                seconds=(base.replace(year=year + 1) - base).total_seconds()
+                * fractional_part
+            )
+
+        return np.asarray(
+            [convert_float_to_datetime(float(t)) for t in dts], dtype="datetime64[s]"
+        )
+    if isinstance(dt_0, (int, np.int64)) or is_floatlike(dt_0):
+        return (
+            (np.asarray(dts, dtype=float) - 1970)
+            .astype("datetime64[Y]")
+            .astype("datetime64[s]")
+        )
+    if isinstance(dt_0, str):
+        return np.asarray([parser.parse(d) for d in dts], dtype="datetime64[s]")
+    return np.asarray(dts, dtype="datetime64[s]")
+
+
+class TimePoints:  # TODO track type of timeseries
+    """
+    TODO docs
+    Keeps track of both datetime and openscm datetimes and knows how to convert between
+    the two formats.
+    """
+
+    _values: np.ndarray
+
+    def __init__(self, values):
+        """
+        TODO docs
+        """
+        self._values = _format_datetime(np.asarray(values))
+
+    @property
+    def values(self) -> np.ndarray:
+        """TODO
+        Get time points as Python datetimes.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`datetime.datetime`
+            Datetime representation of each time point
+        """
+        return self._values
+
+    def to_index(self) -> pd.Index:
+        """
+        Get time points as ``pd.Index``.
+
+        Returns
+        -------
+        :obj:`pd.Index`
+            pd.Index of dtype "object" with name "time" made from the time points
+        """
+        return pd.Index(self._values.astype(object), dtype=object, name="time")
+
+    def years(self) -> np.ndarray:
+        """
+        Get year of each time point.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`int`
+            Year of each time point
+        """
+        return np.vectorize(getattr)(self._values.astype(object), "year")
+
+    def months(self) -> np.ndarray:
+        """
+        Get month of each time point.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`int`
+            Month of each time point
+        """
+        return np.vectorize(getattr)(self._values.astype(object), "month")
+
+    def days(self) -> np.ndarray:
+        """
+        Get day of each time point.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`int`
+            Day of each time point
+        """
+        return np.vectorize(getattr)(self._values.astype(object), "day")
+
+    def hours(self) -> np.ndarray:
+        """
+        Get hour of each time point.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`int`
+            Hour of each time point
+        """
+        return np.vectorize(getattr)(self._values.astype(object), "hour")
+
+    def weekdays(self) -> np.ndarray:
+        """
+        Get weekday of each time point.
+
+        Returns
+        -------
+        :obj:`np.array` of :obj:`int`
+            Day of the week of each time point
+        """
+        return np.vectorize(datetime.datetime.weekday)(self._values.astype(object))
+
+
+def create_time_points(  # TODO get rid of
     start_time: int,
     period_length: int,
     points_num: int,
@@ -93,7 +247,12 @@ def create_time_points(
         else points_num
     )
     end_time_output = start_time + (points_num_output - 1) * period_length
-    return np.linspace(start_time, end_time_output, points_num_output)
+    # TODO return np.linspace(start_time, end_time_output, points_num_output)
+    return pd.date_range(
+        datetime.datetime.fromtimestamp(start_time),
+        datetime.datetime.fromtimestamp(end_time_output),
+        periods=points_num_output,
+    )
 
 
 def _calc_interval_averages(
@@ -225,15 +384,13 @@ class TimeseriesConverter:
         InsufficientDataError
             Timeseries too short to extrapolate
         """
-        self._source = np.array(source_time_points, copy=True)
-        self._target = np.array(target_time_points, copy=True)
+        self._source = np.array(source_time_points).astype(TARGET_TYPE, copy=True)
+        self._target = np.array(target_time_points).astype(TARGET_TYPE, copy=True)
         self._timeseries_type = timeseries_type
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
 
-        if (
-            source_time_points[0] > target_time_points[1]
-        ):  # TODO Consider extrapolation type
+        if self._source[0] > self._target[1]:  # TODO Consider extrapolation type
             raise InsufficientDataError
 
     def _calc_continuous_representation(
@@ -392,13 +549,15 @@ class TimeseriesConverter:
         """
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
             return _calc_interval_averages(
-                self._calc_continuous_representation(source_time_points, values),
-                target_time_points,
+                self._calc_continuous_representation(
+                    source_time_points.astype(TARGET_TYPE), values
+                ),
+                target_time_points.astype(TARGET_TYPE),
             )
         if self._timeseries_type == ParameterType.POINT_TIMESERIES:
-            return self._calc_continuous_representation(source_time_points, values)(
-                target_time_points
-            )
+            return self._calc_continuous_representation(
+                source_time_points.astype(TARGET_TYPE), values
+            )(target_time_points.astype(TARGET_TYPE))
 
         raise NotImplementedError
 

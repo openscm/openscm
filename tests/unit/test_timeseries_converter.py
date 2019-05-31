@@ -1,6 +1,8 @@
 import re
+from datetime import timedelta
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from openscm.core.time import ExtrapolationType, TimeseriesConverter
@@ -21,7 +23,13 @@ def test_short_data(combo):
 
 
 def test_none_extrapolation_error(combo):
-    target = [combo.source[0] - 1, combo.source[0], combo.source[-1] + 1]
+    target = pd.DatetimeIndex(
+        [
+            combo.source[0] - timedelta(seconds=1),
+            combo.source[0],
+            combo.source[-1] + timedelta(seconds=1),
+        ]
+    )
     timeseriesconverter = TimeseriesConverter(
         combo.source,
         target,
