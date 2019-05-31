@@ -5,12 +5,8 @@ import pandas as pd
 from base import _AdapterTester
 
 from openscm.adapters.dice import DICE, YEAR
-from openscm.parameters import ParameterType
-from openscm.timeseries_converter import (
-    ExtrapolationType,
-    InterpolationType,
-    create_time_points,
-)
+from openscm.core.parameters import ParameterType
+from openscm.core.time import ExtrapolationType, InterpolationType, create_time_points
 
 
 def _run_and_compare(test_adapter, filename):
@@ -22,40 +18,39 @@ def _run_and_compare(test_adapter, filename):
     test_adapter.initialize_model_input()
     test_adapter.initialize_run_parameters(start_time, stop_time)
 
-    test_adapter._parameters.get_writable_generic_view(
-        ("DICE", "forcoth_saturation_time"), ("World",)  # , ""
-    ).set(start_time + 90 * YEAR)
+    test_adapter._parameters.generic(
+        ("DICE", "forcoth_saturation_time"), writable=True
+    ).value = (start_time + 90 * YEAR)
     time_points = create_time_points(
         start_time, YEAR, timestep_count, ParameterType.AVERAGE_TIMESERIES
     )
-    test_adapter._parameters.get_writable_timeseries_view(
+    test_adapter._parameters.timeseries(
         ("Emissions", "CO2"),
-        ("World",),
         "GtCO2/a",
         time_points,
-        ParameterType.AVERAGE_TIMESERIES,
-    ).set(original_data.E.values[:timestep_count])
+        timeseries_type="average",
+        writable=True,
+    ).values = original_data.E.values[:timestep_count]
 
     test_adapter.reset()
     test_adapter.run()
 
     output_parameters = [
-        (("Concentration", "Atmosphere"), "GtC", "MAT"),
-        (("Concentration", "Ocean", "lower"), "GtC", "ML"),
-        (("Concentration", "Ocean", "shallow"), "GtC", "MU"),
-        (("Radiative forcing",), "W/m^2", "FORC"),
-        (("Temperature Increase", "Atmosphere"), "degC", "TATM"),
-        (("Temperature Increase", "Ocean", "lower"), "degC", "TOCEAN"),
+        (("Pool", "CO2", "Atmosphere"), "GtC", "MAT"),
+        (("Pool", "CO2", "Ocean", "lower"), "GtC", "ML"),
+        (("Pool", "CO2", "Ocean", "shallow"), "GtC", "MU"),
+        (("Radiative Forcing", "CO2"), "W/m^2", "FORC"),
+        (("Surface Temperature", "Increase"), "degC", "TATM"),
+        (("Ocean Temperature", "Increase"), "degC", "TOCEAN"),
     ]
     for name, unit, original_name in output_parameters:
         np.testing.assert_allclose(
-            test_adapter._output.get_timeseries_view(
+            test_adapter._output.timeseries(
                 name,
-                ("World",),
                 unit,
                 time_points[:-1],  # these are point timeseries
-                ParameterType.POINT_TIMESERIES,
-            ).get(),
+                timeseries_type="point",
+            ).values,
             original_data[original_name][:timestep_count],
             err_msg="Not matching original results for variable '{}'".format(
                 "|".join(name)
@@ -84,12 +79,10 @@ class TestMyAdapter(_AdapterTester):
             test_adapter._timestep_count,
             ParameterType.AVERAGE_TIMESERIES,
         )
-        test_adapter._parameters.get_writable_timeseries_view(
+        test_adapter._parameters.timeseries(
             ("Emissions", "CO2"),
-            ("World",),
             "GtCO2/a",
             time_points_for_averages,
-            ParameterType.AVERAGE_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
-        ).set(np.zeros(test_adapter._timestep_count))
+            timeseries_type="average",
+            writable=True,
+        ).values = np.zeros(test_adapter._timestep_count)

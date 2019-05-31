@@ -248,13 +248,12 @@ def rcp26():
     return ScmDataFrame(fname)
 
 
+@pytest.fixture
 def test_adapter(request):
     """
     Get an initialized instance of an the requesting classes ``tadapter`` property.
     """
     parameters = ParameterSet()
-    parameters.scalar("ecs", "K", writable=True).value = 3
-    parameters.scalar("rf2xco2", "W / m^2", writable=True).value = 4
     output_parameters = ParameterSet()
     try:
         yield request.cls.tadapter(parameters, output_parameters)

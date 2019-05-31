@@ -18,13 +18,9 @@ from typing import Any
 
 import numpy as np
 
-from ..adapter import Adapter
-from ..parameters import ParameterType
-from ..timeseries_converter import (
-    ExtrapolationType,
-    InterpolationType,
-    create_time_points,
-)
+from ..core.parameters import ParameterType
+from ..core.time import ExtrapolationType, InterpolationType, create_time_points
+from . import Adapter
 
 YEAR = 365 * 24 * 60 * 60
 
@@ -127,23 +123,15 @@ class DICE(Adapter):
             setattr(self._values, name, default)
             if unit is None:
                 # Non-scalar parameter
-                self._parameters.get_writable_generic_view(
-                    ("DICE", name), ("World",)
-                ).set(default)
-                setattr(
-                    self._views,
-                    name,
-                    self._parameters.get_generic_view(("DICE", name), ("World",)),
-                )
+                self._parameters.generic(("DICE", name), writable=True).value = default
+                setattr(self._views, name, self._parameters.generic(("DICE", name)))
             else:
                 # Scalar parameter
-                self._parameters.get_writable_scalar_view(
-                    ("DICE", name), ("World",), unit
-                ).set(default)
+                self._parameters.scalar(
+                    ("DICE", name), unit, writable=True
+                ).value = default
                 setattr(
-                    self._views,
-                    name,
-                    self._parameters.get_scalar_view(("DICE", name), ("World",), unit),
+                    self._views, name, self._parameters.scalar(("DICE", name), unit)
                 )
 
     def _initialize_model_input(self) -> None:
@@ -169,86 +157,71 @@ class DICE(Adapter):
         )
 
         # Original: "Total CO2 emissions (GtCO2 per year)"
-        self._views.E = self._parameters.get_timeseries_view(
+        self._views.E = self._parameters.timeseries(
             ("Emissions", "CO2"),
-            ("World",),
             "GtCO2/a" if self._values.original_rounding else "GtC/a",
             time_points_for_averages,
-            ParameterType.AVERAGE_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="average",
         )
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
-        self._views.mat = self._output.get_writable_timeseries_view(
+        self._views.mat = self._output.timeseries(
             ("Pool", "CO2", "Atmosphere"),
-            ("World",),
             "GtC",
             time_points,
-            ParameterType.POINT_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="point",
+            writable=True,
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
-        self._views.ml = self._output.get_writable_timeseries_view(
+        self._views.ml = self._output.timeseries(
             ("Pool", "CO2", "Ocean", "lower"),
-            ("World",),
             "GtC",
             time_points,
-            ParameterType.POINT_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="point",
+            writable=True,
         )
 
         # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
-        self._views.mu = self._output.get_writable_timeseries_view(
+        self._views.mu = self._output.timeseries(
             ("Pool", "CO2", "Ocean", "shallow"),
-            ("World",),
             "GtC",
             time_points,
-            ParameterType.POINT_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="point",
+            writable=True,
         )
 
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
-        self._views.tatm = self._output.get_writable_timeseries_view(
+        self._views.tatm = self._output.timeseries(
             ("Surface Temperature", "Increase"),
-            ("World",),
             "degC",
             time_points,
-            ParameterType.POINT_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="point",
+            writable=True,
         )
 
         # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
-        self._views.tocean = self._output.get_writable_timeseries_view(
+        self._views.tocean = self._output.timeseries(
             ("Ocean Temperature", "Increase"),
-            ("World",),
             "degC",
             time_points,
-            ParameterType.POINT_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="point",
+            writable=True,
         )
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
-        self._views.forc = self._output.get_writable_timeseries_view(
+        self._views.forc = self._output.timeseries(
             ("Radiative Forcing", "CO2"),
-            ("World",),
             "W/m^2",
             time_points,
-            ParameterType.POINT_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="point",
+            writable=True,
         )
 
     def _reset(self) -> None:
         self._timestep = 0
         for name in MODEL_PARAMETER_DEFAULTS:
-            setattr(self._values, name, getattr(self._views, name).get())
+            setattr(self._values, name, getattr(self._views, name).value)
 
         # Original: "Carbon cycle transition matrix"
         self._values.b11 = 1 - self._values.b12
@@ -257,7 +230,7 @@ class DICE(Adapter):
         self._values.b32 = self._values.b23 * self._values.mueq / self._values.mleq
         self._values.b33 = 1 - self._values.b32
 
-        self._values.E = self._views.E.get()
+        self._values.E = self._views.E.values
 
         self._values.mat = np.empty(self._timestep_count)
         self._values.mat[0] = self._values.mat0
@@ -298,12 +271,12 @@ class DICE(Adapter):
         """
         Set output data from values.
         """
-        self._views.mat.set(self._values.mat)
-        self._views.ml.set(self._values.ml)
-        self._views.mu.set(self._values.mu)
-        self._views.tatm.set(self._values.tatm)
-        self._views.tocean.set(self._values.tocean)
-        self._views.forc.set(self._values.forc)
+        self._views.mat.values = self._values.mat
+        self._views.ml.values = self._values.ml
+        self._views.mu.values = self._values.mu
+        self._views.tatm.values = self._values.tatm
+        self._views.tocean.values = self._values.tocean
+        self._views.forc.values = self._values.forc
 
     def _calc_step(self) -> None:
         """
