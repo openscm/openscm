@@ -18,11 +18,6 @@ Filters
 
 .. automodule:: openscm.scmdataframe.filters
 
-TimeIndex
-*********
-
-.. automodule:: openscm.scmdataframe.timeindex
-
 Offsets
 *******
 

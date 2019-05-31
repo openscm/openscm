@@ -23,7 +23,7 @@ Regions
 
 .. automodule:: openscm.core.regions
 
-Timeseries converter
-********************
+Time
+****
 
 .. automodule:: openscm.core.time
