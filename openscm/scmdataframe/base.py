@@ -14,20 +14,16 @@ import numpy as np
 import pandas as pd
 from dateutil import parser
 
-from openscm import OpenSCM
-from openscm.core.time import (
+from ..core.parameterset import ParameterSet
+from ..core.time import (
     ExtrapolationType,
     InterpolationType,
     ParameterType,
     TimeseriesConverter,
+    TimePoints,
 )
-from openscm.core.units import UnitConverter
-from openscm.core.utils import (
-    convert_datetime_to_openscm_time,
-    convert_openscm_time_to_datetime,
-    is_floatlike,
-)
-
+from ..core.units import UnitConverter
+from ..core.utils import is_floatlike
 from .filters import (
     DEFAULT_SEPARATOR,
     datetime_match,
@@ -41,7 +37,6 @@ from .filters import (
 from .offsets import generate_range, to_offset
 from .parameter_type import guess_parameter_type
 from .pyam_compat import Axes, IamDataFrame, LongDatetimeIamDataFrame
-from .timeindex import TimeIndex
 
 _logger = getLogger(__name__)
 
@@ -277,7 +272,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     requires importing ScmDataFrame, causing a circularity.
     """
 
-    data_hierarchy_separator = DEFAULT_SEPARATOR
+    # TODO add attributes and rename time_index
+
+    data_hierarchy_separator = DEFAULT_SEPARATOR # TODO make general
     """
     str: String used to define different levels in our data hierarchies.
 
@@ -363,7 +360,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             )
         elif isinstance(data, (pd.DataFrame, pd.Series)):
             (_df, _meta) = _format_data(data.copy())
-        elif isinstance(data, IamDataFrame) and data is not None:
+        elif (IamDataFrame is not None) and isinstance(data, IamDataFrame):
             (_df, _meta) = _format_data(data.data.copy())
         else:
             if not is_str(data):
@@ -375,9 +372,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 error_msg = "Cannot load {} from {}".format(type(self), type(data))
                 raise TypeError(error_msg)
             # mypy doesn't recognise type control in `if` statements
-            (_df, _meta) = _read_file(data, **kwargs)  # type: ignore
-        self._time_index = TimeIndex(py_dt=_df.index.values)
-        _df.index = self._time_index.as_pd_index()
+            (_df, _meta) = _read_file(data, **kwargs)
+        self._time_index = TimePoints(_df.index.values)
+        _df.index = self._time_index.to_index()
         _df = _df.astype(float)
 
         self._data, self._meta = (_df, _meta)
@@ -419,7 +416,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         _key_check = [key] if is_str(key) or not isinstance(key, Iterable) else key
         if key == "time":
-            return pd.Series(self._time_index.as_pd_index(), dtype="object")
+            return pd.Series(self._time_index.to_index(), dtype="object")
         if key == "year":
             return pd.Series(self._time_index.years())
         if set(_key_check).issubset(self.meta.columns):
@@ -437,8 +434,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         if key == "time":
             # TODO: double check if this will actually do what we want
-            self._time_index = TimeIndex(py_dt=value)
-            self._data.index = self._time_index.as_pd_index()
+            self._time_index = TimePoints(value)
+            self._data.index = self._time_index.to_index()
             return value
         return self.set_meta(value, name=key)
 
@@ -500,7 +497,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     @property
     def time_points(self) -> np.ndarray:
-        """
+        """TODO remove?
         Return the time axis of the data.
 
         Returns
@@ -508,7 +505,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         :obj:`np.array` of :obj:`int`
             Data as OpenSCM times.
         """
-        return self._time_index.as_openscm()
+        return self._time_index.values
 
     def timeseries(self, meta: Optional[List[str]] = None) -> pd.DataFrame:
         """
@@ -714,7 +711,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 keep_ts &= hour_match(self._time_index.hours(), values)
 
             elif col == "time":
-                keep_ts &= datetime_match(self._time_index.as_py(), values)
+                keep_ts &= datetime_match(self._time_index.values, values)
 
             elif col == "level":
                 if "variable" not in filters.keys():
@@ -902,7 +899,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             self._meta.drop("level_0", axis=1, inplace=True)
         self._sort_meta_cols()
 
-    def interpolate(
+    def interpolate(  # pylint: disable=too-many-locals
         self,
         target_times: List[Union[datetime.datetime, int]],
         interpolation_type: InterpolationType = InterpolationType.LINEAR,
@@ -911,7 +908,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Interpolate the dataframe onto a new time frame.
 
-        Uses openscm.timeseries_converter.TimeseriesConverter internally. For each time
+        Uses openscm.timeseries_converter.TimeseriesConverter internally. For each time # TODO reference
         series a ``ParameterType`` is guessed from the variable name. To override the
         guessed parameter type, specify a `parameter_type` meta column before calling
         interpolate. The guessed parameter types are returned in meta.
@@ -934,29 +931,14 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             ``target_times`` grid
         """
         # pylint: disable=protected-access
-        if isinstance(target_times[0], datetime.datetime):
-            # mypy confused about typing of target_times in this block, we must
-            # assume datetime
-            target_times_openscm = [
-                convert_datetime_to_openscm_time(t)  # type: ignore
-                for t in target_times
-            ]
-            target_times_dt = target_times
-        else:
-            # mypy confused about typing of target_times in this block, we must
-            # assume int
-            target_times_openscm = target_times  # type: ignore
-            target_times_dt = [
-                convert_openscm_time_to_datetime(t)  # type: ignore
-                for t in target_times
-            ]
 
-        target_times_openscm = np.asarray(target_times_openscm)
-        target_times_dt = np.asarray(target_times_dt)
+        target_times = np.asarray(target_times, dtype="datetime64[s]")
 
         # Need to keep an object index or pandas will not be able to handle a wide
         # time range
-        timeseries_index = pd.Index(target_times_dt, dtype="object", name="time")
+        timeseries_index = pd.Index(
+            target_times.astype(object), dtype="object", name="time"
+        )
 
         res = self.copy()
 
@@ -1002,9 +984,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 # With an average time series we are making the assumption that the last value is the
                 # average value between t[-1] and (t[-1] - t[-2]). This will ensure that both the
                 # point and average timeseries can use the same time grid.
-                delta_t = target_times_openscm[-1] - target_times_openscm[-2]
-                target_times_openscm = np.concatenate(
-                    (target_times_openscm, [target_times_openscm[-1] + delta_t])
+                delta_t = target_times[-1] - target_times[-2]
+                target_times = np.concatenate(
+                    (target_times, [target_times[-1] + delta_t])
                 )
 
                 delta_t = time_points[-1] - time_points[-2]
@@ -1012,7 +994,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
             timeseries_converter = TimeseriesConverter(
                 time_points,
-                target_times_openscm,
+                target_times,
                 p_type,
                 interpolation_type,
                 extrapolation_type,
@@ -1031,9 +1013,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
             # Convert from ParameterType to str
             parameter_type_str = (
-                "average"
-                if parameter_type == ParameterType.AVERAGE_TIMESERIES
-                else "point"
+                "average" if p_type == ParameterType.AVERAGE_TIMESERIES else "point"
             )
             res._meta.loc[grp.index] = res._meta.loc[grp.index].assign(
                 parameter_type=parameter_type_str
@@ -1508,7 +1488,7 @@ def df_append(
         if duplicate_msg == "warn":
             warn_msg = (
                 "Duplicate time points detected, the output will be the average of "
-                "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+                "the duplicates. Set `duplicate_msg='return'` to examine the joint "
                 "timeseries (the duplicates can be found by looking at "
                 "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
                 "`duplicate_msg=False` to silence this message."

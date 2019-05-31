@@ -32,7 +32,8 @@ try:
                 self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
 
             not_datetime = [
-                not isinstance(x, datetime.datetime) for x in self.data["time"]
+                not isinstance(x, (datetime.datetime, datetime.date))
+                for x in self.data["time"]
             ]
             if any(not_datetime):
                 bad_values = self.data[not_datetime]["time"]

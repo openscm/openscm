@@ -8,10 +8,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from openscm import OpenSCM
-from openscm.core.parameters import ParameterInfo, ParameterType
-from openscm.core.utils import convert_openscm_time_to_datetime
-
+from .. import OpenSCM
+from ..core.parameters import ParameterInfo, ParameterType
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
 
@@ -32,7 +30,7 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-def convert_openscm_to_scmdataframe(
+def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
     core: OpenSCM,
     time_points: List[int],
     model: str = "unspecified",
@@ -40,7 +38,7 @@ def convert_openscm_to_scmdataframe(
     climate_model: str = "unspecified",
 ) -> ScmDataFrame:
     """
-    Get an ScmDataFrame from a OpenSCM object.
+    Get an ScmDataFrame from an OpenSCM object.
 
     An ScmDataFrame is a view with a common time index for all time series. All metadata
     in OpenSCM must be represented as Generic parameters with in the `World` region.
@@ -117,7 +115,7 @@ def convert_openscm_to_scmdataframe(
             metadata[parameter_name_to_scm(param_name)] = [
                 core.parameters.generic(param_name, region=region).value
             ]
-        else:
+        else:  # TODO scalar parameters
             ts = core.parameters.timeseries(  # type: ignore
                 param_name,
                 p_info.unit,
@@ -131,8 +129,4 @@ def convert_openscm_to_scmdataframe(
             metadata["unit"].append(p_info.unit)
 
     # convert timeseries to dataframe with time index here
-    return ScmDataFrame(
-        np.atleast_2d(data).T,
-        columns=metadata,
-        index=[convert_openscm_time_to_datetime(t) for t in time_points],
-    )
+    return ScmDataFrame(np.atleast_2d(data).T, columns=metadata, index=time_points)

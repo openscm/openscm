@@ -15,7 +15,6 @@ import pytest
 from openscm.core import time
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
-from openscm.core.utils import convert_openscm_time_to_datetime
 from openscm.scmdataframe import ScmDataFrame
 
 try:
@@ -137,7 +136,7 @@ def doesnt_warn():
     def check_context():
         with pytest.warns(None) as record:
             yield
-        if len(record):
+        if record:
             pytest.fail(
                 "The following warnings were raised: {}".format(
                     [w.message for w in record.list]
@@ -263,11 +262,11 @@ def test_adapter(request):
 
 @pytest.fixture
 def assert_core():
-    def check_func(expected, time, test_core, name, region, unit, time_points):
+    def check_func(expected, t, test_core, name, region, unit, time_points):
         pview = test_core.parameters.timeseries(
             name, unit, time_points, region=region, timeseries_type="point"
         )
-        relevant_idx = (np.abs(time_points - time)).argmin()
+        relevant_idx = (np.abs(time_points - t)).argmin()
         np.testing.assert_allclose(pview.values[relevant_idx], expected)
 
     return check_func
@@ -412,20 +411,20 @@ def combo(request):
 
 @pytest.fixture(params=test_combinations, scope="function")
 def combo_df(request):
-    combo = deepcopy(request.param)
-    vals = combo._asdict()
-    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
+    combination = deepcopy(request.param)
+    vals = combination._asdict()
+    df_dts = combination.source
 
     # For average timeseries we drop the last time value so that the data and times are same length
-    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+    if combination.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
         assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
         df_dts = df_dts[:-1]
-        vals["target"] = combo.target.copy()[:-1]
-        assert len(vals["target"]) == len(combo.target_values)
-        assert len(df_dts) == len(combo.source_values)
+        vals["target"] = combination.target.copy()[:-1]
+        assert len(vals["target"]) == len(combination.target_values)
+        assert len(df_dts) == len(combination.source_values)
 
     df = ScmDataFrame(
-        combo.source_values,
+        combination.source_values,
         columns={
             "scenario": ["a_scenario"],
             "model": ["a_model"],
@@ -435,7 +434,7 @@ def combo_df(request):
             "parameter_type": [
                 (
                     "point"
-                    if combo.timeseries_type == ParameterType.POINT_TIMESERIES
+                    if combination.timeseries_type == ParameterType.POINT_TIMESERIES
                     else "average"
                 )
             ],

@@ -60,6 +60,7 @@ action "Notebooks" {
     "pip install -e .[tests,notebooks]",
     "pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg --no-cov"
   ]
+  needs = ["Coverage", "Documentation", "Formatting", "Linters", "Tests"]
 }
 
 action "Coverage" {

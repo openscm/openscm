@@ -7,21 +7,18 @@ import numbers
 from typing import Any, Optional, Sequence, Tuple, cast
 
 import numpy as np
-from numpy.lib.mixins import NDArrayOperatorsMixin
-from pandas.core.arrays.base import ExtensionOpsMixin
 
 from ..errors import ParameterEmptyError, TimeseriesPointsValuesMismatchError
 from .parameters import ParameterInfo, ParameterType, _Parameter
 from .time import ExtrapolationType, InterpolationType, TimeseriesConverter
 from .units import UnitConverter
+from .utils import NumpyArrayHandler
 
 # pylint: disable=protected-access
 
 
-class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
-    __array_priority__ = 1000
+class _Timeseries(NumpyArrayHandler):  # type: ignore
     _HANDLED_TYPES = (np.ndarray, numbers.Number)
-    _ndarray: np.ndarray
 
     def __init__(self, input_array, parameter_view):
         self._ndarray = np.asarray(input_array)
@@ -34,27 +31,6 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
     def __write__(self):
         self._parameter_view._write()
         return self
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        args = [
-            i.__read__()._ndarray if isinstance(i, type(self)) else i for i in inputs
-        ]
-        outputs = kwargs.pop("out", None)
-        if outputs:
-            kwargs["out"] = tuple(
-                i._ndarray if isinstance(i, type(self)) else i for i in outputs
-            )
-            results = self._ndarray.__array_ufunc__(ufunc, method, *args, **kwargs)
-            if results is NotImplemented:
-                return NotImplemented
-            if ufunc.nout == 1:
-                results = (results,)
-            results = tuple(
-                (output.__write__() if isinstance(output, type(self)) else result)
-                for result, output in zip(results, outputs)
-            )
-            return results[0] if len(results) == 1 else results
-        return self._ndarray.__array_ufunc__(ufunc, method, *args, **kwargs)
 
     def __getitem__(self, item):
         self.__read__()
@@ -93,28 +69,6 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
     def nbytes(self):
         self.__read__()
         return self._ndarray.nbytes
-
-    @property
-    def shape(self) -> Tuple[int, ...]:
-        return cast(Tuple[int, ...], self._ndarray.shape)
-
-    @classmethod
-    def _create_arithmetic_method(cls, op):
-        def arithmetic_method(self, other):
-            if isinstance(other, cls):
-                other = other._ndarray
-
-            with np.errstate(all="ignore"):
-                return op(self._ndarray, other)
-
-        arithmetic_method.__name__ = "__{}__".format(op.__name__)
-        arithmetic_method.__qualname__ = "{cl}.__{name}__".format(
-            cl=cls.__name__, name=op.__name__
-        )
-        arithmetic_method.__module__ = cls.__module__
-        return arithmetic_method
-
-    _create_comparison_method = _create_arithmetic_method
 
 
 _Timeseries._add_arithmetic_ops()
@@ -261,7 +215,7 @@ class TimeseriesView(ParameterInfo):
     _unit_converter: UnitConverter
     """Unit converter"""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         parameter: _Parameter,
         unit: str,

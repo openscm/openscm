@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import numpy as np
 import pytest
 
@@ -30,7 +32,7 @@ def test_insufficient_overlap(combo):
     with pytest.raises(InsufficientDataError):
         TimeseriesConverter(
             combo.source,
-            combo.target - 1e6,
+            combo.target - timedelta(days=3650),
             combo.timeseries_type,
             combo.interpolation_type,
             combo.extrapolation_type,

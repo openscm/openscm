@@ -71,7 +71,7 @@ for k, v in REQUIREMENTS_MODELS.items():
     REQUIREMENTS_EXTRAS["tests"] += v
     REQUIREMENTS_EXTRAS["dev"] += v
 
-PACKAGE_DATA = {"openscm": ["units/*.csv"]}
+PACKAGE_DATA = {"openscm": ["units/*.csv", "scenarios/*.csv"]}
 
 # Get the long description from the README file
 with open("README.rst", "r", encoding="utf-8") as f:
