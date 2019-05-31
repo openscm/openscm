@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 
 from ..core.parameters import ParameterType
-from ..core.time import ExtrapolationType, InterpolationType, create_time_points
+from ..core.time import create_time_points
 from . import Adapter
 
 YEAR = 365 * 24 * 60 * 60

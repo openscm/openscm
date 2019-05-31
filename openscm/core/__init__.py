@@ -32,7 +32,12 @@ class OpenSCM:
     _parameters: ParameterSet
     """Set of input :ref:`parameters <parameters>` for the model"""
 
-    def __init__(self, model_name: str):
+    def __init__(
+        self,
+        model_name: str,
+        input_parameters: Optional[ParameterSet] = None,
+        output_parameters: Optional[ParameterSet] = None,
+    ):
         """
         Initialize.
 
@@ -40,14 +45,19 @@ class OpenSCM:
         ----------
         model
             Name of the SCM to run
+        TODO
 
         Raises
         ------
         KeyError
             No adapter for SCM named ``model`` found
         """
-        self._input_parameters = ParameterSet()
-        self._output_parameters = ParameterSet()
+        self._input_parameters = (
+            input_parameters if input_parameters is not None else ParameterSet()
+        )
+        self._output_parameters = (
+            output_parameters if output_parameters is not None else ParameterSet()
+        )
         self._model_name = model_name
         self._model = load_adapter(model_name)(
             self._input_parameters, self._output_parameters

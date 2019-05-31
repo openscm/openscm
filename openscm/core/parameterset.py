@@ -1,12 +1,19 @@
 """
 TODO Docs
 """
-from typing import Optional, Sequence, Union
+from typing import Optional, Union
 
-from .parameters import ParameterInfo, ParameterType, _Parameter
+import numpy as np
+
+from .parameters import (
+    HIERARCHY_SEPARATOR,
+    HierarchicalName,
+    ParameterInfo,
+    ParameterType,
+    _Parameter,
+)
 from .regions import _Region
 from .time import ExtrapolationType, InterpolationType
-from .utils import HierarchicalName, hierarchical_name_as_sequence
 from .views import (
     GenericView,
     ScalarView,
@@ -55,14 +62,15 @@ class ParameterSet:
         ValueError
             If parent region could not be found
         """
-        name_tuple = hierarchical_name_as_sequence(name)
+        if isinstance(name, str):
+            name = name.split(HIERARCHY_SEPARATOR)
 
-        if len(name_tuple) > 1:
-            p = self._get_or_create_region(name_tuple[:-1])
-            return p.get_or_create_subregion(name_tuple[-1])
+        if len(name) > 1:
+            p = self._get_or_create_region(name[:-1])
+            return p.get_or_create_subregion(name[-1])
 
-        if len(name_tuple) == 1:
-            name_str = name_tuple[0]
+        if len(name) == 1:
+            name_str = name[0]
             root_name = self._root._name  # pylint: disable=protected-access
             if name_str != root_name:
                 error_msg = (
@@ -73,7 +81,7 @@ class ParameterSet:
 
             return self._root
 
-        # len(name_tuple) == 0
+        # len(name) == 0
         raise ValueError("No region name given")
 
     def _get_region(self, name: HierarchicalName) -> Optional[_Region]:
@@ -90,12 +98,13 @@ class ParameterSet:
         Optional[_Region]
             Region or ``None`` if not found
         """
-        name_tuple = hierarchical_name_as_sequence(name)
+        if isinstance(name, str):
+            name = name.split(HIERARCHY_SEPARATOR)
 
-        if name_tuple[0] != self._root.name:
+        if name[0] != self._root.name:
             return None
 
-        return self._root.get_subregion(name_tuple[1:])
+        return self._root.get_subregion(name[1:])
 
     def _get_or_create_parameter(
         self, name: HierarchicalName, region: _Region
@@ -120,16 +129,17 @@ class ParameterSet:
         ValueError
             Name not given
         """
-        name_tuple = hierarchical_name_as_sequence(name)
+        if isinstance(name, str):
+            name = name.split(HIERARCHY_SEPARATOR)
 
-        if len(name_tuple) > 1:
-            p = self._get_or_create_parameter(name_tuple[:-1], region)
-            return p.get_or_create_child_parameter(name_tuple[-1])
+        if len(name) > 1:
+            p = self._get_or_create_parameter(name[:-1], region)
+            return p.get_or_create_child_parameter(name[-1])
 
-        if len(name_tuple) == 1:
-            return region.get_or_create_parameter(name_tuple[0])
+        if len(name) == 1:
+            return region.get_or_create_parameter(name[0])
 
-        # len(name_tuple) == 0
+        # len(name) == 0
         raise ValueError("No parameter name given")
 
     def scalar(

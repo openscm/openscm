@@ -20,7 +20,6 @@ from dateutil import parser
 
 from ..errors import InsufficientDataError
 from .parameters import ParameterType
-from .utils import NumpyArrayHandler, is_floatlike
 
 TARGET_TYPE = np.int64
 
@@ -225,8 +224,8 @@ class TimePoints:  # TODO track type of timeseries
 
 
 def create_time_points(  # TODO get rid of
-    start_time: int,
-    period_length: int,
+    start_time: np.datetime64,
+    period_length: np.timedelta64,
     points_num: int,
     timeseries_type: Union[ParameterType, str],
 ) -> np.ndarray:

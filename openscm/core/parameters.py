@@ -9,18 +9,21 @@ import numpy as np
 
 from ..errors import (
     ParameterAggregationError,
+    ParameterEmptyError,
     ParameterReadError,
     ParameterReadonlyError,
     ParameterTypeError,
     ParameterWrittenError,
 )
-from .utils import HierarchicalName, hierarchical_name_as_sequence
 
 if TYPE_CHECKING:  # pragma: no cover
     from . import regions  # pylint: disable=cyclic-import
 
 # pylint: disable=protected-access
 # pylint: disable=too-many-instance-attributes
+
+HierarchicalName = Union[str, Sequence[str]]
+HIERARCHY_SEPARATOR = "|"
 
 
 class ParameterType(Enum):
@@ -38,7 +41,25 @@ class ParameterType(Enum):
         cls, timeseries_type: Union["ParameterType", str]
     ) -> "ParameterType":
         """
-        TODO Docs
+        Get time series type (i.e. `ParameterType.AVERAGE_TIMESERIES` or
+        `ParameterType.POINT_TIMESERIES`) from `ParameterType` or string value.
+
+        Parameters
+        ----------
+        timeseries_type
+            Value to convert to enum value (can be
+            ``"average"``/`ParameterType.AVERAGE_TIMESERIES` or
+            ``"point"``/`ParameterType.POINT_TIMESERIES`)
+
+        Returns
+        -------
+        ParameterType
+            Enum value
+
+        Raises
+        ------
+        ValueError
+            If `timeseries_type` is unknown string or unvalid enum value
         """
         if isinstance(timeseries_type, str):
             if timeseries_type.lower() == "average":
@@ -159,8 +180,9 @@ class _Parameter:
         Optional[_Parameter]
             Parameter of ``None`` if not found
         """
-        name = hierarchical_name_as_sequence(name)
         if name:
+            if isinstance(name, str):
+                name = name.split(HIERARCHY_SEPARATOR)
             res = self.children.get(name[0], None)
             if res is not None:
                 res = res.get_subparameter(name[1:])
@@ -334,6 +356,14 @@ class ParameterInfo:
 
     def ensure(self) -> None:
         """
-        TODO Docs
+        Ensure that parameter is not empty.
+
+        Raises
+        ------
+        ParameterEmptyError
+            If parameter is empty
         """
-        # TODO
+        if self.empty:
+            raise ParameterEmptyError(
+                "Parameter {} is required but empty".format(str(self._parameter))
+            )
