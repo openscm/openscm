@@ -45,7 +45,10 @@ class OpenSCM:
         ----------
         model
             Name of the SCM to run
-        TODO
+        input_parameters
+            Input `ParameterSet` to use (or a new one is used when this is ``None``)
+        output_parameters
+            Output `ParameterSet` to use (or a new one is used when this is ``None``)
 
         Raises
         ------

@@ -123,13 +123,11 @@ class DICE(Adapter):
             setattr(self._values, name, default)
             if unit is None:
                 # Non-scalar parameter
-                self._parameters.generic(("DICE", name), writable=True).value = default
+                self._parameters.generic(("DICE", name)).value = default
                 setattr(self._views, name, self._parameters.generic(("DICE", name)))
             else:
                 # Scalar parameter
-                self._parameters.scalar(
-                    ("DICE", name), unit, writable=True
-                ).value = default
+                self._parameters.scalar(("DICE", name), unit).value = default
                 setattr(
                     self._views, name, self._parameters.scalar(("DICE", name), unit)
                 )
@@ -166,11 +164,7 @@ class DICE(Adapter):
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
         self._views.mat = self._output.timeseries(
-            ("Pool", "CO2", "Atmosphere"),
-            "GtC",
-            time_points,
-            timeseries_type="point",
-            writable=True,
+            ("Pool", "CO2", "Atmosphere"), "GtC", time_points, timeseries_type="point"
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
@@ -179,7 +173,6 @@ class DICE(Adapter):
             "GtC",
             time_points,
             timeseries_type="point",
-            writable=True,
         )
 
         # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
@@ -188,7 +181,6 @@ class DICE(Adapter):
             "GtC",
             time_points,
             timeseries_type="point",
-            writable=True,
         )
 
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
@@ -197,7 +189,6 @@ class DICE(Adapter):
             "degC",
             time_points,
             timeseries_type="point",
-            writable=True,
         )
 
         # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
@@ -206,16 +197,11 @@ class DICE(Adapter):
             "degC",
             time_points,
             timeseries_type="point",
-            writable=True,
         )
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
         self._views.forc = self._output.timeseries(
-            ("Radiative Forcing", "CO2"),
-            "W/m^2",
-            time_points,
-            timeseries_type="point",
-            writable=True,
+            ("Radiative Forcing", "CO2"), "W/m^2", time_points, timeseries_type="point"
         )
 
     def _reset(self) -> None:

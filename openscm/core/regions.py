@@ -78,7 +78,7 @@ class _Region:
             self._children[name] = res
         return res
 
-    def get_subregion(self, name: parameters.HierarchicalName) -> Optional["_Region"]:
+    def get_subregion(self, name: "parameters.HierarchicalName") -> Optional["_Region"]:
         """
         Get a subregion of this region or ``None`` if not found.
 
@@ -123,7 +123,7 @@ class _Region:
         return res
 
     def get_parameter(
-        self, name: parameters.HierarchicalName
+        self, name: "parameters.HierarchicalName"
     ) -> Optional["parameters._Parameter"]:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.

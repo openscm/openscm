@@ -18,18 +18,14 @@ def _run_and_compare(test_adapter, filename):
     test_adapter.initialize_model_input()
     test_adapter.initialize_run_parameters(start_time, stop_time)
 
-    test_adapter._parameters.generic(
-        ("DICE", "forcoth_saturation_time"), writable=True
-    ).value = (start_time + 90 * YEAR)
+    test_adapter._parameters.generic(("DICE", "forcoth_saturation_time")).value = (
+        start_time + 90 * YEAR
+    )
     time_points = create_time_points(
         start_time, YEAR, timestep_count, ParameterType.AVERAGE_TIMESERIES
     )
     test_adapter._parameters.timeseries(
-        ("Emissions", "CO2"),
-        "GtCO2/a",
-        time_points,
-        timeseries_type="average",
-        writable=True,
+        ("Emissions", "CO2"), "GtCO2/a", time_points, timeseries_type="average"
     ).values = original_data.E.values[:timestep_count]
 
     test_adapter.reset()
@@ -84,5 +80,4 @@ class TestMyAdapter(_AdapterTester):
             "GtCO2/a",
             time_points_for_averages,
             timeseries_type="average",
-            writable=True,
         ).values = np.zeros(test_adapter._timestep_count)

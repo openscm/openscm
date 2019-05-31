@@ -247,9 +247,7 @@ def _from_ts(
     num_ts = len(df.columns)
     for c_name in columns:
         col = columns[c_name]
-        col = (
-            [col] if isinstance(col, str) else col
-        )  # type: ignore # mypy can't handle if
+        col = [col] if isinstance(col, str) else col
 
         if len(col) == num_ts:
             continue
@@ -502,17 +500,16 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             region = metadata.pop("region")
             unit = metadata.pop("unit")
 
-            parameterset.timeseries(  # type: ignore
+            parameterset.timeseries(
                 variable,
                 unit,
                 self.time_points,
                 region=region,
                 timeseries_type=ParameterType.POINT_TIMESERIES,
-                writable=True,
             ).values = vals.values
 
         for k, v in meta_values.iteritems():
-            parameterset.generic(k, writable=True).value = v  # type: ignore
+            parameterset.generic(k).value = v
 
         return parameterset
 

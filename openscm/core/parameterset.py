@@ -1,5 +1,5 @@
 """
-TODO Docs
+Bundling parameters in a parameter set.
 """
 from typing import Optional, Union
 
@@ -14,14 +14,7 @@ from .parameters import (
 )
 from .regions import _Region
 from .time import ExtrapolationType, InterpolationType
-from .views import (
-    GenericView,
-    ScalarView,
-    TimeseriesView,
-    WritableGenericView,
-    WritableScalarView,
-    WritableTimeseriesView,
-)
+from .views import GenericView, ScalarView, TimeseriesView
 
 
 class ParameterSet:
@@ -143,35 +136,29 @@ class ParameterSet:
         raise ValueError("No parameter name given")
 
     def scalar(
-        self,
-        name: HierarchicalName,
-        unit: str,
-        region: HierarchicalName = ("World",),
-        writable: bool = False,
+        self, name: HierarchicalName, unit: str, region: HierarchicalName = ("World",)
     ) -> ScalarView:
         """
         Get a view to a scalar parameter.
 
         The parameter is created as a scalar if not viewed so far.
 
-        Parameters # TODO docs
+        Parameters
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
-        region
-            Hierarchical name of the region
         unit
             Unit for the values in the view
+        region
+            Hierarchical name of the region
 
         Returns
         -------
         ScalarView
-            Read-only view to the parameter
+            View to the parameter
 
         Raises
         ------
-        ParameterReadonlyError
-            Parameter is read-only (e.g. because its parent has been written to)
         ParameterTypeError
             Parameter is not scalar
         ValueError
@@ -180,10 +167,6 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-
-        if writable:
-            parameter.attempt_write(ParameterType.SCALAR, unit)
-            return WritableScalarView(parameter, unit)
 
         parameter.attempt_read(ParameterType.SCALAR, unit)
         return ScalarView(parameter, unit)
@@ -194,7 +177,6 @@ class ParameterSet:
         unit: str,
         time_points: np.ndarray,
         region: HierarchicalName = ("World",),
-        writable: bool = False,
         timeseries_type: Union[ParameterType, str] = ParameterType.POINT_TIMESERIES,
         interpolation: Union[InterpolationType, str] = InterpolationType.LINEAR,
         extrapolation: Union[ExtrapolationType, str] = ExtrapolationType.NONE,
@@ -206,16 +188,16 @@ class ParameterSet:
         returned ParameterView's timeseries is adjusted such that its last value is
         equal to or less than ``stop_time``.
 
-        Parameters # TODO
+        Parameters
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
-        region
-            Hierarchical name of the region
         unit
             Unit for the values in the view
         time_points
             Time points of the timeseries
+        region
+            Hierarchical name of the region
         timeseries_type
             Time series type
         interpolation_type
@@ -242,34 +224,20 @@ class ParameterSet:
             name, self._get_or_create_region(region)
         )
 
-        if writable:
-            parameter.attempt_write(timeseries_type, unit, time_points)
-            return WritableTimeseriesView(
-                parameter,
-                unit,
-                time_points,
-                timeseries_type,
-                interpolation,
-                extrapolation,
-            )  # WritableTimeseriesView
-
         parameter.attempt_read(timeseries_type, unit, time_points)
         return TimeseriesView(
             parameter, unit, time_points, timeseries_type, interpolation, extrapolation
         )  # TimeseriesView
 
     def generic(
-        self,
-        name: HierarchicalName,
-        region: HierarchicalName = ("World",),
-        writable: bool = False,
+        self, name: HierarchicalName, region: HierarchicalName = ("World",)
     ) -> GenericView:
         """
         Get a view to a generic parameter.
 
         The parameter is created as a generic if not viewed so far.
 
-        Parameters # TODO docs
+        Parameters
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
@@ -285,8 +253,6 @@ class ParameterSet:
         ------
         ParameterAggregationError
             If parameter has child parameters and thus cannot be aggregated
-        ParameterReadonlyError
-            Parameter is read-only (e.g. because its parent has been written to)
         ParameterTypeError
             Parameter is not generic (scalar or timeseries)
         ValueError
@@ -295,10 +261,6 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-
-        if writable:
-            parameter.attempt_write(ParameterType.GENERIC)
-            return WritableGenericView(parameter)
 
         parameter.attempt_read(ParameterType.GENERIC)
         return GenericView(parameter)

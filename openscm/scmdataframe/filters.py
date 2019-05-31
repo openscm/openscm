@@ -7,7 +7,7 @@ Borrowed from pyam.utils
 import datetime
 import re
 import time
-from typing import Any, Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -79,14 +79,14 @@ def find_depth(
         def test(x):
             return level == x
 
-    elif level[-1] == "-":  # type: ignore  # already know level is str
-        _level = int(level[:-1])  # type: ignore  # already know level is str
+    elif level[-1] == "-":
+        _level = int(level[:-1])
 
         def test(x):
             return _level >= x
 
-    elif level[-1] == "+":  # type: ignore  # already know level is str
-        _level = int(level[:-1])  # type: ignore  # already know level is str
+    elif level[-1] == "+":
+        _level = int(level[:-1])
 
         def test(x):
             return _level <= x

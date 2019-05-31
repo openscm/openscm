@@ -175,7 +175,7 @@ def test_scalar_parameter_view(core):
     with pytest.raises(ParameterEmptyError):
         cs.value
     assert cs.empty
-    cs_writable = parameterset.scalar("Climate Sensitivity", "degF", writable=True)
+    cs_writable = parameterset.scalar("Climate Sensitivity", "degF")
     cs_writable.value = 68
     assert cs_writable.value == 68
     assert not cs.empty
@@ -193,17 +193,13 @@ def test_scalar_parameter_view_aggregation(core, start_time):
 
     parameterset = core.parameters
 
-    a_1_writable = parameterset.scalar(
-        ("Top", "a", "1"), "dimensionless", writable=True
-    )
+    a_1_writable = parameterset.scalar(("Top", "a", "1"), "dimensionless")
     a_1_writable.value = ta_1
 
-    a_2_writable = parameterset.scalar(
-        ("Top", "a", "2"), "dimensionless", writable=True
-    )
+    a_2_writable = parameterset.scalar(("Top", "a", "2"), "dimensionless")
     a_2_writable.value = ta_2
 
-    b_writable = parameterset.scalar(("Top", "b"), "dimensionless", writable=True)
+    b_writable = parameterset.scalar(("Top", "b"), "dimensionless")
     b_writable.value = tb
 
     a_1 = parameterset.scalar(("Top", "a", "1"), "dimensionless")
@@ -219,7 +215,7 @@ def test_scalar_parameter_view_aggregation(core, start_time):
     np.testing.assert_allclose(b.value, tb)
 
     with pytest.raises(ParameterReadonlyError):
-        parameterset.scalar(("Top", "a"), "dimensionless", writable=True)
+        parameterset.scalar(("Top", "a"), "dimensionless").value = 0
 
     total = parameterset.scalar(("Top"), "dimensionless")
     np.testing.assert_allclose(total.value, ta_1 + ta_2 + tb)
@@ -262,7 +258,6 @@ def test_timeseries_parameter_view(core, start_time, series):
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
         ),
         timeseries_type="average",
-        writable=True,
     )
     with pytest.raises(TimeseriesPointsValuesMismatchError):
         carbon_writable.values = inseries[::2]
@@ -298,7 +293,6 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             ParameterType.AVERAGE_TIMESERIES,
         ),
         timeseries_type="average",
-        writable=True,
     )
     fossil_industry_writable.values = fossil_industry_emms
 
@@ -312,7 +306,6 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             ParameterType.AVERAGE_TIMESERIES,
         ),
         timeseries_type="average",
-        writable=True,
     )
     fossil_energy_writable.values = fossil_energy_emms
 
@@ -326,7 +319,6 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             ParameterType.AVERAGE_TIMESERIES,
         ),
         timeseries_type="average",
-        writable=True,
     )
     land_writable.values = land_emms * 1000
 
@@ -386,7 +378,6 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
                 ParameterType.AVERAGE_TIMESERIES,
             ),
             timeseries_type="average",
-            writable=True,
         )
 
     land = parameterset.timeseries(
@@ -410,8 +401,7 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
                 ParameterType.AVERAGE_TIMESERIES,
             ),
             timeseries_type="average",
-            writable=True,
-        )
+        ).values = np.ndarray([])
 
     total = parameterset.timeseries(
         ("Emissions", "CO2"),
@@ -439,9 +429,7 @@ def test_generic_parameter_view(core):
     with pytest.raises(ParameterEmptyError):
         cs.value
     assert cs.empty
-    cs_writable = parameterset.generic(
-        ("Model Options", "Generic Option"), writable=True
-    )
+    cs_writable = parameterset.generic(("Model Options", "Generic Option"))
     cs_writable.value = "enabled"
     assert cs_writable.value == "enabled"
     assert not cs.empty

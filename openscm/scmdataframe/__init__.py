@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from ..core.parameters import ParameterInfo, ParameterType
+from ..core.parameters import ParameterInfo, ParameterType, _Parameter
 from ..core.parameterset import ParameterSet
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
@@ -30,7 +30,7 @@ class ScmDataFrame(ScmDataFrameBase):
     """
 
 
-def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
+def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     parameterset: ParameterSet,
     time_points: np.ndarray,
     model: str = "unspecified",
@@ -41,14 +41,15 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
     Get an `ScmDataFrame` from a `ParameterSet`.
 
     An ScmDataFrame is a view with a common time index for all time series. All metadata
-    in OpenSCM must be represented as Generic parameters with in the `World` region. TODO this is really not good
+    in the ParameterSet must be represented as Generic parameters with in the `World`
+    region. TODO: We should really improve on that
 
-    Parameters TODO adjust
+    Parameters
     ----------
-    core
-        OpenSCM object containing time series and optional metadata.
+    parameterset
+        `ParameterSet` containing time series and optional metadata.
     time_points
-        List of OpenSCM time values to which all timeseries will be interpolated.
+        Time points to which all timeseries will be interpolated.
     model
         Default value for the model metadata value. This value is only used if the
         `model` parameter is not found.
@@ -68,12 +69,12 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
     Returns
     -------
     :obj:`ScmDataFrame`
-        ``ScmDataFrame`` containing the data from ``core``
+        `ScmDataFrame` containing the data from `parameterset`
     """
-    time_points = np.asarray(time_points, dtype="datetime64[s]")  # TODO necessary?
+    time_points = np.asarray(time_points, dtype="datetime64[s]")
 
-    def walk_parameters(  # type: ignore
-        para, past=()
+    def walk_parameters(
+        para: _Parameter, past: Tuple[str, ...] = ()
     ) -> Dict[Tuple, ParameterInfo]:
         md = {}
         full_para_name = past + (para.name,)

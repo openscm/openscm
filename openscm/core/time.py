@@ -95,7 +95,7 @@ def _parse_datetime(inp: np.ndarray) -> np.ndarray:
 
 def _format_datetime(dts: np.ndarray) -> np.ndarray:
     """
-    Convert a list into a set of ``datetime.datetime``'s. TODO
+    Convert an array to an array of ``np.datetime64``.
 
     Parameters
     ----------
@@ -104,13 +104,13 @@ def _format_datetime(dts: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    :obj:`list` of :obj:`datetime.datetime`
-        Converted ``datetime.datetime``'s
+    np.ndarray
+        Converted array of `np.datetime64`
 
     Raises
     ------
     ValueError
-        If one of the values in ``dts`` cannot be converted to ``datetime.datetime``
+        If one of the values in ``dts`` cannot be converted to ``np.datetime64``
     """
     if len(dts) <= 0:  # pylint: disable=len-as-condition
         return np.array([], dtype="datetime64[s]")
@@ -137,6 +137,7 @@ class TimePoints:  # TODO track type of timeseries
     """
 
     _values: np.ndarray
+    """TODO"""
 
     def __init__(self, values):
         """
@@ -146,13 +147,13 @@ class TimePoints:  # TODO track type of timeseries
 
     @property
     def values(self) -> np.ndarray:
-        """TODO
-        Get time points as Python datetimes.
+        """
+        Get time points.
 
         Returns
         -------
-        :obj:`np.array` of :obj:`datetime.datetime`
-            Datetime representation of each time point
+        :obj:`np.array` of :obj:`np.datetime64`
+            Time points
         """
         return self._values
 
@@ -504,7 +505,7 @@ class TimeseriesConverter:
             Length of the time series is too short to convert
         InsufficientDataError
             Target time points are outside the source time points and
-            ``self._extrapolation_type`` is ``ExtrapolationType.None``
+            ``self._extrapolation_type`` is ``ExtrapolationType.NONE``
 
         Returns
         -------
