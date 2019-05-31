@@ -83,7 +83,7 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
     ``Radiative Forcing``, ``Volcanic``
     ``Radiative Forcing``, ``Solar``
     ``Radiative Forcing``, ``External``
-    ``X to Y Flux``,,, "mass / time", "See :ref:`material_fluxes`"
+    ``<X> to <Y> Flux``,,, "mass / time", "See :ref:`material_fluxes`"
     ``Surface Temperature``,,, "temperature", "Surface air temperature i.e. ``tas``"
     ``Ocean Temperature``,,, "temperature", "Surface ocean temperature i.e. ``tos``"
     ``Ocean Heat Content``,,, "energy"
@@ -158,9 +158,9 @@ Material Fluxes
 ***************
 
 These variables can be used to store the flux of material within the
-model. They should be of the form ``X to Y Flux`` where the material
-is flowing from ``X`` into ``Y`` (and hence negative values represent
-flows from ``Y`` into ``X``):
+model. They should be of the form ``<X> to <Y> Flux`` where the
+material is flowing from ``<X>`` into ``<Y>`` (and hence negative
+values represent flows from ``<Y>`` into ``<X>``):
 
 - ``Land to Air Flux|CO2|Permafrost`` (mass carbon / time) - land to
   air flux of |CO2| from permafrost
@@ -175,14 +175,26 @@ which are higher in the hierarchy are the sum of all the regions which
 are one level below them in the hierarchy (be careful of this when
 looking at e.g. |CO2| concentration data at a regional level).
 
-The hemispheric regions should be fairly obvious and well-defined.
-The land/ocean split is somewhat fuzzily defined as the transition between land and ocean does not have a precise definition.
-We don't provide a clear definition because a) there isn't an agreed one in the literature and b) no simple climate model is detailed enough for the slight fuzziness around these definitions to matter.
-We choose to put the hemispheres before the ocean/land split in the hierarchy because it makes more sense to us but are happy to discuss further if desired (raise an issue).
+The hemispheric regions should be fairly obvious and well-defined. The
+land/ocean split is somewhat fuzzily defined as the transition between
+land and ocean does not have a precise definition. We don't provide a
+clear definition because a) there isn't an agreed one in the
+literature and b) no simple climate model is detailed enough for the
+slight fuzziness around these definitions to matter. We choose to put
+the hemispheres before the ocean/land split in the hierarchy because
+it makes more sense to us but are happy to discuss further if desired
+(raise an issue).
 
-Descriptions of the rest of the regions can be found in the 'Description' column below.
+Descriptions of the rest of the regions can be found in the
+'Description' column below.
 
-**Warning** Be careful, if you mix multiple regional conventions (e.g. reporting both ``("World", "Land")`` and ``("World", "R5ASIA")``), then your ``("World")`` total will double count some quantities and so may provide misleading information. There is no way for OpenSCM to reasonably keep track of what overlaps with what so we can't automate this process (if you think you have an idea of how to do this, please make a PR :D).
+**Warning** Be careful, if you mix multiple regional conventions (e.g.
+reporting both ``("World", "Land")`` and ``("World", "R5ASIA")``),
+then your ``("World")`` total will double count some quantities and so
+may provide misleading information. There is no way for OpenSCM to
+reasonably keep track of what overlaps with what so we can't automate
+this process (if you think you have an idea of how to do this, please
+make a PR :D).
 
 .. csv-table:: Gases
     :header: "Name 0", "Name 1", "Name 2", "Description"
