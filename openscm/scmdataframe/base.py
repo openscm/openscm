@@ -233,7 +233,10 @@ def _from_ts(  # pylint: disable=missing-return-doc
     if not isinstance(df, pd.DataFrame):
         df = pd.DataFrame(df)
     if index is not None:
-        df.index = index
+        if isinstance(index, np.ndarray):
+            df.index = TimePoints(index).to_index()
+        else:
+            df.index = index
 
     # format columns to lower-case and check that all required columns exist
     if not set(REQUIRED_COLS).issubset(columns.keys()):
@@ -373,8 +376,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 raise TypeError(error_msg)
             # mypy doesn't recognise type control in `if` statements
             (_df, _meta) = _read_file(data, **kwargs)
-        self._time_index = TimePoints(_df.index.values)
-        _df.index = self._time_index.to_index()
+        self._time_points = TimePoints(_df.index.values)
+        _df.index = self._time_points.to_index()
         _df = _df.astype(float)
 
         self._data, self._meta = (_df, _meta)
@@ -416,9 +419,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         _key_check = [key] if is_str(key) or not isinstance(key, Iterable) else key
         if key == "time":
-            return pd.Series(self._time_index.to_index(), dtype="object")
+            return pd.Series(self._time_points.to_index(), dtype="object")
         if key == "year":
-            return pd.Series(self._time_index.years())
+            return pd.Series(self._time_points.years())
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
 
@@ -434,8 +437,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         if key == "time":
             # TODO: double check if this will actually do what we want
-            self._time_index = TimePoints(value)
-            self._data.index = self._time_index.to_index()
+            self._time_points = TimePoints(value)
+            self._data.index = self._time_points.to_index()
             return value
         return self.set_meta(value, name=key)
 
@@ -699,19 +702,19 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                     separator=self.data_hierarchy_separator,
                 ).values
             elif col == "year":
-                keep_ts &= years_match(self._time_index.years(), values)
+                keep_ts &= years_match(self._time_points.years(), values)
 
             elif col == "month":
-                keep_ts &= month_match(self._time_index.months(), values)
+                keep_ts &= month_match(self._time_points.months(), values)
 
             elif col == "day":
                 keep_ts &= self._day_match(values)
 
             elif col == "hour":
-                keep_ts &= hour_match(self._time_index.hours(), values)
+                keep_ts &= hour_match(self._time_points.hours(), values)
 
             elif col == "time":
-                keep_ts &= datetime_match(self._time_index.values, values)
+                keep_ts &= datetime_match(self._time_points.values, values)
 
             elif col == "level":
                 if "variable" not in filters.keys():
@@ -739,9 +742,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             wday = False
 
         if wday:
-            days = self._time_index.weekdays()
+            days = self._time_points.weekdays()
         else:  # ints or list of ints
-            days = self._time_index.days()
+            days = self._time_points.days()
 
         return day_match(days, values)
 
@@ -901,7 +904,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     def interpolate(  # pylint: disable=too-many-locals
         self,
-        target_times: List[Union[datetime.datetime, int]],
+        target_times: Union[np.ndarray, List[Union[datetime.datetime, int]]],
         interpolation_type: InterpolationType = InterpolationType.LINEAR,
         extrapolation_type: ExtrapolationType = ExtrapolationType.CONSTANT,
     ) -> ScmDataFrameBase:

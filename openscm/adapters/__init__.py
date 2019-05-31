@@ -5,6 +5,8 @@ Module including all model adapters shipped with OpenSCM.
 from abc import ABCMeta, abstractmethod
 from typing import Dict, Optional
 
+import numpy as np
+
 from ..core.parameterset import ParameterSet
 from ..errors import AdapterNeedsModuleError
 
@@ -24,11 +26,8 @@ class Adapter(metaclass=ABCMeta):
     output data back to a :class:`openscm.core.ParameterSet`.
     """
 
-    _current_time: int
-    """
-    Current time when using `step` (seconds since
-    ``1970-01-01 00:00:00``)
-    """
+    _current_time: np.datetime64
+    """ Current time when using `step`"""
 
     _initialized: bool
     """True if model has been initialized via :func:`_initialize_model`"""
@@ -39,17 +38,11 @@ class Adapter(metaclass=ABCMeta):
     _parameters: ParameterSet
     """Input parameter set"""
 
-    _start_time: int
-    """
-    Beginning of the time range to run over (seconds since
-    ``1970-01-01 00:00:00``)
-    """
+    _start_time: np.datetime64
+    """Beginning of the time range to run over"""
 
-    _stop_time: int
-    """
-    End of the time range to run over (including; seconds since
-    ``1970-01-01 00:00:00``)
-    """
+    _stop_time: np.datetime64
+    """End of the time range to run over (including)"""
 
     def __init__(self, input_parameters: ParameterSet, output_parameters: ParameterSet):
         """
@@ -85,7 +78,9 @@ class Adapter(metaclass=ABCMeta):
             self._initialized = True
         self._initialize_model_input()
 
-    def initialize_run_parameters(self, start_time: int, stop_time: int) -> None:
+    def initialize_run_parameters(
+        self, start_time: np.datetime64, stop_time: np.datetime64
+    ) -> None:
         """
         Initialize parameters for the run.
 
@@ -95,11 +90,9 @@ class Adapter(metaclass=ABCMeta):
         Parameters
         ----------
         start_time
-            Beginning of the time range to run over (seconds since
-            ``1970-01-01 00:00:00``)
+            Beginning of the time range to run over
         stop_time
-            End of the time range to run over (including; seconds since
-            ``1970-01-01 00:00:00``)
+            End of the time range to run over (including)
         """
         if not self._initialized:
             self._initialize_model()
@@ -124,14 +117,14 @@ class Adapter(metaclass=ABCMeta):
         """
         self._run()
 
-    def step(self) -> int:
+    def step(self) -> np.datetime64:
         """
         Do a single time step.
 
         Returns
         -------
-        int
-            Current time (seconds since ``1970-01-01 00:00:00``)
+        np.datetime64
+            Current time
         """
         self._step()
         return self._current_time

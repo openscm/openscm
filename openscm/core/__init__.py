@@ -5,6 +5,10 @@ values. Mapping of :ref:`parameter names <parameter-hierarchy>` and :ref:`units 
 is done internally.
 """
 
+from typing import Optional
+
+import numpy as np
+
 from ..adapters import Adapter, load_adapter
 from .parameterset import ParameterSet
 
@@ -70,47 +74,45 @@ class OpenSCM:
         """
         return self._input_parameters
 
-    def reset_stepping(self, start_time: int, stop_time: int) -> None:
+    def reset_stepping(
+        self, start_time: np.datetime64, stop_time: np.datetime64
+    ) -> None:
         """
         Reset the model before starting stepping.
 
         Parameters
         ----------
         start_time
-            Beginning of the time range to run over (seconds since
-            ``1970-01-01 00:00:00``)
+            Beginning of the time range to run over
         stop_time
-            End of the time range to run over (including; seconds since
-            ``1970-01-01 00:00:00``)
+            End of the time range to run over (including)
         """
         self._model.initialize_model_input()
         self._model.initialize_run_parameters(start_time, stop_time)
         self._model.reset()
 
-    def run(self, start_time: int, stop_time: int) -> None:
+    def run(self, start_time: np.datetime64, stop_time: np.datetime64) -> None:
         """
         Run the model over the full time range.
 
         Parameters
         ----------
         start_time
-            Beginning of the time range to run over (seconds since
-            ``1970-01-01 00:00:00``)
+            Beginning of the time range to run over
         stop_time
-            End of the time range to run over (including; seconds since
-            ``1970-01-01 00:00:00``)
+            End of the time range to run over (including)
         """
         self.reset_stepping(start_time, stop_time)
         self._model.run()
 
-    def step(self) -> int:
+    def step(self) -> np.datetime64:
         """
         Do a single time step.
 
         Returns
         -------
         int
-            Current time (seconds since ``1970-01-01 00:00:00``)
+            Current time
         """
         # TODO check if reset_stepping has been called
         return self._model.step()

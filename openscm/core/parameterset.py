@@ -182,7 +182,7 @@ class ParameterSet:
         self,
         name: HierarchicalName,
         unit: str,
-        time_points: Sequence[int],
+        time_points: np.ndarray,
         region: HierarchicalName = ("World",),
         writable: bool = False,
         timeseries_type: Union[ParameterType, str] = ParameterType.POINT_TIMESERIES,
@@ -205,7 +205,7 @@ class ParameterSet:
         unit
             Unit for the values in the view
         time_points
-            Time points of the timeseries (seconds since ``1970-01-01 00:00:00``)
+            Time points of the timeseries
         timeseries_type
             Time series type
         interpolation_type

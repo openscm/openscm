@@ -10,7 +10,7 @@ dedicated `Jupyter Notebook
 
 import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -67,9 +67,36 @@ class InterpolationType(Enum):
         return interpolation_type
 
 
-def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:  # TODO types
+def _float_year_to_datetime(inp: float) -> np.datetime64:
+    year = int(inp)
+    fractional_part = inp - year
+    return np.datetime64(  # pylint: disable=too-many-function-args
+        year - 1970, "Y"
+    ) + np.timedelta64(  # pylint: disable=too-many-function-args
+        int(
+            (
+                datetime.datetime(year + 1, 1, 1) - datetime.datetime(year, 1, 1)
+            ).total_seconds()
+            * fractional_part
+        ),
+        "s",
+    )
+
+
+_ufunc_float_year_to_datetime = np.frompyfunc(_float_year_to_datetime, 1, 1)
+_ufunc_str_to_datetime = np.frompyfunc(parser.parse, 1, 1)
+
+
+def _parse_datetime(inp: np.ndarray) -> np.ndarray:
+    try:
+        return _ufunc_float_year_to_datetime(inp.astype(float))
+    except (TypeError, ValueError):
+        return _ufunc_str_to_datetime(inp)
+
+
+def _format_datetime(dts: np.ndarray) -> np.ndarray:
     """
-    Convert a list into a set of ``datetime.datetime``'s.
+    Convert a list into a set of ``datetime.datetime``'s. TODO
 
     Parameters
     ----------
@@ -86,38 +113,20 @@ def _format_datetime(dts: List[Any]) -> List[datetime.datetime]:  # TODO types
     ValueError
         If one of the values in ``dts`` cannot be converted to ``datetime.datetime``
     """
-    empty_input = not dts.size if isinstance(dts, np.ndarray) else not dts  # TODO
-    if empty_input:
-        return np.asarray([])
-    dt_0 = dts[0]
+    if len(dts) <= 0:  # pylint: disable=len-as-condition
+        return np.array([], dtype="datetime64[s]")
 
-    print("dtype", np.asarray(dts).dtype)  # TODO proper type recognition
-    print("type", type(dt_0))
-
-    if isinstance(dt_0, np.datetime64):
+    dtype = dts.dtype.type
+    if issubclass(dtype, np.object):
+        dtype = np.dtype(type(dts[0])).type
+    if issubclass(dtype, np.datetime64):
         return np.asarray(dts, dtype="datetime64[s]")
-    if is_floatlike(dt_0):
-
-        def convert_float_to_datetime(inp):
-            year = int(inp)
-            fractional_part = inp - year
-            base = datetime.datetime(year, 1, 1)
-            return base + datetime.timedelta(
-                seconds=(base.replace(year=year + 1) - base).total_seconds()
-                * fractional_part
-            )
-
-        return np.asarray(
-            [convert_float_to_datetime(float(t)) for t in dts], dtype="datetime64[s]"
-        )
-    if isinstance(dt_0, (int, np.int64)) or is_floatlike(dt_0):
-        return (
-            (np.asarray(dts, dtype=float) - 1970)
-            .astype("datetime64[Y]")
-            .astype("datetime64[s]")
-        )
-    if isinstance(dt_0, str):
-        return np.asarray([parser.parse(d) for d in dts], dtype="datetime64[s]")
+    if issubclass(dtype, np.floating):
+        return _ufunc_float_year_to_datetime(dts).astype("datetime64[s]")
+    if issubclass(dtype, np.integer):
+        return (np.asarray(dts) - 1970).astype("datetime64[Y]").astype("datetime64[s]")
+    if issubclass(dtype, str):
+        return _parse_datetime(dts).astype("datetime64[s]")
     return np.asarray(dts, dtype="datetime64[s]")
 
 
@@ -227,7 +236,7 @@ def create_time_points(  # TODO get rid of
     Parameters
     ----------
     start_time
-        First time point of the timeseries (seconds since ``1970-01-01 00:00:00``)
+        First time point of the timeseries
     period_length
         Period length (in seconds)
     points_num
@@ -247,11 +256,8 @@ def create_time_points(  # TODO get rid of
         else points_num
     )
     end_time_output = start_time + (points_num_output - 1) * period_length
-    # TODO return np.linspace(start_time, end_time_output, points_num_output)
-    return pd.date_range(
-        datetime.datetime.fromtimestamp(start_time),
-        datetime.datetime.fromtimestamp(end_time_output),
-        periods=points_num_output,
+    return np.linspace(
+        start_time, end_time_output, points_num_output, dtype="datetime64[s]"
     )
 
 
