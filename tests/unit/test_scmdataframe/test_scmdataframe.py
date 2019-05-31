@@ -1845,10 +1845,11 @@ def test_scmdataframe_to_parameterset_raises(test_scm_df):
     with pytest.raises(ValueError, match="Not all timeseries have identical metadata"):
         test_scm_df.to_parameterset()
 
-    # make sure single scenario passes
-    test_scm_df.filter(scenario="a_scenario2").to_parameterset()
-    # as long as this passes we're happy, test of conversion details is in
-    # `test_convert_openscm_to_scmdataframe`
+    with pytest.raises(
+        ValueError,
+        match="Only input data can be converted to a ParameterSet. Remove climate_model first",
+    ):
+        test_scm_df.filter(scenario="a_scenario2").to_parameterset()
 
 
 def test_convert_openscm_to_scmdataframe(rcp26):
