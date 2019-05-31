@@ -31,41 +31,26 @@ class _AdapterTester:
         Test that initalizing model input does as intended.
         """
         assert not test_adapter._initialized
-        # TODO test for missing but mandatory parameter
         test_adapter.initialize_model_input()
         assert test_adapter._initialized
-
-    def test_initialize_model_input_non_model_parameter(self, test_adapter):
-        tname = ("junk",)
-        test_adapter._parameters.scalar(tname, "K", writable=True).value = 4
-        test_adapter.initialize_model_input()
-        # TODO test that "junk" has not been used
 
     def test_initialize_run_parameters(self, test_adapter, test_run_parameters):
         """
         Test that initalizing run parameters does as intended.
         """
         assert not test_adapter._initialized
-        # TODO see test_initialize_model_input
         test_adapter.initialize_run_parameters(
             test_run_parameters.start_time, test_run_parameters.stop_time
         )
         assert test_adapter._initialized
 
-    def test_initialize_run_parameters_non_model_parameter(
-        self, test_adapter, test_run_parameters
-    ):
-        tname = ("junk",)
-        test_adapter._parameters.scalar(tname, "K", writable=True).value = 4
-        test_adapter.initialize_run_parameters(
-            test_run_parameters.start_time, test_run_parameters.stop_time
-        )
-        # TODO see test_initialize_model_input_non_model_parameter
-
     def test_run(self, test_adapter, test_run_parameters):
         test_adapter.initialize_model_input()
         test_adapter.initialize_run_parameters(
             test_run_parameters.start_time, test_run_parameters.stop_time
+        )
+        self.prepare_run_input(
+            test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
         )
         test_adapter.reset()
         test_adapter.run()
@@ -74,6 +59,9 @@ class _AdapterTester:
         test_adapter.initialize_model_input()
         test_adapter.initialize_run_parameters(
             test_run_parameters.start_time, test_run_parameters.stop_time
+        )
+        self.prepare_run_input(
+            test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
         )
         test_adapter.reset()
         assert test_adapter._current_time == test_run_parameters.start_time

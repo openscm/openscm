@@ -224,14 +224,10 @@ def load_adapter(name: str) -> type:
     adapter: Optional[type] = None
 
     try:
-        if name in ["DICE", "unspecified", "a_model"]:  # TODO
-            adapter = Adapter
+        if name == "DICE":
+            from .dice import DICE
 
-        # TODO remove once we have at least one real adapter in here
-        elif name == "MODELNAME":
-            from .modelname import MODELNAME
-
-            adapter = MODELNAME
+            adapter = DICE
 
         """
         When implementing an additional adapter, include your adapter NAME here as:
