@@ -87,9 +87,7 @@ class DICE(Adapter):
     Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
     model.
 
-    TODO Recalibration to different period lengths
-    TODO recalculate increase to absolute values
-    TODO What about timeseries parameters when run times change?
+    TODO Use original calibration
     """
 
     _timestep: int
@@ -183,7 +181,7 @@ class DICE(Adapter):
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
         self._views.mat = self._output.get_writable_timeseries_view(
-            ("Concentration", "Atmosphere"),
+            ("Pool", "CO2", "Atmosphere"),
             ("World",),
             "GtC",
             time_points,
@@ -194,7 +192,7 @@ class DICE(Adapter):
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
         self._views.ml = self._output.get_writable_timeseries_view(
-            ("Concentration", "Ocean", "lower"),
+            ("Pool", "CO2", "Ocean", "lower"),
             ("World",),
             "GtC",
             time_points,
@@ -205,7 +203,7 @@ class DICE(Adapter):
 
         # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
         self._views.mu = self._output.get_writable_timeseries_view(
-            ("Concentration", "Ocean", "shallow"),
+            ("Pool", "CO2", "Ocean", "shallow"),
             ("World",),
             "GtC",
             time_points,
@@ -216,7 +214,7 @@ class DICE(Adapter):
 
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
         self._views.tatm = self._output.get_writable_timeseries_view(
-            ("Temperature Increase", "Atmosphere"),
+            ("Surface Temperature", "Increase"),
             ("World",),
             "degC",
             time_points,
@@ -227,7 +225,7 @@ class DICE(Adapter):
 
         # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
         self._views.tocean = self._output.get_writable_timeseries_view(
-            ("Temperature Increase", "Ocean", "lower"),
+            ("Ocean Temperature", "Increase"),
             ("World",),
             "degC",
             time_points,
@@ -238,7 +236,7 @@ class DICE(Adapter):
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
         self._views.forc = self._output.get_writable_timeseries_view(
-            ("Radiative forcing",),
+            ("Radiative Forcing", "CO2"),
             ("World",),
             "W/m^2",
             time_points,
