@@ -26,7 +26,7 @@ from pandas.tseries.offsets import (
 def apply_dt(func, self):
     """
     Apply a wrapper which keeps the result as a datetime instead of converting to
-    ``pd.Timestamp``.
+    `pd.Timestamp`.
 
     This decorator is a simplified version of pandas.tseries.offsets.apply_wraps. It is
     required to avoid running into errors when our time data is outside panda's limited
@@ -87,11 +87,11 @@ def apply_rollback(obj):
 
 def to_offset(rule: str) -> DateOffset:
     """
-    Return a wrapped ``DateOffset`` class for a given rule.
+    Return a wrapped `DateOffset` class for a given rule.
 
-    The ``DateOffset`` class is manipulated to return datetimes instead of
-    pd.Timestamps, allowing it to handle times outside panda's limited time range of
-    1677-09-22 00:12:43.145225 to 2262-04-11 23:47:16.854775807, see `this discussion
+    The `DateOffset` class is manipulated to return datetimes instead of pd.Timestamps,
+    allowing it to handle times outside panda's limited time range of 1677-09-22
+    00:12:43.145225 to 2262-04-11 23:47:16.854775807, see `this discussion
     <https://stackoverflow.com/a/37226672>`_.
 
     Parameters
@@ -103,7 +103,7 @@ def to_offset(rule: str) -> DateOffset:
     Returns
     -------
     :obj:`DateOffset`
-        Wrapped ``DateOffset`` class for the given rule
+        Wrapped `DateOffset` class for the given rule
 
     Raises
     ------
@@ -149,8 +149,8 @@ def generate_range(
         mentioned above and illustrated in the examples).
 
     end
-        Last datetime from which to generate the range (noting roll forward
-        mentioned above and illustrated in the examples).
+        Last datetime from which to generate the range (noting roll forward mentioned
+        above and illustrated in the examples).
 
     offset
         Offset object for determining the timesteps. An offsetter obtained from
@@ -164,7 +164,7 @@ def generate_range(
     Raises
     ------
     ValueError
-        Offset does not result in increasing ``datetime.datetime``'s
+        Offset does not result in increasing `datetime.datetime`'s
 
     Examples
     --------

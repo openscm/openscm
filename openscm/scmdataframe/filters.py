@@ -10,13 +10,13 @@ import time
 from typing import Any, Iterable, List, Optional, Union
 
 import numpy as np
-import pandas as pd  # noqa: F401
+import pandas as pd
 import six
 
-DEFAULT_SEPARATOR = "|"
+from ..core.parameters import HIERARCHY_SEPARATOR
 
 
-def is_str(s: Any) -> bool:
+def is_str(s: Any) -> bool:  # TODO get rid off as we only support py3.7
     """
     Determine, for our use cases, whether a quantity is a string or not.
 
@@ -49,8 +49,8 @@ def is_in(vals: List, items: List) -> np.ndarray:
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array of the same length as ``vals`` where the element is True if the
-        corresponding element of ``vals`` is in ``items`` and False otherwise
+        Array of the same length as `vals` where the element is True if the
+        corresponding element of `vals` is in `items` and False otherwise
     """
     return np.array([v in items for v in vals])
 
@@ -59,7 +59,7 @@ def find_depth(
     meta_col: pd.Series,
     s: str,
     level: Union[int, str],
-    separator: str = DEFAULT_SEPARATOR,
+    separator: str = HIERARCHY_SEPARATOR,
 ) -> np.ndarray:
     """
     Find all values which match given depth from a filter keyword.
@@ -128,7 +128,7 @@ def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
     level: Optional[Union[str, int]] = None,
     regexp: bool = False,
     has_nan: bool = True,
-    separator: str = DEFAULT_SEPARATOR,
+    separator: str = HIERARCHY_SEPARATOR,
 ) -> np.ndarray:
     """
     Filter data by matching metadata columns to given patterns.
@@ -142,17 +142,17 @@ def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
         Values to match
 
     level
-        Passed to ``find_depth``. For usage, see docstring of ``find_depth``.
+        Passed to `find_depth`. For usage, see docstring of `find_depth`.
 
     regexp
         If True, match using regexp rather than pseudo regexp syntax developed by the
         `pyam <https://github.com/IAMconsortium/pyam>`_ developers.
 
     has_nan
-        If True, convert all nan in ``meta_col`` to empty string before applying
-        filters. This means that "" and "*" will match rows with ``np.nan``. If False,
-        the conversion is not applied and so a search in a string column which contains
-        ``np.nan`` will result in a ``TypeError``.
+        If True, convert all nan in `meta_col` to empty string before applying filters.
+        This means that "" and "*" will match rows with `np.nan`. If False, the
+        conversion is not applied and so a search in a string column which contains
+        `np.nan` will result in a `TypeError`.
 
     separator
         String used to separate the hierarchy levels in values. Defaults to '|'
@@ -166,7 +166,7 @@ def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
     ------
     TypeError
         Filtering is performed on a string metadata column which contains
-        ``np.nan`` and ``has_nan`` is ``False``
+        `np.nan` and `has_nan` is ``False``
     """
     matches = np.array([False] * len(meta_col))
     _values = [values] if not isinstance(values, Iterable) or is_str(values) else values
@@ -334,12 +334,12 @@ def time_match(
         Times to match
 
     conv_codes
-        If ``times`` contains strings, conversion codes to try passing to
-        ``time.strptime`` to convert ``times`` to ``datetime.datetime``'s
+        If `times` contains strings, conversion codes to try passing to `time.strptime`
+        to convert `times` to `datetime.datetime`'s
 
     strptime_attr
-        If ``times`` contains strings, the ``datetime.datetime`` attribute to finalize
-        the conversion of strings to integers
+        If `times` contains strings, the `datetime.datetime` attribute to finalize the
+        conversion of strings to integers
 
     name
         Name of the part of a datetime you're trying to extract, used to produce

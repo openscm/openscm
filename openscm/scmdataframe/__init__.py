@@ -8,8 +8,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from .. import OpenSCM
 from ..core.parameters import ParameterInfo, ParameterType
+from ..core.parameterset import ParameterSet
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
 
@@ -31,19 +31,19 @@ class ScmDataFrame(ScmDataFrameBase):
 
 
 def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
-    core: OpenSCM,
-    time_points: List[int],
+    parameterset: ParameterSet,
+    time_points: np.ndarray,
     model: str = "unspecified",
     scenario: str = "unspecified",
     climate_model: str = "unspecified",
 ) -> ScmDataFrame:
     """
-    Get an ScmDataFrame from an OpenSCM object.
+    Get an `ScmDataFrame` from a `ParameterSet`.
 
     An ScmDataFrame is a view with a common time index for all time series. All metadata
-    in OpenSCM must be represented as Generic parameters with in the `World` region.
+    in OpenSCM must be represented as Generic parameters with in the `World` region. TODO this is really not good
 
-    Parameters
+    Parameters TODO adjust
     ----------
     core
         OpenSCM object containing time series and optional metadata.
@@ -70,16 +70,16 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
     :obj:`ScmDataFrame`
         ``ScmDataFrame`` containing the data from ``core``
     """
-    time_points = np.asarray(time_points)
+    time_points = np.asarray(time_points, dtype="datetime64[s]")  # TODO necessary?
 
     def walk_parameters(  # type: ignore
-        c: OpenSCM, para, past=()
+        para, past=()
     ) -> Dict[Tuple, ParameterInfo]:
         md = {}
         full_para_name = past + (para.name,)
         if para.children:
             for (_, child_para) in para.children.items():
-                md.update(walk_parameters(c, child_para, past=full_para_name))
+                md.update(walk_parameters(child_para, past=full_para_name))
             return md
 
         md[(full_para_name, para.region.full_name)] = ParameterInfo(para)
@@ -102,8 +102,8 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
     for (
         _,
         value,
-    ) in core.parameters._root._parameters.items():  # pylint: disable=protected-access
-        root_params.update(walk_parameters(core, value))
+    ) in parameterset._root._parameters.items():  # pylint: disable=protected-access
+        root_params.update(walk_parameters(value))
 
     for (param_name, region), p_info in root_params.items():
         # All meta values are stored as generic value (AKA no units)
@@ -113,10 +113,10 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals # TODO
                     "Only generic types with Region=World can be extracted"
                 )
             metadata[parameter_name_to_scm(param_name)] = [
-                core.parameters.generic(param_name, region=region).value
+                parameterset.generic(param_name, region=region).value
             ]
         else:  # TODO scalar parameters
-            ts = core.parameters.timeseries(  # type: ignore
+            ts = parameterset.timeseries(  # type: ignore
                 param_name,
                 p_info.unit,
                 time_points,
