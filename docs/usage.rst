@@ -62,14 +62,11 @@ corresponding period. This implies that values that are not averages
 but, for instance, absolute values, such as emissions need to be given
 as a rate, e.g. ``tC/a`` rather than ``tC``.
 
-In the core API time points are given in seconds since ``1970-01-01
-00:00:00``, while time period lengths are specified in seconds.
-
 
 Main interface
 --------------
 
-(see :ref:`core-reference` for an API reference)
+(see :ref:`main-api-reference` for an API reference)
 
 Setting up a model run
 **********************
@@ -80,13 +77,8 @@ specifying the underlying SCM and start and end time:
 .. code:: python
 
     from openscm import OpenSCM
-    from datetime import datetime, timedelta
 
-    start_time = datetime(2006, 1, 1).timestamp()
-    year_seconds = timedelta(365).total_seconds()
-    # use year_seconds since models do not account for leap years
-    stop_time = start_time + (2100 - 2006) * year_seconds
-    model_run = OpenSCM("DICE", start_time, stop_time)
+    model = OpenSCM("DICE")
 
 .. _get-set-parameters:
 
@@ -105,6 +97,9 @@ Unit and time frame have to be specified when requesting a
 :class:`~openscm.parameter_views.ParameterView` from the
 :class:`~openscm.OpenSCM`'s :class:`~openscm.core.ParameterSet`
 property called ``parameters`` using one of the following functions:
+
+..
+    TODO Update to new interface
 
 - :func:`~openscm.core.ParameterSet.get_scalar_view` returns a
   read-only view to a scalar ("number") parameter
@@ -194,7 +189,12 @@ function:
 
 .. code:: python
 
-    model_run.run()
+    import numpy as np
+
+    start_time = np.datetime64("2006-01-01")
+    stop_time = np.datetime64("2100-01-01")
+
+    model.run(start_time, stop_time)
 
 This tells the adapter for the particular SCM to get the necessary
 parameters in the format as expected by the model, while conversion
@@ -215,7 +215,7 @@ read-only :class:`~openscm.parameter_views.ParameterView` objects:
 
 .. code:: python
 
-    gmt = model_run.parameters.get_timeseries_view(
-        ("Temperature", "Surface"), ("World",), "degC", start_time, year_seconds
+    gmt = model_run.parameters.timeseries(
+        ("Surface Temperature", "Increase"), "degC", start_time, year_seconds
     )
-    print(gmt.get())
+    print(gmt.values)

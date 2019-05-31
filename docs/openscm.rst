@@ -1,7 +1,7 @@
-.. _core-reference:
+.. _main-api-reference:
 
-OpenSCM Core API
-----------------
+OpenSCM
+-------
 
 Core
 ****

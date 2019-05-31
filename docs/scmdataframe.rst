@@ -1,7 +1,7 @@
 .. _scmdataframe:
 
-OpenSCM ScmDataFrame API
-------------------------
+ScmDataFrame
+------------
 
 ScmDataFrame
 ************

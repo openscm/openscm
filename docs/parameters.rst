@@ -66,6 +66,8 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
 .. csv-table:: Standard parameters
     :header: "Parameter name 0", "Parameter name 1", "Parameter name 2", "Unit type", "Note"
 
+    ``Start Time``,,, `TimePoint` object, Time of the first time step of the model run
+    ``Stop Time``,,, `TimePoint` object, Time of the last time step of the model run
     ``Emissions``, ``<GAS>``,, "mass <GAS> / time"
     ``Atmospheric Concentrations``, ``<GAS>``,, "parts per X where X is million, billion, trillion etc.", "Aggregation possible, but does not always make sense"
     ``Pool``, ``<GAS>``,, "mass <GAS>"

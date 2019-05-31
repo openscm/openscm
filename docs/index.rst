@@ -30,11 +30,13 @@ Schema
     parameters
     fileformats
 
+..
+    TODO split into public and internals
 .. toctree::
     :maxdepth: 2
     :caption: API reference
 
-    core
+    openscm
     adapter
     errors
     units
