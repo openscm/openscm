@@ -1088,7 +1088,7 @@ def test_append_duplicates(test_scm_df):
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 7.0]
     npt.assert_array_equal(
-        res._time_index.years(), [2005, 2010, 2015, 2020, 2030, 2040]
+        res._time_points.years(), [2005, 2010, 2015, 2020, 2030, 2040]
     )
     npt.assert_almost_equal(obs, exp)
 
@@ -1103,7 +1103,7 @@ def test_append_duplicates_order_doesnt_matter(test_scm_df):
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 5.0]
     npt.assert_array_equal(
-        res._time_index.years(), [2005, 2010, 2015, 2020, 2030, 2040]
+        res._time_points.years(), [2005, 2010, 2015, 2020, 2030, 2040]
     )
     npt.assert_almost_equal(obs, exp)
 
@@ -1786,7 +1786,9 @@ def test_scmdataframe_to_parameterset(rcp26, assert_core):
     tstart_dt = tdata["time"].min()
 
     def get_comparison_time_for_year(yr):
-        return tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
+        return np.datetime64(
+            tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
+        )
 
     assert_core(
         9.14781,
@@ -1839,7 +1841,7 @@ def test_scmdataframe_to_parameterset(rcp26, assert_core):
     )
 
 
-def test_scmdataframe_to_parameterset_raises(test_scm_df): # TODO
+def test_scmdataframe_to_parameterset_raises(test_scm_df):
     with pytest.raises(ValueError, match="Not all timeseries have identical metadata"):
         test_scm_df.to_parameterset()
 
@@ -1849,7 +1851,7 @@ def test_scmdataframe_to_parameterset_raises(test_scm_df): # TODO
     # `test_convert_openscm_to_scmdataframe`
 
 
-def test_convert_openscm_to_scmdataframe(rcp26): # TODO
+def test_convert_openscm_to_scmdataframe(rcp26):
     tdata = rcp26
 
     intermediate = rcp26.to_parameterset()

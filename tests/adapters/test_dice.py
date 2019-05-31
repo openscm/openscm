@@ -6,7 +6,7 @@ from base import _AdapterTester
 
 from openscm.adapters.dice import DICE, YEAR
 from openscm.core.parameters import ParameterType
-from openscm.core.time import ExtrapolationType, InterpolationType, create_time_points
+from openscm.core.time import create_time_points
 
 
 def _run_and_compare(test_adapter, filename):

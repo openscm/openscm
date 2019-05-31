@@ -262,8 +262,8 @@ def test_adapter(request):
 
 @pytest.fixture
 def assert_core():
-    def check_func(expected, t, test_core, name, region, unit, time_points):
-        pview = test_core.parameters.timeseries(
+    def check_func(expected, t, test_parameterset, name, region, unit, time_points):
+        pview = test_parameterset.timeseries(
             name, unit, time_points, region=region, timeseries_type="point"
         )
         relevant_idx = (np.abs(time_points - t)).argmin()
@@ -413,15 +413,15 @@ def combo(request):
 def combo_df(request):
     combination = deepcopy(request.param)
     vals = combination._asdict()
-    df_dts = combination.source
+    source = combination.source
 
     # For average timeseries we drop the last time value so that the data and times are same length
     if combination.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
-        df_dts = df_dts[:-1]
+        assert source[-1] - source[-2] == source[-2] - source[-3]
+        source = source[:-1]
         vals["target"] = combination.target.copy()[:-1]
         assert len(vals["target"]) == len(combination.target_values)
-        assert len(df_dts) == len(combination.source_values)
+        assert len(source) == len(combination.source_values)
 
     df = ScmDataFrame(
         combination.source_values,
@@ -439,7 +439,7 @@ def combo_df(request):
                 )
             ],
         },
-        index=df_dts,
+        index=source,
     )
 
     return Combination(**vals), df
