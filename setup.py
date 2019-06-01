@@ -36,13 +36,22 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = ["numpy", "scipy", "pint", "pandas", "python-dateutil"]
+REQUIREMENTS_INSTALL = ["numpy>=1.7", "scipy", "pint", "pandas", "python-dateutil"]
 REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0"]
 REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov", "pyam-iamc>=0.2.0"]
 REQUIREMENTS_DOCS = ["sphinx>=1.8", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 REQUIREMENTS_DEV = (
-    ["black", "bandit", "coverage", "flake8", "isort", "mypy", "pydocstyle", "pylint"]
+    [
+        "black",
+        "bandit",
+        "coverage",
+        "flake8",
+        "isort",
+        "mypy",
+        "pydocstyle",
+        "pylint @ git+https://github.com/PyCQA/pylint.git@b1ee385",  # TODO: change when new release comes out
+    ]
     + REQUIREMENTS_NOTEBOOKS
     + REQUIREMENTS_TESTS
     + REQUIREMENTS_DOCS
