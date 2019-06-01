@@ -8,11 +8,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from ..core.parameters import (
-    ParameterInfo,
-    ParameterType,
-    _Parameter,
-)
+from ..core.parameters import ParameterInfo, ParameterType, _Parameter
 from ..core.parameterset import ParameterSet
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
