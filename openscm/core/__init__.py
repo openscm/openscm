@@ -46,14 +46,16 @@ class OpenSCM:
         model
             Name of the SCM to run
         input_parameters
-            Input `ParameterSet` to use (or a new one is used when this is ``None``)
+            Input :class:`ParameterSet` to use (or a new one is used when this is
+            ``None``)
         output_parameters
-            Output `ParameterSet` to use (or a new one is used when this is ``None``)
+            Output :class:`ParameterSet` to use (or a new one is used when this is
+            ``None``)
 
         Raises
         ------
         KeyError
-            No adapter for SCM named ``model`` found
+            No adapter for SCM named :obj:`model` found
         """
         self._input_parameters = (
             input_parameters if input_parameters is not None else ParameterSet()
@@ -127,5 +129,5 @@ class OpenSCM:
         int
             Current time
         """
-        # TODO check if reset_stepping has been called
+        # TODO: check if reset_stepping has been called
         return self._model.step()

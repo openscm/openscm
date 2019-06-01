@@ -1,11 +1,12 @@
 """
-A simplified version of pandas `DateOffset's
-https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects`
-which use datetime-like objects instead of pd.Timestamp.
+A simplified version of :class:`pandas.DateOffset`s which use datetime-like
+objects instead of :class:`pandas.Timestamp`.
 
-This differentiation allows for times which exceed the range of pd.Timestamp (see `here
-<https://stackoverflow.com/a/37226672>`__) which is particularly important for longer
-running models.
+This differentiation allows for times which exceed the range of :class`pandas.Timestamp`
+(see `here <https://stackoverflow.com/a/37226672>`__) which is particularly important
+for longer running models.
+
+TODO: use np.timedelta64 instead?
 """
 import datetime
 import functools
@@ -26,12 +27,13 @@ from pandas.tseries.offsets import (
 def apply_dt(func, self):
     """
     Apply a wrapper which keeps the result as a datetime instead of converting to
-    `pd.Timestamp`.
+    :class:`pd.Timestamp`.
 
-    This decorator is a simplified version of pandas.tseries.offsets.apply_wraps. It is
-    required to avoid running into errors when our time data is outside panda's limited
-    time range of 1677-09-22 00:12:43.145225 to 2262-04-11 23:47:16.854775807, see `this
-    discussion <https://stackoverflow.com/a/37226672>`_.
+    This decorator is a simplified version of
+    :func:`pandas.tseries.offsets.apply_wraps`. It is required to avoid running into
+    errors when our time data is outside panda's limited time range of 1677-09-22
+    00:12:43.145225 to 2262-04-11 23:47:16.854775807, see `this discussion
+    <https://stackoverflow.com/a/37226672>`_.
     """
     # should self be renamed in the function signature to something else, `ipt`?
     @functools.wraps(func)
@@ -87,12 +89,12 @@ def apply_rollback(obj):
 
 def to_offset(rule: str) -> DateOffset:
     """
-    Return a wrapped `DateOffset` class for a given rule.
+    Return a wrapped :class:`DateOffset` instance for a given rule.
 
-    The `DateOffset` class is manipulated to return datetimes instead of pd.Timestamps,
-    allowing it to handle times outside panda's limited time range of 1677-09-22
-    00:12:43.145225 to 2262-04-11 23:47:16.854775807, see `this discussion
-    <https://stackoverflow.com/a/37226672>`_.
+    The :class:`DateOffset` class is manipulated to return datetimes instead of
+    :class:`pd.Timestamp`, allowing it to handle times outside panda's limited time
+    range of 1677-09-22 00:12:43.145225 to 2262-04-11 23:47:16.854775807, see `this
+    discussion <https://stackoverflow.com/a/37226672>`_.
 
     Parameters
     ----------
@@ -102,8 +104,8 @@ def to_offset(rule: str) -> DateOffset:
 
     Returns
     -------
-    :obj:`DateOffset`
-        Wrapped `DateOffset` class for the given rule
+    :class:`DateOffset`
+        Wrapped :class:`DateOffset` class for the given rule
 
     Raises
     ------
@@ -154,7 +156,7 @@ def generate_range(
 
     offset
         Offset object for determining the timesteps. An offsetter obtained from
-        `openscm.scmdataframe.offset.to_offset` *must* be used.
+        :func`to_offset` *must* be used.
 
     Yields
     ------
@@ -164,7 +166,7 @@ def generate_range(
     Raises
     ------
     ValueError
-        Offset does not result in increasing `datetime.datetime`'s
+        Offset does not result in increasing :class`datetime.datetime`s
 
     Examples
     --------

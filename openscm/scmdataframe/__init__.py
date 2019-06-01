@@ -8,7 +8,12 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from ..core.parameters import ParameterInfo, ParameterType, _Parameter
+from ..core.parameters import (
+    HIERARCHY_SEPARATOR,
+    ParameterInfo,
+    ParameterType,
+    _Parameter,
+)
 from ..core.parameterset import ParameterSet
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
@@ -23,7 +28,7 @@ class ScmDataFrame(ScmDataFrameBase):
     with those time series.
 
     For users who wish to take advantage of all of Pyam's functionality, please cast
-    your ScmDataFrame to an IamDataFrame first with `to_iamdataframe()`. Note: this
+    your ScmDataFrame to an IamDataFrame first with :func:`to_iamdataframe`. Note: this
     operation can be computationally expensive for large data sets because IamDataFrames
     stored data in long/tidy form internally rather than ScmDataFrames' more compact
     internal format.
@@ -38,38 +43,41 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     climate_model: str = "unspecified",
 ) -> ScmDataFrame:
     """
-    Get an `ScmDataFrame` from a `ParameterSet`.
+    Get an :class:`ScmDataFrame` from a :class:`ParameterSet`.
 
     An ScmDataFrame is a view with a common time index for all time series. All metadata
     in the ParameterSet must be represented as Generic parameters with in the `World`
-    region. TODO: We should really improve on that
+    region.
+
+    TODO: we should really improve on that
+    TODO: overhaul this function and move to an appropriate location
 
     Parameters
     ----------
     parameterset
-        `ParameterSet` containing time series and optional metadata.
+        :class:`ParameterSet` containing time series and optional metadata.
     time_points
         Time points to which all timeseries will be interpolated.
     model
         Default value for the model metadata value. This value is only used if the
-        `model` parameter is not found.
+        :obj:`model` parameter is not found.
     scenario
         Default value for the scenario metadata value. This value is only used if the
-        `scenario` parameter is not found.
+        :obj:`scenario` parameter is not found.
     climate_model
         Default value for the climate_model metadata value. This value is only used if
-        the `climate_model` parameter is not found.
+        the :obj:`climate_model` parameter is not found.
 
     Raises
     ------
     ValueError
         If a generic parameter cannot be mapped to an ScmDataFrame meta table. This
-        happens if the parameter has a region which is not `('World',)`.
+        happens if the parameter has a region which is not ``('World',)``.
 
     Returns
     -------
-    :obj:`ScmDataFrame`
-        `ScmDataFrame` containing the data from `parameterset`
+    :class:`ScmDataFrame`
+        :class:`ScmDataFrame` containing the data from :obj:`parameterset`
     """
     time_points = np.asarray(time_points, dtype="datetime64[s]")
 
@@ -109,14 +117,14 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     for (param_name, region), p_info in root_params.items():
         # All meta values are stored as generic value (AKA no units)
         if p_info.parameter_type == ParameterType.GENERIC:
-            if region != ("World",):  # pragma: no cover
+            if region != ("World",):
                 raise ValueError(
                     "Only generic types with Region=World can be extracted"
                 )
             metadata[parameter_name_to_scm(param_name)] = [
                 parameterset.generic(param_name, region=region).value
             ]
-        else:  # TODO scalar parameters
+        else:  # TODO: support scalar parameters
             ts = parameterset.timeseries(  # type: ignore
                 param_name,
                 p_info.unit,

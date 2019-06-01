@@ -20,7 +20,7 @@ class _Region:
 
     _has_been_aggregated: bool
     """
-    If True, a parameter of this region has already been read in an aggregated way,
+    If ``True``, a parameter of this region has already been read in an aggregated way,
     i.e., aggregating over subregions
      """
 
@@ -31,7 +31,7 @@ class _Region:
     """Parameters"""
 
     _parent: Optional["_Region"]
-    """Parent region (or `None` if root region)"""
+    """Parent region (or ``None`` if root region)"""
 
     def __init__(self, name: str):
         """

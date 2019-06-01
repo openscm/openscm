@@ -1,7 +1,7 @@
 """
-Helpers for filtering DataFrames
+Helpers for filtering DataFrames.
 
-Borrowed from pyam.utils
+Borrowed from :obj:`pyam.utils`.
 """
 
 import datetime
@@ -22,17 +22,17 @@ def is_in(vals: List, items: List) -> np.ndarray:
     Parameters
     ----------
     vals
-        The list of values we want to check
+        The list of values to check
 
     items
-        The options used to determine whether each element of vals is in the desired
-        subset or not
+        The options used to determine whether each element of :obj:`vals` is in the
+        desired subset or not
 
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array of the same length as `vals` where the element is True if the
-        corresponding element of `vals` is in `items` and False otherwise
+        Array of the same length as :obj:`vals` where the element is ``True`` if the
+        corresponding element of :obj:`vals` is in :obj:`items` and False otherwise
     """
     return np.array([v in items for v in vals])
 
@@ -66,12 +66,12 @@ def find_depth(
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
 
     Raises
     ------
     ValueError
-        If `level` cannot be understood
+        If :obj:`level` cannot be understood
     """
     # determine function for finding depth level
     if not isinstance(level, str):
@@ -124,17 +124,18 @@ def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
         Values to match
 
     level
-        Passed to `find_depth`. For usage, see docstring of `find_depth`.
+        Passed to :func:`find_depth`. For usage, see docstring of :func:`find_depth`.
 
     regexp
-        If True, match using regexp rather than pseudo regexp syntax developed by the
-        `pyam <https://github.com/IAMconsortium/pyam>`_ developers.
+        If ``True``, match using regexp rather than pseudo regexp syntax of `pyam
+        <https://github.com/IAMconsortium/pyam>`_.
 
     has_nan
-        If True, convert all nan in `meta_col` to empty string before applying filters.
-        This means that "" and "*" will match rows with `np.nan`. If False, the
-        conversion is not applied and so a search in a string column which contains
-        `np.nan` will result in a `TypeError`.
+        If ``True``, convert all nan values in :obj:`meta_col` to empty string before
+        applying filters. This means that "" and "*" will match rows with
+        :class:`np.nan`. If ``False``, the conversion is not applied and so a search in
+        a string column which contains :class:`np.nan` will result in a
+        :class:`TypeError`.
 
     separator
         String used to separate the hierarchy levels in values. Defaults to '|'
@@ -142,13 +143,13 @@ def pattern_match(  # pylint: disable=too-many-arguments,too-many-locals
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
 
     Raises
     ------
     TypeError
         Filtering is performed on a string metadata column which contains
-        `np.nan` and `has_nan` is ``False``
+        :class:`np.nan` and :obj:`has_nan` is ``False``
     """
     matches = np.array([False] * len(meta_col))
     _values = (
@@ -225,7 +226,7 @@ def years_match(data: List, years: Union[List[int], int]) -> np.ndarray:
     Raises
     ------
     TypeError
-        If `years` is not `int` or list of `int`
+        If :obj:`years` is not :class:`int` or list of :class:`int`
     """
     years = [years] if isinstance(years, int) else years
     usable_int = (
@@ -257,7 +258,7 @@ def month_match(
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
     """
     return time_match(data, months, ["%b", "%B"], "tm_mon", "month")
 
@@ -277,7 +278,7 @@ def day_match(data: List, days: Union[List[str], List[int], int, str]) -> np.nda
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
     """
     return time_match(data, days, ["%a", "%A"], "tm_wday", "day")
 
@@ -297,7 +298,7 @@ def hour_match(data: List, hours: Union[List[int], int]) -> np.ndarray:
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
     """
     hours_list = [hours] if isinstance(hours, int) else hours
     return is_in(data, hours_list)
@@ -322,21 +323,21 @@ def time_match(
         Times to match
 
     conv_codes
-        If `times` contains strings, conversion codes to try passing to `time.strptime`
-        to convert `times` to `datetime.datetime`'s
+        If :obj:`times` contains strings, conversion codes to try passing to
+        :func:`time.strptime` to convert :obj:`times` to :class:`datetime.datetime`
 
     strptime_attr
-        If `times` contains strings, the `datetime.datetime` attribute to finalize the
-        conversion of strings to integers
+        If :obj:`times` contains strings, the :class:`datetime.datetime` attribute to
+        finalize the conversion of strings to integers
 
     name
-        Name of the part of a datetime you're trying to extract, used to produce
-        useful error messages.
+        Name of the part of a datetime to extract, used to produce useful error
+        messages.
 
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
 
     Raises
     ------
@@ -410,12 +411,12 @@ def datetime_match(
     Returns
     -------
     :obj:`np.array` of :obj:`bool`
-        Array where True indicates a match
+        Array where ``True`` indicates a match
 
     Raises
     ------
     TypeError
-        `dts` contains `int`
+        :obj:`dts` contains :class:`int`
     """
     dts = [dts] if isinstance(dts, datetime.datetime) else dts
     if isinstance(dts, int) or any([isinstance(d, int) for d in dts]):

@@ -12,12 +12,15 @@ try:
     # mypy can't work out try-except block forces IamDataFrame to be ok here
     class LongDatetimeIamDataFrame(IamDataFrame):  # type: ignore
         """
-        Custom implementation of `pyam.IamDataFrame` which handles long datetime data.
+        Custom implementation of :class:`pyam.IamDataFrame` which handles long datetime
+        data.
 
         This custom implementation allows the data frame to handle times outside panda's
         limited time range of 1677-09-22 00:12:43.145225 to 2262-04-11
         23:47:16.854775807, see `this discussion
         <https://stackoverflow.com/a/37226672>`_.
+
+        TODO: use np.datetime64 instead
         """
 
         def _format_datetime_col(self):

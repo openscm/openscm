@@ -186,7 +186,7 @@ class ParameterSet:
 
         The parameter is created as a timeseries if not viewed so far. The length of the
         returned ParameterView's timeseries is adjusted such that its last value is
-        equal to or less than ``stop_time``.
+        equal to or less than :obj:`stop_time`.
 
         Parameters
         ----------
@@ -269,9 +269,9 @@ class ParameterSet:
         self, name: HierarchicalName, region: HierarchicalName = ("World",)
     ) -> Optional[ParameterInfo]:
         """
-        Get a parameter or ``None`` if not found.
+        Get parameter information or ``None`` if not found.
 
-        Parameters # TODO docs
+        Parameters
         ----------
         name
             :ref:`Hierarchical name <parameter-hierarchy>` of the parameter
@@ -285,8 +285,8 @@ class ParameterSet:
 
         Returns
         -------
-        _Parameter
-            Parameter or ``None`` if the parameter has not been created yet
+        Optional[ParameterInfo]
+            Parameter information or ``None`` if the parameter has not been created yet
         """
         region_ = self._get_region(region)
         if region_ is not None:

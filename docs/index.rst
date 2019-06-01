@@ -31,7 +31,8 @@ Schema
     fileformats
 
 ..
-    TODO split into public and internals
+    TODO: split into public and internals
+
 .. toctree::
     :maxdepth: 2
     :caption: API reference

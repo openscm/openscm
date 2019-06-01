@@ -46,6 +46,9 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
 
     @property
     def shape(self) -> Tuple[int, ...]:
+        """
+        Shape of the 1-dimensional timeseries array
+        """
         return cast(Tuple[int, ...], self._ndarray.shape)
 
     @classmethod
@@ -66,7 +69,17 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
 
     _create_comparison_method = _create_arithmetic_method
 
-    def __init__(self, input_array, parameter_view):
+    def __init__(self, input_array: np.ndarray, parameter_view: "TimeseriesView"):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        input_array
+            Array to handle
+        parameter_view
+            :class:`TimeseriesView` this timeseries belongs to
+        """
         self._ndarray = np.asarray(input_array)
         self._parameter_view = parameter_view
 
@@ -104,15 +117,24 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
         return len(self._ndarray)
 
     @property
-    def dtype(self):
+    def dtype(self) -> np.dtype:
+        """
+        :class:`np.dtype` of the timeseries
+        """
         return self._ndarray.dtype
 
     @property
     def ndim(self):
+        """
+        Dimension of the timeseries (``==1``)
+        """
         return 1
 
     @property
     def nbytes(self):
+        """
+        Bytes block of the unterlying timeseries
+        """
         self.__read__()
         return self._ndarray.nbytes
 
@@ -133,7 +155,7 @@ class ScalarView(ParameterInfo):
     """Unit converter"""
 
     _writable: bool
-    """TODO"""
+    """Is this view writable? Is set to ``True`` once this view is written to."""
 
     def __init__(self, parameter: _Parameter, unit: str):
         """
@@ -142,7 +164,7 @@ class ScalarView(ParameterInfo):
         Parameters
         ----------
         parameter
-            Parameter
+            Parameter to handle
         unit
             Unit for the values in the view
         """
@@ -171,21 +193,17 @@ class ScalarView(ParameterInfo):
     @property
     def value(self) -> float:
         """
-        Get current value of scalar parameter.
+        Value of scalar parameter
 
-        If the parameter has child parameters (i.e. ``_children`` is not empty),
-        the returned value will be the sum of the values of all of the child
-        parameters.
-
-        Returns
-        -------
-        float
-            Current value of parameter
+        If the parameter has child parameters, the returned value will be the sum of the
+        values of all of the child parameters.
 
         Raises
         ------
         ParameterEmptyError
             Parameter is empty, i.e. has not yet been written to
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
         """
         if self._parameter.children:
             return sum(v.value for v in self._child_data_views)
@@ -197,15 +215,7 @@ class ScalarView(ParameterInfo):
     @value.setter
     def value(self, v: float) -> None:
         """
-        Set current value of scalar parameter.
-
-        Parameters
-        ----------
-        v
-            Value
-
-        ParameterReadonlyError
-            Parameter is read-only (e.g. because its parent has been written to)
+        Value of scalar parameter
         """
         if not self._writable:
             self._parameter.attempt_write(
@@ -222,7 +232,7 @@ class ScalarView(ParameterInfo):
         return "View of scalar {}".format(str(self._parameter))
 
 
-class TimeseriesView(ParameterInfo):
+class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attributes
     """
     View of a timeseries.
     """
@@ -231,8 +241,13 @@ class TimeseriesView(ParameterInfo):
     """List of views to the child parameters for aggregated reads"""
 
     _timeseries: Optional[_Timeseries]
+    """Time series handler"""
+
     _data: Optional[np.ndarray]
+    """Chache for underlying data"""
+
     _version: int
+    """Version of cache"""
 
     _timeseries_converter: TimeseriesConverter
     """Timeseries converter"""
@@ -241,7 +256,7 @@ class TimeseriesView(ParameterInfo):
     """Unit converter"""
 
     _writable: bool
-    """TODO"""
+    """Is this view writable? Is set to ``True`` once this view is written to."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -278,7 +293,7 @@ class TimeseriesView(ParameterInfo):
             timeseries_type,
             interpolation_type,
             extrapolation_type,
-        )  # TimeseriesConverter
+        )
         self._data = None
         self._timeseries = None
         self._writable = False
@@ -353,21 +368,19 @@ class TimeseriesView(ParameterInfo):
     @property
     def values(self) -> _Timeseries:
         """
-        Get values of the full timeseries.
+        Values of the full timeseries
 
-        If the parameter has child parameters (i.e. ``_children`` is not empty),
-        the returned value will be the sum of the values of all of the child
-        parameters.
-
-        Returns
-        -------
-        Sequence[float]
-            Current value of parameter
+        If the parameter has child parameters, the returned value will be the sum of the
+        values of all of the child parameters.
 
         Raises
         ------
         ParameterEmptyError
             Parameter is empty, i.e. has not yet been written to
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
+        TimeseriesPointsValuesMismatchError
+            Lengths of set value and the time points number mismatch
         """
         if self._timeseries is None:
             self._read()
@@ -377,19 +390,7 @@ class TimeseriesView(ParameterInfo):
     @values.setter
     def values(self, v: np.ndarray) -> None:
         """
-        Set value for whole time series.
-
-        Parameters
-        ----------
-        v
-            Values to set
-
-        Raises
-        ------
-        TimeseriesPointsValuesMismatchError
-            Lengths of ``v`` and the time points number mismatch
-        ParameterReadonlyError
-            Parameter is read-only (e.g. because its parent has been written to)
+        Value of the full timeseries
         """
         self._check_write()
         if len(v) != self._timeseries_converter.target_length:
@@ -404,7 +405,7 @@ class TimeseriesView(ParameterInfo):
     @property
     def length(self) -> int:
         """
-        Length of timeseries.
+        Length of timeseries
         """
         return self._timeseries_converter.target_length
 
@@ -421,11 +422,16 @@ class GenericView(ParameterInfo):
     """
 
     _writable: bool
-    """TODO"""
+    """Is this view writable? Is set to ``True`` once this view is written to."""
 
     def __init__(self, parameter: _Parameter):
         """
-        TODO
+        Initialize.
+
+        Parameters
+        ----------
+        parameter
+           Parameter to handle
         """
         super().__init__(parameter)
         self._writable = False
@@ -433,17 +439,14 @@ class GenericView(ParameterInfo):
     @property
     def value(self) -> Any:
         """
-        Get current value of generic parameter.
-
-        Returns
-        -------
-        Any
-            Current value of parameter
+        Value of generic parameter
 
         Raises
         ------
         ParameterEmptyError
             Parameter is empty, i.e. has not yet been written to
+        ParameterReadonlyError
+            Parameter is read-only (e.g. because its parent has been written to)
         """
         if self.empty:
             raise ParameterEmptyError
@@ -453,17 +456,7 @@ class GenericView(ParameterInfo):
     @value.setter
     def value(self, v: Any) -> None:
         """
-        Set current value of boolean parameter.
-
-        Parameters
-        ----------
-        v
-            Value
-
-        Raises
-        ------
-        ParameterReadonlyError
-            Parameter is read-only (e.g. because its parent has been written to)
+        Value of generic parameter
         """
         if not self._writable:
             self._parameter.attempt_write(ParameterType.GENERIC)

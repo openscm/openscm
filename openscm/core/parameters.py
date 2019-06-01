@@ -23,7 +23,14 @@ if TYPE_CHECKING:  # pragma: no cover
 # pylint: disable=too-many-instance-attributes
 
 HierarchicalName = Union[str, Sequence[str]]
-HIERARCHY_SEPARATOR = "|"
+
+HIERARCHY_SEPARATOR: str = "|"
+"""
+String used to define different levels in our data hierarchies
+
+By default we follow pyam and use "|". In such a case, emissions of CO2 for energy from
+coal would be "Emissions|CO2|Energy|Coal".
+"""
 
 
 class ParameterType(Enum):
@@ -41,15 +48,16 @@ class ParameterType(Enum):
         cls, timeseries_type: Union["ParameterType", str]
     ) -> "ParameterType":
         """
-        Get time series type (i.e. `ParameterType.AVERAGE_TIMESERIES` or
-        `ParameterType.POINT_TIMESERIES`) from `ParameterType` or string value.
+        Get time series type (i.e. :attr:`ParameterType.AVERAGE_TIMESERIES` or
+        :attr:`ParameterType.POINT_TIMESERIES`) from :class:`ParameterType` or string
+        value.
 
         Parameters
         ----------
         timeseries_type
             Value to convert to enum value (can be
-            ``"average"``/`ParameterType.AVERAGE_TIMESERIES` or
-            ``"point"``/`ParameterType.POINT_TIMESERIES`)
+            ``"average"``/:attr:`ParameterType.AVERAGE_TIMESERIES` or
+            ``"point"``/:attr:`ParameterType.POINT_TIMESERIES`)
 
         Returns
         -------
@@ -59,7 +67,7 @@ class ParameterType(Enum):
         Raises
         ------
         ValueError
-            If `timeseries_type` is unknown string or unvalid enum value
+            If :obj:`timeseries_type` is unknown string or unvalid enum value
         """
         if isinstance(timeseries_type, str):
             if timeseries_type.lower() == "average":
@@ -350,7 +358,7 @@ class ParameterInfo:
     @property
     def version(self) -> int:
         """
-        Get internal version number of parameter.
+        Version number of parameter (used internally)
         """
         return self._parameter.version
 

@@ -10,7 +10,7 @@ dedicated `Jupyter Notebook
 
 import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -32,14 +32,27 @@ class ExtrapolationType(Enum):
     NONE = -1
     CONSTANT = 0
     LINEAR = 1
-    # TODO support CUBIC = 3
+    # TODO: support CUBIC = 3
 
     @classmethod
     def from_extrapolation_type(
         cls, extrapolation_type: Union["ExtrapolationType", str]
     ) -> "ExtrapolationType":
         """
-        TODO Docs
+        Get extrapolation type from :class:`ExtrapolationType` or string value.
+
+        Parameters
+        ----------
+        extrapolation_type
+            Value to convert to enum value (can be
+            ``"none"``/:attr:`ExtrapolationType.NONE`,
+            ``"constant"``/:attr:`ExtrapolationType.CONSTANT`, or
+            ``"linear"``/:attr:`ExtrapolationType.LINEAR`)
+
+        Returns
+        -------
+        ExtrapolationType
+            Enum value
         """
         if isinstance(extrapolation_type, str):
             return cls[extrapolation_type.upper()]
@@ -59,7 +72,18 @@ class InterpolationType(Enum):
         cls, interpolation_type: Union["InterpolationType", str]
     ) -> "InterpolationType":
         """
-        TODO Docs
+        Get interpolation type from :class:`InterpolationType` or string value.
+
+        Parameters
+        ----------
+        interpolation_type
+            Value to convert to enum value (can be
+            ``"linear"``/:attr:`InterpolationType.LINEAR`)
+
+        Returns
+        -------
+        InterpolationType
+            Enum value
         """
         if isinstance(interpolation_type, str):
             return cls[interpolation_type.upper()]
@@ -95,7 +119,7 @@ def _parse_datetime(inp: np.ndarray) -> np.ndarray:
 
 def _format_datetime(dts: np.ndarray) -> np.ndarray:
     """
-    Convert an array to an array of ``np.datetime64``.
+    Convert an array to an array of :class:`np.datetime64`.
 
     Parameters
     ----------
@@ -104,13 +128,13 @@ def _format_datetime(dts: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray
-        Converted array of `np.datetime64`
+    :class:`np.ndarray` of :class:`np.datetime64`
+        Converted array
 
     Raises
     ------
     ValueError
-        If one of the values in ``dts`` cannot be converted to ``np.datetime64``
+        If one of the values in :obj:`dts` cannot be converted to :class:`np.datetime64`
     """
     if len(dts) <= 0:  # pylint: disable=len-as-condition
         return np.array([], dtype="datetime64[s]")
@@ -129,42 +153,41 @@ def _format_datetime(dts: np.ndarray) -> np.ndarray:
     return np.asarray(dts, dtype="datetime64[s]")
 
 
-class TimePoints:  # TODO track type of timeseries
+class TimePoints:  # TODO: track type of timeseries
     """
-    TODO docs
-    Keeps track of both datetime and openscm datetimes and knows how to convert between
-    the two formats.
+    Handles time points by wrapping :class:`np.ndarray` of :class:`np.datetime64`..
     """
 
     _values: np.ndarray
-    """TODO"""
+    """Actual time points array"""
 
-    def __init__(self, values):
+    def __init__(self, values: Sequence):
         """
-        TODO docs
+        Initialize.
+
+        Parameters
+        ----------
+        values
+            Time points array to handle
         """
         self._values = _format_datetime(np.asarray(values))
 
     @property
     def values(self) -> np.ndarray:
         """
-        Get time points.
-
-        Returns
-        -------
-        :obj:`np.array` of :obj:`np.datetime64`
-            Time points
+        Time points
         """
         return self._values
 
     def to_index(self) -> pd.Index:
         """
-        Get time points as ``pd.Index``.
+        Get time points as :class:`pd.Index`.
 
         Returns
         -------
-        :obj:`pd.Index`
-            pd.Index of dtype "object" with name "time" made from the time points
+        :class:`pd.Index`
+            :class:`pd.Index` of :class:`np.dtype` :class:`object` with name ``"time"``
+            made from the time points represented as :class:`datetime.datetime`.
         """
         return pd.Index(self._values.astype(object), dtype=object, name="time")
 
@@ -224,7 +247,7 @@ class TimePoints:  # TODO track type of timeseries
         return np.vectorize(datetime.datetime.weekday)(self._values.astype(object))
 
 
-def create_time_points(  # TODO get rid of
+def create_time_points(  # TODO: replace by simpler function
     start_time: np.datetime64,
     period_length: np.timedelta64,
     points_num: int,
@@ -238,7 +261,7 @@ def create_time_points(  # TODO get rid of
     start_time
         First time point of the timeseries
     period_length
-        Period length (in seconds)
+        Period length
     points_num
         Length of timeseries
     timeseries_type
@@ -246,7 +269,7 @@ def create_time_points(  # TODO get rid of
 
     Returns
     -------
-    np.ndarray
+    :class:`np.ndarray` of :class:`np.datetime64`
         Array of the timeseries time points
     """
     timeseries_type = ParameterType.from_timeseries_type(timeseries_type)
@@ -285,8 +308,7 @@ def _calc_interval_averages(
         Array of the interval/period averages
     """
     # TODO: numerical integration here could be very expensive
-    # TODO: update to include caching and/or analytic solutions depending on
-    # TODO:     interpolation choice
+    # TODO: update to include caching and/or analytic solutions depending on interpolation choice
     int_averages = [np.nan] * len(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
         u = target_intervals[i + 1]
@@ -298,7 +320,7 @@ def _calc_interval_averages(
 
 def _calc_integral_preserving_linear_interpolation(values: np.ndarray) -> np.ndarray:
     """
-    Calculate the "linearization" values of the array ``values`` which is assumed to
+    Calculate the "linearization" values of the array :obj:`values` which is assumed to
     represent averages over time periods. Values at the edges of the periods are
     taken as the average of adjacent periods, values at the period middles are taken
     such that the integral over a period is the same as for the input data.
@@ -396,11 +418,11 @@ class TimeseriesConverter:
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
 
-        if self._source[0] > self._target[1]:  # TODO Consider extrapolation type
+        if self._source[0] > self._target[1]:  # TODO: consider extrapolation type
             raise InsufficientDataError
 
     def _calc_continuous_representation(
-        # TODO remove when NotImplementedError removed:
+        # TODO: remove when NotImplementedError removed:
         # pylint: disable=missing-raises-doc
         self,
         time_points: np.ndarray,
@@ -409,7 +431,7 @@ class TimeseriesConverter:
         """
         Calculate a "continuous" representation of a timeseries (see
         :func:`openscm.timeseries_converter._calc_integral_preserving_linear_interpolation`)
-        with the time points ``time_points`` and values ``values``.
+        with the time points :obj:`time_points` and values :obj:`values`.
 
         Parameters
         ----------
@@ -484,11 +506,11 @@ class TimeseriesConverter:
         target_time_points: np.ndarray,
     ) -> np.ndarray:
         """
-        Wrap ``self._convert_unsafe`` to provide proper error handling.
+        Wrap :func:`_convert_unsafe` to provide proper error handling.
 
-        ``self._convert_unsafe`` converts time period average timeseries data
-        ``values`` for timeseries time points ``source_time_points`` to the time
-        points ``target_time_points``.
+        :func:`_convert_unsafe` converts time period average timeseries data
+        :obj:`values` for timeseries time points :obj:`source_time_points` to the time
+        points :obj:`target_time_points`.
 
         Parameters
         ----------
@@ -505,12 +527,12 @@ class TimeseriesConverter:
             Length of the time series is too short to convert
         InsufficientDataError
             Target time points are outside the source time points and
-            ``self._extrapolation_type`` is ``ExtrapolationType.NONE``
+            :attr:`_extrapolation_type` is :attr:`ExtrapolationType.NONE`
 
         Returns
         -------
         np.ndarray
-            Converted time period average data for timeseries ``target``
+            Converted time period average data for timeseries :obj:`values`
         """
         if len(values) < 3:
             raise InsufficientDataError
@@ -531,8 +553,8 @@ class TimeseriesConverter:
         target_time_points: np.ndarray,
     ) -> np.ndarray:
         """
-        Convert time period average timeseries data ``values`` for timeseries time
-        points ``source_time_points`` to the time points ``target_time_points``.
+        Convert time period average timeseries data :obj:`values` for timeseries time
+        points :obj:`source_time_points` to the time points :obj:`target_time_points`.
 
         Parameters
         ----------
@@ -551,7 +573,7 @@ class TimeseriesConverter:
         Returns
         -------
         np.ndarray
-            Converted time period average data for timeseries ``target``
+            Converted time period average data for timeseries :obj:`values`
         """
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
             return _calc_interval_averages(

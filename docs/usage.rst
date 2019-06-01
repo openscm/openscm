@@ -14,7 +14,8 @@ other file formats, including whole scenario definitions.
 The **ensemble** interface provides functions for running ensembles of
 model runs.
 
-TODO describe ScmDataFrame
+..
+    TODO: describe ScmDataFrame
 
 The **command line** interface lets users run models with specified
 parameters and model input directly from the command line without
@@ -99,7 +100,7 @@ Unit and time frame have to be specified when requesting a
 property called ``parameters`` using one of the following functions:
 
 ..
-    TODO Update to new interface
+    TODO: update to new interface
 
 - :func:`~openscm.core.ParameterSet.get_scalar_view` returns a
   read-only view to a scalar ("number") parameter
