@@ -21,7 +21,7 @@ from ..core.parameters import ParameterType
 from ..core.time import create_time_points
 from . import Adapter
 
-YEAR = np.timedelta64(365, "D")
+YEAR = np.timedelta64(365, "D")  # pylint: disable=too-many-function-args
 
 MODEL_PARAMETER_DEFAULTS = {
     # Initial pool size atmosphere

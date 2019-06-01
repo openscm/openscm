@@ -9,7 +9,6 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from ..core.parameters import (
-    HIERARCHY_SEPARATOR,
     ParameterInfo,
     ParameterType,
     _Parameter,
