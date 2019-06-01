@@ -1,28 +1,29 @@
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
 from base import _AdapterTester
 
-from openscm.adapters.dice import DICE, YEAR
+from openscm.adapters.dice import DICE
 from openscm.core.parameters import ParameterType
 from openscm.core.time import create_time_points
 
 
 def _run_and_compare(test_adapter, filename):
     original_data = pd.read_csv(filename)
-    start_time = int(datetime(2010, 1, 1).timestamp())
+    start_time = np.datetime64("2010-01-01")
     timestep_count = len(original_data)
-    stop_time = start_time + (timestep_count - 1) * YEAR
+    stop_time = start_time + (timestep_count - 1) * np.timedelta64(365, "D")
 
     test_adapter.initialize_model_input()
     test_adapter.initialize_run_parameters(start_time, stop_time)
 
-    test_adapter._parameters.generic(("DICE", "forcoth_saturation_time")).value = (
-        start_time + 90 * YEAR
-    )
+    test_adapter._parameters.generic(
+        ("DICE", "forcoth_saturation_time")
+    ).value = start_time + np.timedelta64(90 * 365, "D")
     time_points = create_time_points(
-        start_time, YEAR, timestep_count, ParameterType.AVERAGE_TIMESERIES
+        start_time,
+        np.timedelta64(365, "D"),
+        timestep_count,
+        ParameterType.AVERAGE_TIMESERIES,
     )
     test_adapter._parameters.timeseries(
         ("Emissions", "CO2"), "GtCO2/a", time_points, timeseries_type="average"
@@ -51,6 +52,7 @@ def _run_and_compare(test_adapter, filename):
             err_msg="Not matching original results for variable '{}'".format(
                 "|".join(name)
             ),
+            rtol=1e-4,
         )
 
 
@@ -71,7 +73,7 @@ class TestMyAdapter(_AdapterTester):
         """
         time_points_for_averages = create_time_points(
             start_time,
-            YEAR,
+            np.timedelta64(365, "D"),
             test_adapter._timestep_count,
             ParameterType.AVERAGE_TIMESERIES,
         )

@@ -280,7 +280,10 @@ def create_time_points(  # TODO: replace by simpler function
     )
     end_time_output = start_time + (points_num_output - 1) * period_length
     return np.linspace(
-        start_time, end_time_output, points_num_output, dtype="datetime64[s]"
+        start_time.astype("datetime64[s]").astype(float),
+        end_time_output.astype("datetime64[s]").astype(float),
+        points_num_output,
+        dtype="datetime64[s]",
     )
 
 

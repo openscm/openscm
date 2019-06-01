@@ -12,7 +12,6 @@ variable naming. Original comments are marked by "Original:".
 """
 
 from collections import namedtuple
-from datetime import datetime
 from math import log2
 from typing import Any
 
@@ -22,7 +21,7 @@ from ..core.parameters import ParameterType
 from ..core.time import create_time_points
 from . import Adapter
 
-YEAR = 365 * 24 * 60 * 60
+YEAR = np.timedelta64(365, "D")
 
 MODEL_PARAMETER_DEFAULTS = {
     # Initial pool size atmosphere
@@ -74,7 +73,7 @@ MODEL_PARAMETER_DEFAULTS = {
     # (has rounding errors but needed to reproduce original output; not part of original)
     "original_rounding": (True, None),
     # Time when forcing due to other greenhouse gases saturates (original: 2100)
-    "forcoth_saturation_time": (int(datetime(2100, 1, 1).timestamp()), None),
+    "forcoth_saturation_time": (np.datetime64("2100-01-01"), None),
 }
 
 
@@ -83,7 +82,7 @@ class DICE(Adapter):
     Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
     model.
 
-    TODO Use original calibration
+    TODO: use original calibration
     """
 
     _timestep: int
@@ -93,9 +92,6 @@ class DICE(Adapter):
     """Total number of time steps"""
 
     _values: Any
-    """Parameter values"""
-
-    _views: Any
     """Parameter views"""
 
     def _initialize_model(self) -> None:
@@ -116,20 +112,18 @@ class DICE(Adapter):
             "b32",
             "b33",
         ]
-        self._values = namedtuple("DICEValues", parameter_names)
-        self._views = namedtuple("DICEViews", parameter_names)
+        self._values = namedtuple("DICEViews", parameter_names)
 
         for name, (default, unit) in MODEL_PARAMETER_DEFAULTS.items():
-            setattr(self._values, name, default)
             if unit is None:
                 # Non-scalar parameter
                 self._parameters.generic(("DICE", name)).value = default
-                setattr(self._views, name, self._parameters.generic(("DICE", name)))
+                setattr(self._values, name, self._parameters.generic(("DICE", name)))
             else:
                 # Scalar parameter
                 self._parameters.scalar(("DICE", name), unit).value = default
                 setattr(
-                    self._views, name, self._parameters.scalar(("DICE", name), unit)
+                    self._values, name, self._parameters.scalar(("DICE", name), unit)
                 )
 
     def _initialize_model_input(self) -> None:
@@ -137,38 +131,39 @@ class DICE(Adapter):
 
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
-        self._timestep_count = (self._stop_time - self._start_time) // int(
-            self._values.period_length
-        ) + 1  # include self._stop_time
+        self._timestep_count = (
+            int((self._stop_time - self._start_time) / self._values.period_length.value)
+            + 1
+        )  # include self._stop_time
 
         time_points = create_time_points(
             self._start_time,
-            self._values.period_length,
+            self._values.period_length.value,
             self._timestep_count,
             ParameterType.POINT_TIMESERIES,
         )
         time_points_for_averages = create_time_points(
             self._start_time,
-            self._values.period_length,
+            self._values.period_length.value,
             self._timestep_count,
             ParameterType.AVERAGE_TIMESERIES,
         )
 
         # Original: "Total CO2 emissions (GtCO2 per year)"
-        self._views.E = self._parameters.timeseries(
+        self._values.E = self._parameters.timeseries(
             ("Emissions", "CO2"),
-            "GtCO2/a" if self._values.original_rounding else "GtC/a",
+            "GtCO2/a" if self._values.original_rounding.value else "GtC/a",
             time_points_for_averages,
             timeseries_type="average",
         )
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
-        self._views.mat = self._output.timeseries(
+        self._values.mat = self._output.timeseries(
             ("Pool", "CO2", "Atmosphere"), "GtC", time_points, timeseries_type="point"
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
-        self._views.ml = self._output.timeseries(
+        self._values.ml = self._output.timeseries(
             ("Pool", "CO2", "Ocean", "lower"),
             "GtC",
             time_points,
@@ -176,7 +171,7 @@ class DICE(Adapter):
         )
 
         # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
-        self._views.mu = self._output.timeseries(
+        self._values.mu = self._output.timeseries(
             ("Pool", "CO2", "Ocean", "shallow"),
             "GtC",
             time_points,
@@ -184,7 +179,7 @@ class DICE(Adapter):
         )
 
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
-        self._views.tatm = self._output.timeseries(
+        self._values.tatm = self._output.timeseries(
             ("Surface Temperature", "Increase"),
             "degC",
             time_points,
@@ -192,7 +187,7 @@ class DICE(Adapter):
         )
 
         # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
-        self._views.tocean = self._output.timeseries(
+        self._values.tocean = self._output.timeseries(
             ("Ocean Temperature", "Increase"),
             "degC",
             time_points,
@@ -200,39 +195,35 @@ class DICE(Adapter):
         )
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
-        self._views.forc = self._output.timeseries(
+        self._values.forc = self._output.timeseries(
             ("Radiative Forcing", "CO2"), "W/m^2", time_points, timeseries_type="point"
         )
 
     def _reset(self) -> None:
         self._timestep = 0
-        for name in MODEL_PARAMETER_DEFAULTS:
-            setattr(self._values, name, getattr(self._views, name).value)
+        v = self._values  # just for convenience
 
         # Original: "Carbon cycle transition matrix"
-        self._values.b11 = 1 - self._values.b12
-        self._values.b21 = self._values.b12 * self._values.mateq / self._values.mueq
-        self._values.b22 = 1 - self._values.b21 - self._values.b23
-        self._values.b32 = self._values.b23 * self._values.mueq / self._values.mleq
-        self._values.b33 = 1 - self._values.b32
+        v.b11 = 1 - v.b12.value
+        v.b21 = v.b12.value * v.mateq.value / v.mueq.value
+        v.b22 = 1 - v.b21 - v.b23.value
+        v.b32 = v.b23.value * v.mueq.value / v.mleq.value
+        v.b33 = 1 - v.b32
 
-        self._values.E = self._views.E.values
+        v.mat.values = np.empty(self._timestep_count)
+        v.mat.values[0] = v.mat0.value
+        v.ml.values = np.empty(self._timestep_count)
+        v.ml.values[0] = v.ml0.value
+        v.mu.values = np.empty(self._timestep_count)
+        v.mu.values[0] = v.mu0.value
+        v.tatm.values = np.empty(self._timestep_count)
+        v.tatm.values[0] = v.tatm0.value
+        v.tocean.values = np.empty(self._timestep_count)
+        v.tocean.values[0] = v.tocean0.value
 
-        self._values.mat = np.empty(self._timestep_count)
-        self._values.mat[0] = self._values.mat0
-        self._values.ml = np.empty(self._timestep_count)
-        self._values.ml[0] = self._values.ml0
-        self._values.mu = np.empty(self._timestep_count)
-        self._values.mu[0] = self._values.mu0
-        self._values.tatm = np.empty(self._timestep_count)
-        self._values.tatm[0] = self._values.tatm0
-        self._values.tocean = np.empty(self._timestep_count)
-        self._values.tocean[0] = self._values.tocean0
-
-        self._values.forc = np.empty(self._timestep_count)
-        self._values.forc[0] = (
-            self._values.fco22x * log2(self._values.mat0 / self._values.mateq)
-            + self._values.fex0
+        v.forc.values = np.empty(self._timestep_count)
+        v.forc.values[0] = (
+            v.fco22x.value * log2(v.mat0.value / v.mateq.value) + v.fex0.value
         )
 
     def _shutdown(self) -> None:
@@ -244,104 +235,89 @@ class DICE(Adapter):
         """
         for _ in range(self._timestep_count - 1):
             self._calc_step()
-        self._update_output()
 
     def _step(self) -> None:
         """
         Do a single time step.
         """
         self._calc_step()
-        self._update_output()
-
-    def _update_output(self) -> None:
-        """
-        Set output data from values.
-        """
-        self._views.mat.values = self._values.mat
-        self._views.ml.values = self._values.ml
-        self._views.mu.values = self._values.mu
-        self._views.tatm.values = self._values.tatm
-        self._views.tocean.values = self._values.tocean
-        self._views.forc.values = self._values.forc
 
     def _calc_step(self) -> None:
         """
         Calculate a single time step.
         """
         self._timestep += 1
-        self._current_time += YEAR
+        self._current_time += self._values.period_length.value
+        v = self._values  # just for convenience
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
-        self._values.mat[self._timestep] = max(
-            self._values.mat_lower,
-            self._values.mat[self._timestep - 1] * self._values.b11
-            + self._values.mu[self._timestep - 1] * self._values.b21
-            + self._values.E[self._timestep - 1]
-            * self._values.period_length
-            / YEAR
-            / (3.666 if self._values.original_rounding else 1),
+        v.mat.values[self._timestep] = max(
+            v.mat_lower.value,
+            v.mat.values[self._timestep - 1] * v.b11
+            + v.mu.values[self._timestep - 1] * v.b21
+            + v.E.values[self._timestep - 1]
+            * float(v.period_length.value / YEAR)
+            / (3.666 if v.original_rounding.value else 1),
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
-        self._values.ml[self._timestep] = max(
-            self._values.ml_lower,
-            self._values.ml[self._timestep - 1] * self._values.b33
-            + self._values.mu[self._timestep - 1] * self._values.b23,
+        v.ml.values[self._timestep] = max(
+            v.ml_lower.value,
+            v.ml.values[self._timestep - 1] * v.b33
+            + v.mu.values[self._timestep - 1] * v.b23.value,
         )
 
         # Original: "Carbon concentration increase in shallow oceans (GtC from 1750)"
-        self._values.mu[self._timestep] = max(
-            self._values.mu_lower,
-            self._values.mat[self._timestep - 1] * self._values.b12
-            + self._values.mu[self._timestep - 1] * self._values.b22
-            + self._values.ml[self._timestep - 1] * self._values.b32,
+        v.mu.values[self._timestep] = max(
+            v.mu_lower.value,
+            v.mat.values[self._timestep - 1] * v.b12.value
+            + v.mu.values[self._timestep - 1] * v.b22
+            + v.ml.values[self._timestep - 1] * v.b32,
         )
 
         # Original: "Increase temperatureof lower oceans (degrees C from 1900)" (sic)
-        self._values.tocean[self._timestep] = max(
-            self._values.tocean_lower,
+        v.tocean.values[self._timestep] = max(
+            v.tocean_lower.value,
             min(
-                self._values.tocean_upper,
-                self._values.tocean[self._timestep - 1]
-                + self._values.c4
+                v.tocean_upper.value,
+                v.tocean.values[self._timestep - 1]
+                + v.c4.value
                 * (
-                    self._values.tatm[self._timestep - 1]
-                    - self._values.tocean[self._timestep - 1]
+                    v.tatm.values[self._timestep - 1]
+                    - v.tocean.values[self._timestep - 1]
                 ),
             ),
         )
 
         # Original: "Exogenous forcing for other greenhouse gases"
         if (
-            self._start_time + self._values.period_length * self._timestep
-            >= self._values.forcoth_saturation_time
+            self._start_time + v.period_length.value * self._timestep
+            >= v.forcoth_saturation_time.value
         ):
-            forcoth = self._values.fex1
+            forcoth = v.fex1.value
         else:
-            forcoth = self._values.fex0 + (self._values.fex1 - self._values.fex0) * (
-                self._values.period_length * self._timestep
-            ) / (self._values.forcoth_saturation_time - self._start_time)
+            forcoth = v.fex0.value + (v.fex1.value - v.fex0.value) * (
+                v.period_length.value * self._timestep
+            ) / (v.forcoth_saturation_time.value - self._start_time)
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
-        self._values.forc[self._timestep] = (
-            self._values.fco22x
-            * log2(self._values.mat[self._timestep] / self._values.mateq)
+        v.forc.values[self._timestep] = (
+            v.fco22x.value * log2(v.mat.values[self._timestep] / v.mateq.value)
             + forcoth
         )
 
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
-        self._values.tatm[self._timestep] = min(
-            self._values.tatm_upper,
-            self._values.tatm[self._timestep - 1]
-            + self._values.c1
+        v.tatm.values[self._timestep] = min(
+            v.tatm_upper.value,
+            v.tatm.values[self._timestep - 1]
+            + v.c1.value
             * (
-                self._values.forc[self._timestep]
-                - (self._values.fco22x / self._values.t2xco2)
-                * self._values.tatm[self._timestep - 1]
-                - self._values.c3
+                v.forc.values[self._timestep]
+                - (v.fco22x.value / v.t2xco2.value) * v.tatm.values[self._timestep - 1]
+                - v.c3.value
                 * (
-                    self._values.tatm[self._timestep - 1]
-                    - self._values.tocean[self._timestep - 1]
+                    v.tatm.values[self._timestep - 1]
+                    - v.tocean.values[self._timestep - 1]
                 )
             ),
         )

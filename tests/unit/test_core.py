@@ -27,12 +27,12 @@ def model():
 
 @pytest.fixture
 def start_time():
-    return 30 * 365 * 24 * 3600
+    return np.datetime64("2000-01-01")
 
 
 @pytest.fixture
 def stop_time():
-    return 130 * 365 * 24 * 3600
+    return np.datetime64("2100-01-01")
 
 
 @pytest.fixture

@@ -275,17 +275,19 @@ def assert_core():
 @pytest.fixture(scope="function")
 def test_run_parameters():
     RunParameters = namedtuple("RunParameters", ["start_time", "stop_time"])
-    yield RunParameters(start_time=0, stop_time=100 * 365 * 24 * 60 * 60)
+    yield RunParameters(
+        start_time=np.datetime64("2000-01-01"), stop_time=np.datetime64("2100-01-01")
+    )
 
 
 possible_source_values = [[1, 5, 3, 5, 7, 3, 2, 9]]
 
-possible_target_values = [
+possible_target_values = [  # TODO: Use years here after create_time_points has been fixed
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=-5,
-        target_period_length=5,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01") - np.timedelta64(5, "D"),
+        target_period_length=np.timedelta64(5, "D"),
         source_values=possible_source_values[0],
         target_values=[-1, 1, 3, 5, 4, 3, 4, 5, 6, 7, 5, 3, 2.5, 2, 5.5, 9, 12.5],
         timeseries_type=ParameterType.POINT_TIMESERIES,
@@ -293,10 +295,10 @@ possible_target_values = [
         extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=-50,
-        target_period_length=50,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01") - np.timedelta64(50, "D"),
+        target_period_length=np.timedelta64(50, "D"),
         source_values=possible_source_values[0],
         target_values=[1, 1, 3, 9],
         timeseries_type=ParameterType.POINT_TIMESERIES,
@@ -304,10 +306,10 @@ possible_target_values = [
         extrapolation_type=time.ExtrapolationType.CONSTANT,
     ),
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=4,
-        target_period_length=7,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01") + np.timedelta64(4, "D"),
+        target_period_length=np.timedelta64(7, "D"),
         source_values=possible_source_values[0],
         target_values=[
             2.02142857,
@@ -327,10 +329,10 @@ possible_target_values = [
         extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=0,
-        target_period_length=5,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01"),
+        target_period_length=np.timedelta64(5, "D"),
         source_values=possible_source_values[0],
         target_values=[
             0.0,
@@ -355,10 +357,10 @@ possible_target_values = [
         extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
-        source_start_time=3,
-        source_period_length=3,
-        target_start_time=0,
-        target_period_length=5,
+        source_start_time=np.datetime64("2000-01-01") + np.timedelta64(3, "D"),
+        source_period_length=np.timedelta64(3, "D"),
+        target_start_time=np.datetime64("2000-01-01"),
+        target_period_length=np.timedelta64(5, "D"),
         source_values=possible_source_values[0],
         target_values=[-1.66666667, 4.13333333, 4.13333333, 5.51666667, 3.01666667],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
