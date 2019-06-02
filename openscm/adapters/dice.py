@@ -233,7 +233,9 @@ class DICE(Adapter):
         """
         Run the model over the full time range.
         """
-        for _ in range(self._timestep_count - 1):
+        for _ in range(
+            self._timestep_count - 1
+        ):  # TODO: add lock mechanism for parameter views for performance
             self._calc_step()
 
     def _step(self) -> None:
