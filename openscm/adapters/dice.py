@@ -24,41 +24,42 @@ from . import Adapter
 YEAR = np.timedelta64(365, "D")  # pylint: disable=too-many-function-args
 
 MODEL_PARAMETER_DEFAULTS = {
-    # Initial pool size atmosphere
+    # Initial size of atmospheric CO2 pool
     #     Original: "Initial Concentration in atmosphere 2010 (GtC)"
     "mat0": (830.4, "GtC"),  # 851
-    # Equilibrium pool size atmosphere
+    # Equilibrium size of atmospheric CO2 pool
     #     Original: "Equilibrium concentration atmosphere (GtC)"
     "mateq": (588, "GtC"),  # 588
+    # do we know what this is?
     "mat_lower": (10, "GtC"),  # 10
     # Original: "Initial Concentration in lower strata 2010 (GtC)"
-    "ml0": (10010, "GtC"),  # 1740
+    "ml0": (10010, "GtC"),  # 1740 # do we know what this actually is?
     # Original: "Equilibrium concentration in lower strata (GtC)"
-    "mleq": (10000, "GtC"),  # 1720
-    "ml_lower": (1000, "GtC"),  # 1000
+    "mleq": (10000, "GtC"),  # 1720 # do we know what this actually is?
+    "ml_lower": (1000, "GtC"),  # 1000 # do we know what this actually is?
     # Original: "Initial Concentration in upper strata 2010 (GtC)"
-    "mu0": (1527, "GtC"),  # 460
+    "mu0": (1527, "GtC"),  # 460 # do we know what this actually is?
     # Original: "Equilibrium concentration in upper strata (GtC)"
-    "mueq": (1350, "GtC"),  # 360
-    "mu_lower": (100, "GtC"),  # 100
+    "mueq": (1350, "GtC"),  # 360 # do we know what this actually is?
+    "mu_lower": (100, "GtC"),  # 100 # do we know what this actually is?
     # Original: "Initial atmospheric temp change (C from 1900)"
     "tatm0": (0.8, "degC"),  # 0.85
-    "tatm_upper": (40, "degC"),  # 12
+    "tatm_upper": (40, "degC"),  # 12 # do we know what this actually is?
     # Original: "Initial lower stratum temp change (C from 1900)"
-    "tocean0": (0.0068, "degC"),  # 0.0068
-    "tocean_lower": (-1, "degC"),  # -1
-    "tocean_upper": (20, "degC"),  # 20
+    "tocean0": (0.0068, "degC"),  # 0.0068 # do we know what this actually is?
+    "tocean_lower": (-1, "degC"),  # -1 # do we know what this actually is?
+    "tocean_upper": (20, "degC"),  # 20 # do we know what this actually is?
     # Original: "Carbon cycle transition matrix"
-    "b12": (0.0181, ""),  # 0.088; 0.12
+    "b12": (0.0181, ""),  # 0.088; 0.12 # do we know what this actually is?
     # Original: "Carbon cycle transition matrix"
-    "b23": (0.00071, ""),  # 0.00250; 0.007
+    "b23": (0.00071, ""),  # 0.00250; 0.007 # do we know what this actually is?
     # Original: "Climate equation coefficient for upper level"
-    "c1": (0.0222, "degC*m^2/W"),  # 0.098; 0.1005
+    "c1": (0.0222, "degC*m^2/W"),  # 0.098; 0.1005 # do we know what this actually is?
     # Original: "Transfer coefficient upper to lower stratum"
-    "c3": (0.09175, "W/m^2/degC"),  # 0.088; 0.088
+    "c3": (0.09175, "W/m^2/degC"),  # 0.088; 0.088 # do we know what this actually is?
     # Original: "Transfer coefficient for lower level"
-    "c4": (0.00487, ""),  # 0.025; 0.025
-    # Forcings of equilibrium CO2 doubling (Wm-2)
+    "c4": (0.00487, ""),  # 0.025; 0.025 # do we know what this actually is?
+    # Radiative forcing due CO2 doubling (Wm-2)
     "fco22x": (3.8, "W/m^2"),  # 3.6813
     # Original: "2010 forcings of non-CO2 GHG (Wm-2)"
     "fex0": (0.25, "W/m^2"),  # 0.5
@@ -181,7 +182,7 @@ class DICE(Adapter):
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
         self._values.tatm = self._output.timeseries(
             ("Surface Temperature", "Increase"),
-            "degC",
+            "degC",  # TODO: convert to delta_degC?
             time_points,
             timeseries_type="point",
         )
@@ -189,7 +190,7 @@ class DICE(Adapter):
         # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
         self._values.tocean = self._output.timeseries(
             ("Ocean Temperature", "Increase"),
-            "degC",
+            "degC",  # TODO: convert to delta_degC?
             time_points,
             timeseries_type="point",
         )
@@ -197,7 +198,7 @@ class DICE(Adapter):
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
         self._values.forc = self._output.timeseries(
             ("Radiative Forcing", "CO2"), "W/m^2", time_points, timeseries_type="point"
-        )
+        )  # TODO: convert to average (seems surprising RF would be being used as point..)?
 
     def _reset(self) -> None:
         self._timestep = 0
