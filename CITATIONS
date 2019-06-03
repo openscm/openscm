@@ -1,0 +1,75 @@
+OpenSCM
+-------
+
+[To be written]
+
+Wrappers
+--------
+
+@article{gieseke2018pymagicc,
+  doi = {10.21105/joss.00516},
+  year = 2018,
+  month = {2},
+  publisher = {The Open Journal},
+  volume = {3},
+  number = {22},
+  pages = {516},
+  author = {Robert Gieseke and Sven N Willner and Matthias Mengel},
+  title = {Pymagicc: A Python wrapper for the simple climate model {MAGICC}},
+  journal = {The Journal of Open Source Software}
+}
+
+@article{willner2017pyhector,
+    doi = {10.21105/joss.00248},
+    year = 2017,
+    month = {4},
+    publisher = {The Open Journal},
+    volume = {2},
+    number = {12},
+    pages = {248},
+    author = {Sven N Willner and Corinne Hartin and Robert Gieseke},
+    title = {pyhector: A Python interface for the simple climate model Hector},
+    journal = {The Journal of Open Source Software}
+}
+
+
+Models
+------
+
+@article{meinshausen2011magiccdescription,
+    doi = {10.5194/acp-11-1417-2011},
+    year = 2011,
+    month = {feb},
+    publisher = {Copernicus {GmbH}},
+    volume = {11},
+    number = {4},
+    pages = {1417--1456},
+    author = {M. Meinshausen and S. C. B. Raper and T. M. L. Wigley},
+    title = {Emulating coupled atmosphere-ocean and carbon cycle models with a simpler model, {MAGICC}6 {\textendash} Part 1: Model description and calibration},
+    journal = {Atmospheric Chemistry and Physics}
+}
+
+@article{smith2018fairv13,
+    author = {Smith, C. J. and Forster, P. M. and Allen, M. and Leach, N. and Millar, R. J. and Passerello, G. A. and Regayre, L. A.},
+    title = {FAIR v1.3: a simple emissions-based impulse response and carbon cycle model},
+    journal = {Geoscientific Model Development},
+    volume = {11},
+    year = {2018},
+    number = {6},
+    pages = {2273--2297},
+    url = {https://www.geosci-model-dev.net/11/2273/2018/},
+    doi = {10.5194/gmd-11-2273-2018}
+}
+
+@article{hartin2015hectorv10,
+    doi = {10.5194/gmd-8-939-2015},
+    year = 2015,
+    month = {4},
+    publisher = {Copernicus {GmbH}},
+    volume = {8},
+    number = {4},
+    pages = {939--955},
+    author = {C. A. Hartin and P. Patel and A. Schwarber and R. P. Link and B. P. Bond-Lamberty},
+    title = {A simple object-oriented and open-source model for scientific and policy analyses of the global climate system {\textendash} Hector v1.0},
+    journal = {Geoscientific Model Development}
+}

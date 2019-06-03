@@ -31,13 +31,15 @@ This OpenSCM implementation comes with a command line tool
 Use guidelines
 --------------
 
-We encourage use of OpenSCM as much as possible.
-If you plan to publish using OpenSCM, please be respectful of the work and the authors' willingness to open source their code under a permissive license.
-Please contact the `Maintainers`_ to discuss how best to acknowledge their work.
-There is a balance, and no single rule will fit all situations: in most cases simply citing OpenSCM will be sufficient, in others co-authorship may be the appropriate route.
-To recognise this, **our preferred policy is that you communicate your intentions early i.e. before drafting a manuscript**.
+We encourage use of OpenSCM as much as possible and are open to collaboration.
+If you plan to publish using OpenSCM, please be respectful of the work and the `Maintainers`_' willingness to open source their code.
 
-Thanks to Anthony Walker and his `MAAT <https://github.com/walkeranthonyp/MAAT>`_ project for inspiring these use guidelines.
+In particular, when using OpenSCM, please cite the DOI of the precise version of the package used and consider citing our package description paper [when it's written, which it's not yet :)].
+As appropriate, please consider also citing the wrappers and models that OpenSCM relies.
+References to the wrappers and original models can be found in the documentation and are available in bibtex format in the ``CITATIONS`` file.
+
+Of course, there is a balance, and no single rule will fit all situations.
+If in doubt, don't hestiate to contact the `Maintainers`_ and ask.
 
 Maintainers
 -----------
