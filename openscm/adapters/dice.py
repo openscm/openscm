@@ -43,20 +43,20 @@ MODEL_PARAMETER_DEFAULTS = {
     "mueq": (1350, "GtC"),  # 360 # do we know what this actually is?
     "mu_lower": (100, "GtC"),  # 100 # do we know what this actually is?
     # Original: "Initial atmospheric temp change (C from 1900)"
-    "tatm0": (0.8, "degC"),  # 0.85
-    "tatm_upper": (40, "degC"),  # 12 # do we know what this actually is?
+    "tatm0": (0.8, "delta_degC"),  # 0.85
+    "tatm_upper": (40, "delta_degC"),  # 12 # do we know what this actually is?
     # Original: "Initial lower stratum temp change (C from 1900)"
-    "tocean0": (0.0068, "degC"),  # 0.0068 # do we know what this actually is?
-    "tocean_lower": (-1, "degC"),  # -1 # do we know what this actually is?
-    "tocean_upper": (20, "degC"),  # 20 # do we know what this actually is?
+    "tocean0": (0.0068, "delta_degC"),  # 0.0068 # do we know what this actually is?
+    "tocean_lower": (-1, "delta_degC"),  # -1 # do we know what this actually is?
+    "tocean_upper": (20, "delta_degC"),  # 20 # do we know what this actually is?
     # Original: "Carbon cycle transition matrix"
     "b12": (0.0181, ""),  # 0.088; 0.12 # do we know what this actually is?
     # Original: "Carbon cycle transition matrix"
     "b23": (0.00071, ""),  # 0.00250; 0.007 # do we know what this actually is?
     # Original: "Climate equation coefficient for upper level"
-    "c1": (0.0222, "degC*m^2/W"),  # 0.098; 0.1005 # do we know what this actually is?
+    "c1": (0.0222, "delta_degC*m^2/W"),  # 0.098; 0.1005 # do we know what this actually is?
     # Original: "Transfer coefficient upper to lower stratum"
-    "c3": (0.09175, "W/m^2/degC"),  # 0.088; 0.088 # do we know what this actually is?
+    "c3": (0.09175, "W/m^2/delta_degC"),  # 0.088; 0.088 # do we know what this actually is?
     # Original: "Transfer coefficient for lower level"
     "c4": (0.00487, ""),  # 0.025; 0.025 # do we know what this actually is?
     # Radiative forcing due CO2 doubling (Wm-2)
@@ -67,7 +67,7 @@ MODEL_PARAMETER_DEFAULTS = {
     "fex1": (0.7, "W/m^2"),  # 1.0
     # Equilibrium climate sensitivity
     #     Original: "Equilibrium temp impact (oC per doubling CO2)"
-    "t2xco2": (2.9, "degC"),  # 3.1
+    "t2xco2": (2.9, "delta_degC"),  # 3.1
     # Period length in seconds (not part of original)
     "period_length": (YEAR, None),
     # Use original conversion factor from tCO2 to tC
@@ -182,7 +182,7 @@ class DICE(Adapter):
         # Original: "Increase temperature of atmosphere (degrees C from 1900)"
         self._values.tatm = self._output.timeseries(
             ("Surface Temperature", "Increase"),
-            "degC",  # TODO: convert to delta_degC?
+            "delta_degC",
             time_points,
             timeseries_type="point",
         )
@@ -190,7 +190,7 @@ class DICE(Adapter):
         # Original: "Increase in temperatureof lower oceans (degrees from 1900)"
         self._values.tocean = self._output.timeseries(
             ("Ocean Temperature", "Increase"),
-            "degC",  # TODO: convert to delta_degC?
+            "delta_degC",
             time_points,
             timeseries_type="point",
         )
