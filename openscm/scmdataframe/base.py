@@ -1502,6 +1502,9 @@ def df_append(
         to_replace=np.nan, value=na_fill_value
     )
     data = data.set_index(list(joint_meta_set))
+    # for a, b in data.groupby(data.index.names):
+    #     import pdb
+    #     pdb.set_trace()
     if duplicate_msg and data.index.duplicated().any():
         if duplicate_msg == "warn":
             warn_msg = (
