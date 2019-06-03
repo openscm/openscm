@@ -33,32 +33,32 @@ MODEL_PARAMETER_DEFAULTS = {
     # do we know what this is?
     "mat_lower": (10, "GtC"),  # 10
     # Original: "Initial Concentration in lower strata 2010 (GtC)"
-    "ml0": (10010, "GtC"),  # 1740 # do we know what this actually is?
+    "ml0": (10010, "GtC"),  # 1740
     # Original: "Equilibrium concentration in lower strata (GtC)"
-    "mleq": (10000, "GtC"),  # 1720 # do we know what this actually is?
-    "ml_lower": (1000, "GtC"),  # 1000 # do we know what this actually is?
+    "mleq": (10000, "GtC"),  # 1720
+    "ml_lower": (1000, "GtC"),  # 1000
     # Original: "Initial Concentration in upper strata 2010 (GtC)"
-    "mu0": (1527, "GtC"),  # 460 # do we know what this actually is?
+    "mu0": (1527, "GtC"),  # 460
     # Original: "Equilibrium concentration in upper strata (GtC)"
-    "mueq": (1350, "GtC"),  # 360 # do we know what this actually is?
-    "mu_lower": (100, "GtC"),  # 100 # do we know what this actually is?
+    "mueq": (1350, "GtC"),  # 360
+    "mu_lower": (100, "GtC"),  # 100
     # Original: "Initial atmospheric temp change (C from 1900)"
     "tatm0": (0.8, "delta_degC"),  # 0.85
-    "tatm_upper": (40, "delta_degC"),  # 12 # do we know what this actually is?
+    "tatm_upper": (40, "delta_degC"),  # 12
     # Original: "Initial lower stratum temp change (C from 1900)"
-    "tocean0": (0.0068, "delta_degC"),  # 0.0068 # do we know what this actually is?
-    "tocean_lower": (-1, "delta_degC"),  # -1 # do we know what this actually is?
-    "tocean_upper": (20, "delta_degC"),  # 20 # do we know what this actually is?
+    "tocean0": (0.0068, "delta_degC"),  # 0.0068
+    "tocean_lower": (-1, "delta_degC"),  # -1
+    "tocean_upper": (20, "delta_degC"),  # 20
     # Original: "Carbon cycle transition matrix"
-    "b12": (0.0181, ""),  # 0.088; 0.12 # do we know what this actually is?
+    "b12": (0.0181, ""),  # 0.088; 0.12
     # Original: "Carbon cycle transition matrix"
-    "b23": (0.00071, ""),  # 0.00250; 0.007 # do we know what this actually is?
+    "b23": (0.00071, ""),  # 0.00250; 0.007
     # Original: "Climate equation coefficient for upper level"
-    "c1": (0.0222, "delta_degC*m^2/W"),  # 0.098; 0.1005 # do we know what this actually is?
+    "c1": (0.0222, "delta_degC*m^2/W"),  # 0.098; 0.1005
     # Original: "Transfer coefficient upper to lower stratum"
-    "c3": (0.09175, "W/m^2/delta_degC"),  # 0.088; 0.088 # do we know what this actually is?
+    "c3": (0.09175, "W/m^2/delta_degC"),  # 0.088; 0.088
     # Original: "Transfer coefficient for lower level"
-    "c4": (0.00487, ""),  # 0.025; 0.025 # do we know what this actually is?
+    "c4": (0.00487, ""),  # 0.025; 0.025
     # Radiative forcing due CO2 doubling (Wm-2)
     "fco22x": (3.8, "W/m^2"),  # 3.6813
     # Original: "2010 forcings of non-CO2 GHG (Wm-2)"
