@@ -1307,8 +1307,7 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
     )
 
 
-@pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate(combo_df, with_openscm_time):
+def test_interpolate(combo_df):
     combo, df = combo_df
     target = combo.target
 
@@ -1321,8 +1320,7 @@ def test_interpolate(combo_df, with_openscm_time):
     npt.assert_array_almost_equal(res.values.squeeze(), combo.target_values)
 
 
-@pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate_missing_param_type(combo_df, with_openscm_time, doesnt_warn):
+def test_interpolate_missing_param_type(combo_df, doesnt_warn):
     combo, df = combo_df
     df._meta.pop("parameter_type")
 

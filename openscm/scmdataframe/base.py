@@ -382,8 +382,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                     )
                 error_msg = "Cannot load {} from {}".format(type(self), type(data))
                 raise TypeError(error_msg)
-            # mypy doesn't recognise type control in `if` statements
+
             (_df, _meta) = _read_file(data, **kwargs)
+
         self._time_points = TimePoints(_df.index.values)
         _df.index = self._time_points.to_index()
         _df = _df.astype(float)
@@ -1426,9 +1427,8 @@ def df_append(
     When appending many objects, it may be more efficient to call this routine once with
     a list of ScmDataFrames, than using :func:`ScmDataFrame.append` multiple times. If
     timeseries with duplicate metadata are found, the timeseries are appended and values
-    falling on the same timestep are averaged.
-
-    TODO: decide whether to raise a warning, which can be silenced, when this happens
+    falling on the same timestep are averaged (this behaviour can be adjusted with the
+    :obj:`duplicate_msg` arguments).
 
     Parameters
     ----------

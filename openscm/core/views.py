@@ -19,6 +19,9 @@ from .units import UnitConverter
 
 
 class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
+    """
+    Internal class which wraps numpy to make sure data is buffered and up-to-date
+    """
     _HANDLED_TYPES = (np.ndarray, numbers.Number)
     __array_priority__ = 1000
     _ndarray: np.ndarray
