@@ -70,6 +70,14 @@ MODEL_PARAMETER_DEFAULTS = {
     "t2xco2": (2.9, "delta_degC"),  # 3.1
     # Period length in seconds (not part of original)
     "period_length": (YEAR, None),
+    # Start time of run (not part of original)
+    "start_time": (np.datetime64("2010-01-01"), None),
+    # Stop time of run (not part of original)
+    "stop_time": (
+        np.datetime64("2010-01-01")
+        + np.timedelta64(90 * 365, "D"),  # pylint: disable=too-many-function-args
+        None,
+    ),
     # Use original conversion factor from tCO2 to tC
     # (has rounding errors but needed to reproduce original output; not part of original)
     "original_rounding": (True, None),
@@ -132,19 +140,25 @@ class DICE(Adapter):
 
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
+
+        self._values.start_time.value = self._parameters.generic("start_time").value
+        self._values.stop_time.value = self._parameters.generic("stop_time").value
+
         self._timestep_count = (
-            int((self._stop_time - self._start_time) / self._values.period_length.value)
+            int(
+                (self._values.stop_time.value - self._values.start_time.value)
+                / self._values.period_length.value
+            )
             + 1
         )  # include self._stop_time
-
         time_points = create_time_points(
-            self._start_time,
+            self._values.start_time.value,
             self._values.period_length.value,
             self._timestep_count,
             ParameterType.POINT_TIMESERIES,
         )
         time_points_for_averages = create_time_points(
-            self._start_time,
+            self._values.start_time.value,
             self._values.period_length.value,
             self._timestep_count,
             ParameterType.AVERAGE_TIMESERIES,
@@ -294,14 +308,14 @@ class DICE(Adapter):
 
         # Original: "Exogenous forcing for other greenhouse gases"
         if (
-            self._start_time + v.period_length.value * self._timestep
+            v.start_time.value + v.period_length.value * self._timestep
             >= v.forcoth_saturation_time.value
         ):
             forcoth = v.fex1.value
         else:
             forcoth = v.fex0.value + (v.fex1.value - v.fex0.value) * (
                 v.period_length.value * self._timestep
-            ) / (v.forcoth_saturation_time.value - self._start_time)
+            ) / (v.forcoth_saturation_time.value - v.start_time.value)
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
         v.forc.values[self._timestep] = (
