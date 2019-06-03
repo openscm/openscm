@@ -1502,24 +1502,30 @@ def df_append(
         to_replace=np.nan, value=na_fill_value
     )
     data = data.set_index(list(joint_meta_set))
-    # for a, b in data.groupby(data.index.names):
-    #     import pdb
-    #     pdb.set_trace()
     if duplicate_msg and data.index.duplicated().any():
-        if duplicate_msg == "warn":
-            warn_msg = (
-                "Duplicate time points detected, the output will be the average of "
-                "the duplicates. Set `dulicate_msg='return'` to examine the joint "
-                "timeseries (the duplicates can be found by looking at "
-                "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
-                "`duplicate_msg=False` to silence this message."
-            )
-            warnings.warn(warn_msg)
-        elif duplicate_msg == "return":
-            warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
-            return data  # type: ignore  # only for special use case
-        else:
-            raise ValueError("Unrecognised value for duplicate_msg")
+        # double check we're not looking at continuous timeseries
+        continuous = True
+        for _, df in data.groupby(data.index.names):
+            # if more than one number would contribute to any of the sums, we're not
+            # looking at continuous timeseries
+            if ((~df.isnull()).sum() > 1).any():
+                continuous = False
+                break
+        if not continuous:
+            if duplicate_msg == "warn":
+                warn_msg = (
+                    "Duplicate time points detected, the output will be the average of "
+                    "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+                    "timeseries (the duplicates can be found by looking at "
+                    "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
+                    "`duplicate_msg=False` to silence this message."
+                )
+                warnings.warn(warn_msg)
+            elif duplicate_msg == "return":
+                warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
+                return data  # type: ignore  # only for special use case
+            else:
+                raise ValueError("Unrecognised value for duplicate_msg")
 
     data = data.groupby(data.index.names).mean()
 
