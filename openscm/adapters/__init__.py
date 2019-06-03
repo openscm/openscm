@@ -79,7 +79,7 @@ class Adapter(metaclass=ABCMeta):
         self._initialize_model_input()
 
     def initialize_run_parameters(
-        self, start_time: np.datetime64, stop_time: np.datetime64
+        self,
     ) -> None:
         """
         Initialize parameters for the run.
@@ -97,8 +97,6 @@ class Adapter(metaclass=ABCMeta):
         if not self._initialized:
             self._initialize_model()
             self._initialized = True
-        self._start_time = start_time
-        self._stop_time = stop_time
         self._initialize_run_parameters()
 
     def reset(self) -> None:

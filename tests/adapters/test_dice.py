@@ -14,7 +14,7 @@ def _run_and_compare(test_adapter, filename):
     stop_time = start_time + (timestep_count - 1) * np.timedelta64(365, "D")
 
     test_adapter.initialize_model_input()
-    test_adapter.initialize_run_parameters(start_time, stop_time)
+    test_adapter.initialize_run_parameters()
 
     test_adapter._parameters.generic(
         ("DICE", "forcoth_saturation_time")
