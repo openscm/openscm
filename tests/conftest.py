@@ -237,6 +237,14 @@ def test_processing_scm_df():
     )
 
 
+append_scm_df_pairs = []
+
+
+@pytest.fixture(params=append_scm_df_pairs)
+def test_append_scm_dfs(request):
+    return request.param
+
+
 @pytest.fixture
 def iamdf_type():
     return IamDataFrame

@@ -1074,7 +1074,10 @@ def test_append(test_scm_df):
 
 def test_append_exact_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
-    test_scm_df.append(other).timeseries()
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        test_scm_df.append(other).timeseries()
+
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     pd.testing.assert_frame_equal(test_scm_df.timeseries(), other.timeseries())
 
@@ -1083,7 +1086,10 @@ def test_append_duplicates(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     other["time"] = [2020, 2030, 2040]
 
-    res = test_scm_df.append(other.timeseries())
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        res = test_scm_df.append(other.timeseries())
+
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 7.0]
@@ -1097,8 +1103,10 @@ def test_append_duplicates_order_doesnt_matter(test_scm_df):
     other = copy.deepcopy(test_scm_df)
     other["time"] = [2020, 2030, 2040]
     other._data.values[2, 2] = 5.0
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        res = other.append(test_scm_df)
 
-    res = other.append(test_scm_df)
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 5.0]
@@ -1108,59 +1116,59 @@ def test_append_duplicates_order_doesnt_matter(test_scm_df):
     npt.assert_almost_equal(obs, exp)
 
 
-@pytest.mark.parametrize("duplicate_msg", ("warn", "return", False))
-def test_append_duplicate_times(test_scm_df, duplicate_msg):
-    other = copy.deepcopy(test_scm_df)
-    other._data *= 2
+# @pytest.mark.parametrize("duplicate_msg", ("warn", "return", False))
+# def test_append_duplicate_times(test_append_scm_dfs, duplicate_msg):
+#     base = test_append_scm_dfs["base"]
+#     other = test_append_scm_dfs["other"]
 
-    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
-        res = test_scm_df.append(other, duplicate_msg=duplicate_msg)
+#     with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+#         res = base.append(other, duplicate_msg=duplicate_msg)
 
-    if duplicate_msg == "warn":
-        warn_msg = (
-            "Duplicate time points detected, the output will be the average of the "
-            "duplicates. Set `dulicate_msg='return'` to examine the "
-            "joint timeseries (the duplicates can be found by looking at "
-            "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
-            "`duplicate_msg=False` to silence this message."
-        )
-        assert len(mock_warn_taking_average) == 1
-        assert str(mock_warn_taking_average[0].message) == warn_msg
-    elif duplicate_msg == "return":
-        warn_msg = "returning a `pd.DataFrame`, not an `ScmDataFrame`"
-        assert len(mock_warn_taking_average) == 1
-        assert str(mock_warn_taking_average[0].message) == warn_msg
-    else:
-        assert len(mock_warn_taking_average) == 0
+#     if duplicate_msg == "warn":
+#         warn_msg = (
+#             "Duplicate time points detected, the output will be the average of the "
+#             "duplicates. Set `dulicate_msg='return'` to examine the "
+#             "joint timeseries (the duplicates can be found by looking at "
+#             "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
+#             "`duplicate_msg=False` to silence this message."
+#         )
+#         assert len(mock_warn_taking_average) == 1
+#         assert str(mock_warn_taking_average[0].message) == warn_msg
+#     elif duplicate_msg == "return":
+#         warn_msg = "returning a `pd.DataFrame`, not an `ScmDataFrame`"
+#         assert len(mock_warn_taking_average) == 1
+#         assert str(mock_warn_taking_average[0].message) == warn_msg
+#     else:
+#         assert len(mock_warn_taking_average) == 0
 
-    if duplicate_msg == "return":
-        assert res.shape[0] == other.timeseries().shape[0] * 2
-        look_df = res[res.index.duplicated(keep=False)].sort_index()
-        expected = pd.concat([other.timeseries(), test_scm_df.timeseries()])
-        look_df_reshaped = (
-            look_df.reset_index()
-            .set_index(expected.index.names)
-            .sort_values(by=expected.columns[0])
-            .sort_index()
-        )
-        pd.testing.assert_frame_equal(
-            expected.sort_values(by=expected.columns[0]).sort_index(), look_df_reshaped
-        )
-    else:
-        obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
-        exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
-        npt.assert_almost_equal(obs, exp)
+#     if duplicate_msg == "return":
+#         assert res.shape[0] == other.timeseries().shape[0] * 2
+#         look_df = res[res.index.duplicated(keep=False)].sort_index()
+#         expected = pd.concat([other.timeseries(), test_scm_df.timeseries()])
+#         look_df_reshaped = (
+#             look_df.reset_index()
+#             .set_index(expected.index.names)
+#             .sort_values(by=expected.columns[0])
+#             .sort_index()
+#         )
+#         pd.testing.assert_frame_equal(
+#             expected.sort_values(by=expected.columns[0]).sort_index(), look_df_reshaped
+#         )
+#     else:
+#         obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
+#         exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
+#         npt.assert_almost_equal(obs, exp)
 
 
-def test_append_continous_times_doesnt_raise_if_continuous(test_scm_df):
-    join_year = 2011
-    base = test_scm_df.filter(year=range(1, join_year))
-    other = test_scm_df.filter(year=range(join_year, 30000))
+# def test_append_continous_times_doesnt_raise_if_continuous(test_append_scm_dfs):
+#     join_year = 2011
+#     base = test_append_scm_dfs["base"].filter(year=range(1, join_year))
+#     other = test_append_scm_dfs["base"].filter(year=range(join_year, 30000))
 
-    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
-        base.append(other)
+#     with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+#         base.append(other)
 
-    assert len(mock_warn_taking_average) == 0
+#     assert len(mock_warn_taking_average) == 0
 
 
 def test_append_duplicate_times_error_msg(test_scm_df):
@@ -1179,8 +1187,10 @@ def test_append_inplace(test_scm_df):
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2, 7, 7]
     npt.assert_almost_equal(obs, exp)
-    # TODO: test for warning here
-    test_scm_df.append(other, inplace=True)
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        test_scm_df.append(other, inplace=True)
+
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     obs = test_scm_df.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [(2.0 + 4.0) / 2, (7.0 + 14.0) / 2, (7.0 + 14.0) / 2]
@@ -1253,7 +1263,10 @@ def get_append_col_order_time_dfs(base):
 def test_append_column_order_time_interpolation(test_scm_df):
     base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
 
-    res = df_append([test_scm_df, other, other_2])
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        res = df_append([test_scm_df, other, other_2])
+
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     pd.testing.assert_frame_equal(
         res.timeseries().sort_index(),
@@ -1265,13 +1278,17 @@ def test_append_column_order_time_interpolation(test_scm_df):
 def test_df_append_inplace_wrong_base(test_scm_df):
     error_msg = "Can only append inplace to an ScmDataFrameBase"
     with pytest.raises(TypeError, match=error_msg):
-        df_append([test_scm_df.timeseries(), test_scm_df], inplace=True)
+        with warnings.catch_warnings(record=True):  # ignore warnings in this test
+            df_append([test_scm_df.timeseries(), test_scm_df], inplace=True)
 
 
 def test_append_chain_column_order_time_interpolation(test_scm_df):
     base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
 
-    res = test_scm_df.append(other).append(other_2)
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        res = test_scm_df.append(other).append(other_2)
+
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     pd.testing.assert_frame_equal(
         res.timeseries().sort_index(),
@@ -1283,8 +1300,11 @@ def test_append_chain_column_order_time_interpolation(test_scm_df):
 def test_append_inplace_column_order_time_interpolation(test_scm_df):
     base, other, other_2, exp = get_append_col_order_time_dfs(test_scm_df)
 
-    test_scm_df.append(other, inplace=True)
-    test_scm_df.append(other_2, inplace=True)
+    with warnings.catch_warnings(record=True) as mock_warn_taking_average:
+        test_scm_df.append(other, inplace=True)
+        test_scm_df.append(other_2, inplace=True)
+
+    assert len(mock_warn_taking_average) == 1  # test message elsewhere
 
     pd.testing.assert_frame_equal(
         test_scm_df.timeseries().sort_index(),
