@@ -43,20 +43,20 @@ class _AdapterTester:
         assert test_adapter._initialized
 
     def test_run(self, test_adapter, test_run_parameters):
+        self.prepare_run_input(
+            test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
+        )
         test_adapter.initialize_model_input()
         test_adapter.initialize_run_parameters()
-        self.prepare_run_input(
-            test_adapter
-        )
         test_adapter.reset()
         test_adapter.run()
 
     def test_step(self, test_adapter, test_run_parameters):
+        self.prepare_run_input(
+            test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
+        )
         test_adapter.initialize_model_input()
         test_adapter.initialize_run_parameters()
-        self.prepare_run_input(
-            test_adapter
-        )
         test_adapter.reset()
         assert test_adapter._current_time == test_run_parameters.start_time
         try:

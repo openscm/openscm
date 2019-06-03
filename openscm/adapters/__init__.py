@@ -8,9 +8,15 @@ from typing import Dict, Optional
 import numpy as np
 
 from ..core.parameterset import ParameterSet
-from ..errors import AdapterNeedsModuleError
+from ..errors import AdapterNeedsModuleError, ParameterEmptyError
 
 _loaded_adapters: Dict[str, type] = {}
+
+
+OPENSCM_STANDARD_DEFAULTS = {
+    "start_time": (np.datetime64("1750-01-01"), None),
+    "stop_time": (np.datetime64("2300-01-01"), None),
+}
 
 
 class Adapter(metaclass=ABCMeta):
@@ -31,6 +37,9 @@ class Adapter(metaclass=ABCMeta):
 
     _initialized: bool
     """``True`` if model has been initialized via :func:`_initialize_model`"""
+
+    _initialized_inputs: bool
+    """True if model inputs have been initialized via :func:`initialize_model_input`"""
 
     _output: ParameterSet
     """Output parameter set"""
@@ -58,6 +67,7 @@ class Adapter(metaclass=ABCMeta):
         self._parameters = input_parameters
         self._output = output_parameters
         self._initialized = False
+        self._initialized_inputs = False
         self._current_time = 0
 
     def __del__(self) -> None:
@@ -74,13 +84,31 @@ class Adapter(metaclass=ABCMeta):
         :func:`run` or :func:`step`.
         """
         if not self._initialized:
+            self._ensure_all_defaults_included_in_parameters()
             self._initialize_model()
             self._initialized = True
         self._initialize_model_input()
+        self._initialized_inputs = True
 
-    def initialize_run_parameters(
-        self,
-    ) -> None:
+    def _ensure_all_defaults_included_in_parameters(self) -> None:
+        """
+        Ensure all OpenSCM defaults are also initialised
+        """
+        for name, (default, unit) in OPENSCM_STANDARD_DEFAULTS.items():
+            if unit is None:
+                # Non-scalar parameter
+                try:
+                    self._parameters.generic((name,)).value
+                except ParameterEmptyError:
+                    self._parameters.generic((name,)).value = default
+            else:
+                # Scalar parameter
+                try:
+                    self._parameters.scalar((name,), unit).value
+                except ParameterEmptyError:
+                    self._parameters.scalar((name,), unit).value = default
+
+    def initialize_run_parameters(self) -> None:
         """
         Initialize parameters for the run.
 
@@ -95,8 +123,14 @@ class Adapter(metaclass=ABCMeta):
             End of the time range to run over (including)
         """
         if not self._initialized:
+            self._ensure_all_defaults_included_in_parameters()
             self._initialize_model()
             self._initialized = True
+
+        if not self._initialized_inputs:
+            self.initialize_model_input()
+            self._initialized_inputs = True
+
         self._initialize_run_parameters()
 
     def reset(self) -> None:
@@ -106,7 +140,7 @@ class Adapter(metaclass=ABCMeta):
         Called once after each call of :func:`run` and to reset the model after several calls
         to :func:`step`.
         """
-        self._current_time = self._start_time
+        self._current_time = self._parameters.generic("start_time").value
         self._reset()
 
     def run(self) -> None:

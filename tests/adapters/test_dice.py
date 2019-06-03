@@ -13,9 +13,8 @@ def _run_and_compare(test_adapter, filename):
     timestep_count = len(original_data)
     stop_time = start_time + (timestep_count - 1) * np.timedelta64(365, "D")
 
-    test_adapter.initialize_model_input()
-    test_adapter.initialize_run_parameters()
-
+    test_adapter._parameters.generic(("start_time")).value = start_time
+    test_adapter._parameters.generic(("stop_time")).value = stop_time
     test_adapter._parameters.generic(
         ("DICE", "forcoth_saturation_time")
     ).value = start_time + np.timedelta64(90 * 365, "D")
@@ -29,6 +28,8 @@ def _run_and_compare(test_adapter, filename):
         ("Emissions", "CO2"), "GtCO2/a", time_points, timeseries_type="average"
     ).values = original_data.E.values[:timestep_count]
 
+    test_adapter.initialize_model_input()
+    test_adapter.initialize_run_parameters()
     test_adapter.reset()
     test_adapter.run()
 
@@ -68,13 +69,17 @@ class TestMyAdapter(_AdapterTester):
     def prepare_run_input(self, test_adapter, start_time, stop_time):
         """
         Overload this in your adapter test if you need to set required input parameters.
-        This method is called directly after ``test_adapter.initialize_run_parameters``
+        This method is called directly before ``test_adapter.initialize_model_input``
         during tests.
         """
+        test_adapter._parameters.generic(("start_time",)).value = start_time
+        test_adapter._parameters.generic(("stop_time",)).value = stop_time
+
+        npoints = 10  # setting to zero so doesn't matter
         time_points_for_averages = create_time_points(
             start_time,
-            np.timedelta64(365, "D"),
-            test_adapter._timestep_count,
+            stop_time - start_time,
+            npoints,
             ParameterType.AVERAGE_TIMESERIES,
         )
         test_adapter._parameters.timeseries(
@@ -82,4 +87,4 @@ class TestMyAdapter(_AdapterTester):
             "GtCO2/a",
             time_points_for_averages,
             timeseries_type="average",
-        ).values = np.zeros(test_adapter._timestep_count)
+        ).values = np.zeros(npoints)
