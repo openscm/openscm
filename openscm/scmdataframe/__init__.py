@@ -44,7 +44,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     in the ParameterSet must be represented as Generic parameters with in the `World`
     region.
 
-    TODO: we should really improve on that
+    TODO: we should really improve on that ZN: +1
     TODO: overhaul this function and move to an appropriate location
 
     Parameters
@@ -52,7 +52,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     parameterset
         :class:`ParameterSet` containing time series and optional metadata.
     time_points
-        Time points to which all timeseries will be interpolated.
+        Time points onto which all timeseries will be interpolated.
     model
         Default value for the model metadata value. This value is only used if the
         :obj:`model` parameter is not found.
