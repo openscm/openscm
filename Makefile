@@ -65,7 +65,7 @@ coverage: venv  ## run all the tests and show code coverage
 docs: venv  ## build the docs
 	./venv/bin/sphinx-build -M html docs docs/build
 
-format: venv clean-notebooks
+format: venv clean-notebooks  ## format the code and clean notebooks
 	./venv/bin/isort --recursive openscm tests setup.py
 	./venv/bin/black openscm tests setup.py --exclude openscm/_version.py
 
@@ -79,10 +79,10 @@ publish-on-pypi: venv  ## publish a release on PyPI
 		echo Working directory is dirty >&2; \
 	fi;
 
-test: venv
+test: venv  ## run all the code tests
 	./venv/bin/pytest -sx tests
 
-test-notebooks: venv
+test-notebooks: venv  ## run all notebook tests
 	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
 
 test-all: test test-notebooks  ## run the testsuite and the notebook tests
