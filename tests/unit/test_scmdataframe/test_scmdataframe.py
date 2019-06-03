@@ -1143,9 +1143,11 @@ def test_append_duplicate_times(test_append_scm_dfs, duplicate_msg):
 
         # check advice given in message actually only finds duplicate rows
         look_df = res[res.index.duplicated(keep=False)].sort_index()
-        assert look_df.shape[0] == 2*test_append_scm_dfs["duplicate_rows"]
+        assert look_df.shape[0] == 2 * test_append_scm_dfs["duplicate_rows"]
     else:
-        pd.testing.assert_frame_equal(res.timeseries(), expected.timeseries(), check_like=True)
+        pd.testing.assert_frame_equal(
+            res.timeseries(), expected.timeseries(), check_like=True
+        )
 
 
 def test_append_doesnt_warn_if_continuous_times(test_append_scm_dfs):
