@@ -37,8 +37,8 @@ def _run_and_compare(test_adapter, filename):
         (("Pool", "CO2", "Ocean", "lower"), "GtC", "ML"),
         (("Pool", "CO2", "Ocean", "shallow"), "GtC", "MU"),
         (("Radiative Forcing", "CO2"), "W/m^2", "FORC"),
-        (("Surface Temperature", "Increase"), "degC", "TATM"),
-        (("Ocean Temperature", "Increase"), "degC", "TOCEAN"),
+        (("Surface Temperature", "Increase"), "delta_degC", "TATM"),
+        (("Ocean Temperature", "Increase"), "delta_degC", "TOCEAN"),
     ]
     for name, unit, original_name in output_parameters:
         np.testing.assert_allclose(
