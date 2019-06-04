@@ -118,7 +118,10 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         value,
     ) in parameterset._root._parameters.items():  # pylint: disable=protected-access
         root_params.update(walk_parameters(value))
-    for (_, r) in parameterset._root._children.items():  # pylint: disable=protected-access
+    for (
+        _,
+        r,
+    ) in parameterset._root._children.items():  # pylint: disable=protected-access
         for _, value in r._parameters.items():  # pylint: disable=protected-access
             root_params.update(walk_parameters(value))
 

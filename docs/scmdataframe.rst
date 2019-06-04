@@ -27,4 +27,4 @@ Pyam Compatibilty
 *****************
 
 .. automodule:: openscm.scmdataframe.pyam_compat
-
+    :exclude-members: Axes,IamDataFrame

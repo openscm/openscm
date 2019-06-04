@@ -481,7 +481,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             and does not equal "unspecified"
         """
         meta_values = self._meta.drop(
-            ["variable", "region", "unit", "parameter_type"], axis=1
+            ["variable", "region", "unit", "parameter_type"], axis=1, errors="ignore"
         ).drop_duplicates()
         if len(meta_values) > 1:
             raise ValueError("Not all timeseries have identical metadata")
@@ -506,9 +506,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                     metadata.pop("parameter_type")
                 )
             except KeyError:
-                import pdb
-
-                pdb.set_trace()
+                timeseries_type = guess_parameter_type(variable, unit)
 
             time_points = self.time_points
             if timeseries_type == ParameterType.AVERAGE_TIMESERIES:

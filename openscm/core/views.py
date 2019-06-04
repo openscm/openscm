@@ -355,7 +355,10 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
     def _get_values(self) -> np.ndarray:
         if self._parameter.children:
             return cast(
-                Sequence[float], np.sum(v.values for v in self._child_data_views)
+                Sequence[float],
+                np.sum(
+                    v.values for v in self._child_data_views
+                ),  # TODO: fix numpy warning here
             )
         if self.empty:
             raise ParameterEmptyError
