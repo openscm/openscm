@@ -102,7 +102,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         return "average" if t == ParameterType.AVERAGE_TIMESERIES else "point"
 
     metadata: Dict[str, List] = {
-        "climate_model": [climate_model],  # TODO: auto-fill
+        "climate_model": [climate_model],
         "scenario": [scenario],
         "model": [model],
         "variable": [],
@@ -131,12 +131,16 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         if p_info.parameter_type == ParameterType.GENERIC:
             if region != ("World",):  # TODO: fix this
                 raise ValueError(
-                    "Only generic types with Region=World can be extracted"
+                    "Only generic types with Region==World can be extracted"
                 )
             metadata[parameter_name_to_scm(param_name)] = [
                 parameterset.generic(param_name, region=region).value
             ]
         elif p_info.parameter_type == ParameterType.SCALAR:
+            if region != ("World",):  # TODO: fix this
+                raise ValueError(
+                    "Only scalar types with Region==World can be extracted"
+                )
             meta_key = "{} ({})".format(parameter_name_to_scm(param_name), p_info.unit)
             meta_value = parameterset.scalar(param_name, unit=str(p_info.unit)).value
             metadata[meta_key] = [meta_value]

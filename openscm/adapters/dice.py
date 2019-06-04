@@ -58,7 +58,7 @@ MODEL_PARAMETER_DEFAULTS = {
     "c3": (0.09175, "W/m^2/delta_degC"),  # 0.088; 0.088
     # Original: "Transfer coefficient for lower level"
     "c4": (0.00487, ""),  # 0.025; 0.025
-    # Radiative forcing due CO2 doubling (Wm-2)
+    # Radiative forcing due to CO2 doubling (Wm-2)
     "fco22x": (3.8, "W/m^2"),  # 3.6813
     # Original: "2010 forcings of non-CO2 GHG (Wm-2)"
     "fex0": (0.25, "W/m^2"),  # 0.5
