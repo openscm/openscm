@@ -9,7 +9,6 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
@@ -1779,63 +1778,66 @@ def test_scmdataframe_to_parameterset(rcp26, assert_core):
     tdata = rcp26
 
     res = tdata.to_parameterset()
-    time_points = tdata.time_points
 
-    tstart_dt = tdata["time"].min()
-
-    def get_comparison_time_for_year(yr):
-        return np.datetime64(
-            tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
+    def get_comparison_times_for_year(yr):
+        return np.asarray(
+            [datetime.datetime(yr, 1, 1), datetime.datetime(yr + 1, 1, 1)],
+            dtype="datetime64[s]",
         )
 
-    assert_core(
+    np.testing.assert_allclose(
         9.14781,
-        get_comparison_time_for_year(2017),
-        res,
-        ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
-        "World",
-        "GtC / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
+            "GtC / yr",
+            get_comparison_times_for_year(2017),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         6.124 + 1.2981006,
-        get_comparison_time_for_year(1993),
-        res,
-        ("Emissions", "CO2"),
-        "World",
-        "GtC / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "CO2"),
+            "GtC / yr",
+            get_comparison_times_for_year(1993),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         7.2168971,
-        get_comparison_time_for_year(1983),
-        res,
-        ("Emissions", "N2O"),
-        "World",
-        "MtN2ON / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "N2O"),
+            "MtN2ON / yr",
+            get_comparison_times_for_year(1983),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         0.56591996,
-        get_comparison_time_for_year(1766),
-        res,
-        ("Emissions", "OC"),
-        "World",
-        "MtOC / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "OC"),
+            "MtOC / yr",
+            get_comparison_times_for_year(1766),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         0.22445,
-        get_comparison_time_for_year(2087),
-        res,
-        ("Emissions", "SF6"),
-        "World",
-        "ktSF6 / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "SF6"),
+            "ktSF6 / yr",
+            get_comparison_times_for_year(2087),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
 
