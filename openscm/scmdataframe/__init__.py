@@ -73,9 +73,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     :class:`ScmDataFrame`
         :class:`ScmDataFrame` containing the data from :obj:`parameterset`
     """
-    time_points = np.asarray(
-        time_points, dtype="datetime64[s]"
-    )  # TODO: check this can handle many different input types
+    time_points = np.asarray(time_points, dtype="datetime64[s]")
     time_points_average = np.copy(time_points)
     delta_t = time_points_average[-1] - time_points_average[-2]
     time_points_average = np.concatenate(
@@ -129,7 +127,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         # All meta values are stored as generic value (AKA no units)
         # TODO: fix this
         if p_info.parameter_type == ParameterType.GENERIC:
-            if region != ("World",):  # TODO: fix this
+            if region != ("World",):
                 raise ValueError(
                     "Only generic types with Region==World can be extracted"
                 )
@@ -137,7 +135,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                 parameterset.generic(param_name, region=region).value
             ]
         elif p_info.parameter_type == ParameterType.SCALAR:
-            if region != ("World",):  # TODO: fix this
+            if region != ("World",):
                 raise ValueError(
                     "Only scalar types with Region==World can be extracted"
                 )
@@ -146,7 +144,6 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
             metadata[meta_key] = [meta_value]
         else:
             para_type = p_info.parameter_type
-            print(para_type)
             tp = (
                 time_points
                 if para_type == ParameterType.POINT_TIMESERIES
