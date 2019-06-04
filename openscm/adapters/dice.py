@@ -30,7 +30,6 @@ MODEL_PARAMETER_DEFAULTS = {
     # Equilibrium size of atmospheric CO2 pool
     #     Original: "Equilibrium concentration atmosphere (GtC)"
     "mateq": (588, "GtC"),  # 588
-    # do we know what this is?
     "mat_lower": (10, "GtC"),  # 10
     # Original: "Initial Concentration in lower strata 2010 (GtC)"
     "ml0": (10010, "GtC"),  # 1740
