@@ -76,6 +76,11 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     time_points = np.asarray(
         time_points, dtype="datetime64[s]"
     )  # TODO: check this can handle many different input types
+    time_points_average = np.copy(time_points)
+    delta_t = time_points_average[-1] - time_points_average[-2]
+    time_points_average = np.concatenate(
+        [time_points_average, [time_points_average[-1] + delta_t]]
+    )
 
     def walk_parameters(
         para: _Parameter, past: Tuple[str, ...] = ()
@@ -93,6 +98,9 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     def parameter_name_to_scm(t):
         return ScmDataFrame.data_hierarchy_separator.join(t)
 
+    def parameter_type_to_scm(t):
+        return "average" if t == ParameterType.AVERAGE_TIMESERIES else "point"
+
     metadata: Dict[str, List] = {
         "climate_model": [climate_model],  # TODO: auto-fill
         "scenario": [scenario],
@@ -100,6 +108,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         "variable": [],
         "region": [],
         "unit": [],
+        "parameter_type": [],
     }
     data = []
 
@@ -109,6 +118,9 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         value,
     ) in parameterset._root._parameters.items():  # pylint: disable=protected-access
         root_params.update(walk_parameters(value))
+    for (_, r) in parameterset._root._children.items():  # pylint: disable=protected-access
+        for _, value in r._parameters.items():  # pylint: disable=protected-access
+            root_params.update(walk_parameters(value))
 
     for (param_name, region), p_info in root_params.items():
         # All meta values are stored as generic value (AKA no units)
@@ -121,18 +133,27 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
             metadata[parameter_name_to_scm(param_name)] = [
                 parameterset.generic(param_name, region=region).value
             ]
-        else:  # TODO: support scalar parameters
+        elif p_info.parameter_type == ParameterType.SCALAR:
+            meta_key = "{} ({})".format(parameter_name_to_scm(param_name), p_info.unit)
+            meta_value = parameterset.scalar(param_name, unit=str(p_info.unit)).value
+            metadata[meta_key] = [meta_value]
+        else:
+            para_type = p_info.parameter_type
+            print(para_type)
+            tp = (
+                time_points
+                if para_type == ParameterType.POINT_TIMESERIES
+                else time_points_average
+            )
+
             ts = parameterset.timeseries(  # type: ignore
-                param_name,
-                p_info.unit,
-                time_points,
-                region=region,
-                timeseries_type=p_info.parameter_type,
+                param_name, p_info.unit, tp, region=region, timeseries_type=para_type
             )
             data.append(ts.values)
             metadata["variable"].append(parameter_name_to_scm(param_name))
             metadata["region"].append(parameter_name_to_scm(region))
             metadata["unit"].append(p_info.unit)
+            metadata["parameter_type"].append(parameter_type_to_scm(para_type))
 
     # convert timeseries to dataframe with time index here
     return ScmDataFrame(np.atleast_2d(data).T, columns=metadata, index=time_points)

@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import datetime
 import os
+import re
 import warnings
 from logging import getLogger
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -480,7 +481,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             and does not equal "unspecified"
         """
         meta_values = self._meta.drop(
-            ["variable", "region", "unit"], axis=1
+            ["variable", "region", "unit", "parameter_type"], axis=1
         ).drop_duplicates()
         if len(meta_values) > 1:
             raise ValueError("Not all timeseries have identical metadata")
@@ -500,18 +501,36 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             variable = metadata.pop("variable")
             region = metadata.pop("region")
             unit = metadata.pop("unit")
+            try:
+                timeseries_type = ParameterType.from_timeseries_type(
+                    metadata.pop("parameter_type")
+                )
+            except KeyError:
+                import pdb
+
+                pdb.set_trace()
+
+            time_points = self.time_points
+            if timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+                delta_t = time_points[-1] - time_points[-2]
+                time_points = np.concatenate((time_points, [time_points[-1] + delta_t]))
 
             parameterset.timeseries(
                 variable,
                 unit,
-                self.time_points,
+                time_points,
                 region=region,
-                timeseries_type=ParameterType.POINT_TIMESERIES,  # TODO: remove hard-coding
+                timeseries_type=timeseries_type,
             ).values = vals.values
 
+        unit_regexp = re.compile(r".*\(.*\)")
         for k, v in meta_values.iteritems():
-            # TODO: make this smarter
-            parameterset.generic(k).value = v
+            if unit_regexp.match(k):
+                para_name = k.split("(")[0].strip()
+                para_unit = k.split("(")[1].split(")")[0].strip()
+                parameterset.scalar(para_name, para_unit).value = v
+            else:
+                parameterset.generic(k).value = v
 
         return parameterset
 
