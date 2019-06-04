@@ -213,7 +213,7 @@ def _format_wide_data(df):
 
 
 def _from_ts(
-    df: Any, index: Any = None, **columns: Union[str, List[str]]
+    df: Any, index: Any = None, **columns: Union[str, bool, float, int, List]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Prepare data to initialize :class:`ScmDataFrameBase` from wide timeseries.
@@ -246,19 +246,20 @@ def _from_ts(
     df.index.name = "time"
 
     num_ts = len(df.columns)
-    for c_name in columns:
-        col = columns[c_name]
-        col = [col] if isinstance(col, str) else col
+    for c_name, col in columns.items():
+        col_list = (
+            [col] if isinstance(col, str) or not isinstance(col, Iterable) else col
+        )
 
-        if len(col) == num_ts:
+        if len(col_list) == num_ts:
             continue
-        if len(col) != 1:
+        if len(col_list) != 1:
             error_msg = (
                 "Length of column '{}' is incorrect. It should be length "
                 "1 or {}".format(c_name, num_ts)
             )
             raise ValueError(error_msg)
-        columns[c_name] = col * num_ts
+        columns[c_name] = col_list * num_ts
 
     meta = pd.DataFrame(columns, index=df.columns)
 

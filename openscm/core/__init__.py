@@ -89,35 +89,19 @@ class OpenSCM:
         """
         return self._input_parameters
 
-    def reset_stepping(
-        self, start_time: np.datetime64, stop_time: np.datetime64
-    ) -> None:
+    def reset_stepping(self) -> None:
         """
         Reset the model before starting stepping.
-
-        Parameters
-        ----------
-        start_time
-            Beginning of the time range to run over
-        stop_time
-            End of the time range to run over (including)
         """
         self._model.initialize_model_input()
-        self._model.initialize_run_parameters(start_time, stop_time)
+        self._model.initialize_run_parameters()
         self._model.reset()
 
-    def run(self, start_time: np.datetime64, stop_time: np.datetime64) -> None:
+    def run(self) -> None:
         """
         Run the model over the full time range.
-
-        Parameters
-        ----------
-        start_time
-            Beginning of the time range to run over
-        stop_time
-            End of the time range to run over (including)
         """
-        self.reset_stepping(start_time, stop_time)
+        self.reset_stepping()
         self._model.run()
 
     def step(self) -> np.datetime64:
