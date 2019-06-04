@@ -1852,10 +1852,29 @@ def test_scmdataframe_climate_model_to_parameterset_raises(test_scm_df):
         test_scm_df.filter(scenario="a_scenario2").to_parameterset()
 
 
-def test_convert_openscm_to_scmdataframe(rcp26):
-    tdata = rcp26
+def test_convert_openscm_to_scmdataframe_circularity(rcp26):
+    tdata = rcp26.copy()
+    tdata.set_meta("average", name="parameter_type")
+    tdata.set_meta(True, name="test_generic")
+    tdata.set_meta(3.2, name="test_scalar (delta_degC)")
+    tdata.set_meta([(1, 2, 3)] * len(tdata), name="test_gen_list")
 
-    intermediate = rcp26.to_parameterset()
+    append_meta = tdata.meta.iloc[0].to_dict()
+    append_meta["variable"] = "Cumulative test"
+    append_meta["unit"] = "kg"
+    append_meta["region"] = "World|Aus"
+    append_meta["parameter_type"] = "point"
+    append_meta["test_gen_list"] = [append_meta["test_gen_list"]]
+    tdata = tdata.append(
+        ScmDataFrame(
+            data=np.arange(len(tdata.time_points)),
+            index=tdata.time_points,
+            columns=append_meta,
+        )
+    )
+    tdata.timeseries()
+
+    intermediate = tdata.to_parameterset()
 
     res = convert_openscm_to_scmdataframe(
         intermediate,

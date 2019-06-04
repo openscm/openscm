@@ -73,7 +73,9 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     :class:`ScmDataFrame`
         :class:`ScmDataFrame` containing the data from :obj:`parameterset`
     """
-    time_points = np.asarray(time_points, dtype="datetime64[s]")  # TODO: check this can handle many different input types
+    time_points = np.asarray(
+        time_points, dtype="datetime64[s]"
+    )  # TODO: check this can handle many different input types
 
     def walk_parameters(
         para: _Parameter, past: Tuple[str, ...] = ()
