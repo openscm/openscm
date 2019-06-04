@@ -1885,9 +1885,7 @@ def test_convert_openscm_to_scmdataframe_circularity(rcp26):
     )
 
     pd.testing.assert_frame_equal(
-        tdata.timeseries().reset_index(),
-        res.timeseries().reset_index(),
-        check_like=True,
+        tdata.timeseries().sort_index(), res.timeseries().sort_index(), check_like=True
     )
 
 
