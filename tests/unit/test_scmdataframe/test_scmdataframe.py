@@ -1839,10 +1839,12 @@ def test_scmdataframe_to_parameterset(rcp26, assert_core):
     )
 
 
-def test_scmdataframe_to_parameterset_raises(test_scm_df):
+def test_scmdataframe_non_unique_metadata_to_parameterset_raises(test_scm_df):
     with pytest.raises(ValueError, match="Not all timeseries have identical metadata"):
         test_scm_df.to_parameterset()
 
+
+def test_scmdataframe_climate_model_to_parameterset_raises(test_scm_df):
     with pytest.raises(
         ValueError,
         match="Only input data can be converted to a ParameterSet. Remove climate_model first",

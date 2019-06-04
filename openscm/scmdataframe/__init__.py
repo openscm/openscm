@@ -44,7 +44,6 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     in the ParameterSet must be represented as Generic parameters with in the `World`
     region.
 
-    TODO: we should really improve on that ZN: +1
     TODO: overhaul this function and move to an appropriate location
 
     Parameters
@@ -74,7 +73,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     :class:`ScmDataFrame`
         :class:`ScmDataFrame` containing the data from :obj:`parameterset`
     """
-    time_points = np.asarray(time_points, dtype="datetime64[s]")
+    time_points = np.asarray(time_points, dtype="datetime64[s]")  # TODO: check this can handle many different input types
 
     def walk_parameters(
         para: _Parameter, past: Tuple[str, ...] = ()
@@ -93,7 +92,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
         return ScmDataFrame.data_hierarchy_separator.join(t)
 
     metadata: Dict[str, List] = {
-        "climate_model": [climate_model],
+        "climate_model": [climate_model],  # TODO: auto-fill
         "scenario": [scenario],
         "model": [model],
         "variable": [],
@@ -111,8 +110,9 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
 
     for (param_name, region), p_info in root_params.items():
         # All meta values are stored as generic value (AKA no units)
+        # TODO: fix this
         if p_info.parameter_type == ParameterType.GENERIC:
-            if region != ("World",):
+            if region != ("World",):  # TODO: fix this
                 raise ValueError(
                     "Only generic types with Region=World can be extracted"
                 )

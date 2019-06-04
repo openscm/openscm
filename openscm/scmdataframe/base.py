@@ -456,9 +456,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Add parameters in this :class:`ScmDataFrameBase` to a :class:`ParameterSet`.
 
         It can only be transformed if all timeseries have the same metadata. This is
-        typically the case if all output comes from a single model run. If that is not
-        the case, further filtering is needed to reduce to a dataframe with identical
-        metadata.
+        typically the case if all data comes from a single scenario/model input
+        dataset. If that is not the case, further filtering is needed to reduce to a
+        dataframe with identical metadata.
 
         Parameters
         ----------
@@ -466,8 +466,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             ParameterSet to add this :class:`ScmDataFrameBase`'s parameters to. A new
             :class:`ParameterSet` is created if this is ``None``.
 
-        Return
-        ------
+        Returns
+        -------
         ParameterSet
             :class:`ParameterSet` containing the data in ``self`` (equals
             :obj:`parameterset` if not ``None``)
@@ -487,7 +487,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
         if meta_values.get("climate_model", "unspecified") != "unspecified":
             raise ValueError(
-                "Only input data can be converted to a ParameterSet. Remove climate_model first"
+                "Only input data can be converted to a ParameterSet. Remove climate_model first."
             )
 
         if not parameterset:
@@ -505,10 +505,11 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 unit,
                 self.time_points,
                 region=region,
-                timeseries_type=ParameterType.POINT_TIMESERIES,
+                timeseries_type=ParameterType.POINT_TIMESERIES,  # TODO: remove hard-coding
             ).values = vals.values
 
         for k, v in meta_values.iteritems():
+            # TODO: make this smarter
             parameterset.generic(k).value = v
 
         return parameterset
