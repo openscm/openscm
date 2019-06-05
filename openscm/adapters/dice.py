@@ -107,6 +107,7 @@ class DICE(Adapter):
         "start_time": "Start Time",
         "stop_time": "Stop Time",
         "t2xco2": "Equilibrium Climate Sensitivity",
+        "fco22x": "Radiative Forcing 2xCO2",
     }
     """Mapping from OpenSCM standard parameters to DICE parameters"""
 
@@ -138,29 +139,23 @@ class DICE(Adapter):
         if name in openscm_map:  # openscm standard parameters
             if unit is None:
                 self._set_para_if_not_set(
-                    self._parameters.generic(openscm_map[name]),
-                    value,
+                    self._parameters.generic(openscm_map[name]), value
                 )
             else:
                 self._set_para_if_not_set(
-                    self._parameters.scalar(openscm_map[name], unit),
-                    value,
+                    self._parameters.scalar(openscm_map[name], unit), value
                 )
 
         if unit is None:
             # Non-scalar parameter
-            self._set_para_if_not_set(
-                self._parameters.generic(("DICE", name)), value
-            )
+            self._set_para_if_not_set(self._parameters.generic(("DICE", name)), value)
             setattr(self._values, name, self._parameters.generic(("DICE", name)))
         else:
             # Scalar parameter
             self._set_para_if_not_set(
                 self._parameters.scalar(("DICE", name), unit), value
             )
-            setattr(
-                self._values, name, self._parameters.scalar(("DICE", name), unit)
-            )
+            setattr(self._values, name, self._parameters.scalar(("DICE", name), unit))
 
     def _set_para_if_not_set(self, p, d):
         try:
@@ -175,9 +170,14 @@ class DICE(Adapter):
         for dice_name, openscm_name in self._openscm_standard_paras_mapping.items():
             unit = MODEL_PARAMETER_DEFAULTS[dice_name][1]
             if unit is None:
-                getattr(self._values, dice_name).value = self._parameters.generic(openscm_name).value
+                getattr(self._values, dice_name).value = self._parameters.generic(
+                    openscm_name
+                ).value
             else:
-                getattr(self._values, dice_name).value = self._parameters.scalar(openscm_name, unit).value
+                getattr(self._values, dice_name).value = self._parameters.scalar(
+                    openscm_name, unit
+                ).value
+
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
 
