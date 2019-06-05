@@ -37,7 +37,7 @@ def test_adapter_base_class_run():
 
     Adapter.__abstractmethods__ = set()
     in_parameters = ParameterSet()
-    in_parameters.generic("start_time").value = start_time
+    in_parameters.generic("Start Time").value = start_time
     adapter = Adapter(  # pylint: disable=abstract-class-instantiated
         in_parameters, ParameterSet()
     )
