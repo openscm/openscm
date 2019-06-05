@@ -92,18 +92,34 @@ class TestMyAdapter(_AdapterTester):
 
     def test_openscm_standard_parameters_handling(self):
         parameters = ParameterSet()
+
         start_t = np.datetime64("1850-01-01")
         parameters.generic("Start Time").value = start_t
+
         stop_t = np.datetime64("2100-01-01")
         parameters.generic("Stop Time").value = stop_t
+
         ecs_magnitude = 3.12
-        parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value = ecs_magnitude
-        parameters.scalar(("DICE", "t2xco2"), "delta_degC").value = 5  # ensure openscm standard parameters take precedence
+        parameters.scalar(
+            "Equilibrium Climate Sensitivity", "delta_degC"
+        ).value = ecs_magnitude
+        parameters.scalar(
+            ("DICE", "t2xco2"), "delta_degC"
+        ).value = 5  # ensure openscm standard parameters take precedence
+
+        rf2xco2_magnitude = 4.012
+        parameters.scalar("Radiative Forcing 2xCO2", "W / m^2").value = rf2xco2_magnitude
+        parameters.scalar(("DICE", "fco22x"), "W / m^2").value = 3.5
+
         output_parameters = ParameterSet()
 
         test_adapter = self.tadapter(parameters, output_parameters)
 
-        self.prepare_run_input(test_adapter, parameters.generic("Start Time").value, parameters.generic("Stop Time").value)
+        self.prepare_run_input(
+            test_adapter,
+            parameters.generic("Start Time").value,
+            parameters.generic("Stop Time").value,
+        )
         test_adapter.initialize_model_input()
         test_adapter.initialize_run_parameters()
         test_adapter.reset()
@@ -111,15 +127,33 @@ class TestMyAdapter(_AdapterTester):
 
         assert test_adapter._parameters.generic("Start Time").value == start_t
         assert test_adapter._parameters.generic("Stop Time").value == stop_t
-        assert test_adapter._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value == ecs_magnitude
-        assert test_adapter._parameters.scalar(("DICE", "t2xco2"), "delta_degC").value == ecs_magnitude
+        assert (
+            test_adapter._parameters.scalar(
+                "Equilibrium Climate Sensitivity", "delta_degC"
+            ).value
+            == ecs_magnitude
+        )
+        assert (
+            test_adapter._parameters.scalar(("DICE", "t2xco2"), "delta_degC").value
+            == ecs_magnitude
+        )
+        assert (
+            test_adapter._parameters.scalar(
+                "Radiative Forcing 2xCO2", "W/m^2"
+            ).value
+            == rf2xco2_magnitude
+        )
+        assert (
+            test_adapter._parameters.scalar(("DICE", "fco22x"), "mW / m^2").value
+            == rf2xco2_magnitude * 1000
+        )
 
         assert test_adapter._values.start_time.value == start_t
         assert test_adapter._values.stop_time.value == stop_t
         assert test_adapter._values.t2xco2.value == ecs_magnitude
+        assert test_adapter._values.fco22x.value == rf2xco2_magnitude
 
         # do we want adapters to push all parameter values to output too? If yes, uncomment this
         # assert output_parameters.generic("Start Time").value == np.datetime64("1850-01-01")
         # assert output_parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
         # assert output_parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value == ecs_magnitude
-
