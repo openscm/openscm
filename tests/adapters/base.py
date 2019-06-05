@@ -1,4 +1,11 @@
-class _AdapterTester:
+from abc import ABCMeta, abstractmethod
+
+import numpy as np
+
+from openscm.core.parameterset import ParameterSet
+
+
+class _AdapterTester(metaclass=ABCMeta):
     """
     Base class for adapter testing.
 
@@ -64,3 +71,38 @@ class _AdapterTester:
             assert new_time > test_run_parameters.start_time
         except NotImplementedError:
             pass
+
+    @abstractmethod
+    def test_openscm_standard_parameters_handling(self):
+        """
+        Test how the adapter handles OpenSCM's standard parameters
+
+        Implementers must implement this method to check what the user would
+        get when OpenSCM's standard parameters are passed to the adapter. 
+        It might be that they get used, that they are re-mapped to a different
+        name, that they are not supported and hence nothing is done. All these
+        behaviours are valid, they just need to be tested and validated.
+        
+        We give an example of how such a test might look below.
+        """
+        parameters = ParameterSet()
+        parameters.generic("Start Time").value = np.datetime64("1850-01-01")
+        parameters.generic("Stop Time").value = np.datetime64("2100-01-01")
+        parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value = 3.12
+        output_parameters = ParameterSet()
+
+        test_adapter = self.tadapter(parameters, output_parameters)
+
+        self.prepare_run_input(test_adapter, parameters.generic("Start Time").value, parameters.generic("Stop Time").value)
+        test_adapter.initialize_model_input()
+        test_adapter.initialize_run_parameters()
+        test_adapter.reset()
+        test_adapter.run()
+
+        assert test_adapter._parameters.generic("Start Time").value == np.datetime64("1850-01-01")
+        assert test_adapter._parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
+        assert test_adapter._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value == 3.12
+
+        assert output_parameters.generic("Start Time").value == np.datetime64("1850-01-01")
+        assert output_parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
+        assert output_parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value == 3.12
