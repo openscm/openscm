@@ -13,8 +13,8 @@ def _run_and_compare(test_adapter, filename):
     timestep_count = len(original_data)
     stop_time = start_time + (timestep_count - 1) * np.timedelta64(365, "D")
 
-    test_adapter._parameters.generic(("start_time")).value = start_time
-    test_adapter._parameters.generic(("stop_time")).value = stop_time
+    test_adapter._parameters.generic(("Start Time")).value = start_time
+    test_adapter._parameters.generic(("Stop Time")).value = stop_time
     test_adapter._parameters.generic(
         ("DICE", "forcoth_saturation_time")
     ).value = start_time + np.timedelta64(90 * 365, "D")
@@ -72,8 +72,6 @@ class TestMyAdapter(_AdapterTester):
         This method is called directly before ``test_adapter.initialize_model_input``
         during tests.
         """
-        import pdb
-        pdb.set_trace()
         test_adapter._parameters.generic("Start Time").value = start_time
         test_adapter._parameters.generic("Stop Time").value = stop_time
 
