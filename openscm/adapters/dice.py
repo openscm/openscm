@@ -130,17 +130,28 @@ class DICE(Adapter):
 
         for name, (default, unit) in MODEL_PARAMETER_DEFAULTS.items():
             if name in openscm_standard_paras_mapping:  # openscm standard parameters
-                self._set_para_if_not_set(self._parameters.generic(openscm_standard_paras_mapping[name]), default)
-                setattr(self._values, name, self._parameters.generic(openscm_standard_paras_mapping[name]))
+                self._set_para_if_not_set(
+                    self._parameters.generic(openscm_standard_paras_mapping[name]),
+                    default,
+                )
+                setattr(
+                    self._values,
+                    name,
+                    self._parameters.generic(openscm_standard_paras_mapping[name]),
+                )
                 continue
 
             if unit is None:
                 # Non-scalar parameter
-                self._set_para_if_not_set(self._parameters.generic(("DICE", name)), default)
+                self._set_para_if_not_set(
+                    self._parameters.generic(("DICE", name)), default
+                )
                 setattr(self._values, name, self._parameters.generic(("DICE", name)))
             else:
                 # Scalar parameter
-                self._set_para_if_not_set(self._parameters.scalar(("DICE", name), unit), default)
+                self._set_para_if_not_set(
+                    self._parameters.scalar(("DICE", name), unit), default
+                )
                 setattr(
                     self._values, name, self._parameters.scalar(("DICE", name), unit)
                 )
