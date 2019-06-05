@@ -35,8 +35,8 @@ We encourage use of OpenSCM as much as possible and are open to collaboration.
 If you plan to publish using OpenSCM, please be respectful of the work and the `Maintainers`_' willingness to open source their code.
 
 In particular, when using OpenSCM, please cite the DOI of the precise version of the package used and consider citing our package description paper [when it's written, which it's not yet :)].
-As appropriate, please consider also citing the wrappers and models that OpenSCM relies.
-References to the wrappers and original models can be found in the documentation and are available in bibtex format in the ``CITATIONS`` file.
+As appropriate, please consider also citing the wrappers and models that OpenSCM relies on.
+A way to cite OpenSCM alongside the references to the wrappers and original models can be found in the documentation and are available in bibtex format in the ``CITATION`` file.
 
 Of course, there is a balance, and no single rule will fit all situations.
 If in doubt, don't hestiate to contact the `Maintainers`_ and ask.
