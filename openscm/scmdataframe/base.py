@@ -1535,30 +1535,26 @@ def df_append(
 
 
 def _handle_potential_duplicates_in_append(data, duplicate_msg):
-    # double check we're not looking at continuous timeseries
-    continuous = True
-    for _, tsdf in data.groupby(data.index.names):
-        # if more than one number would contribute to any of the sums, we're not
-        # looking at continuous timeseries
-        if ((~tsdf.isnull()).sum() > 1).any():
-            continuous = False
-            break
-    if not continuous:
-        if duplicate_msg == "warn":
-            warn_msg = (
-                "Duplicate time points detected, the output will be the average of "
-                "the duplicates. Set `dulicate_msg='return'` to examine the joint "
-                "timeseries (the duplicates can be found by looking at "
-                "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
-                "`duplicate_msg=False` to silence this message."
-            )
-            warnings.warn(warn_msg)
-            return None
+    # If only one number contributes to each of the timeseries, we're not looking at
+    # duplicates so can return.
+    contributing_values = (~data.isnull()).astype(int).groupby(data.index.names).sum()
+    duplicates = (contributing_values > 1).any().any()
+    if not duplicates:
+        return None
 
-        if duplicate_msg == "return":
-            warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
-            return data
+    if duplicate_msg == "warn":
+        warn_msg = (
+            "Duplicate time points detected, the output will be the average of "
+            "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+            "timeseries (the duplicates can be found by looking at "
+            "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
+            "`duplicate_msg=False` to silence this message."
+        )
+        warnings.warn(warn_msg)
+        return None
 
-        raise ValueError("Unrecognised value for duplicate_msg")
+    if duplicate_msg == "return":
+        warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
+        return data
 
-    return None
+    raise ValueError("Unrecognised value for duplicate_msg")
