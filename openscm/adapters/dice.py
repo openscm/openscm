@@ -122,7 +122,16 @@ class DICE(Adapter):
         ]
         self._values = namedtuple("DICEViews", parameter_names)
 
+        openscm_standard_paras_mapping = {
+            "start_time": "Start Time",
+            "stop_time": "Stop Time",
+        }
+
         for name, (default, unit) in MODEL_PARAMETER_DEFAULTS.items():
+            if name in openscm_standard_paras_mapping:  # openscm standard parameters
+                self._parameters.generic(openscm_standard_paras_mapping[name]).value = default
+                setattr(self._values, name, self._parameters.generic(openscm_standard_paras_mapping[name]))
+                continue
             if unit is None:
                 # Non-scalar parameter
                 self._parameters.generic(("DICE", name)).value = default
@@ -140,8 +149,8 @@ class DICE(Adapter):
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
 
-        self._values.start_time.value = self._parameters.generic("start_time").value
-        self._values.stop_time.value = self._parameters.generic("stop_time").value
+        self._values.start_time.value = self._parameters.generic("Start Time").value
+        self._values.stop_time.value = self._parameters.generic("Stop Time").value
 
         self._timestep_count = (
             int(

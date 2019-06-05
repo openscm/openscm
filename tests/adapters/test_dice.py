@@ -72,8 +72,10 @@ class TestMyAdapter(_AdapterTester):
         This method is called directly before ``test_adapter.initialize_model_input``
         during tests.
         """
-        test_adapter._parameters.generic(("start_time",)).value = start_time
-        test_adapter._parameters.generic(("stop_time",)).value = stop_time
+        import pdb
+        pdb.set_trace()
+        test_adapter._parameters.generic("Start Time").value = start_time
+        test_adapter._parameters.generic("Stop Time").value = stop_time
 
         npoints = 10  # setting to zero so doesn't matter
         time_points_for_averages = create_time_points(

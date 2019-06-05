@@ -14,8 +14,8 @@ _loaded_adapters: Dict[str, type] = {}
 
 
 OPENSCM_STANDARD_DEFAULTS = {
-    "start_time": (np.datetime64("1750-01-01"), None),
-    "stop_time": (np.datetime64("2300-01-01"), None),
+    "Start Time": (np.datetime64("1750-01-01"), None),
+    "Stop Time": (np.datetime64("2300-01-01"), None),
 }
 
 
@@ -46,12 +46,6 @@ class Adapter(metaclass=ABCMeta):
 
     _parameters: ParameterSet
     """Input parameter set"""
-
-    _start_time: np.datetime64
-    """Beginning of the time range to run over"""
-
-    _stop_time: np.datetime64
-    """End of the time range to run over (including)"""
 
     def __init__(self, input_parameters: ParameterSet, output_parameters: ParameterSet):
         """
@@ -114,13 +108,6 @@ class Adapter(metaclass=ABCMeta):
 
         Called before the adapter is used in any way and at most once before a call to
         :func:`run` or :func:`step`.
-
-        Parameters
-        ----------
-        start_time
-            Beginning of the time range to run over
-        stop_time
-            End of the time range to run over (including)
         """
         if not self._initialized:
             self._ensure_all_defaults_included_in_parameters()
@@ -140,7 +127,7 @@ class Adapter(metaclass=ABCMeta):
         Called once after each call of :func:`run` and to reset the model after several calls
         to :func:`step`.
         """
-        self._current_time = self._parameters.generic("start_time").value
+        self._current_time = self._parameters.generic("Start Time").value
         self._reset()
 
     def run(self) -> None:
