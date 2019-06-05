@@ -13,7 +13,7 @@ variable naming. Original comments are marked by "Original:".
 
 from collections import namedtuple
 from math import log2
-from typing import Any
+from typing import Any, Dict
 
 import numpy as np
 
@@ -103,6 +103,13 @@ class DICE(Adapter):
     _values: Any
     """Parameter views"""
 
+    _openscm_standard_paras_mapping: Dict = {
+        "start_time": "Start Time",
+        "stop_time": "Stop Time",
+        "t2xco2": "Equilibrium Climate Sensitivity",
+    }
+    """Mapping from OpenSCM standard parameters to DICE parameters"""
+
     def _initialize_model(self) -> None:
         """
         Initialize the model.
@@ -123,38 +130,37 @@ class DICE(Adapter):
         ]
         self._values = namedtuple("DICEViews", parameter_names)
 
-        openscm_standard_paras_mapping = {
-            "start_time": "Start Time",
-            "stop_time": "Stop Time",
-        }
-
         for name, (default, unit) in MODEL_PARAMETER_DEFAULTS.items():
-            if name in openscm_standard_paras_mapping:  # openscm standard parameters
-                self._set_para_if_not_set(
-                    self._parameters.generic(openscm_standard_paras_mapping[name]),
-                    default,
-                )
-                setattr(
-                    self._values,
-                    name,
-                    self._parameters.generic(openscm_standard_paras_mapping[name]),
-                )
-                continue
+            self._set_default_para_value(name, default, unit=unit)
 
+    def _set_default_para_value(self, name, value, unit=None):
+        openscm_map = self._openscm_standard_paras_mapping  # convenience
+        if name in openscm_map:  # openscm standard parameters
             if unit is None:
-                # Non-scalar parameter
                 self._set_para_if_not_set(
-                    self._parameters.generic(("DICE", name)), default
+                    self._parameters.generic(openscm_map[name]),
+                    value,
                 )
-                setattr(self._values, name, self._parameters.generic(("DICE", name)))
             else:
-                # Scalar parameter
                 self._set_para_if_not_set(
-                    self._parameters.scalar(("DICE", name), unit), default
+                    self._parameters.scalar(openscm_map[name], unit),
+                    value,
                 )
-                setattr(
-                    self._values, name, self._parameters.scalar(("DICE", name), unit)
-                )
+
+        if unit is None:
+            # Non-scalar parameter
+            self._set_para_if_not_set(
+                self._parameters.generic(("DICE", name)), value
+            )
+            setattr(self._values, name, self._parameters.generic(("DICE", name)))
+        else:
+            # Scalar parameter
+            self._set_para_if_not_set(
+                self._parameters.scalar(("DICE", name), unit), value
+            )
+            setattr(
+                self._values, name, self._parameters.scalar(("DICE", name), unit)
+            )
 
     def _set_para_if_not_set(self, p, d):
         try:
@@ -165,11 +171,21 @@ class DICE(Adapter):
     def _initialize_model_input(self) -> None:
         pass
 
+    def _prioritise_openscm_standard_paras(self) -> None:
+        for dice_name, openscm_name in self._openscm_standard_paras_mapping.items():
+            unit = MODEL_PARAMETER_DEFAULTS[dice_name][1]
+            if unit is None:
+                getattr(self._values, dice_name).value = self._parameters.generic(openscm_name).value
+            else:
+                getattr(self._values, dice_name).value = self._parameters.scalar(openscm_name, unit).value
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
 
-        self._values.start_time.value = self._parameters.generic("Start Time").value
-        self._values.stop_time.value = self._parameters.generic("Stop Time").value
+        self._prioritise_openscm_standard_paras()
+        # # must be a smarter way to have OpenSCM standard parameters take precedence...
+        # self._values.start_time.value = self._parameters.generic("Start Time").value
+        # self._values.stop_time.value = self._parameters.generic("Stop Time").value
+        # self._values.t2xco2.value = self._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value
 
         self._timestep_count = (
             int(
