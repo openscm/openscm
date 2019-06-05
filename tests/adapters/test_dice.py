@@ -4,6 +4,7 @@ from base import _AdapterTester
 
 from openscm.adapters.dice import DICE
 from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 
 
@@ -88,3 +89,29 @@ class TestMyAdapter(_AdapterTester):
             time_points_for_averages,
             timeseries_type="average",
         ).values = np.zeros(npoints)
+
+    def test_openscm_standard_parameters_handling(self):
+        parameters = ParameterSet()
+        parameters.generic("Start Time").value = np.datetime64("1850-01-01")
+        parameters.generic("Stop Time").value = np.datetime64("2100-01-01")
+        ecs_magnitude = 3.12
+        parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value = ecs_magnitude
+        output_parameters = ParameterSet()
+
+        test_adapter = self.tadapter(parameters, output_parameters)
+
+        self.prepare_run_input(test_adapter, parameters.generic("Start Time").value, parameters.generic("Stop Time").value)
+        test_adapter.initialize_model_input()
+        test_adapter.initialize_run_parameters()
+        test_adapter.reset()
+        test_adapter.run()
+
+        assert test_adapter._parameters.generic("Start Time").value == np.datetime64("1850-01-01")
+        assert test_adapter._parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
+        assert test_adapter._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value == ecs_magnitude
+        assert test_adapter._parameters.scalar(("DICE", "t2xco2"), "delta_degC").value == ecs_magnitude
+
+        assert output_parameters.generic("Start Time").value == np.datetime64("1850-01-01")
+        assert output_parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
+        assert output_parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value == ecs_magnitude
+
