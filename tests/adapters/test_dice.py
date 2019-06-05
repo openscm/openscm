@@ -108,7 +108,9 @@ class TestMyAdapter(_AdapterTester):
         ).value = 5  # ensure openscm standard parameters take precedence
 
         rf2xco2_magnitude = 4.012
-        parameters.scalar("Radiative Forcing 2xCO2", "W / m^2").value = rf2xco2_magnitude
+        parameters.scalar(
+            "Radiative Forcing 2xCO2", "W / m^2"
+        ).value = rf2xco2_magnitude
         parameters.scalar(("DICE", "fco22x"), "W / m^2").value = 3.5
 
         output_parameters = ParameterSet()
@@ -138,9 +140,7 @@ class TestMyAdapter(_AdapterTester):
             == ecs_magnitude
         )
         assert (
-            test_adapter._parameters.scalar(
-                "Radiative Forcing 2xCO2", "W/m^2"
-            ).value
+            test_adapter._parameters.scalar("Radiative Forcing 2xCO2", "W/m^2").value
             == rf2xco2_magnitude
         )
         assert (

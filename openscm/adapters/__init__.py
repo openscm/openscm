@@ -8,15 +8,9 @@ from typing import Dict, Optional
 import numpy as np
 
 from ..core.parameterset import ParameterSet
-from ..errors import AdapterNeedsModuleError, ParameterEmptyError
+from ..errors import AdapterNeedsModuleError
 
 _loaded_adapters: Dict[str, type] = {}
-
-
-OPENSCM_STANDARD_DEFAULTS = {
-    "Start Time": (np.datetime64("1750-01-01"), None),
-    "Stop Time": (np.datetime64("2300-01-01"), None),
-}
 
 
 class Adapter(metaclass=ABCMeta):
@@ -78,29 +72,10 @@ class Adapter(metaclass=ABCMeta):
         :func:`run` or :func:`step`.
         """
         if not self._initialized:
-            self._ensure_all_defaults_included_in_parameters()
             self._initialize_model()
             self._initialized = True
         self._initialize_model_input()
         self._initialized_inputs = True
-
-    def _ensure_all_defaults_included_in_parameters(self) -> None:
-        """
-        Ensure all OpenSCM defaults are also initialised
-        """
-        for name, (default, unit) in OPENSCM_STANDARD_DEFAULTS.items():
-            if unit is None:
-                # Non-scalar parameter
-                try:
-                    self._parameters.generic((name,)).value
-                except ParameterEmptyError:
-                    self._parameters.generic((name,)).value = default
-            else:
-                # Scalar parameter
-                try:
-                    self._parameters.scalar((name,), unit).value
-                except ParameterEmptyError:
-                    self._parameters.scalar((name,), unit).value = default
 
     def initialize_run_parameters(self) -> None:
         """
@@ -110,7 +85,6 @@ class Adapter(metaclass=ABCMeta):
         :func:`run` or :func:`step`.
         """
         if not self._initialized:
-            self._ensure_all_defaults_included_in_parameters()
             self._initialize_model()
             self._initialized = True
 
