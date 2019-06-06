@@ -244,20 +244,26 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
     _child_data_views: Sequence["TimeseriesView"]
     """List of views to the child parameters for aggregated reads"""
 
-    _timeseries: Optional[_Timeseries]
-    """Time series handler"""
-
     _data: Optional[np.ndarray]
     """Chache for underlying data"""
 
-    _version: int
-    """Version of cache"""
+    _locked: bool
+    """
+    Is this view locked (i.e., does it not update the underlying parameter on every
+    write)?
+    """
+
+    _timeseries: Optional[_Timeseries]
+    """Time series handler"""
 
     _timeseries_converter: TimeseriesConverter
     """Timeseries converter"""
 
     _unit_converter: UnitConverter
     """Unit converter"""
+
+    _version: int
+    """Version of cache"""
 
     _writable: bool
     """Is this view writable? Is set to ``True`` once this view is written to."""
@@ -299,6 +305,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             extrapolation_type,
         )
         self._data = None
+        self._locked = False
         self._timeseries = None
         self._writable = False
 
@@ -346,11 +353,12 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             self._writable = True
 
     def _write(self):
-        self._parameter.data = self._timeseries_converter.convert_to(
-            self._unit_converter.convert_to(self._data)
-        )
-        self._parameter.version += 1
-        self._version = self._parameter.version
+        if not self._locked:
+            self._parameter.data = self._timeseries_converter.convert_to(
+                self._unit_converter.convert_to(self._data)
+            )
+            self._parameter.version += 1
+            self._version = self._parameter.version
 
     def _get_values(self) -> np.ndarray:
         if self._parameter.children:
@@ -419,6 +427,21 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         Return string representation / description.
         """
         return "View of timeseries {}".format(str(self._parameter))
+
+    def lock(self) -> None:
+        """
+        Lock this view (i.e., do not update the underlying parameter on every write).
+        """
+        self._locked = True
+
+    def unlock(self) -> None:
+        """
+        Unlock this view (i.e., update the underlying parameter on every write).
+
+        Updates the underlying parameter.
+        """
+        self._locked = False
+        self._write()
 
 
 class GenericView(ParameterInfo):

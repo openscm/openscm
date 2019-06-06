@@ -258,10 +258,25 @@ class DICE(Adapter):
         """
         Run the model over the full time range.
         """
-        for _ in range(
-            self._timestep_count - 1
-        ):  # TODO: add lock mechanism for parameter views for performance
+        v = self._values  # just for convenience
+
+        v.mat.lock()
+        v.ml.lock()
+        v.mu.lock()
+        v.tatm.lock()
+        v.tocean.lock()
+        v.forc.lock()
+
+        for _ in range(self._timestep_count - 1):
             self._calc_step()
+        self._values.forc.unlock()
+
+        v.mat.unlock()
+        v.ml.unlock()
+        v.mu.unlock()
+        v.tatm.unlock()
+        v.tocean.unlock()
+        v.forc.unlock()
 
     def _step(self) -> None:
         """
