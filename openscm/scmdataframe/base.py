@@ -1553,7 +1553,7 @@ def _handle_potential_duplicates_in_append(data, duplicate_msg):
     if duplicate_msg == "warn":
         warn_msg = (
             "Duplicate time points detected, the output will be the average of "
-            "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+            "the duplicates. Set `duplicate_msg='return'` to examine the joint "
             "timeseries (the duplicates can be found by looking at "
             "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
             "`duplicate_msg=False` to silence this message."
