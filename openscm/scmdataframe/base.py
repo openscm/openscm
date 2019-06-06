@@ -480,6 +480,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             Not all timeseries have the same metadata or :obj:`climate_model` is given
             and does not equal "unspecified"
         """
+        # pylint: disable=too-many-locals
+
         meta_values = self._meta.drop(
             ["variable", "region", "unit", "parameter_type"], axis=1, errors="ignore"
         ).drop_duplicates()

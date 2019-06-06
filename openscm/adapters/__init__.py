@@ -32,9 +32,6 @@ class Adapter(metaclass=ABCMeta):
     _initialized: bool
     """``True`` if model has been initialized via :func:`_initialize_model`"""
 
-    _initialized_inputs: bool
-    """True if model inputs have been initialized via :func:`initialize_model_input`"""
-
     _output: ParameterSet
     """Output parameter set"""
 
@@ -74,8 +71,8 @@ class Adapter(metaclass=ABCMeta):
         if not self._initialized:
             self._initialize_model()
             self._initialized = True
+
         self._initialize_model_input()
-        self._initialized_inputs = True
 
     def initialize_run_parameters(self) -> None:
         """
@@ -87,10 +84,6 @@ class Adapter(metaclass=ABCMeta):
         if not self._initialized:
             self._initialize_model()
             self._initialized = True
-
-        if not self._initialized_inputs:
-            self.initialize_model_input()
-            self._initialized_inputs = True
 
         self._initialize_run_parameters()
 

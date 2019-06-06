@@ -4,7 +4,7 @@ data. It provides a simple interface for reading/writing, subsetting and visuali
 model data. ScmDataFrames are able to hold multiple model runs which aids in analysis of
 ensembles of model runs.
 """
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union, cast
 
 import numpy as np
 
@@ -96,10 +96,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
     def parameter_name_to_scm(t):
         return ScmDataFrame.data_hierarchy_separator.join(t)
 
-    def parameter_type_to_scm(t):
-        return "average" if t == ParameterType.AVERAGE_TIMESERIES else "point"
-
-    metadata: Dict[str, List] = {
+    metadata: Dict[str, List[Union[float, str]]] = {
         "climate_model": [climate_model],
         "scenario": [scenario],
         "model": [model],
@@ -140,24 +137,32 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                     "Only scalar types with Region==World can be extracted"
                 )
             meta_key = "{} ({})".format(parameter_name_to_scm(param_name), p_info.unit)
-            meta_value = parameterset.scalar(param_name, unit=str(p_info.unit)).value
+            meta_value = parameterset.scalar(
+                param_name, unit=cast(str, p_info.unit)
+            ).value
             metadata[meta_key] = [meta_value]
         else:
-            para_type = p_info.parameter_type
+            para_type = cast(ParameterType, p_info.parameter_type)
             tp = (
                 time_points
                 if para_type == ParameterType.POINT_TIMESERIES
                 else time_points_average
             )
 
-            ts = parameterset.timeseries(  # type: ignore
-                param_name, p_info.unit, tp, region=region, timeseries_type=para_type
+            ts = parameterset.timeseries(
+                param_name,
+                cast(str, p_info.unit),
+                tp,
+                region=region,
+                timeseries_type=para_type,
             )
             data.append(ts.values)
             metadata["variable"].append(parameter_name_to_scm(param_name))
             metadata["region"].append(parameter_name_to_scm(region))
-            metadata["unit"].append(p_info.unit)
-            metadata["parameter_type"].append(parameter_type_to_scm(para_type))
+            metadata["unit"].append(cast(str, p_info.unit))
+            metadata["parameter_type"].append(
+                ParameterType.timeseries_type_to_string(para_type)
+            )
 
     # convert timeseries to dataframe with time index here
     return ScmDataFrame(np.atleast_2d(data).T, columns=metadata, index=time_points)

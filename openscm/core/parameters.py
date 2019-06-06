@@ -44,6 +44,34 @@ class ParameterType(Enum):
     GENERIC = 4
 
     @classmethod
+    def timeseries_type_to_string(cls, timeseries_type: "ParameterType") -> str:
+        """
+        Get time series type (i.e. :attr:`ParameterType.AVERAGE_TIMESERIES` or
+        :attr:`ParameterType.POINT_TIMESERIES`) from :class:`ParameterType` as string
+        value.
+
+        Parameters
+        ----------
+        timeseries_type
+            Value to convert to string value
+
+        Returns
+        -------
+        str
+            String value
+
+        Raises
+        ------
+        ValueError
+            If :obj:`timeseries_type` is invalid enum value
+        """
+        if timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+            return "average"
+        if timeseries_type == ParameterType.POINT_TIMESERIES:
+            return "point"
+        raise ValueError("Timeseries type expected")
+
+    @classmethod
     def from_timeseries_type(
         cls, timeseries_type: Union["ParameterType", str]
     ) -> "ParameterType":
@@ -67,7 +95,7 @@ class ParameterType(Enum):
         Raises
         ------
         ValueError
-            If :obj:`timeseries_type` is unknown string or unvalid enum value
+            If :obj:`timeseries_type` is unknown string or invalid enum value
         """
         if isinstance(timeseries_type, str):
             if timeseries_type.lower() == "average":

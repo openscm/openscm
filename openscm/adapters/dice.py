@@ -13,13 +13,12 @@ variable naming. Original comments are marked by "Original:".
 
 from collections import namedtuple
 from math import log2
-from typing import Any, Dict
+from typing import Any, Optional, Tuple
 
 import numpy as np
 
 from ..core.parameters import ParameterType
 from ..core.time import create_time_points
-from ..errors import ParameterEmptyError
 from . import Adapter
 
 YEAR = np.timedelta64(365, "D")  # pylint: disable=too-many-function-args
@@ -59,30 +58,29 @@ MODEL_PARAMETER_DEFAULTS = {
     "c3": (0.09175, "W/m^2/delta_degC"),  # 0.088; 0.088
     # Original: "Transfer coefficient for lower level"
     "c4": (0.00487, ""),  # 0.025; 0.025
-    # Radiative forcing due to CO2 doubling (Wm-2)
-    "fco22x": (3.8, "W/m^2"),  # 3.6813
     # Original: "2010 forcings of non-CO2 GHG (Wm-2)"
     "fex0": (0.25, "W/m^2"),  # 0.5
     # Original: "2100 forcings of non-CO2 GHG (Wm-2)"
     "fex1": (0.7, "W/m^2"),  # 1.0
-    # Equilibrium climate sensitivity
-    #     Original: "Equilibrium temp impact (oC per doubling CO2)"
-    "t2xco2": (2.9, "delta_degC"),  # 3.1
     # Period length in seconds (not part of original)
     "period_length": (YEAR, None),
-    # Start time of run (not part of original)
-    "start_time": (np.datetime64("2010-01-01"), None),
-    # Stop time of run (not part of original)
-    "stop_time": (
-        np.datetime64("2010-01-01")
-        + np.timedelta64(90 * 365, "D"),  # pylint: disable=too-many-function-args
-        None,
-    ),
     # Use original conversion factor from tCO2 to tC
     # (has rounding errors but needed to reproduce original output; not part of original)
     "original_rounding": (True, None),
     # Time when forcing due to other greenhouse gases saturates (original: 2100)
     "forcoth_saturation_time": (np.datetime64("2100-01-01"), None),
+}
+
+STANDARD_PARAMETER_DEFAULTS = {
+    # Radiative forcing due to CO2 doubling (Wm-2)
+    "fco22x": ("Radiative Forcing Sensitivity", 3.8, "W/m^2"),  # 3.6813
+    # Equilibrium climate sensitivity
+    #     Original: "Equilibrium temp impact (oC per doubling CO2)"
+    "t2xco2": ("Equilibrium Climate Sensitivity", 2.9, "delta_degC"),  # 3.1
+    # Start time of run (not part of original)
+    "start_time": ("Start Time", None, None),
+    # Stop time of run (not part of original)
+    "stop_time": ("Stop Time", None, None),
 }
 
 
@@ -103,97 +101,63 @@ class DICE(Adapter):
     _values: Any
     """Parameter views"""
 
-    _openscm_standard_paras_mapping: Dict = {
-        "start_time": "Start Time",
-        "stop_time": "Stop Time",
-        "t2xco2": "Equilibrium Climate Sensitivity",
-        "fco22x": "Radiative Forcing 2xCO2",
-    }
-    """Mapping from OpenSCM standard parameters to DICE parameters"""
-
     def _initialize_model(self) -> None:
         """
         Initialize the model.
         """
-        parameter_names = list(MODEL_PARAMETER_DEFAULTS.keys()) + [
-            "E",
-            "mat",
-            "ml",
-            "mu",
-            "tatm",
-            "tocean",
-            "forc",
-            "b11",
-            "b21",
-            "b22",
-            "b32",
-            "b33",
-        ]
+        parameter_names = (
+            list(MODEL_PARAMETER_DEFAULTS.keys())
+            + list(STANDARD_PARAMETER_DEFAULTS.keys())
+            + [
+                "E",
+                "mat",
+                "ml",
+                "mu",
+                "tatm",
+                "tocean",
+                "forc",
+                "b11",
+                "b21",
+                "b22",
+                "b32",
+                "b33",
+            ]
+        )
         self._values = namedtuple("DICEViews", parameter_names)
 
+        def set_parameter(
+            name: str,
+            full_name: Tuple[str, ...],
+            value: Any,
+            unit: Optional[str] = None,
+        ) -> None:
+            if unit is None:  # Generic parameter
+                p = self._parameters.generic(full_name)
+            else:  # Scalar parameter
+                p = self._parameters.scalar(full_name, unit)  # type: ignore
+            if value is not None and p.empty:
+                p.value = value
+            setattr(self._values, name, p)
+
         for name, (default, unit) in MODEL_PARAMETER_DEFAULTS.items():
-            self._set_default_para_value(name, default, unit=unit)
+            set_parameter(name, ("DICE", name), default, unit=unit)
 
-    def _set_default_para_value(self, name, value, unit=None):
-        openscm_map = self._openscm_standard_paras_mapping  # convenience
-        if name in openscm_map:  # openscm standard parameters
-            if unit is None:
-                self._set_para_if_not_set(
-                    self._parameters.generic(openscm_map[name]), value
-                )
-            else:
-                self._set_para_if_not_set(
-                    self._parameters.scalar(openscm_map[name], unit), value
-                )
-
-        if unit is None:
-            # Non-scalar parameter
-            self._set_para_if_not_set(self._parameters.generic(("DICE", name)), value)
-            setattr(self._values, name, self._parameters.generic(("DICE", name)))
-        else:
-            # Scalar parameter
-            self._set_para_if_not_set(
-                self._parameters.scalar(("DICE", name), unit), value
-            )
-            setattr(self._values, name, self._parameters.scalar(("DICE", name), unit))
-
-    def _set_para_if_not_set(self, p, d):
-        try:
-            p.value
-        except ParameterEmptyError:
-            p.value = d
+        for name, (standard_name, default, unit) in STANDARD_PARAMETER_DEFAULTS.items():
+            set_parameter(name, (standard_name,), default, unit=unit)
 
     def _initialize_model_input(self) -> None:
         pass
 
-    def _prioritise_openscm_standard_paras(self) -> None:
-        for dice_name, openscm_name in self._openscm_standard_paras_mapping.items():
-            unit = MODEL_PARAMETER_DEFAULTS[dice_name][1]
-            if unit is None:
-                getattr(self._values, dice_name).value = self._parameters.generic(
-                    openscm_name
-                ).value
-            else:
-                getattr(self._values, dice_name).value = self._parameters.scalar(
-                    openscm_name, unit
-                ).value
-
     def _initialize_run_parameters(self) -> None:
         self._timestep = 0
-
-        self._prioritise_openscm_standard_paras()
-        # # must be a smarter way to have OpenSCM standard parameters take precedence...
-        # self._values.start_time.value = self._parameters.generic("Start Time").value
-        # self._values.stop_time.value = self._parameters.generic("Stop Time").value
-        # self._values.t2xco2.value = self._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value
 
         self._timestep_count = (
             int(
                 (self._values.stop_time.value - self._values.start_time.value)
                 / self._values.period_length.value
             )
-            + 1
-        )  # include self._stop_time
+            + 1  # include self._stop_time
+        )
         time_points = create_time_points(
             self._values.start_time.value,
             self._values.period_length.value,
@@ -254,8 +218,11 @@ class DICE(Adapter):
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
         self._values.forc = self._output.timeseries(
-            ("Radiative Forcing", "CO2"), "W/m^2", time_points, timeseries_type="point"
-        )  # TODO: convert to average (seems surprising RF would be being used as point..)?
+            ("Radiative Forcing", "CO2"),
+            "W/m^2",
+            time_points_for_averages,
+            timeseries_type="average",
+        )
 
     def _reset(self) -> None:
         self._timestep = 0
