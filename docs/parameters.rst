@@ -30,7 +30,8 @@ relative to the mean of. For example, 'surface temperature relative to
 a 1961-1990 reference period' refers to surface temperatures relative
 to the mean of the period 1961-1990. We are not yet sure how best to
 handle these reference periods in variables, if you have ideas please
-contribute to the discussions in `#167 <https://github.com/openclimatedata/openscm/issues/167>`_.
+contribute to the discussions in `#167
+<https://github.com/openclimatedata/openscm/issues/167>`_.
 
 
 Aggregation
@@ -66,8 +67,8 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
 .. csv-table:: Standard parameters
     :header: "Parameter name 0", "Parameter name 1", "Parameter name 2", "Unit type", "Note"
 
-    ``Start Time``,,, `TimePoint` object, Time of the first time step of the model run
-    ``Stop Time``,,, `TimePoint` object, Time of the last time step of the model run
+    ``Start Time``,,, :class:`np.datetime64` object, Time of the first time step of the model run
+    ``Stop Time``,,, :class:`np.datetime64` object, Time of the last time step of the model run
     ``Emissions``, ``<GAS>``,, "mass <GAS> / time"
     ``Atmospheric Concentrations``, ``<GAS>``,, "parts per X where X is million, billion, trillion etc.", "Aggregation possible, but does not always make sense"
     ``Pool``, ``<GAS>``,, "mass <GAS>"
@@ -92,7 +93,7 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
     ``Sea Level Rise``,,, "length"
     ``Equilibrium Climate Sensitivity``,,, "temperature"
     ``Transient Climate Response``,,, "temperature"
-    ``f2xco2``,,, "power / area", "Radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level"
+    ``Radiative Forcing Sensitivity``,,, "power / area", "Radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level"
 
 .. _gases:
 
