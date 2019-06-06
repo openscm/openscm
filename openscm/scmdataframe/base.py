@@ -1511,20 +1511,9 @@ def df_append(
     )
     data = data.set_index(list(joint_meta_set))
     if duplicate_msg and data.index.duplicated().any():
-        if duplicate_msg == "warn":
-            warn_msg = (
-                "Duplicate time points detected, the output will be the average of "
-                "the duplicates. Set `duplicate_msg='return'` to examine the joint "
-                "timeseries (the duplicates can be found by looking at "
-                "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
-                "`duplicate_msg=False` to silence this message."
-            )
-            warnings.warn(warn_msg)
-        elif duplicate_msg == "return":
-            warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
-            return data  # type: ignore  # only for special use case
-        else:
-            raise ValueError("Unrecognised value for duplicate_msg")
+        warn_handle_res = _handle_potential_duplicates_in_append(data, duplicate_msg)
+        if warn_handle_res is not None:
+            return warn_handle_res  # type: ignore  # special case
 
     data = data.groupby(data.index.names).mean()
 
@@ -1551,3 +1540,29 @@ def df_append(
         return ret
 
     return None
+
+
+def _handle_potential_duplicates_in_append(data, duplicate_msg):
+    # If only one number contributes to each of the timeseries, we're not looking at
+    # duplicates so can return.
+    contributing_values = (~data.isnull()).astype(int).groupby(data.index.names).sum()
+    duplicates = (contributing_values > 1).any().any()
+    if not duplicates:
+        return None
+
+    if duplicate_msg == "warn":
+        warn_msg = (
+            "Duplicate time points detected, the output will be the average of "
+            "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+            "timeseries (the duplicates can be found by looking at "
+            "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
+            "`duplicate_msg=False` to silence this message."
+        )
+        warnings.warn(warn_msg)
+        return None
+
+    if duplicate_msg == "return":
+        warnings.warn("returning a `pd.DataFrame`, not an `ScmDataFrame`")
+        return data
+
+    raise ValueError("Unrecognised value for duplicate_msg")

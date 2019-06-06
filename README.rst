@@ -24,6 +24,37 @@ model tuning.
 This OpenSCM implementation comes with a command line tool
 ``openscm``.
 
+Use guidelines
+--------------
+
+We encourage use of OpenSCM as much as possible and are open to collaboration.
+If you plan to publish using OpenSCM, please be respectful of the work and the `Maintainers`_' willingness to open source their code.
+
+In particular, when using OpenSCM, please cite the DOI of the precise version of the package used and consider citing our package description paper [when it's written, which it's not yet :)].
+As appropriate, please consider also citing the wrappers and models that OpenSCM relies on.
+A way to cite OpenSCM alongside the references to the wrappers and original models can be found in the documentation and are available in bibtex format in the ``CITATION`` file.
+
+Of course, there is a balance, and no single rule will fit all situations.
+If in doubt, don't hestiate to contact the `Maintainers`_ and ask.
+
+Maintainers
+-----------
+
+Current maintainers of OpenSCM are:
+
+-  `Robert Gieseke <http://github.com/rgieseke>`__
+   <`robert.gieseke@pik-potsdam.de
+   <mailto:robert.gieseke@pik-potsdam.de>`__>
+-  `Jared Lewis <http://github.com/lewisjared>`__
+   <`jared.lewis@climate-energy-college.org
+   <mailto:jared.lewis@climate-energy-college.org>`__>
+-  `Zebedee Nicholls <http://github.com/znicholls>`__
+   <`zebedee.nicholls@climate-energy-college.org
+   <mailto:zebedee.nicholls@climate-energy-college.org>`__>
+-  `Sven Willner <http://github.com/swillner>`__
+   <`sven.willner@pik-potsdam.de
+   <mailto:sven.willner@pik-potsdam.de>`__>
+
 .. sec-end-index
 
 Documentation
@@ -87,21 +118,6 @@ Tests can be run locally with
     python setup.py test
 
 .. sec-end-development
-
-Maintainers
------------
-
-Current maintainers of OpenSCM are:
-
--  `Robert Gieseke <http://github.com/rgieseke>`__
-   <`robert.gieseke@pik-potsdam.de
-   <mailto:robert.gieseke@pik-potsdam.de>`__>
--  `Zeb Nicholls <http://github.com/znicholls>`__
-   <`zebedee.nicholls@climate-energy-college.org
-   <mailto:zebedee.nicholls@climate-energy-college.org>`__>
--  `Sven Willner <http://github.com/swillner>`__
-   <`sven.willner@pik-potsdam.de
-   <mailto:sven.willner@pik-potsdam.de>`__>
 
 .. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
     :target: https://openscm.readthedocs.io/en/latest/
