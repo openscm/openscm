@@ -1,3 +1,4 @@
+import re
 import warnings
 
 import numpy as np
@@ -167,6 +168,81 @@ def test_parameterset_default_initialization():
 def test_parameterset_named_initialization():
     paraset_named = ParameterSet("Earth")
     assert paraset_named._get_or_create_region(("Earth",)) == paraset_named._root
+
+
+def test_parameterset_get_region_str():
+    paraset = ParameterSet()
+    paraset._get_or_create_region("World|Test")
+    r = paraset._get_region("World|Test")
+    assert r.full_name == ("World", "Test")
+
+    paraset._get_or_create_region("World|Second test|Lower")
+
+    root = paraset._root
+    r2 = root.get_subregion("Second test|Lower")
+    assert r2.full_name == ("World", "Second test", "Lower")
+
+
+@pytest.mark.parametrize("view_type", ["scalar", "timeseries", "generic"])
+def test_view_str_rep(view_type):
+    paraset = ParameterSet()
+    para_name = "example"
+    if view_type == "generic":
+        v = paraset.generic(para_name)
+    elif view_type == "scalar":
+        unit = "kg"
+        v = paraset.scalar(para_name, unit)
+    elif view_type == "timeseries":
+        unit = "kg"
+        tp = create_time_points(
+            np.datetime64("2010-01-01"),
+            np.timedelta64(365, "D"),
+            10,
+            "average",
+        )
+        v = paraset.timeseries(para_name, unit, tp)
+
+    str_rep = str(v)
+
+    # TODO: decide whether to unify these
+    if view_type == "generic":
+        assert str_rep == "Read-only view of {} in undefined".format(para_name)
+    else:
+        assert str_rep == "View of {} {} in {}".format(view_type, para_name, unit)
+
+
+def test_version():
+    paraset = ParameterSet()
+    v1 = paraset.scalar('example', unit='g')
+    v2 = paraset.scalar('example', unit='kg')
+
+    assert v1.version == 0
+    assert v2.version == 0
+
+    v1.value = 3
+
+    assert v1.version == 1
+    assert v2.version == 1
+
+    v2.value = 12
+
+    assert v1.version == 2
+    assert v2.version == 2
+
+
+def test_ensure():
+    paraset = ParameterSet()
+
+    para = "example"
+    unit = "g"
+    v1 = paraset.scalar(para, unit=unit)
+
+    error_msg = re.escape("Parameter {} in {} is required but empty".format(para, unit))
+    with pytest.raises(ParameterEmptyError, match=error_msg):
+        v1.ensure()
+
+    v1.value = 3
+    v1.ensure()
 
 
 def test_scalar_parameter_view(core):

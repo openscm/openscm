@@ -494,7 +494,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 "Only input data can be converted to a ParameterSet. Remove climate_model first."
             )
 
-        if not parameterset:
+        if parameterset is None:
             parameterset = ParameterSet()
 
         for i in self._data:

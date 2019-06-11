@@ -13,6 +13,7 @@ from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
 from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
 from openscm.errors import DimensionalityError, UndefinedUnitError
 from openscm.scmdataframe import (
     ScmDataFrame,
@@ -1796,10 +1797,15 @@ def test_convert_existing_unit_context(test_scm_df):
     # TODO: warning if unit_context is different
 
 
-def test_scmdataframe_to_parameterset(rcp26, assert_core):
+@pytest.mark.parametrize("prefill", [True, False])
+def test_scmdataframe_to_parameterset(rcp26, prefill):
     tdata = rcp26
 
-    res = tdata.to_parameterset()
+    if prefill:
+        res = ParameterSet()
+        tdata.to_parameterset(parameterset=res)
+    else:
+        res = tdata.to_parameterset()
 
     def get_comparison_times_for_year(yr):
         return np.asarray(
@@ -1874,6 +1880,28 @@ def test_scmdataframe_climate_model_to_parameterset_raises(test_scm_df):
         match="Only input data can be converted to a ParameterSet. Remove climate_model first",
     ):
         test_scm_df.filter(scenario="a_scenario2").to_parameterset()
+
+
+def test_parameterset_non_world_generic_para_to_scmdataframe_raises(rcp26):
+    start_point = rcp26.filter(variable="*CO2*").to_parameterset()
+
+    start_point.generic("blowup", region=("World|Region")).value = 12
+    with pytest.raises(
+        ValueError,
+        match="Only generic types with Region==World can be extracted",
+    ):
+        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+
+
+def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
+    start_point = rcp26.filter(variable="*CO2*").to_parameterset()
+
+    start_point.scalar("blowup", "K", region=("World|Region")).value = 12
+    with pytest.raises(
+        ValueError,
+        match="Only scalar types with Region==World can be extracted",
+    ):
+        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
 
 
 def test_convert_openscm_to_scmdataframe_circularity(rcp26):

@@ -68,6 +68,7 @@ class Adapter(metaclass=ABCMeta):
         Called before the adapter is used in any way and at most once before a call to
         :func:`run` or :func:`step`.
         """
+        # I don't know why this isn't picked up by code coverage...
         if not self._initialized:
             self._initialize_model()
             self._initialized = True

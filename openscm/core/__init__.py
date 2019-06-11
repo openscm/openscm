@@ -80,7 +80,8 @@ class OpenSCM:
         """
         Set of output parameters of the model
         """
-        return self._output_parameters
+        raise NotImplementedError  # noqa
+        # return self._output_parameters
 
     @property
     def parameters(self) -> ParameterSet:
@@ -93,16 +94,18 @@ class OpenSCM:
         """
         Reset the model before starting stepping.
         """
-        self._model.initialize_model_input()
-        self._model.initialize_run_parameters()
-        self._model.reset()
+        raise NotImplementedError  # noqa
+        # self._model.initialize_model_input()
+        # self._model.initialize_run_parameters()
+        # self._model.reset()
 
     def run(self) -> None:
         """
         Run the model over the full time range.
         """
-        self.reset_stepping()
-        self._model.run()
+        raise NotImplementedError  # noqa
+        # self.reset_stepping()
+        # self._model.run()
 
     def step(self) -> np.datetime64:
         """
@@ -113,5 +116,6 @@ class OpenSCM:
         int
             Current time
         """
-        # TODO: check if reset_stepping has been called
-        return self._model.step()
+        raise NotImplementedError  # noqa
+        # # TODO: check if reset_stepping has been called
+        # return self._model.step()

@@ -140,8 +140,8 @@ def _format_datetime(dts: np.ndarray) -> np.ndarray:
         return np.array([], dtype="datetime64[s]")
 
     dtype = dts.dtype.type
-    if issubclass(dtype, np.object):
-        dtype = np.dtype(type(dts[0])).type
+    # if issubclass(dtype, np.object):
+    dtype = np.dtype(type(dts[0])).type
     if issubclass(dtype, np.datetime64):
         return np.asarray(dts, dtype="datetime64[s]")
     if issubclass(dtype, np.floating):
