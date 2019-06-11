@@ -18,6 +18,7 @@ from .units import UnitConverter
 # pylint: disable=protected-access
 
 
+# not sure how to get code coverage up here...
 class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
     """
     Internal class which wraps numpy to make sure data is buffered and up-to-date
@@ -340,6 +341,8 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         if self._data is None:
             self._data = self._get_values()
         elif self._version != self._parameter.version:
+            import pdb
+            pdb.set_trace()
             np.copyto(self._data, self._get_values())
         self._version = self._parameter.version
 
@@ -358,7 +361,6 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
                 self._unit_converter.convert_to(self._data)
             )
             self._parameter.version += 1
-            self._version = self._parameter.version
 
     def _get_values(self) -> np.ndarray:
         if self._parameter.children:

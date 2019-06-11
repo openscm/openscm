@@ -510,3 +510,59 @@ def test_generic_parameter_view(core):
     assert cs_writable.value == "enabled"
     assert not cs.empty
     assert cs.value == "enabled"
+
+
+@pytest.mark.parametrize("ptype", ["generic", "scalar", "timeseries"])
+def test_view_updates_with_new_write(ptype):
+    p = ParameterSet()
+    name = "example"
+    if ptype == "generic":
+        v = p.generic(name)
+    elif ptype == "scalar":
+        v = p.scalar(name, "g")
+    elif ptype == "timeseries":
+        tp = create_time_points(
+            np.datetime64("1989-03-05"),
+            np.timedelta64(24, "s"),
+            3,
+            "point",
+        )
+        v = p.timeseries(name, "A", tp)
+
+    assert v.version == 0
+    if ptype == "generic":
+        p.generic(name).value = 12
+        assert v.value == 12
+    elif ptype == "scalar":
+        p.scalar(name, "kg").value = 12
+        assert v.value == 12000
+    elif ptype == "timeseries":
+        p.timeseries(name, "mA", tp).values = np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, 10**-3 * np.arange(0, 3, 1))
+
+    assert v.version == 1
+    if ptype == "generic":
+        v.value = 16
+        assert v.value == 16
+    elif ptype == "scalar":
+        v.value = 1
+        assert v.value == 1
+    elif ptype == "timeseries":
+        v.values = -1*np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, -1 * np.arange(0, 3, 1))
+
+    assert v.version == 2
+    if ptype == "generic":
+        p.generic(name).value = "hello"
+        assert v.value == "hello"
+    elif ptype == "scalar":
+        p.scalar(name, "kg").value = -3
+        assert v.value == -3000
+    elif ptype == "timeseries":
+        # currently failing, I think it's because when you write you set _timeseries
+        # and then you don't look at whether the timeseries has been updated when
+        # reading cause of line 400 of openscm/core/views.py ?
+        p.timeseries(name, "mA", tp).values = 3*np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, 3 * 10**-3 * np.arange(0, 3, 1))
+
+    assert v.version == 3
