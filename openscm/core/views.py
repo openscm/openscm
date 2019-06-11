@@ -342,6 +342,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             self._data = self._get_values()
         elif self._version != self._parameter.version:
             import pdb
+
             pdb.set_trace()
             np.copyto(self._data, self._get_values())
         self._version = self._parameter.version

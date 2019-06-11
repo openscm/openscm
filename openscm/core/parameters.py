@@ -69,7 +69,9 @@ class ParameterType(Enum):
             return "average"
         if timeseries_type == ParameterType.POINT_TIMESERIES:
             return "point"
-        raise ValueError("Timeseries type expected")  # pragma: no cover # emergency valve
+        raise ValueError(
+            "Timeseries type expected"
+        )  # pragma: no cover # emergency valve
 
     @classmethod
     def from_timeseries_type(
@@ -104,7 +106,9 @@ class ParameterType(Enum):
                 return cls.POINT_TIMESERIES
             raise ValueError("Unknown timeseries type '{}'".format(timeseries_type))
         if timeseries_type not in [cls.AVERAGE_TIMESERIES, cls.POINT_TIMESERIES]:
-            raise ValueError("Timeseries type expected")  # pragma: no cover # emergency valve
+            raise ValueError(
+                "Timeseries type expected"
+            )  # pragma: no cover # emergency valve
         return timeseries_type
 
 

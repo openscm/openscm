@@ -1887,8 +1887,7 @@ def test_parameterset_non_world_generic_para_to_scmdataframe_raises(rcp26):
 
     start_point.generic("blowup", region=("World|Region")).value = 12
     with pytest.raises(
-        ValueError,
-        match="Only generic types with Region==World can be extracted",
+        ValueError, match="Only generic types with Region==World can be extracted"
     ):
         convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
 
@@ -1898,8 +1897,7 @@ def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
 
     start_point.scalar("blowup", "K", region=("World|Region")).value = 12
     with pytest.raises(
-        ValueError,
-        match="Only scalar types with Region==World can be extracted",
+        ValueError, match="Only scalar types with Region==World can be extracted"
     ):
         convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
 

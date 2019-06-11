@@ -195,10 +195,7 @@ def test_view_str_rep(view_type):
     elif view_type == "timeseries":
         unit = "kg"
         tp = create_time_points(
-            np.datetime64("2010-01-01"),
-            np.timedelta64(365, "D"),
-            10,
-            "average",
+            np.datetime64("2010-01-01"), np.timedelta64(365, "D"), 10, "average"
         )
         v = paraset.timeseries(para_name, unit, tp)
 
@@ -213,8 +210,8 @@ def test_view_str_rep(view_type):
 
 def test_version():
     paraset = ParameterSet()
-    v1 = paraset.scalar('example', unit='g')
-    v2 = paraset.scalar('example', unit='kg')
+    v1 = paraset.scalar("example", unit="g")
+    v2 = paraset.scalar("example", unit="kg")
 
     assert v1.version == 0
     assert v2.version == 0
@@ -522,10 +519,7 @@ def test_view_updates_with_new_write(ptype):
         v = p.scalar(name, "g")
     elif ptype == "timeseries":
         tp = create_time_points(
-            np.datetime64("1989-03-05"),
-            np.timedelta64(24, "s"),
-            3,
-            "point",
+            np.datetime64("1989-03-05"), np.timedelta64(24, "s"), 3, "point"
         )
         v = p.timeseries(name, "A", tp)
 
@@ -538,7 +532,7 @@ def test_view_updates_with_new_write(ptype):
         assert v.value == 12000
     elif ptype == "timeseries":
         p.timeseries(name, "mA", tp).values = np.arange(0, 3, 1)
-        np.testing.assert_allclose(v.values, 10**-3 * np.arange(0, 3, 1))
+        np.testing.assert_allclose(v.values, 10 ** -3 * np.arange(0, 3, 1))
 
     assert v.version == 1
     if ptype == "generic":
@@ -548,7 +542,7 @@ def test_view_updates_with_new_write(ptype):
         v.value = 1
         assert v.value == 1
     elif ptype == "timeseries":
-        v.values = -1*np.arange(0, 3, 1)
+        v.values = -1 * np.arange(0, 3, 1)
         np.testing.assert_allclose(v.values, -1 * np.arange(0, 3, 1))
 
     assert v.version == 2
@@ -562,7 +556,7 @@ def test_view_updates_with_new_write(ptype):
         # currently failing, I think it's because when you write you set _timeseries
         # and then you don't look at whether the timeseries has been updated when
         # reading cause of line 400 of openscm/core/views.py ?
-        p.timeseries(name, "mA", tp).values = 3*np.arange(0, 3, 1)
-        np.testing.assert_allclose(v.values, 3 * 10**-3 * np.arange(0, 3, 1))
+        p.timeseries(name, "mA", tp).values = 3 * np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, 3 * 10 ** -3 * np.arange(0, 3, 1))
 
     assert v.version == 3
