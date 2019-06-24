@@ -122,6 +122,7 @@ CMDCLASS.update({"test": OpenSCMTest})
 setup(
     name=NAME,
     version=versioneer.get_version(),
+    python_requires=">3.7",
     description=SHORT_DESCRIPTION,
     long_description="\n".join(README_LINES),
     long_description_content_type="text/x-rst",
