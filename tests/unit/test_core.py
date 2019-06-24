@@ -553,9 +553,6 @@ def test_view_updates_with_new_write(ptype):
         p.scalar(name, "kg").value = -3
         assert v.value == -3000
     elif ptype == "timeseries":
-        # currently failing, I think it's because when you write you set _timeseries
-        # and then you don't look at whether the timeseries has been updated when
-        # reading cause of line 400 of openscm/core/views.py ?
         p.timeseries(name, "mA", tp).values = 3 * np.arange(0, 3, 1)
         np.testing.assert_allclose(v.values, 3 * 10 ** -3 * np.arange(0, 3, 1))
 

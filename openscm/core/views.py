@@ -18,7 +18,6 @@ from .units import UnitConverter
 # pylint: disable=protected-access
 
 
-# not sure how to get code coverage up here...
 class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
     """
     Internal class which wraps numpy to make sure data is buffered and up-to-date
@@ -340,9 +339,10 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
     def _read(self):
         if self._data is None:
             self._data = self._get_values()
+            self._version = self._parameter.version
         elif self._version != self._parameter.version:
             np.copyto(self._data, self._get_values())
-        self._version = self._parameter.version
+            self._version = self._parameter.version
 
     def _check_write(self):
         if not self._writable:
@@ -396,8 +396,8 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         TimeseriesPointsValuesMismatchError
             Lengths of set value and the time points number mismatch
         """
+        self._read()
         if self._timeseries is None:
-            self._read()
             self._timeseries = _Timeseries(self._data, self)
         return self._timeseries
 
