@@ -38,7 +38,7 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
             )
             results = self._ndarray.__array_ufunc__(ufunc, method, *args, **kwargs)
             if results is NotImplemented:
-                return NotImplemented
+                return NotImplemented  # pragma: no cover
             if ufunc.nout == 1:
                 results = (results,)
             results = tuple(
@@ -139,7 +139,6 @@ class _Timeseries(ExtensionOpsMixin, NDArrayOperatorsMixin):  # type: ignore
         """
         Bytes block of the unterlying timeseries
         """
-        self.__read__()
         return self._ndarray.nbytes
 
 
@@ -497,4 +496,4 @@ class GenericView(ParameterInfo):
         """
         Return string representation / description.
         """
-        return "Read-only view of {}".format(str(self._parameter))
+        return "View of {}".format(str(self._parameter))

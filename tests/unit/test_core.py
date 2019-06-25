@@ -22,7 +22,7 @@ from openscm.errors import (
 
 
 @pytest.fixture
-def model():
+def model_name():
     return "DICE"
 
 
@@ -33,22 +33,52 @@ def start_time():
 
 @pytest.fixture
 def stop_time():
-    return np.datetime64("2100-01-01")
+    return np.datetime64("2010-01-01")
 
 
 @pytest.fixture
-def core(model):
-    core = OpenSCM(model)
-    core.parameters._get_or_create_region(("World", "DEU", "BER"))
-    return core
+def model(model_name):
+    model = OpenSCM(model_name)
+    model.parameters._get_or_create_region(("World", "DEU", "BER"))
+    return model
 
 
-def test_core(core, model):
-    assert core.model == model
+@pytest.fixture
+def model_run(model_name, start_time, stop_time):
+    model_run = OpenSCM(model_name)
+    model_run.parameters.generic("Start Time").value = start_time
+    model_run.parameters.generic("Stop Time").value = stop_time
+    YEAR = np.timedelta64(365, "D")
+    npoints = int((stop_time - start_time) / YEAR) + 1  # include self._stop_time
+    model_run.parameters.timeseries(
+        ("Emissions", "CO2"),
+        "GtCO2/a",
+        create_time_points(
+            start_time,
+            stop_time - start_time,
+            npoints,
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
+        timeseries_type="average",
+    ).values = np.zeros(npoints)
+    return model_run
 
 
-def test_region(core):
-    parameterset = core.parameters
+def test_model_run(model_run, model_name):
+    assert model_run.model == model_name
+    model_run.run()
+    assert model_run.output.info(("Pool", "CO2", "Atmosphere"))
+
+
+def test_model_stepping(model_run, model_name):
+    assert model_run.model == model_name
+    model_run.reset_stepping()
+    model_run.step()
+    assert model_run.output.info(("Pool", "CO2", "Atmosphere"))
+
+
+def test_region(model):
+    parameterset = model.parameters
 
     with pytest.raises(ValueError, match="No region name given"):
         parameterset._get_or_create_region(())
@@ -78,8 +108,8 @@ def test_region(core):
     assert parameterset._get_region(("INVALID", "DEU", "BER")) is None
 
 
-def test_parameter(core):
-    parameterset = core.parameters
+def test_parameter(model):
+    parameterset = model.parameters
     region_ber = parameterset._get_or_create_region(("World", "DEU", "BER"))
 
     with pytest.raises(ValueError, match="No parameter name given"):
@@ -188,24 +218,20 @@ def test_view_str_rep(view_type):
     paraset = ParameterSet()
     para_name = "example"
     if view_type == "generic":
+        unit = "undefined"
         v = paraset.generic(para_name)
+        assert str(v) == "View of {} in {}".format(para_name, unit)
     elif view_type == "scalar":
         unit = "kg"
         v = paraset.scalar(para_name, unit)
+        assert str(v) == "View of {} {} in {}".format(view_type, para_name, unit)
     elif view_type == "timeseries":
         unit = "kg"
         tp = create_time_points(
             np.datetime64("2010-01-01"), np.timedelta64(365, "D"), 10, "average"
         )
         v = paraset.timeseries(para_name, unit, tp)
-
-    str_rep = str(v)
-
-    # TODO: decide whether to unify these
-    if view_type == "generic":
-        assert str_rep == "Read-only view of {} in undefined".format(para_name)
-    else:
-        assert str_rep == "View of {} {} in {}".format(view_type, para_name, unit)
+        assert str(v) == "View of {} {} in {}".format(view_type, para_name, unit)
 
 
 def test_version():
@@ -242,8 +268,8 @@ def test_ensure():
     v1.ensure()
 
 
-def test_scalar_parameter_view(core):
-    parameterset = core.parameters
+def test_scalar_parameter_view(model):
+    parameterset = model.parameters
     cs = parameterset.scalar("Climate Sensitivity", "degC")
     with pytest.raises(ParameterEmptyError):
         cs.value
@@ -257,14 +283,16 @@ def test_scalar_parameter_view(core):
         parameterset.timeseries("Climate Sensitivity", "degC", (0,))
     with pytest.raises(DimensionalityError):
         parameterset.scalar("Climate Sensitivity", "kg")
+    cs_writable.value = 45
+    assert cs_writable.value == 45
 
 
-def test_scalar_parameter_view_aggregation(core, start_time):
+def test_scalar_parameter_view_aggregation(model):
     ta_1 = 0.6
     ta_2 = 0.3
     tb = 0.1
 
-    parameterset = core.parameters
+    parameterset = model.parameters
 
     a_1_writable = parameterset.scalar(("Top", "a", "1"), "dimensionless")
     a_1_writable.value = ta_1
@@ -304,11 +332,11 @@ def series(request):
     return np.array(request.param[0]), np.array(request.param[1])
 
 
-def test_timeseries_parameter_view(core, start_time, series):
+def test_timeseries_parameter_view(model, start_time, series):
     inseries = series[0]
     outseries = series[1]
 
-    parameterset = core.parameters
+    parameterset = model.parameters
     carbon = parameterset.timeseries(
         ("Emissions", "CO2"),
         "GtCO2/a",
@@ -349,12 +377,12 @@ def test_timeseries_parameter_view(core, start_time, series):
         )
 
 
-def test_timeseries_parameter_view_aggregation(core, start_time):
+def test_timeseries_parameter_view_aggregation(model, start_time):
     fossil_industry_emms = np.array([0, 1, 2])
     fossil_energy_emms = np.array([2, 1, 4])
     land_emms = np.array([0.05, 0.1, 0.2])
 
-    parameterset = core.parameters
+    parameterset = model.parameters
 
     fossil_industry_writable = parameterset.timeseries(
         ("Emissions", "CO2", "Fossil", "Industry"),
@@ -492,8 +520,8 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
     )
 
 
-def test_generic_parameter_view(core):
-    parameterset = core.parameters
+def test_generic_parameter_view(model):
+    parameterset = model.parameters
     cs = parameterset.generic(("Model Options", "Generic Option"))
     with pytest.raises(ParameterAggregationError):
         parameterset.generic("Model Options")
@@ -507,6 +535,8 @@ def test_generic_parameter_view(core):
     assert cs_writable.value == "enabled"
     assert not cs.empty
     assert cs.value == "enabled"
+    cs_writable.value = "enabled2"
+    assert cs_writable.value == "enabled2"
 
 
 @pytest.mark.parametrize("ptype", ["generic", "scalar", "timeseries"])
@@ -557,3 +587,65 @@ def test_view_updates_with_new_write(ptype):
         np.testing.assert_allclose(v.values, 3 * 10 ** -3 * np.arange(0, 3, 1))
 
     assert v.version == 3
+
+
+def test_parameter_enums():
+    assert (
+        ParameterType.timeseries_type_to_string(ParameterType.AVERAGE_TIMESERIES)
+        == "average"
+    )
+    assert (
+        ParameterType.timeseries_type_to_string(ParameterType.POINT_TIMESERIES)
+        == "point"
+    )
+    with pytest.raises(ValueError, match="Timeseries type expected"):
+        ParameterType.timeseries_type_to_string(ParameterType.SCALAR)
+
+    assert (
+        ParameterType.from_timeseries_type("average")
+        == ParameterType.AVERAGE_TIMESERIES
+    )
+    assert ParameterType.from_timeseries_type("point") == ParameterType.POINT_TIMESERIES
+    timeseries_type = "invalid"
+    with pytest.raises(
+        ValueError, match="Unknown timeseries type '{}'".format(timeseries_type)
+    ):
+        ParameterType.from_timeseries_type(timeseries_type)
+    with pytest.raises(ValueError, match="Timeseries type expected"):
+        ParameterType.from_timeseries_type(ParameterType.SCALAR)
+
+
+def test_timeseries_class(model, start_time, series):
+    inseries = series[0]
+
+    parameterset = model.parameters
+    parameter = parameterset.timeseries(
+        "Parameter",
+        "",
+        create_time_points(
+            start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
+        ),
+        timeseries_type="average",
+    )
+    parameter.values = inseries
+
+    assert parameter.values.shape == inseries.shape
+    assert parameter.values.nbytes == inseries.nbytes
+    assert parameter.values.dtype == inseries.dtype
+    assert parameter.values.ndim == 1
+    assert np.all(parameter.values[:] == parameter.values[:])
+    assert str(parameter.values) == "timeseries({})".format(repr(inseries))
+
+    np.testing.assert_allclose(np.add(parameter.values, inseries), 2 * inseries)
+    assert np.sum(parameter.values) == np.sum(inseries)
+
+    out = np.empty_like(inseries, dtype=float)
+    np.sin(parameter.values, out=out)
+    np.testing.assert_allclose(out, np.sin(inseries))
+
+    out0 = np.empty_like(inseries, dtype=float)
+    out1 = np.empty_like(inseries, dtype=float)
+    np.modf(parameter.values, out=(out0, out1))
+    out = np.modf(inseries)
+    np.testing.assert_equal(out[0], out0)
+    np.testing.assert_equal(out[1], out1)
