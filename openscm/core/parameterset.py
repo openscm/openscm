@@ -184,7 +184,7 @@ class ParameterSet:
         """
         Get a view to a timeseries parameter.
 
-        The parameter is created as a timeseries if not viewed so far. 
+        The parameter is created as a timeseries if not viewed so far.
 
         Parameters
         ----------
