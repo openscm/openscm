@@ -93,7 +93,7 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
     ``Sea Level Rise``,,, "length"
     ``Equilibrium Climate Sensitivity``,,, "temperature"
     ``Transient Climate Response``,,, "temperature"
-    ``Radiative Forcing Sensitivity``,,, "power / area", "Radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level"
+    ``Radiative Forcing 2xCO2``,,, "power / area", "Radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level"
 
 .. _gases:
 

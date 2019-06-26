@@ -184,9 +184,7 @@ class ParameterSet:
         """
         Get a view to a timeseries parameter.
 
-        The parameter is created as a timeseries if not viewed so far. The length of the
-        returned ParameterView's timeseries is adjusted such that its last value is
-        equal to or less than :obj:`stop_time`.
+        The parameter is created as a timeseries if not viewed so far. 
 
         Parameters
         ----------
