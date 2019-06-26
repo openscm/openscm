@@ -102,54 +102,41 @@ property called ``parameters`` using one of the following functions:
 ..
     TODO: update to new interface
 
-- :func:`~openscm.core.ParameterSet.get_scalar_view` returns a
-  read-only view to a scalar ("number") parameter
-  (:class:`~openscm.parameter_views.ScalarView`)
-- :func:`~openscm.core.ParameterSet.get_writable_scalar_view` returns
-  a writable view to a scalar ("number") parameter
-  (:class:`~openscm.parameter_views.WritableScalarView`)
-- :func:`~openscm.core.ParameterSet.get_timeseries_view` returns a
-  read-only view to a timeseries parameter
+- :func:`~openscm.core.ParameterSet.scalar` returns a view to a scalar
+  ("number") parameter (:class:`~openscm.parameter_views.ScalarView`)
+- :func:`~openscm.core.ParameterSet.timeseries_` returns a view to a
+  timeseries parameter
   (:class:`~openscm.parameter_views.TimeseriesView`)
-- :func:`~openscm.core.ParameterSet.get_writable_timeseries_view`
-  returns a writable view to a timeseries parameter
-  (:class:`~openscm.parameter_views.WritableTimeseriesView`)
-- :func:`~openscm.core.ParameterSet.get_boolean_view` returns a
-  read-only view to a boolean parameter
-  (:class:`~openscm.parameter_views.BooleanView`)
-- :func:`~openscm.core.ParameterSet.get_writable_boolean_view` returns
-  a writable view to a boolean parameter
-  (:class:`~openscm.parameter_views.WritableBooleanView`)
-- :func:`~openscm.core.ParameterSet.get_string_view` returns a
-  read-only view to a string parameter
-  (:class:`~openscm.parameter_views.StringView`)
-- :func:`~openscm.core.ParameterSet.get_writable_string_view` returns
-  a writable view to a string parameter
-  (:class:`~openscm.parameter_views.WritableStringView`)
+- :func:`~openscm.core.ParameterSet.generic` returns a view to a
+  generic parameter, i.e. one of a non-scalar, non-timeseries type,
+  which is not converted in any way
+  (:class:`~openscm.parameter_views.GenericView`)
 
 Each of these functions take the hierarchical name of the parameter
-(as described under :ref:`parameters`) and, in a similar fashion, the
-hierarchical name of the region it applies to. The "root" region, i.e.
-the region of which all others are subregions and which applies to
-parameters for all regions, is by default named ``"World"``.
+(as described under :ref:`parameters`) and, in a similar fashion,
+optionally, the hierarchical name of the region it applies to. The
+"root" region, i.e. the region of which all others are subregions and
+which applies to parameters for all regions, is by default named
+``"World"``.
 
-Values can be get and set using ``get`` and ``set``, respectively.
-Conversion, if necessary, is done internally by the object. There is
-no standard for the unit and time frame for internal storage, but
-those of the first :class:`openscm.parameter_views.ParameterView`
-requested are used. If a scalar view for a time series is requested
-(or vice-versa), or if the units are not convertible, an error is
-raised.
+Values can be get and set using the ``value`` and ``values`` property
+for scalar/generic and timeseries views, respectively. Conversion, if
+necessary, is done internally by the object. There is no standard for
+the unit and time frame for internal storage, but those of the first
+:class:`openscm.parameter_views.ParameterView` requested are used. If
+a scalar view for a time series is requested (or vice-versa), or if
+the units are not convertible, an error is raised. For timeseries, the
+conversion also happens after altering (or reading) particular values
+of the timeseries ``values``.
 
 :class:`~openscm.parameter_views.ParameterView` objects also convert
 between hierarchical levels if possible: a view to a higher level
 parameter yields the sum of its child parameters. This implies that,
-once a *writable* view to a parameter is requested, there cannot be a
-view to one of its children. Otherwise consistency cannot be
-guaranteed, so an error is raised. The same holds if a child parameter
-has already been set and the user tries to set values for one of its
-parent parameters. A similar logic applies to the hierarchy of
-regions.
+once a view to a parameter has been written to, there cannot be a view
+to one of its children. Otherwise consistency cannot be guaranteed, so
+an error is raised. The same holds if a child parameter has already
+been set and the user tries to set values for one of its parent
+parameters. A similar logic applies to the hierarchy of regions.
 
 Using :class:`~openscm.parameter_views.ParameterView` as proxy objects
 rather than directly setting/returning parameter values allows for
@@ -159,28 +146,25 @@ step-wise would create large overhead).
 
 .. code:: python
 
-    climate_sensitivity = model_run.parameters.get_writable_scalar_view(
-        ("Equilibrium Climate Sensitivity",), ("World",), "degC"
+    climate_sensitivity = model_run.parameters.scalar(
+        "Equilibrium Climate Sensitivity", "degC"
     )
-    climate_sensitivity.set(3)
+    climate_sensitivity.value = 3
 
     carbon_emissions_raw = [10 for _ in range(2100 - 2006)]
     time_points = create_time_points(
         start_time,
         year_seconds,
         len(carbon_emissions_raw),
-        ParameterType.AVERAGE_TIMESERIES,
+        "average",
     )
-    carbon_emissions = model_run.parameters.get_writable_timeseries_view(
+    carbon_emissions = model_run.parameters.timeseries(
         ("Emissions", "CO2"),
-        ("World",),
         "GtCO2/a",
         time_points,
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.NONE,
+        "average",
     )
-    carbon_emissions.set(carbon_emissions_raw)
+    carbon_emissions.values = carbon_emissions_raw
 
 Running the model
 *****************
@@ -194,8 +178,10 @@ function:
 
     start_time = np.datetime64("2006-01-01")
     stop_time = np.datetime64("2100-01-01")
+    model.parameter.generic("Start Time").value = start_time
+    model.parameter.generic("Stop Time").value = stop_time
 
-    model.run(start_time, stop_time)
+    model.run()
 
 This tells the adapter for the particular SCM to get the necessary
 parameters in the format as expected by the model, while conversion
@@ -203,9 +189,9 @@ for units and time frames is done by the corresponding
 :class:`openscm.parameter_views.ParameterView` objects. It then runs
 the model itself.
 
-After the run the model is reset, so the
-:func:`~openscm.OpenSCM.run` function can be called again (setting
-parameters to new values before, if desired).
+After the run the model is reset, so the :func:`~openscm.OpenSCM.run`
+function can be called again (setting parameters to new values before,
+if desired).
 
 Getting output parameters
 *************************
