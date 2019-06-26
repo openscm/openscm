@@ -113,5 +113,4 @@ class OpenSCM:
         int
             Current time
         """
-        # TODO: check if reset_stepping has been called
         return self._model.step()
