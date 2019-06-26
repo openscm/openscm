@@ -21,7 +21,8 @@ from dateutil import parser
 from ..errors import InsufficientDataError
 from .parameters import ParameterType
 
-TARGET_TYPE = np.int64
+"""numpy.dtype to do time conversions in"""
+_TARGET_TYPE = np.int64
 
 
 class ExtrapolationType(Enum):
@@ -415,8 +416,8 @@ class TimeseriesConverter:
         InsufficientDataError
             Timeseries too short to extrapolate
         """
-        self._source = np.array(source_time_points).astype(TARGET_TYPE, copy=True)
-        self._target = np.array(target_time_points).astype(TARGET_TYPE, copy=True)
+        self._source = np.array(source_time_points).astype(_TARGET_TYPE, copy=True)
+        self._target = np.array(target_time_points).astype(_TARGET_TYPE, copy=True)
         self._timeseries_type = timeseries_type
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
@@ -581,14 +582,14 @@ class TimeseriesConverter:
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
             return _calc_interval_averages(
                 self._calc_continuous_representation(
-                    source_time_points.astype(TARGET_TYPE), values
+                    source_time_points.astype(_TARGET_TYPE), values
                 ),
-                target_time_points.astype(TARGET_TYPE),
+                target_time_points.astype(_TARGET_TYPE),
             )
         if self._timeseries_type == ParameterType.POINT_TIMESERIES:
             return self._calc_continuous_representation(
-                source_time_points.astype(TARGET_TYPE), values
-            )(target_time_points.astype(TARGET_TYPE))
+                source_time_points.astype(_TARGET_TYPE), values
+            )(target_time_points.astype(_TARGET_TYPE))
 
         raise NotImplementedError
 
