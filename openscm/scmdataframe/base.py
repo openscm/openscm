@@ -445,7 +445,6 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Provides direct access to set "time" as well as the columns in :attr:`meta`.
         """
         if key == "time":
-            # TODO: double check if this will actually do what we want
             self._time_points = TimePoints(value)
             self._data.index = self._time_points.to_index()
             return value

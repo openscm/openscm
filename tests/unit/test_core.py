@@ -467,7 +467,7 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     np.testing.assert_allclose(fossil.values, fossil_industry_emms + fossil_energy_emms)
 
     # ensure that you can't write extra children once you've got a parent view, this
-    # avoids ever having the child views become out of date
+    # avoids ever having the child views being out of date
     with pytest.raises(ParameterReadError):
         parameterset.timeseries(
             ("Emissions", "CO2", "Fossil", "Transport"),
