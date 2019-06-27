@@ -3,7 +3,7 @@ Usage
 
 OpenSCM defines and provides three interfaces for its users.
 
-Its **core** interface is targeted to users who want to include
+Its **main** interface is targeted to users who want to include
 OpenSCM in their model, e.g. integrated assessment modellers. This
 interface provides the basic functionality necessary to run all SCMs
 included in OpenSCM. It includes functions for getting and setting
@@ -14,8 +14,12 @@ other file formats, including whole scenario definitions.
 The **ensemble** interface provides functions for running ensembles of
 model runs.
 
-..
-    TODO: describe ScmDataFrame
+The **ScmDataFrame** provides a high-level model output analysis tool.
+It is designed to make model output filtering, plotting and writing
+to/from disk as easy as possible. In addition, it integrates with the
+tools provided by the pyam <https://github.com/IAMconsortium/pyam>_
+package which facilitates easy inclusion of data from integrated
+assessment modelling exercises too.
 
 The **command line** interface lets users run models with specified
 parameters and model input directly from the command line without
