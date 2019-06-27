@@ -60,7 +60,7 @@ Current maintainers of OpenSCM are:
 Documentation
 -------------
 
-Detailed documentation is given on `ReadTheDocs
+Detailed documentation is available at `ReadTheDocs
 <https://openscm.readthedocs.io/en/latest/>`_.
 
 .. sec-end-long-description
