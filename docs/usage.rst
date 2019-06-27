@@ -103,9 +103,6 @@ Unit and time frame have to be specified when requesting a
 :class:`~openscm.OpenSCM`'s :class:`~openscm.core.ParameterSet`
 property called ``parameters`` using one of the following functions:
 
-..
-    TODO: update to new interface
-
 - :func:`~openscm.core.ParameterSet.scalar` returns a view to a scalar
   ("number") parameter (:class:`~openscm.parameter_views.ScalarView`)
 - :func:`~openscm.core.ParameterSet.timeseries_` returns a view to a
