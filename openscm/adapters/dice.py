@@ -89,7 +89,7 @@ class DICE(Adapter):
     Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
     model.
 
-    TODO: use original calibration
+    TODO: use original calibration (as given by the extra values in the comments)
     """
 
     _timestep: int
