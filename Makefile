@@ -1,4 +1,4 @@
-.PHONY: black checks clean clean-notebooks coverage docs flake8 format publish-on-pypi test test-all test-pypi-install
+.PHONY: black checks check-docs clean clean-notebooks coverage docs format test test-all
 .DEFAULT_GOAL := help
 
 define PRINT_HELP_PYSCRIPT
@@ -69,16 +69,6 @@ format: venv clean-notebooks  ## format the code and clean notebooks
 	./venv/bin/isort --recursive openscm tests setup.py
 	./venv/bin/black openscm tests setup.py --exclude openscm/_version.py
 
-publish-on-pypi: venv  ## publish a release on PyPI
-	-rm -rf build dist
-	@status=$$(git status --porcelain); \
-	if test "x$${status}" = x; then \
-		./venv/bin/python setup.py bdist_wheel --universal; \
-		./venv/bin/twine upload dist/*; \
-	else \
-		echo Working directory is dirty >&2; \
-	fi;
-
 test: venv  ## run all the code tests
 	./venv/bin/pytest -sx tests
 
@@ -86,13 +76,6 @@ test-notebooks: venv  ## run all notebook tests
 	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
 
 test-all: test test-notebooks  ## run the testsuite and the notebook tests
-
-test-pypi-install: venv  ## test openscm installs from the test PyPI server
-	$(eval TEMPVENV := $(shell mktemp -d))
-	python3 -m venv $(TEMPVENV)
-	$(TEMPVENV)/bin/pip install pip --upgrade
-	$(TEMPVENV)/bin/pip install openscm
-	$(TEMPVENV)/bin/python -c "import sys; sys.path.remove(''); import openscm; print(openscm.__version__)"
 
 venv: setup.py  ## install a development virtual environment
 	[ -d ./venv ] || python3 -m venv ./venv
