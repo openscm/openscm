@@ -364,7 +364,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         if self._parameter.children:
             return cast(
                 Sequence[float],
-                np.sum((v.values for v in self._child_data_views), axis=0),
+                sum((v.values for v in self._child_data_views)),
             )
         if self.empty:
             raise ParameterEmptyError
