@@ -370,6 +370,13 @@ class ParameterInfo:
         return self._parameter.region.full_name
 
     @property
+    def unit(self) -> Optional[str]:
+        """
+        Parameter unit
+        """
+        return self._parameter.unit
+
+    @property
     def empty(self) -> bool:
         """
         Check if parameter is empty, i.e. has not yet been written to.
