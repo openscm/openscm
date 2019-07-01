@@ -649,3 +649,25 @@ def test_timeseries_class(model, start_time, series):
     out = np.modf(inseries)
     np.testing.assert_equal(out[0], out0)
     np.testing.assert_equal(out[1], out1)
+
+
+@pytest.mark.parametrize("view_type", ["scalar", "timeseries"])
+def test_view_units(view_type):
+    p = ParameterSet()
+    a_unit = "kg"
+    b_unit = "g"
+
+    if view_type == "scalar":
+        v1 = p.scalar('example', a_unit)
+    else:
+        v1 = p.timeseries("example", a_unit, [0])
+    v1.value = 2
+    assert v1.unit == 'kg'
+
+    if view_type == "scalar":
+        v2 = p.scalar('example', b_unit)
+    else:
+        v2 = p.timeseries("example", b_unit, [0])
+
+    assert v2.value == v1.value * 1000
+    assert v2.unit == 'g'
