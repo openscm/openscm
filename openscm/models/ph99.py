@@ -1,5 +1,20 @@
 """
 Simple climate model first presented in Petschel-Held Climatic Change 1999
+
+This one box model projects global-mean |CO2| concentrations, global-mean radiative
+forcing and global-mean temperatures from emissions of |CO2| alone.
+
+Conventions:
+
+- All fluxes are time period averages and are assumed to be constant throughout the
+  time period
+
+- All state variables are start of time period values
+
+Further reference:
+Petschel-Held, G., Schellnhuber, H.-J., Bruckner, T., Toth, F. L., and Hasselmann, K.:
+The tolerable windows approach: Theoretical and methodological foundations, Climatic
+Change, 41, 303–331, 1999.
 """
 from copy import deepcopy
 
@@ -22,23 +37,7 @@ Decisions as I write:
 
 class PH99Model:  # pylint: disable=too-many-instance-attributes
     """
-    Simple climate model first presented in Petschel-Held Climatic Change 1999
-
-    This one box model projects global-mean |CO2| concentrations, global-mean radiative
-    forcing and global-mean temperatures from emissions of |CO2| alone.
-
-    Conventions:
-
-    - All fluxes are time period averages and are assumed to be constant throughout
-      the time period
-
-    - All state variables are start of time period values
-
-
-    Further reference:
-    Petschel-Held, G., Schellnhuber, H.-J., Bruckner, T., Toth, F. L., and
-    Hasselmann, K.: The tolerable windows approach: Theoretical and methodological
-    foundations, Climatic Change, 41, 303–331, 1999.
+    Implementation of model first presented in Petschel-Held Climatic Change 1999
     """
 
     _yr = 1 * _unit_registry("yr")
