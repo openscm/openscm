@@ -658,7 +658,7 @@ def test_view_units(view_type):
     b_unit = "g"
 
     if view_type == "scalar":
-        v1 = p.scalar('example', a_unit)
+        v1 = p.scalar("example", a_unit)
         v1.value = 2
     else:
         v1 = p.timeseries("example", a_unit, [0, 1, 2])
@@ -667,7 +667,7 @@ def test_view_units(view_type):
     assert v1.unit == a_unit
 
     if view_type == "scalar":
-        v2 = p.scalar('example', b_unit)
+        v2 = p.scalar("example", b_unit)
         assert v2.value == v1.value * 1000
     else:
         v2 = p.timeseries("example", b_unit, [0, 1, 2])
