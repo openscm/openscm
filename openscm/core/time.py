@@ -422,7 +422,9 @@ class TimeseriesConverter:
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
 
-        if self._source[0] > self._target[1]:  # TODO: consider extrapolation type
+        if self._source[0] > self._target[-1]:  # TODO: consider extrapolation type
+            raise InsufficientDataError
+        if self._source[-1] < self._target[0]:  # TODO: consider extrapolation type
             raise InsufficientDataError
 
     def _calc_continuous_representation(
