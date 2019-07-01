@@ -228,6 +228,13 @@ class ScalarView(ParameterInfo):
         self._parameter.data = self._unit_converter.convert_to(v)
         self._parameter.version += 1
 
+    @property
+    def unit(self) -> Optional[str]:
+        """
+        Parameter unit
+        """
+        return self._unit_converter.target
+
     def __str__(self) -> str:
         """
         Return string representation / description.
@@ -414,6 +421,13 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         else:
             np.copyto(self._data, np.asarray(v))
         self._write()
+
+    @property
+    def unit(self) -> Optional[str]:
+        """
+        Parameter unit
+        """
+        return self._unit_converter.target
 
     @property
     def length(self) -> int:
