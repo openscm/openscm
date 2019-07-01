@@ -3,12 +3,12 @@ import re
 import numpy as np
 import pytest
 
-from openscm import timeseries_converter
+from openscm.core.time import ExtrapolationType, TimeseriesConverter
 from openscm.errors import InsufficientDataError
 
 
 def test_short_data(combo):
-    timeseriesconverter = timeseries_converter.TimeseriesConverter(
+    timeseriesconverter = TimeseriesConverter(
         combo.source,
         combo.target,
         combo.timeseries_type,
@@ -21,13 +21,20 @@ def test_short_data(combo):
 
 
 def test_none_extrapolation_error(combo):
-    target = [combo.source[0] - 1, combo.source[0], combo.source[-1] + 1]
-    timeseriesconverter = timeseries_converter.TimeseriesConverter(
+    target = np.asarray(
+        [
+            combo.source[0] - np.timedelta64(1, "s"),
+            combo.source[0],
+            combo.source[-1] + np.timedelta64(1, "s"),
+        ],
+        dtype=np.datetime64,
+    )
+    timeseriesconverter = TimeseriesConverter(
         combo.source,
         target,
         combo.timeseries_type,
         combo.interpolation_type,
-        timeseries_converter.ExtrapolationType.NONE,
+        ExtrapolationType.NONE,
     )
     error_msg = re.escape(
         "Target time points are outside the source time points, use an "

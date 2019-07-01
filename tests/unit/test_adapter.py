@@ -1,5 +1,5 @@
-from openscm.adapter import Adapter
-from openscm.core import ParameterSet
+from openscm.adapters import Adapter
+from openscm.core.parameterset import ParameterSet
 
 
 def test_adapter_base_class_init():
@@ -20,6 +20,7 @@ def test_adapter_base_class_initialize_model_input():
     )
 
     adapter.initialize_model_input()
+    assert adapter._initialized
 
 
 def test_adapter_base_class_initialize_run_parameters():
@@ -27,28 +28,22 @@ def test_adapter_base_class_initialize_run_parameters():
     adapter = Adapter(  # pylint: disable=abstract-class-instantiated
         ParameterSet(), ParameterSet()
     )
-
-    start_time = 0
-    stop_time = 1
-    adapter.initialize_run_parameters(start_time, stop_time)
-    assert adapter._start_time == start_time
-    assert adapter._stop_time == stop_time
-
-    start_time = 1
-    stop_time = 2
-    adapter.initialize_run_parameters(start_time, stop_time)
-    assert adapter._start_time == start_time
-    assert adapter._stop_time == stop_time
+    adapter.initialize_run_parameters()
+    assert adapter._initialized
 
 
 def test_adapter_base_class_run():
+    start_time = 20
+
     Adapter.__abstractmethods__ = set()
+    in_parameters = ParameterSet()
+    in_parameters.generic("Start Time").value = start_time
     adapter = Adapter(  # pylint: disable=abstract-class-instantiated
-        ParameterSet(), ParameterSet()
+        in_parameters, ParameterSet()
     )
-    start_time = 0
-    adapter.initialize_run_parameters(start_time, 1)
+
     adapter.initialize_model_input()
+    adapter.initialize_run_parameters()
     adapter.reset()
     assert adapter._current_time == start_time
     adapter.run()

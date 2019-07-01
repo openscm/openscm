@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import datetime
 import os
+import re
 import warnings
 from logging import getLogger
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -14,26 +15,20 @@ import numpy as np
 import pandas as pd
 from dateutil import parser
 
-from openscm.core import Core
-from openscm.timeseries_converter import (
+from ..core.parameters import HIERARCHY_SEPARATOR
+from ..core.parameterset import ParameterSet
+from ..core.time import (
     ExtrapolationType,
     InterpolationType,
     ParameterType,
+    TimePoints,
     TimeseriesConverter,
 )
-from openscm.units import UnitConverter
-from openscm.utils import (
-    convert_datetime_to_openscm_time,
-    convert_openscm_time_to_datetime,
-    is_floatlike,
-)
-
+from ..core.units import UnitConverter
 from .filters import (
-    DEFAULT_SEPARATOR,
     datetime_match,
     day_match,
     hour_match,
-    is_str,
     month_match,
     pattern_match,
     years_match,
@@ -41,7 +36,6 @@ from .filters import (
 from .offsets import generate_range, to_offset
 from .parameter_type import guess_parameter_type
 from .pyam_compat import Axes, IamDataFrame, LongDatetimeIamDataFrame
-from .timeindex import TimeIndex
 
 _logger = getLogger(__name__)
 
@@ -54,15 +48,14 @@ def _read_file(  # pylint: disable=missing-return-doc
     fnames: str, *args: Any, **kwargs: Any
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Prepare data to initialise ``ScmDataFrameBase`` from a file
+    Prepare data to initialize :class:`ScmDataFrameBase` from a file.
 
     Parameters
     ----------
     *args
-        Passed to ``_read_pandas``.
-
+        Passed to :func:`_read_pandas`.
     **kwargs
-        Passed to ``_read_pandas``.
+        Passed to :func:`_read_pandas`.
 
     Returns
     -------
@@ -76,20 +69,18 @@ def _read_file(  # pylint: disable=missing-return-doc
 
 def _read_pandas(fname: str, *args: Any, **kwargs: Any) -> pd.DataFrame:
     """
-    Read a file and return a pd.DataFrame
+    Read a file and return a :class:`pd.DataFrame`.
 
     Parameters
     ----------
     fname
         Path from which to read data
-
     *args
-        Passed to ``pd.read_csv`` if ``fname`` ends with '.csv', otherwise
-        passed to ``pd.read_excel``.
-
+        Passed to :func:`pd.read_csv` if :obj:`fname` ends with '.csv', otherwise passed
+        to :func:`pd.read_excel`.
     **kwargs
-        Passed to ``pd.read_csv`` if ``fname`` ends with '.csv', otherwise
-        passed to ``pd.read_excel``.
+        Passed to :func:`pd.read_csv` if :obj:`fname` ends with '.csv', otherwise passed
+        to :func:`pd.read_excel`.
 
     Returns
     -------
@@ -99,7 +90,7 @@ def _read_pandas(fname: str, *args: Any, **kwargs: Any) -> pd.DataFrame:
     Raises
     ------
     OSError
-        Path specified by ``fname`` does not exist
+        Path specified by :obj:`fname` does not exist
     """
     if not os.path.exists(fname):
         raise OSError("no data file `{}` found!".format(fname))
@@ -119,9 +110,10 @@ def _format_data(  # pylint: disable=missing-return-doc
     df: Union[pd.DataFrame, pd.Series]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Prepare data to initialise ``ScmDataFrameBase`` from ``pd.DataFrame`` or ``pd.Series``
+    Prepare data to initialize :class:`ScmDataFrameBase` from :class:`pd.DataFrame` or
+    :class:`pd.Series`.
 
-    See docstring of ``ScmDataFrameBase.__init__`` for details.
+    See docstring of :func:`ScmDataFrameBase.__init__` for details.
 
     Parameters
     ----------
@@ -143,7 +135,7 @@ def _format_data(  # pylint: disable=missing-return-doc
         df = df.to_frame()
 
     # all lower case
-    str_cols = [c for c in df.columns if is_str(c)]
+    str_cols = [c for c in df.columns if isinstance(c, str)]
     df.rename(columns={c: str(c).lower() for c in str_cols}, inplace=True)
 
     # reset the index if meaningful entries are included there
@@ -192,20 +184,23 @@ def _format_wide_data(df):
     time_cols, extra_cols = False, []
     for i in cols:
         # if in wide format, check if columns are years (int) or datetime
-        if is_floatlike(i) or isinstance(i, datetime.datetime):
+        if isinstance(i, datetime.datetime):
             time_cols = True
         else:
             try:
+                float(i)
+                time_cols = True
+            except (ValueError, TypeError):
                 try:
-                    # most common format
-                    datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
+                    try:
+                        # most common format
+                        datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        # this is super slow so avoid if possible
+                        parser.parse(str(i))  # if no ValueError, this is datetime
                     time_cols = True
                 except ValueError:
-                    # this is super slow so avoid if possible
-                    parser.parse(str(i))  # if no ValueError, this is datetime
-                    time_cols = True
-            except ValueError:
-                extra_cols.append(i)  # some other string
+                    extra_cols.append(i)  # some other string
 
     if not time_cols:
         msg = "invalid column format, must contain some time (int, float or datetime) columns!"
@@ -218,18 +213,17 @@ def _format_wide_data(df):
     return df, meta
 
 
-# pylint doesn't recognise ',' in returns type definition
-def _from_ts(  # pylint: disable=missing-return-doc
-    df: Any, index: Any = None, **columns: Union[str, List[str]]
+def _from_ts(
+    df: Any, index: Any = None, **columns: Union[str, bool, float, int, List]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Prepare data to initialise ``ScmDataFrameBase`` from wide timeseries
+    Prepare data to initialize :class:`ScmDataFrameBase` from wide timeseries.
 
-    See docstring of ``ScmDataFrameBase.__init__`` for details.
+    See docstring of :func:`ScmDataFrameBase.__init__` for details.
 
     Returns
     -------
-    :obj:`pd.DataFrame`, :obj:`pd.DataFrame`
+    Tuple[pd.DataFrame, pd.DataFrame]
         First dataframe is the data. Second dataframe is metadata
 
     Raises
@@ -240,7 +234,10 @@ def _from_ts(  # pylint: disable=missing-return-doc
     if not isinstance(df, pd.DataFrame):
         df = pd.DataFrame(df)
     if index is not None:
-        df.index = index
+        if isinstance(index, np.ndarray):
+            df.index = TimePoints(index).to_index()
+        else:
+            df.index = index
 
     # format columns to lower-case and check that all required columns exist
     if not set(REQUIRED_COLS).issubset(columns.keys()):
@@ -250,19 +247,20 @@ def _from_ts(  # pylint: disable=missing-return-doc
     df.index.name = "time"
 
     num_ts = len(df.columns)
-    for c_name in columns:
-        col = columns[c_name]
-        col = [col] if is_str(col) else col  # type: ignore # mypy can't handle if
+    for c_name, col in columns.items():
+        col_list = (
+            [col] if isinstance(col, str) or not isinstance(col, Iterable) else col
+        )
 
-        if len(col) == num_ts:
+        if len(col_list) == num_ts:
             continue
-        if len(col) != 1:
+        if len(col_list) != 1:
             error_msg = (
                 "Length of column '{}' is incorrect. It should be length "
                 "1 or {}".format(c_name, num_ts)
             )
             raise ValueError(error_msg)
-        columns[c_name] = col * num_ts
+        columns[c_name] = col_list * num_ts
 
     meta = pd.DataFrame(columns, index=df.columns)
 
@@ -273,14 +271,24 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     """
     Base of OpenSCM's custom DataFrame implementation.
 
-    This base is the class other libraries can subclass. Having such a subclass avoids
-    a potential circularity where e.g. openscm imports ScmDataFrame as well as
-    Pymagicc, but Pymagicc wants to import ScmDataFrame too. Hence, importing
-    ScmDataFrame requires importing ScmDataFrame, causing a circularity.
+    This base is the class other libraries can subclass. Having such a subclass avoids a
+    potential circularity where e.g. OpenSCM imports ScmDataFrame as well as Pymagicc,
+    but Pymagicc wants to import ScmDataFrame too. Hence, importing ScmDataFrame
+    requires importing ScmDataFrame, causing a circularity.
     """
 
-    data_hierarchy_separator = DEFAULT_SEPARATOR
-    """str: String used to define different levels in our data hierarchies.
+    _data: pd.DataFrame
+    """Timeseries data"""
+
+    _meta: pd.DataFrame
+    """Meta data"""
+
+    _time_points: TimePoints
+    """Time points"""
+
+    data_hierarchy_separator = HIERARCHY_SEPARATOR
+    """
+    str: String used to define different levels in our data hierarchies.
 
     By default we follow pyam and use "|". In such a case, emissions of CO2 for energy
     from coal would be "Emissions|CO2|Energy|Coal".
@@ -296,30 +304,29 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         **kwargs: Any
     ):
         """
-        Initialize an ScmDataFrameBase instance
+        Initialize.
 
         Parameters
         ----------
         data
-            A pd.DataFrame or data file with IAMC-format data columns, or a numpy
-            array of timeseries data if `columns` is specified. If a string is passed,
+            A pd.DataFrame or data file with IAMC-format data columns, or a numpy array
+            of timeseries data if :obj:`columns` is specified. If a string is passed,
             data will be attempted to be read from file.
 
         index
-            Only used if ``columns is not None``. If ``index is not None`` too then
-            this value sets the time index of the ``ScmDataFrameBase`` instance. If
-            ``index is None`` and `columns is not None``, the index is taken from
-            ``data``.
+            Only used if :obj:`columns` is not ``None``. If :obj:`index` is not
+            ``None``, too, then this value sets the time index of the
+            :class:`ScmDataFrameBase` instance. If :obj:`index` is ``None`` and
+            :obj:`columns` is not ``None``, the index is taken from :obj:`data`.
 
         columns
-            If None, ScmDataFrameBase will attempt to infer the values from the
-            source. Otherwise, use this dict to write the metadata for each timeseries
-            in data. For each metadata key (e.g. "model", "scenario"), an array of
-            values (one per time series) is expected. Alternatively, providing a
-            list of length 1 applies the same value to all timeseries in data. For
-            example, if you had three timeseries from 'rcp26' for 3 different models
-            'model', 'model2' and 'model3', the column dict would look like either
-            `col_1` or `col_2`:
+            If None, ScmDataFrameBase will attempt to infer the values from the source.
+            Otherwise, use this dict to write the metadata for each timeseries in data.
+            For each metadata key (e.g. "model", "scenario"), an array of values (one
+            per time series) is expected. Alternatively, providing a list of length 1
+            applies the same value to all timeseries in data. For example, if you had
+            three timeseries from 'rcp26' for 3 different models 'model', 'model2' and
+            'model3', the column dict would look like either 'col_1' or 'col_2':
 
             .. code:: python
 
@@ -343,17 +350,17 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 )
 
         **kwargs:
-            Additional parameters passed to `pyam.core._read_file` to read files
+            Additional parameters passed to :func:`pyam.core._read_file` to read files
 
         Raises
         ------
         ValueError
             If metadata for ['model', 'scenario', 'region', 'variable', 'unit'] is not
-            found. A ``ValueError`` is also raised if you try to load from multiple
-            files at once. If you wish to do this, please use ``df_append`` instead.
+            found. A :class:`ValueError` is also raised if you try to load from multiple
+            files at once. If you wish to do this, please use :func:`df_append` instead.
 
         TypeError
-            Timeseries cannot be read from ``data``
+            Timeseries cannot be read from :obj:`data`
         """
         if columns is not None:
             (_df, _meta) = _from_ts(data, index=index, **columns)
@@ -361,26 +368,27 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             # turn off mypy type checking here as ScmDataFrameBase isn't defined
             # when mypy does type checking
             (_df, _meta) = (
-                data._data.copy(),  # type: ignore # pylint: disable=protected-access
-                data._meta.copy(),  # type: ignore # pylint: disable=protected-access
+                data._data.copy(),  # pylint: disable=protected-access
+                data._meta.copy(),  # pylint: disable=protected-access
             )
         elif isinstance(data, (pd.DataFrame, pd.Series)):
             (_df, _meta) = _format_data(data.copy())
         elif (IamDataFrame is not None) and isinstance(data, IamDataFrame):
             (_df, _meta) = _format_data(data.data.copy())
         else:
-            if not is_str(data):
-                if isinstance(data, list) and is_str(data[0]):
+            if not isinstance(data, str):
+                if isinstance(data, list) and isinstance(data[0], str):
                     raise ValueError(
                         "Initialising from multiple files not supported, "
                         "use `openscm.ScmDataFrame.append()`"
                     )
                 error_msg = "Cannot load {} from {}".format(type(self), type(data))
                 raise TypeError(error_msg)
-            # mypy doesn't recognise type control in `if` statements
+
             (_df, _meta) = _read_file(data, **kwargs)
-        self._time_index = TimeIndex(py_dt=_df.index.values)
-        _df.index = self._time_index.as_pd_index()
+
+        self._time_points = TimePoints(_df.index.values)
+        _df.index = self._time_points.to_index()
         _df = _df.astype(float)
 
         self._data, self._meta = (_df, _meta)
@@ -388,15 +396,12 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     def copy(self) -> ScmDataFrameBase:
         """
-        Return a ``copy.deepcopy`` of self
-
-        Documentation about ``copy.deepcopy`` is available
-        `here <https://docs.python.org/2/library/copy.html#copy.deepcopy>`_.
+        Return a :func:`copy.deepcopy` of self.
 
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            ``copy.deepcopy`` of self
+            :func:`copy.deepcopy` of ``self``
         """
         return copy.deepcopy(self)
 
@@ -416,15 +421,16 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Get item of self with helpful direct access.
 
-        Provides direct access to "time", "year" as well as the columns in
-        ``self.meta``. If key is anything else, the key will be applied to
-        ``self._data``.
+        Provides direct access to "time", "year" as well as the columns in :attr:`meta`.
+        If key is anything else, the key will be applied to :attr:`_data`.
         """
-        _key_check = [key] if is_str(key) or not isinstance(key, Iterable) else key
+        _key_check = (
+            [key] if isinstance(key, str) or not isinstance(key, Iterable) else key
+        )
         if key == "time":
-            return pd.Series(self._time_index.as_pd_index(), dtype="object")
+            return pd.Series(self._time_points.to_index(), dtype="object")
         if key == "year":
-            return pd.Series(self._time_index.years())
+            return pd.Series(self._time_points.years())
         if set(_key_check).issubset(self.meta.columns):
             return self.meta.__getitem__(key)
 
@@ -436,48 +442,59 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Set item of self with helpful direct access.
 
-        Provides direct access to set "time" as well as the columns in
-        ``self.meta``.
+        Provides direct access to set "time" as well as the columns in :attr:`meta`.
         """
         if key == "time":
-            # TODO: double check if this will actually do what we want
-            self._time_index = TimeIndex(py_dt=value)
-            self._data.index = self._time_index.as_pd_index()
+            self._time_points = TimePoints(value)
+            self._data.index = self._time_points.to_index()
             return value
         return self.set_meta(value, name=key)
 
-    def to_core(self) -> Core:
+    def to_parameterset(
+        self, parameterset: Optional[ParameterSet] = None
+    ) -> ParameterSet:
         """
-        Convert ``self`` to a ``Core`` object
+        Add parameters in this :class:`ScmDataFrameBase` to a :class:`ParameterSet`.
 
-        An ``ScmDataFrameBase`` can only be converted to a core object if all
-        timeseries have the same metadata. This is typically the case if all output
-        comes from a single model run. If that is not the case, further filtering is
-        needed to reduce to a dataframe with identical metadata.
+        It can only be transformed if all timeseries have the same metadata. This is
+        typically the case if all data comes from a single scenario/model input
+        dataset. If that is not the case, further filtering is needed to reduce to a
+        dataframe with identical metadata.
 
-        Return
-        ------
-        :obj:`Core`
-            Core instance containing the data in ``self``
+        Parameters
+        ----------
+        parameterset
+            ParameterSet to add this :class:`ScmDataFrameBase`'s parameters to. A new
+            :class:`ParameterSet` is created if this is ``None``.
+
+        Returns
+        -------
+        ParameterSet
+            :class:`ParameterSet` containing the data in ``self`` (equals
+            :obj:`parameterset` if not ``None``)
 
         Raises
         ------
         ValueError
-            Not all timeseries have the same metadata
-
-        KeyError
-            ``climate_model`` is not a column of ``self.meta`` [TODO: test this]
+            Not all timeseries have the same metadata or :obj:`climate_model` is given
+            and does not equal "unspecified"
         """
+        # pylint: disable=too-many-locals
+
         meta_values = self._meta.drop(
-            ["variable", "region", "unit"], axis=1
+            ["variable", "region", "unit", "parameter_type"], axis=1, errors="ignore"
         ).drop_duplicates()
         if len(meta_values) > 1:
             raise ValueError("Not all timeseries have identical metadata")
         meta_values = meta_values.squeeze()
 
-        climate_model = meta_values.pop("climate_model")
+        if meta_values.get("climate_model", "unspecified") != "unspecified":
+            raise ValueError(
+                "Only input data can be converted to a ParameterSet. Remove climate_model first."
+            )
 
-        core = Core(climate_model, self.time_points.min(), self.time_points.max())
+        if parameterset is None:
+            parameterset = ParameterSet()
 
         for i in self._data:
             vals = self._data[i]
@@ -485,38 +502,48 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             variable = metadata.pop("variable")
             region = metadata.pop("region")
             unit = metadata.pop("unit")
+            try:
+                timeseries_type = ParameterType.from_timeseries_type(
+                    metadata.pop("parameter_type")
+                )
+            except KeyError:
+                timeseries_type = guess_parameter_type(variable, unit)
 
-            variable_openscm = tuple(variable.split(self.data_hierarchy_separator))
-            region_openscm = tuple(region.split(self.data_hierarchy_separator))
-            core.parameters.get_writable_timeseries_view(
-                variable_openscm,
-                region_openscm,
+            time_points = self.time_points
+            if timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+                delta_t = time_points[-1] - time_points[-2]
+                time_points = np.concatenate((time_points, [time_points[-1] + delta_t]))
+
+            parameterset.timeseries(
+                variable,
                 unit,
-                self.time_points,
-                ParameterType.POINT_TIMESERIES,
-            ).set(vals.values)
+                time_points,
+                region=region,
+                timeseries_type=timeseries_type,
+            ).values = vals.values
 
+        unit_regexp = re.compile(r".*\(.*\)")
         for k, v in meta_values.iteritems():
-            core.parameters.get_writable_generic_view(k, ("World",)).set(v)
+            if unit_regexp.match(k):
+                para_name = k.split("(")[0].strip()
+                para_unit = k.split("(")[1].split(")")[0].strip()
+                parameterset.scalar(para_name, para_unit).value = v
+            else:
+                parameterset.generic(k).value = v
 
-        return core
+        return parameterset
 
     @property
     def time_points(self) -> np.ndarray:
         """
-        Return the time axis of the data.
-
-        Returns the data as OpenSCM times.
-
-        Returns
-        -------
-        :obj:`np.array` of :obj:`int`
+        Time points of the data
         """
-        return self._time_index.as_openscm()
+        return self._time_points.values
 
     def timeseries(self, meta: Optional[List[str]] = None) -> pd.DataFrame:
         """
-        Return the data in wide format (same as the timeseries method of ``pyam.IamDataFrame``)
+        Return the data in wide format (same as the timeseries method of
+        :class:`pyam.IamDataFrame`).
 
         Parameters
         ----------
@@ -549,16 +576,16 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
     @property
     def values(self) -> np.ndarray:
         """
-        Return timeseries values without metadata
+        Timeseries values without metadata
 
-        Calls ``self.timeseries()``
+        Calls :func:`timeseries`
         """
         return self.timeseries().values
 
     @property
     def meta(self) -> pd.DataFrame:
         """
-        Return metadata
+        Metadata
         """
         return self._meta.copy()
 
@@ -575,46 +602,49 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Parameters
         ----------
         keep
-            If True, keep all timeseries satisfying the filters, otherwise drop all
-            the timeseries satisfying the filters
+            If True, keep all timeseries satisfying the filters, otherwise drop all the
+            timeseries satisfying the filters
 
         inplace
             If True, do operation inplace and return None
 
         has_nan
-            If True, convert all nan in ``meta_col`` to empty string before applying
-            filters. This means that "" and "*" will match rows with ``np.nan``. If
-            False, the conversion is not applied and so a search in a string column
-            which contains ``np.nan`` will result in a ``TypeError``.
+            If ``True``, convert all nan values in :obj:`meta_col` to empty string
+            before applying filters. This means that "" and "*" will match rows with
+            :class:`np.nan`. If ``False``, the conversion is not applied and so a search
+            in a string column which contains ;class:`np.nan` will result in a
+            :class:`TypeError`.
 
         **kwargs
             Argument names are keys with which to filter, values are used to do the
             filtering. Filtering can be done on:
 
-            - all metadata columns with strings, `*` can be used as a wildcard in
-              search strings
+            - all metadata columns with strings, "*" can be used as a wildcard in search
+              strings
 
-            - 'level': the maximum "depth" of IAM variables (number of
-              `self.data_hierarchy_separator`'s, excluding the strings given in the
-              'variable' argument)
+            - 'level': the maximum "depth" of IAM variables (number of hierarchy levels,
+              excluding the strings given in the 'variable' argument)
 
-            - 'time': takes a `datetime.datetime` or list of `datetime.datetime`'s
+            - 'time': takes a :class:`datetime.datetime` or list of
+              :class:`datetime.datetime`'s
+              TODO: default to np.datetime64
 
-            - 'year', 'month', 'day', hour': takes an `int` or list of `int`'s
-              ('month' and 'day' also accept `str` or list of `str`)
+            - 'year', 'month', 'day', hour': takes an :class:`int` or list of
+              :class:`int`'s ('month' and 'day' also accept :class:`str` or list of
+              :class:`str`)
 
-            If `regexp=True` is included in ``kwargs`` then the pseudo-regexp
-            syntax in `pattern_match` is disabled.
+            If ``regexp=True`` is included in :obj:`kwargs` then the pseudo-regexp
+            syntax in :obj:`pattern_match` is disabled.
 
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            If not inplace, return a new instance with the filtered data.
+            If not :obj:`inplace`, return a new instance with the filtered data.
 
         Raises
         ------
         AssertionError
-            Data and meta become unaligned.
+            Data and meta become unaligned
         """
         _keep_ts, _keep_cols = self._apply_filters(kwargs, has_nan)
         idx = _keep_ts[:, np.newaxis] & _keep_cols
@@ -654,32 +684,32 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         self, filters: Dict, has_nan: bool = True
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Determine rows to keep in data for given set of filters
+        Determine rows to keep in data for given set of filters.
 
         Parameters
         ----------
         filters
-            Dictionary of filters ({col: values}}); uses a pseudo-regexp syntax
-            by default but if ``filters["regexp"]`` is ``True``, regexp is used
-            directly.
+            Dictionary of filters ``({col: values}})``; uses a pseudo-regexp syntax by
+            default but if ``filters["regexp"]`` is ``True``, regexp is used directly.
 
         has_nan
-            If True, convert all nan in ``meta_col`` to empty string before applying
-            filters. This means that "" and "*" will match rows with ``np.nan``. If
-            False, the conversion is not applied and so a search in a string column
-            which contains ``np.nan`` will result in a ``TypeError``.
+            If `True``, convert all nan values in :obj:`meta_col` to empty string before
+            applying filters. This means that "" and "*" will match rows with
+            :class:`np.nan`. If ``False``, the conversion is not applied and so a search
+            in a string column which contains :class:`np.nan` will result in a
+            :class:`TypeError`.
 
         Returns
         -------
-        :obj:`np.array` of bool, :obj:`np.array` of bool
-            Two boolean `np.array`'s. The first contains the columns to keep (i.e.
-            which time points to keep). The second contains the rows to keep (i.e.
+        :obj:`np.ndarray` of :class:`bool`, :obj:`np.ndarray` of :class:`bool`
+            Two boolean :class:`np.ndarray`'s. The first contains the columns to keep
+            (i.e. which time points to keep). The second contains the rows to keep (i.e.
             which metadata matched the filters).
 
         Raises
         ------
         ValueError
-            Filtering cannot be performed on requested column.
+            Filtering cannot be performed on requested column
         """
         regexp = filters.pop("regexp", False)
         keep_ts = np.array([True] * len(self._data))
@@ -706,19 +736,19 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                     separator=self.data_hierarchy_separator,
                 ).values
             elif col == "year":
-                keep_ts &= years_match(self._time_index.years(), values)
+                keep_ts &= years_match(self._time_points.years(), values)
 
             elif col == "month":
-                keep_ts &= month_match(self._time_index.months(), values)
+                keep_ts &= month_match(self._time_points.months(), values)
 
             elif col == "day":
                 keep_ts &= self._day_match(values)
 
             elif col == "hour":
-                keep_ts &= hour_match(self._time_index.hours(), values)
+                keep_ts &= hour_match(self._time_points.hours(), values)
 
             elif col == "time":
-                keep_ts &= datetime_match(self._time_index.as_py(), values)
+                keep_ts &= datetime_match(self._time_points.values, values)
 
             elif col == "level":
                 if "variable" not in filters.keys():
@@ -746,47 +776,47 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             wday = False
 
         if wday:
-            days = self._time_index.weekdays()
+            days = self._time_points.weekdays()
         else:  # ints or list of ints
-            days = self._time_index.days()
+            days = self._time_points.days()
 
         return day_match(days, values)
 
     def head(self, *args, **kwargs):
         """
-        Return head of ``self.timeseries()``
+        Return head of :func:`self.timeseries()`.
 
         Parameters
         ----------
         *args
-            Passed to ``self.timeseries().head()``
+            Passed to :func:`self.timeseries().head()`
 
         **kwargs
-            Passed to ``self.timeseries().head()``
+            Passed to :func:`self.timeseries().head()`
 
         Returns
         -------
         :obj:`pd.DataFrame`
-            Tail of ``self.timeseries()``
+            Tail of :func:`self.timeseries()`
         """
         return self.timeseries().head(*args, **kwargs)
 
     def tail(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
         """
-        Return tail of ``self.timeseries()``
+        Return tail of :func:`self.timeseries()`.
 
         Parameters
         ----------
         *args
-            Passed to ``self.timeseries().tail()``
+            Passed to :func:`self.timeseries().tail()`
 
         **kwargs
-            Passed to ``self.timeseries().tail()``
+            Passed to :func:`self.timeseries().tail()`
 
         Returns
         -------
         :obj:`pd.DataFrame`
-            Tail of ``self.timeseries()``
+            Tail of :func:`self.timeseries()`
         """
         return self.timeseries().tail(*args, **kwargs)
 
@@ -794,9 +824,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         self, mapping: Dict[str, Dict[str, str]], inplace: bool = False
     ) -> Optional[ScmDataFrameBase]:
         """
-        Rename and aggregate column entries using `groupby.sum()` on values.
-        When renaming models or scenarios, the uniqueness of the index must be
-        maintained, and the function will raise an error otherwise.
+        Rename and aggregate column entries using :func:`groupby.sum()` on values. When
+        renaming models or scenarios, the uniqueness of the index must be maintained,
+        and the function will raise an error otherwise.
 
         Parameters
         ----------
@@ -810,17 +840,18 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                                  <current_name_2>: <target_name_2>}}
 
         inplace
-            If True, do operation inplace and return None.
+            If ``True``, do operation inplace and return ``None``
 
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            If ``inplace`` is True, return a new ``ScmDataFrameBase`` instance.
+            If :obj:`inplace` is ``True``, return a new :class:`ScmDataFrameBase`
+            instance
 
         Raises
         ------
         ValueError
-            Column is not in meta or renaming will cause non-unique metadata.
+            Column is not in meta or renaming will cause non-unique metadata
         """
         ret = copy.deepcopy(self) if not inplace else self
         for col, _mapping in mapping.items():
@@ -844,26 +875,26 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         index: Optional[Union[pd.DataFrame, pd.Series, pd.Index, pd.MultiIndex]] = None,
     ) -> None:
         """
-        Set metadata information
+        Set metadata information.
 
-        [TODO: re-write this to make it more sane and add type annotations @lewisjared]
+        TODO: re-write this to make it more sane and add type annotations
 
         Parameters
         ----------
         meta
-            Column to be added to metadata.
+            Column to be added to metadata
 
         name
-            Meta column name (defaults to ``meta.name``).
+            Meta column name (defaults to :obj:`meta.name`)
 
         index
-            The index to which the metadata is to be applied.
+            The index to which the metadata is to be applied
 
         Raises
         ------
         ValueError
             No name can be determined from inputs or index cannot be coerced to
-            pd.MultiIndex.
+            :class:`pd.MultiIndex`
         """
         # check that name is valid and doesn't conflict with data columns
         # mypy doesn't recognise if
@@ -906,19 +937,19 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             self._meta.drop("level_0", axis=1, inplace=True)
         self._sort_meta_cols()
 
-    def interpolate(
+    def interpolate(  # pylint: disable=too-many-locals
         self,
-        target_times: List[Union[datetime.datetime, int]],
-        interpolation_type: InterpolationType = InterpolationType.LINEAR,
-        extrapolation_type: ExtrapolationType = ExtrapolationType.CONSTANT,
+        target_times: Union[np.ndarray, List[Union[datetime.datetime, int]]],
+        interpolation_type: Union[InterpolationType, str] = InterpolationType.LINEAR,
+        extrapolation_type: Union[ExtrapolationType, str] = ExtrapolationType.CONSTANT,
     ) -> ScmDataFrameBase:
         """
-        Interpolate the dataframe onto a new time frame
+        Interpolate the dataframe onto a new time frame.
 
-        Uses openscm.timeseries_converter.TimeseriesConverter internally. For each time series
-        a ``ParameterType`` is guessed from the variable name. To override the guessed parameter
-        type, specify a `parameter_type` meta column before calling interpolate. The guessed
-        parameter types are returned in meta.
+        Uses :class:`openscm.timeseries_converter.TimeseriesConverter` internally. For
+        each time series a :class:`ParameterType` is guessed from the variable name. To
+        override the guessed parameter type, specify a "parameter_type" meta column
+        before calling interpolate. The guessed parameter types are returned in meta.
 
         Parameters
         ----------
@@ -926,53 +957,29 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             Time grid onto which to interpolate
 
         interpolation_type
-            How to interpolate the data between timepoints.
+            How to interpolate the data between timepoints
 
         extrapolation_type
-            If and how to extrapolate the data beyond the data in `self.timeseries()`
+            If and how to extrapolate the data beyond the data in
+            :func:`self.timeseries()`
 
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            A new ``ScmDataFrameBase`` containing the data interpolated onto the
-            ``target_times`` grid
+            A new :class:`ScmDataFrameBase` containing the data interpolated onto the
+            :obj:`target_times` grid
         """
         # pylint: disable=protected-access
-        if isinstance(target_times[0], datetime.datetime):
-            # mypy confused about typing of target_times in this block, we must
-            # assume datetime
-            target_times_openscm = [
-                convert_datetime_to_openscm_time(t)  # type: ignore
-                for t in target_times
-            ]
-            target_times_dt = target_times
-        else:
-            # mypy confused about typing of target_times in this block, we must
-            # assume int
-            target_times_openscm = target_times  # type: ignore
-            target_times_dt = [
-                convert_openscm_time_to_datetime(t)  # type: ignore
-                for t in target_times
-            ]
 
-        target_times_openscm = np.asarray(target_times_openscm)
-        target_times_dt = np.asarray(target_times_dt)
+        target_times = np.asarray(target_times, dtype="datetime64[s]")
 
         # Need to keep an object index or pandas will not be able to handle a wide
         # time range
-        timeseries_index = pd.Index(target_times_dt, dtype="object", name="time")
+        timeseries_index = pd.Index(
+            target_times.astype(object), dtype="object", name="time"
+        )
 
         res = self.copy()
-
-        def _to_param_type(p: Union[ParameterType, str]) -> ParameterType:
-            if isinstance(p, ParameterType):
-                return p
-            if p == "average":
-                return ParameterType.AVERAGE_TIMESERIES
-            if p == "point":
-                return ParameterType.POINT_TIMESERIES
-
-            raise ValueError("Unknown parameter_type")
 
         # Add in a parameter_type column if it doesn't exist
         if "parameter_type" not in res._meta:
@@ -999,16 +1006,16 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         res._data = pd.DataFrame(index=timeseries_index, columns=res._data.columns)
 
         for parameter_type, grp in res._meta.groupby("parameter_type"):
-            p_type = _to_param_type(parameter_type)
+            p_type = ParameterType.from_timeseries_type(parameter_type)
             time_points = self.time_points
 
             if p_type == ParameterType.AVERAGE_TIMESERIES:
                 # With an average time series we are making the assumption that the last value is the
                 # average value between t[-1] and (t[-1] - t[-2]). This will ensure that both the
                 # point and average timeseries can use the same time grid.
-                delta_t = target_times_openscm[-1] - target_times_openscm[-2]
-                target_times_openscm = np.concatenate(
-                    (target_times_openscm, [target_times_openscm[-1] + delta_t])
+                delta_t = target_times[-1] - target_times[-2]
+                target_times = np.concatenate(
+                    (target_times, [target_times[-1] + delta_t])
                 )
 
                 delta_t = time_points[-1] - time_points[-2]
@@ -1016,10 +1023,10 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
             timeseries_converter = TimeseriesConverter(
                 time_points,
-                target_times_openscm,
+                target_times,
                 p_type,
-                interpolation_type,
-                extrapolation_type,
+                InterpolationType.from_interpolation_type(interpolation_type),
+                ExtrapolationType.from_extrapolation_type(extrapolation_type),
             )
 
             res._data[grp.index] = old_data[
@@ -1046,30 +1053,32 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     def resample(self, rule: str = "AS", **kwargs: Any) -> ScmDataFrameBase:
         """
-        Resample the time index of the timeseries data onto a custom grid
+        Resample the time index of the timeseries data onto a custom grid.
 
-        This helper function allows for values to be easily interpolated onto Aanual
-        or monthly timesteps using the rules='AS' or 'MS' respectively. Internally,
-        the interpolate function performs the regridding.
+        This helper function allows for values to be easily interpolated onto annual or
+        monthly timesteps using the rules='AS' or 'MS' respectively. Internally, the
+        interpolate function performs the regridding.
 
         Parameters
         ----------
         rule
-            See the pandas `user guide <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>`_
+            See the pandas `user guide
+            <http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects>`_
             for a list of options. Note that Business-related offsets such as
-            `BusinessDay` are not supported.
+            "BusinessDay" are not supported.
 
         **kwargs
-            Other arguments to pass through to ``self.interpolate``.
+            Other arguments to pass through to :func:`interpolate`
 
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            New ``ScmDataFrameBase`` object on a new time index.
+            New :class:`ScmDataFrameBase` instance on a new time index
 
         Examples
         --------
-        # resample a dataframe to annual values
+        Resample a dataframe to annual values
+
         >>> scm_df = ScmDataFrame(
         ...     pd.Series([1, 2, 10], index=(2000, 2001, 2009)),
         ...     columns={
@@ -1090,8 +1099,9 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         2000                  1
         2010                 10
 
-        An annual timeseries can be the created by interpolating to the start
-        of years using the rule 'AS'.
+        An annual timeseries can be the created by interpolating to the start of years
+        using the rule 'AS'.
+
         >>> res = scm_df.resample('AS')
         >>> res.timeseries().T
         model                        a_iam
@@ -1141,8 +1151,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         [109 rows x 1 columns]
 
 
-        Note that the values do not fall exactly on integer values as not all years
-        are exactly the same length.
+        Note that the values do not fall exactly on integer values as not all years are
+        exactly the same length.
 
         References
         ----------
@@ -1165,30 +1175,29 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Parameters
         ----------
         cols
-            Columns to perform the operation on. The timeseries will be grouped
-            by all other columns in ``self.meta``.
+            Columns to perform the operation on. The timeseries will be grouped by all
+            other columns in :attr:`meta`.
 
         operation : ['median', 'mean', 'quantile']
-            The operation to perform. This uses the equivalent pandas function.
-            Note that quantile means the value of the data at a given point in the
-            cumulative distribution of values at each point in the timeseries, for
-            each timeseries once the groupby is applied. As a result, using
-            ``q=0.5`` is is the same as taking the median and not the same as
-            taking the mean/average.
+            The operation to perform. This uses the equivalent pandas function. Note
+            that quantile means the value of the data at a given point in the cumulative
+            distribution of values at each point in the timeseries, for each timeseries
+            once the groupby is applied. As a result, using ``q=0.5`` is is the same as
+            taking the median and not the same as taking the mean/average.
 
         **kwargs
-            Keyword arguments to pass to the pandas operation.
+            Keyword arguments to pass to the pandas operation
 
         Returns
         -------
         :obj:`pd.DataFrame`
-            The quantiles of the timeseries, grouped by all columns in ``self.meta``
-            other than ``cols``
+            The quantiles of the timeseries, grouped by all columns in :attr:`meta`
+            other than :obj:`cols`
 
         Raises
         ------
         ValueError
-            If the operation is not one of ['median', 'mean', 'quantile'].
+            If the operation is not one of ['median', 'mean', 'quantile']
         """
         cols = [cols] if isinstance(cols, str) else cols
         ts = self.timeseries()
@@ -1214,19 +1223,23 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Convert the units of a selection of timeseries.
 
-        Uses :obj:`openscm.units.UnitConverter` to perform the conversion.
+        Uses :class:`openscm.units.UnitConverter` to perform the conversion.
 
         Parameters
         ----------
         unit
-            Unit to convert to. This must be recognised by UnitConverter.
+            Unit to convert to. This must be recognised by
+            :class:`~openscm.units.UnitConverter`.
+
         context
             Context to use for the conversion i.e. which metric to apply when performing
             CO2-equivalent calculations. If ``None``, no metric will be applied and
-            CO2-equivalent calculations will raise ``DimensionalityError``.
+            CO2-equivalent calculations will raise :class:`DimensionalityError`.
+
         inplace
-            If True, the operation is performed inplace, updating the underlying data.
-            Otherwise a new ScmDataFrameBase is returned.
+            If ``True``, the operation is performed inplace, updating the underlying
+            data. Otherwise a new :class:`ScmDataFrameBase` instance is returned.
+
         **kwargs
             Extra arguments which are passed to :func:`~ScmDataFrameBase.filter` to
             limit the timeseries which are attempted to be converted. Defaults to
@@ -1235,8 +1248,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            If ``inplace`` is not ``False``, a new ``ScmDataFrameBase`` instance with
-            the converted units.
+            If :obj:`inplace` is not ``False``, a new :class:`ScmDataFrameBase` instance
+            with the converted units.
         """
         # pylint: disable=protected-access
         ret = self if inplace else self.copy()
@@ -1249,7 +1262,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         for orig_unit, grp in to_convert._meta.groupby("unit"):  # type: ignore
             uc = UnitConverter(orig_unit, unit, context=context)
             ret._data[grp.index] = ret._data[grp.index].apply(uc.convert_from)
-            # TODO: Check if unit_context has changed
+            # TODO: check if unit_context has changed
             ret._meta.loc[grp.index] = ret._meta.loc[grp.index].assign(
                 unit=unit, unit_context=context
             )
@@ -1264,26 +1277,24 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Return the timeseries relative to a given reference period mean.
 
-        The reference period mean is subtracted from all values in the input
-        timeseries.
+        The reference period mean is subtracted from all values in the input timeseries.
 
         Parameters
         ----------
         append_str
-            String to append to the name of all the variables in the resulting
-            DataFrame to indicate that they are relevant to a given reference period.
-            E.g. `'rel. to 1961-1990'`. If None, this will be autofilled with the keys
-            and ranges of ``kwargs``.
+            String to append to the name of all the variables in the resulting DataFrame
+            to indicate that they are relevant to a given reference period. E.g. `'rel.
+            to 1961-1990'`. If None, this will be autofilled with the keys and ranges of
+            :obj:`kwargs`.
 
         **kwargs
-            Arguments to pass to ``self.filter`` to determine the data to be included
-            in the reference time period. See the docs of ``self.filter`` for valid
-            options.
+            Arguments to pass to :func:`filter` to determine the data to be included in
+            the reference time period. See the docs of :func:`filter` for valid options.
 
         Returns
         -------
         :obj:`pd.DataFrame`
-            DataFrame containing the timeseries, adjusted to the reference period mean.
+            DataFrame containing the timeseries, adjusted to the reference period mean
         """
         ts = self.timeseries()
         # mypy confused by `inplace` default
@@ -1316,31 +1327,31 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Append additional data to the current dataframe.
 
-        For details, see ``df_append``.
+        For details, see :func:`df_append`.
 
         Parameters
         ----------
         other
-            Data (in format which can be cast to ScmDataFrameBase) to append
+            Data (in format which can be cast to :class:`ScmDataFrameBase`) to append
 
         inplace
-            If True, append data in place and return None. Otherwise, return a new
-            ``ScmDataFrameBase`` instance with the appended data.
+            If ``True``, append data in place and return ``None``. Otherwise, return a
+            new :class:`ScmDataFrameBase` instance with the appended data.
 
         duplicate_msg
             If "warn", raise a warning if duplicate data is detected. If "return",
-            return the joint dataframe (including duplicate timeseries) so the user
-            can inspect further. If ``False``, take the average and do not raise a
-            warning.
+            return the joint dataframe (including duplicate timeseries) so the user can
+            inspect further. If ``False``, take the average and do not raise a warning.
 
         **kwargs
-            Keywords to pass to ``ScmDataFrameBase.__init__`` when reading ``other``
+            Keywords to pass to :func:`ScmDataFrameBase.__init__` when reading
+            :obj:`other`
 
         Returns
         -------
         :obj:`ScmDataFrameBase`
-            If not inplace, return a new ``ScmDataFrameBase`` object containing the
-            result of the append.
+            If not :obj:`inplace`, return a new :class:`ScmDataFrameBase` instance
+            containing the result of the append.
         """
         if not isinstance(other, ScmDataFrameBase):
             other = self.__class__(other, **kwargs)
@@ -1349,21 +1360,21 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     def to_iamdataframe(self) -> LongDatetimeIamDataFrame:
         """
-        Convert to a ``LongDatetimeIamDataFrame`` instance.
+        Convert to a :class:`LongDatetimeIamDataFrame` instance.
 
-        ``LongDatetimeIamDataFrame`` is a subclass of ``pyam.IamDataFrame``. We use
-        ``LongDatetimeIamDataFrame`` to ensure all times can be handled, see docstring
-        of ``LongDatetimeIamDataFrame`` for details.
+        :class:`LongDatetimeIamDataFrame` is a subclass of :class:`pyam.IamDataFrame`.
+        We use :class:`LongDatetimeIamDataFrame` to ensure all times can be handled, see
+        docstring of :class:`LongDatetimeIamDataFrame` for details.
 
         Returns
         -------
-        :obj:`LongDatetimeIamDataFrame`
-            ``LongDatetimeIamDataFrame`` instance containing the same data.
+        :class:`LongDatetimeIamDataFrame`
+            :class:`LongDatetimeIamDataFrame` instance containing the same data.
 
         Raises
         ------
         ImportError
-            If `pyam <https://github.com/IAMconsortium/pyam>`_ is not installed.
+            If `pyam <https://github.com/IAMconsortium/pyam>`_ is not installed
         """
         if LongDatetimeIamDataFrame is None:
             raise ImportError(
@@ -1387,8 +1398,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Plot a line chart.
 
-        See ``pyam.IamDataFrame.line_plot`` for more information
-
+        See :func:`pyam.IamDataFrame.line_plot` for more information.
         """
         return self.to_iamdataframe().line_plot(x, y, **kwargs)  # pragma: no cover
 
@@ -1396,8 +1406,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Plot a scatter chart using metadata columns.
 
-        See `pyam.plotting.scatter() <https://github.com/IAMconsortium/pyam>`_
-        for details.
+        See :func:`pyam.plotting.scatter` for details.
         """
         self.to_iamdataframe().scatter(x, y, **kwargs)  # pragma: no cover
 
@@ -1405,8 +1414,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Plot regional data for a single model, scenario, variable, and year.
 
-        See `pyam.plotting.region_plot() <https://github.com/IAMconsortium/pyam>`_
-        for details.
+        See :class:`pyam.plotting.region_plot` for details.
         """
         return self.to_iamdataframe().region_plot(**kwargs)  # pragma: no cover
 
@@ -1419,8 +1427,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
         """
         Pivot the underlying data series.
 
-        See `pyam.core.IamDataFrame.pivot_table() <https://github.com/IAMconsortium/pyam>`_
-        for details.
+        See :func:`pyam.core.IamDataFrame.pivot_table` for details.
         """
         return self.to_iamdataframe().pivot_table(
             index, columns, **kwargs
@@ -1435,22 +1442,22 @@ def df_append(
     duplicate_msg: Union[str, bool] = "warn",
 ) -> Optional[ScmDataFrameBase]:
     """
-    Append together many objects
+    Append together many objects.
 
-    When appending many objects, it may be more efficient to call this routine once
-    with a list of ScmDataFrames, than using ``ScmDataFrame.append`` multiple times.
-    If timeseries with duplicate metadata are found, the timeseries are appended and
-    values falling on the same timestep are averaged. [TODO: decide whether to raise
-    a warning, which can be silenced, when this happens].
+    When appending many objects, it may be more efficient to call this routine once with
+    a list of ScmDataFrames, than using :func:`ScmDataFrame.append` multiple times. If
+    timeseries with duplicate metadata are found, the timeseries are appended and values
+    falling on the same timestep are averaged (this behaviour can be adjusted with the
+    :obj:`duplicate_msg` arguments).
 
     Parameters
     ----------
     dfs
         The dataframes to append. Values will be attempted to be cast to
-        ``ScmDataFrameBase``.
+        :class:`ScmDataFrameBase`.
 
     inplace
-        If True, then the operation updates the first item in ``dfs`` and returns
+        If ``True``, then the operation updates the first item in :obj:`dfs` and returns
         ``None``.
 
     duplicate_msg
@@ -1461,18 +1468,18 @@ def df_append(
     Returns
     -------
     :obj:`ScmDataFrameBase`
-        If not inplace, the return value is the object containing the merged data. The
-        resultant class will be determined by the type of the first object. If
-        ``duplicate_msg == "return"``, a ``pd.DataFrame`` will be returned instead.
+        If not :obj:`inplace`, the return value is the object containing the merged
+        data. The resultant class will be determined by the type of the first object. If
+        ``duplicate_msg == "return"``, a `pd.DataFrame` will be returned instead.
 
     Raises
     ------
     TypeError
-        If ``inplace`` is True but the first element in ``dfs`` is not an instance of
-        ``ScmDataFrameBase``
+        If :obj:`inplace` is ``True`` but the first element in :obj:`dfs` is not an
+        instance of :class:`ScmDataFrameBase`
 
     ValueError
-        ``duplicate_msg`` option is not recognised
+        :obj:`duplicate_msg` option is not recognised.
     """
     scm_dfs = [
         df if isinstance(df, ScmDataFrameBase) else ScmDataFrameBase(df) for df in dfs
@@ -1545,7 +1552,7 @@ def _handle_potential_duplicates_in_append(data, duplicate_msg):
     if duplicate_msg == "warn":
         warn_msg = (
             "Duplicate time points detected, the output will be the average of "
-            "the duplicates. Set `dulicate_msg='return'` to examine the joint "
+            "the duplicates. Set `duplicate_msg='return'` to examine the joint "
             "timeseries (the duplicates can be found by looking at "
             "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
             "`duplicate_msg=False` to silence this message."

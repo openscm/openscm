@@ -1,6 +1,6 @@
-.. _openscm-python-reference:
+.. _main-api-reference:
 
-OpenSCM Python API
-------------------
+OpenSCM
+-------
 
-.. automodule:: openscm.openscm
+.. autoclass:: openscm.OpenSCM

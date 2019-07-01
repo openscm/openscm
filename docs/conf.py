@@ -140,7 +140,9 @@ autodoc_default_options = {
 coverage_write_headline = False  # do not write headlines.
 intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "python": ("https://docs.python.org/3", None),
+    "pyam": ("https://pyam-iamc.readthedocs.io/en/latest", None),
     # "pint": ("https://pint.readthedocs.io/en/latest", None), # no full API doc here, unfortunately
 }
 napoleon_google_docstring = False

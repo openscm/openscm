@@ -1,10 +1,17 @@
 """
 Unit handling.
 
-Unit handling makes use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
-allows us to easily define units as well as contexts. Contexts allow us to perform conversions which would not normally be allowed e.g. in the 'AR4GWP100' context we can convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
+..
+   TODO: move this documentation to a separate rst document
 
-In general, you should not use Pint with OpenSCM explicitly. As illustration of how units are used internally, we provide the following example:
+Unit handling makes use of the `Pint <https://github.com/hgrecco/pint>`_ library. This
+allows us to easily define units as well as contexts. Contexts allow us to perform
+conversions which would not normally be allowed e.g. in the 'AR4GWP100'
+context we can
+convert from CO2 to CH4 using the AR4GWP100 equivalence metric.
+
+In general, you should not use Pint with OpenSCM explicitly. As illustration of how
+units are used internally, we provide the following example:
 
 .. code:: python
 
@@ -264,8 +271,8 @@ class ScmUnitRegistry(pint.UnitRegistry):  # type: ignore
 
     def enable_contexts(self, *names_or_contexts, **kwargs):
         """
-        Overload pint's `enable_contexts` to load contexts once (the first time they are
-        used) to avoid (unnecessary) file operations on import.
+        Overload pint's :func:`enable_contexts` to load contexts once (the first time
+        they are used) to avoid (unnecessary) file operations on import.
         """
         if not self._contexts_loaded:
             self._load_contexts()
@@ -356,7 +363,12 @@ class ScmUnitRegistry(pint.UnitRegistry):  # type: ignore
         from os import path
 
         metric_conversions = pd.read_csv(
-            path.join(path.dirname(path.abspath(__file__)), "metric_conversions.csv"),
+            path.join(
+                path.dirname(path.abspath(__file__)),
+                "..",
+                "data",
+                "metric_conversions.csv",
+            ),
             skiprows=1,  # skip source row
             header=0,
             index_col=0,
@@ -478,7 +490,7 @@ class UnitConverter:
         context
             Context to use for the conversion i.e. which metric to apply when performing
             CO2-equivalent calculations. If ``None``, no metric will be applied and
-            CO2-equivalent calculations will raise ``DimensionalityError``.
+            CO2-equivalent calculations will raise :class:`DimensionalityError`.
 
         Raises
         ------
@@ -549,23 +561,27 @@ class UnitConverter:
     @property
     def contexts(self) -> Sequence[str]:
         """
-        Get available contexts for unit conversions.
-
-        Returns
-        -------
-        Sequence[str]
-            List of names of the available contexts
+        Available contexts for unit conversions
         """
         return list(_unit_registry._contexts.keys())  # pylint: disable=protected-access
 
     @property
     def unit_registry(self) -> ScmUnitRegistry:
         """
-        Get underlying unit registry.
-
-        Returns
-        -------
-        ScmUnitRegistry
-            Unit registry used by this unit converter
+        Underlying unit registry
         """
         return _unit_registry
+
+    @property
+    def source(self) -> str:
+        """
+        Source unit
+        """
+        return self._source
+
+    @property
+    def target(self) -> str:
+        """
+        Target unit
+        """
+        return self._target

@@ -9,16 +9,16 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 import pytest
-from dateutil import relativedelta
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
 
-from openscm.parameters import ParameterType
-from openscm.scmdataframe import ScmDataFrame, convert_core_to_scmdataframe, df_append
-from openscm.units import DimensionalityError, UndefinedUnitError
-from openscm.utils import (
-    convert_datetime_to_openscm_time,
-    convert_openscm_time_to_datetime,
+from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
+from openscm.errors import DimensionalityError, UndefinedUnitError
+from openscm.scmdataframe import (
+    ScmDataFrame,
+    convert_openscm_to_scmdataframe,
+    df_append,
 )
 
 
@@ -311,8 +311,8 @@ def test_init_with_decimal_years():
         res["time"].unique()
         == [
             datetime.datetime(1765, 1, 1, 0, 0),
-            datetime.datetime(1765, 1, 31, 7, 4, 48, 3),
-            datetime.datetime(1765, 3, 2, 22, 55, 11, 999997),
+            datetime.datetime(1765, 1, 31, 7, 4, 48),
+            datetime.datetime(1765, 3, 2, 22, 55, 11),
         ]
     ).all()
     npt.assert_array_equal(res._data.loc[:, 0].values, inp_array)
@@ -1091,7 +1091,7 @@ def test_append_duplicates(test_scm_df):
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 7.0]
     npt.assert_array_equal(
-        res._time_index.years(), [2005, 2010, 2015, 2020, 2030, 2040]
+        res._time_points.years(), [2005, 2010, 2015, 2020, 2030, 2040]
     )
     npt.assert_almost_equal(obs, exp)
 
@@ -1106,7 +1106,7 @@ def test_append_duplicates_order_doesnt_matter(test_scm_df):
     obs = res.filter(scenario="a_scenario2").timeseries().squeeze()
     exp = [2.0, 7.0, 7.0, 2.0, 7.0, 5.0]
     npt.assert_array_equal(
-        res._time_index.years(), [2005, 2010, 2015, 2020, 2030, 2040]
+        res._time_points.years(), [2005, 2010, 2015, 2020, 2030, 2040]
     )
     npt.assert_almost_equal(obs, exp)
 
@@ -1123,7 +1123,7 @@ def test_append_duplicate_times(test_append_scm_dfs, duplicate_msg):
     if duplicate_msg == "warn":
         warn_msg = (
             "Duplicate time points detected, the output will be the average of the "
-            "duplicates. Set `dulicate_msg='return'` to examine the "
+            "duplicates. Set `duplicate_msg='return'` to examine the "
             "joint timeseries (the duplicates can be found by looking at "
             "`res[res.index.duplicated(keep=False)].sort_index()`. Set "
             "`duplicate_msg=False` to silence this message."
@@ -1135,7 +1135,7 @@ def test_append_duplicate_times(test_append_scm_dfs, duplicate_msg):
         assert len(mock_warn_taking_average) == 1
         assert str(mock_warn_taking_average[0].message) == warn_msg
     else:
-        assert len(mock_warn_taking_average) == 0
+        assert not mock_warn_taking_average
 
     if duplicate_msg == "return":
         # check res gives all timeseries back
@@ -1329,12 +1329,9 @@ def test_append_inplace_preexisinting_nan(test_scm_df):
     )
 
 
-@pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate(combo_df, with_openscm_time):
+def test_interpolate(combo_df):
     combo, df = combo_df
     target = combo.target
-    if not with_openscm_time:
-        target = [convert_openscm_time_to_datetime(d) for d in target]
 
     res = df.interpolate(
         target,
@@ -1345,14 +1342,11 @@ def test_interpolate(combo_df, with_openscm_time):
     npt.assert_array_almost_equal(res.values.squeeze(), combo.target_values)
 
 
-@pytest.mark.parametrize("with_openscm_time", [True, False])
-def test_interpolate_missing_param_type(combo_df, with_openscm_time, doesnt_warn):
+def test_interpolate_missing_param_type(combo_df, doesnt_warn):
     combo, df = combo_df
     df._meta.pop("parameter_type")
 
     target = combo.target
-    if not with_openscm_time:
-        target = [convert_openscm_time_to_datetime(d) for d in target]
 
     warning_msg = "`parameter_type` metadata not available. Guessing parameter types where unavailable."
     with pytest.warns(UserWarning, match=warning_msg):
@@ -1803,97 +1797,145 @@ def test_convert_existing_unit_context(test_scm_df):
     # TODO: warning if unit_context is different
 
 
-def test_scmdataframe_to_core(rcp26, assert_core):
+@pytest.mark.parametrize("prefill", [True, False])
+def test_scmdataframe_to_parameterset(rcp26, prefill):
     tdata = rcp26
 
-    res = tdata.to_core()
-    time_points = tdata.time_points
+    if prefill:
+        res = ParameterSet()
+        tdata.to_parameterset(parameterset=res)
+    else:
+        res = tdata.to_parameterset()
 
-    tstart_dt = tdata["time"].min()
-
-    def get_comparison_time_for_year(yr):
-        return convert_datetime_to_openscm_time(
-            tstart_dt + relativedelta.relativedelta(years=yr - tstart_dt.year)
+    def get_comparison_times_for_year(yr):
+        return np.asarray(
+            [datetime.datetime(yr, 1, 1), datetime.datetime(yr + 1, 1, 1)],
+            dtype="datetime64[s]",
         )
 
-    assert_core(
+    np.testing.assert_allclose(
         9.14781,
-        get_comparison_time_for_year(2017),
-        res,
-        ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
-        "World",
-        "GtC / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
+            "GtC / yr",
+            get_comparison_times_for_year(2017),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         6.124 + 1.2981006,
-        get_comparison_time_for_year(1993),
-        res,
-        ("Emissions", "CO2"),
-        "World",
-        "GtC / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "CO2"),
+            "GtC / yr",
+            get_comparison_times_for_year(1993),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         7.2168971,
-        get_comparison_time_for_year(1983),
-        res,
-        ("Emissions", "N2O"),
-        "World",
-        "MtN2ON / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "N2O"),
+            "MtN2ON / yr",
+            get_comparison_times_for_year(1983),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         0.56591996,
-        get_comparison_time_for_year(1766),
-        res,
-        ("Emissions", "OC"),
-        "World",
-        "MtOC / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "OC"),
+            "MtOC / yr",
+            get_comparison_times_for_year(1766),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
-    assert_core(
+    np.testing.assert_allclose(
         0.22445,
-        get_comparison_time_for_year(2087),
-        res,
-        ("Emissions", "SF6"),
-        "World",
-        "ktSF6 / yr",
-        time_points,
+        res.timeseries(
+            ("Emissions", "SF6"),
+            "ktSF6 / yr",
+            get_comparison_times_for_year(2087),
+            region="World",
+            timeseries_type="average",
+        ).values,
     )
 
 
-def test_scmdataframe_to_core_raises(test_scm_df):
+def test_scmdataframe_non_unique_metadata_to_parameterset_raises(test_scm_df):
     with pytest.raises(ValueError, match="Not all timeseries have identical metadata"):
-        test_scm_df.to_core()
-
-    # make sure single scenario passes
-    test_scm_df.filter(scenario="a_scenario2").to_core()
-    # as long as this passes we're happy, test of conversion details is in
-    # `test_convert_core_to_scmdataframe`
+        test_scm_df.to_parameterset()
 
 
-def test_convert_core_to_scmdataframe(rcp26):
-    tdata = rcp26
+def test_scmdataframe_climate_model_to_parameterset_raises(test_scm_df):
+    with pytest.raises(
+        ValueError,
+        match="Only input data can be converted to a ParameterSet. Remove climate_model first",
+    ):
+        test_scm_df.filter(scenario="a_scenario2").to_parameterset()
 
-    intermediate = rcp26.to_core()
 
-    res = convert_core_to_scmdataframe(
+def test_parameterset_non_world_generic_para_to_scmdataframe_raises(rcp26):
+    start_point = rcp26.filter(variable="*CO2*").to_parameterset()
+
+    start_point.generic("blowup", region=("World|Region")).value = 12
+    with pytest.raises(
+        ValueError, match="Only generic types with Region==World can be extracted"
+    ):
+        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+
+
+def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
+    start_point = rcp26.filter(variable="*CO2*").to_parameterset()
+
+    start_point.scalar("blowup", "K", region=("World|Region")).value = 12
+    with pytest.raises(
+        ValueError, match="Only scalar types with Region==World can be extracted"
+    ):
+        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+
+
+def test_convert_openscm_to_scmdataframe_circularity(rcp26):
+    tdata = rcp26.copy()
+    tdata.set_meta("average", name="parameter_type")
+    tdata.set_meta(True, name="test_generic")
+    tdata.set_meta(3.2, name="test_scalar (delta_degC)")
+    tdata.set_meta([(1, 2, 3)] * len(tdata), name="test_gen_list")
+
+    append_meta = tdata.meta.iloc[0].to_dict()
+    append_meta["variable"] = "Cumulative test"
+    append_meta["unit"] = "kg"
+    append_meta["region"] = "World|Aus"
+    append_meta["parameter_type"] = "point"
+    append_meta["test_gen_list"] = [append_meta["test_gen_list"]]
+    tdata = tdata.append(
+        ScmDataFrame(
+            data=np.arange(len(tdata.time_points)),
+            index=tdata.time_points,
+            columns=append_meta,
+        )
+    )
+    tdata.timeseries()
+
+    intermediate = tdata.to_parameterset()
+
+    res = convert_openscm_to_scmdataframe(
         intermediate,
-        [convert_datetime_to_openscm_time(dt) for dt in tdata["time"]],
+        tdata["time"],
         model="IMAGE",
         scenario="RCP26",
         climate_model="unspecified",
     )
 
     pd.testing.assert_frame_equal(
-        tdata.timeseries().reset_index(),
-        res.timeseries().reset_index(),
-        check_like=True,
+        tdata.timeseries().sort_index(), res.timeseries().sort_index(), check_like=True
     )
 
 
@@ -1926,8 +1968,7 @@ def test_resample():
     npt.assert_almost_equal(obs, exp, decimal=1)
 
 
-def test_resample_long_datetimes(test_scm_df):
-    # THis is the usecase which will fail if we used pd.resample
+def test_resample_long_datetimes():
     df_dts = [datetime.datetime(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
     df = ScmDataFrame(
         np.arange(1700, 2500 + 1, 100),

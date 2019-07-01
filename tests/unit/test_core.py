@@ -1,10 +1,15 @@
+import re
 import warnings
 
 import numpy as np
 import pytest
 
-from openscm.core import Core, ParameterSet
+from openscm import OpenSCM
+from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
+from openscm.core.time import create_time_points
 from openscm.errors import (
+    DimensionalityError,
     ParameterAggregationError,
     ParameterEmptyError,
     ParameterReadError,
@@ -14,45 +19,66 @@ from openscm.errors import (
     RegionAggregatedError,
     TimeseriesPointsValuesMismatchError,
 )
-from openscm.parameters import ParameterType
-from openscm.timeseries_converter import (
-    ExtrapolationType,
-    InterpolationType,
-    create_time_points,
-)
-from openscm.units import DimensionalityError
 
 
 @pytest.fixture
-def model():
+def model_name():
     return "DICE"
 
 
 @pytest.fixture
 def start_time():
-    return 30 * 365 * 24 * 3600
+    return np.datetime64("2000-01-01")
 
 
 @pytest.fixture
 def stop_time():
-    return 130 * 365 * 24 * 3600
+    return np.datetime64("2010-01-01")
 
 
 @pytest.fixture
-def core(model, start_time, stop_time):
-    core = Core(model, start_time, stop_time)
-    core.parameters._get_or_create_region(("World", "DEU", "BER"))
-    return core
+def model(model_name):
+    model = OpenSCM(model_name)
+    model.parameters._get_or_create_region(("World", "DEU", "BER"))
+    return model
 
 
-def test_core(core, model, start_time, stop_time):
-    assert core.start_time == start_time
-    assert core.stop_time == stop_time
-    assert core.model == model
+@pytest.fixture
+def model_run(model_name, start_time, stop_time):
+    model_run = OpenSCM(model_name)
+    model_run.parameters.generic("Start Time").value = start_time
+    model_run.parameters.generic("Stop Time").value = stop_time
+    YEAR = np.timedelta64(365, "D")
+    npoints = int((stop_time - start_time) / YEAR) + 1  # include self._stop_time
+    model_run.parameters.timeseries(
+        ("Emissions", "CO2"),
+        "GtCO2/a",
+        create_time_points(
+            start_time,
+            stop_time - start_time,
+            npoints,
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
+        timeseries_type="average",
+    ).values = np.zeros(npoints)
+    return model_run
 
 
-def test_region(core):
-    parameterset = core.parameters
+def test_model_run(model_run, model_name):
+    assert model_run.model == model_name
+    model_run.run()
+    assert model_run.output.info(("Pool", "CO2", "Atmosphere"))
+
+
+def test_model_stepping(model_run, model_name):
+    assert model_run.model == model_name
+    model_run.reset_stepping()
+    model_run.step()
+    assert model_run.output.info(("Pool", "CO2", "Atmosphere"))
+
+
+def test_region(model):
+    parameterset = model.parameters
 
     with pytest.raises(ValueError, match="No region name given"):
         parameterset._get_or_create_region(())
@@ -82,8 +108,8 @@ def test_region(core):
     assert parameterset._get_region(("INVALID", "DEU", "BER")) is None
 
 
-def test_parameter(core):
-    parameterset = core.parameters
+def test_parameter(model):
+    parameterset = model.parameters
     region_ber = parameterset._get_or_create_region(("World", "DEU", "BER"))
 
     with pytest.raises(ValueError, match="No parameter name given"):
@@ -96,48 +122,41 @@ def test_parameter(core):
         assert param_co2.parent.get_subparameter(accessor) == param_co2
     assert region_ber.get_parameter(("Emissions", "CO2")) == param_co2
     assert param_co2.full_name == ("Emissions", "CO2")
-    assert param_co2.info.region == ("World", "DEU", "BER")
-    assert param_co2.info.name == "CO2"
-    assert (
-        parameterset.get_parameter_info(("Emissions", "CO2"), ("World", "DEU", "BER"))
-        == param_co2.info
-    )
+    assert param_co2.region.full_name == ("World", "DEU", "BER")
+    assert param_co2.name == "CO2"
+    info = parameterset.info(("Emissions", "CO2"), ("World", "DEU", "BER"))
+    assert info.name == param_co2.full_name
+    assert info.region == param_co2.region.full_name
     for accessor in ["Emissions", ("Emissions"), ("Emissions",), ["Emissions"]]:
-        assert (
-            parameterset.get_parameter_info(accessor, ("World", "DEU", "BER"))
-            == param_co2.parent.info
-        )
-    assert (
-        parameterset.get_parameter_info(("Emissions", "NOx"), ("World", "DEU", "BER"))
-        is None
-    )
-    assert (
-        parameterset.get_parameter_info(("Emissions",), ("World", "DEU", "BRB")) is None
-    )
+        info = parameterset.info(accessor, ("World", "DEU", "BER"))
+        assert info.name == param_co2.parent.full_name
+        assert info.region == param_co2.parent.region.full_name
+    assert parameterset.info(("Emissions", "NOx"), ("World", "DEU", "BER")) is None
+    assert parameterset.info(("Emissions",), ("World", "DEU", "BRB")) is None
 
     with pytest.raises(ValueError, match="No parameter name given"):
-        parameterset.get_parameter_info(None, ("World", "DEU", "BER"))
+        parameterset.info(None, ("World", "DEU", "BER"))
     with pytest.raises(ValueError, match="No parameter name given"):
-        parameterset.get_parameter_info((), ("World", "DEU", "BER"))
+        parameterset.info((), ("World", "DEU", "BER"))
 
     param_emissions = param_co2.parent
     assert param_emissions.full_name == ("Emissions",)
-    assert param_emissions.info.name == "Emissions"
+    assert param_emissions.name == "Emissions"
     # Before any read/write attempt these should be None:
-    assert param_emissions.info.parameter_type is None
-    assert param_emissions.info.unit is None
+    assert param_emissions.parameter_type is None
+    assert param_emissions.unit is None
 
     param_industry = parameterset._get_or_create_parameter(
         ("Emissions", "CO2", "Industry"), region_ber
     )
     assert param_industry.full_name == ("Emissions", "CO2", "Industry")
-    assert param_industry.info.name == "Industry"
+    assert param_industry.name == "Industry"
 
     param_industry.attempt_read(
         ParameterType.AVERAGE_TIMESERIES, "GtCO2/a", np.array([0])
     )
-    assert param_industry.info.parameter_type == ParameterType.AVERAGE_TIMESERIES
-    assert param_industry.info.unit == "GtCO2/a"
+    assert param_industry.parameter_type == ParameterType.AVERAGE_TIMESERIES
+    assert param_industry.unit == "GtCO2/a"
 
     with pytest.raises(ParameterReadonlyError):
         param_co2.attempt_write(
@@ -181,72 +200,126 @@ def test_parameterset_named_initialization():
     assert paraset_named._get_or_create_region(("Earth",)) == paraset_named._root
 
 
-def test_scalar_parameter_view(core):
-    parameterset = core.parameters
-    cs = parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "degC")
-    with pytest.raises(ParameterEmptyError):
-        cs.get()
-    assert cs.is_empty
-    cs_writable = parameterset.get_writable_scalar_view(
-        ("Climate Sensitivity"), ("World",), "degF"
-    )
-    cs_writable.set(68)
-    assert cs_writable.get() == 68
-    assert not cs.is_empty
-    np.testing.assert_allclose(cs.get(), 20)
-    with pytest.raises(ParameterTypeError):
-        parameterset.get_timeseries_view(
-            ("Climate Sensitivity"),
-            ("World",),
-            "degC",
-            (0,),
-            ParameterType.AVERAGE_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+def test_parameterset_get_region_str():
+    paraset = ParameterSet()
+    paraset._get_or_create_region("World|Test")
+    r = paraset._get_region("World|Test")
+    assert r.full_name == ("World", "Test")
+
+    paraset._get_or_create_region("World|Second test|Lower")
+
+    root = paraset._root
+    r2 = root.get_subregion("Second test|Lower")
+    assert r2.full_name == ("World", "Second test", "Lower")
+
+
+@pytest.mark.parametrize("view_type", ["scalar", "timeseries", "generic"])
+def test_view_str_rep(view_type):
+    paraset = ParameterSet()
+    para_name = "example"
+    if view_type == "generic":
+        unit = "undefined"
+        v = paraset.generic(para_name)
+        assert str(v) == "View of {} in {}".format(para_name, unit)
+    elif view_type == "scalar":
+        unit = "kg"
+        v = paraset.scalar(para_name, unit)
+        assert str(v) == "View of {} {} in {}".format(view_type, para_name, unit)
+    elif view_type == "timeseries":
+        unit = "kg"
+        tp = create_time_points(
+            np.datetime64("2010-01-01"), np.timedelta64(365, "D"), 10, "average"
         )
+        v = paraset.timeseries(para_name, unit, tp)
+        assert str(v) == "View of {} {} in {}".format(view_type, para_name, unit)
+
+
+def test_version():
+    paraset = ParameterSet()
+    v1 = paraset.scalar("example", unit="g")
+    v2 = paraset.scalar("example", unit="kg")
+
+    assert v1.version == 0
+    assert v2.version == 0
+
+    v1.value = 3
+
+    assert v1.version == 1
+    assert v2.version == 1
+
+    v2.value = 12
+
+    assert v1.version == 2
+    assert v2.version == 2
+
+
+def test_ensure():
+    paraset = ParameterSet()
+
+    para = "example"
+    unit = "g"
+    v1 = paraset.scalar(para, unit=unit)
+
+    error_msg = re.escape("Parameter {} in {} is required but empty".format(para, unit))
+    with pytest.raises(ParameterEmptyError, match=error_msg):
+        v1.ensure()
+
+    v1.value = 3
+    v1.ensure()
+
+
+def test_scalar_parameter_view(model):
+    parameterset = model.parameters
+    cs = parameterset.scalar("Climate Sensitivity", "degC")
+    with pytest.raises(ParameterEmptyError):
+        cs.value
+    assert cs.empty
+    cs_writable = parameterset.scalar("Climate Sensitivity", "degF")
+    cs_writable.value = 68
+    assert cs_writable.value == 68
+    assert not cs.empty
+    np.testing.assert_allclose(cs.value, 20)
+    with pytest.raises(ParameterTypeError):
+        parameterset.timeseries("Climate Sensitivity", "degC", (0,))
     with pytest.raises(DimensionalityError):
-        parameterset.get_scalar_view(("Climate Sensitivity"), ("World",), "kg")
+        parameterset.scalar("Climate Sensitivity", "kg")
+    cs_writable.value = 45
+    assert cs_writable.value == 45
 
 
-def test_scalar_parameter_view_aggregation(core, start_time):
+def test_scalar_parameter_view_aggregation(model):
     ta_1 = 0.6
     ta_2 = 0.3
     tb = 0.1
 
-    parameterset = core.parameters
+    parameterset = model.parameters
 
-    a_1_writable = parameterset.get_writable_scalar_view(
-        ("Top", "a", "1"), ("World",), "dimensionless"
-    )
-    a_1_writable.set(ta_1)
+    a_1_writable = parameterset.scalar(("Top", "a", "1"), "dimensionless")
+    a_1_writable.value = ta_1
 
-    a_2_writable = parameterset.get_writable_scalar_view(
-        ("Top", "a", "2"), ("World",), "dimensionless"
-    )
-    a_2_writable.set(ta_2)
+    a_2_writable = parameterset.scalar(("Top", "a", "2"), "dimensionless")
+    a_2_writable.value = ta_2
 
-    b_writable = parameterset.get_writable_scalar_view(
-        ("Top", "b"), ("World",), "dimensionless"
-    )
-    b_writable.set(tb)
+    b_writable = parameterset.scalar(("Top", "b"), "dimensionless")
+    b_writable.value = tb
 
-    a_1 = parameterset.get_scalar_view(("Top", "a", "1"), ("World",), "dimensionless")
-    np.testing.assert_allclose(a_1.get(), ta_1)
+    a_1 = parameterset.scalar(("Top", "a", "1"), "dimensionless")
+    np.testing.assert_allclose(a_1.value, ta_1)
 
-    a_2 = parameterset.get_scalar_view(("Top", "a", "2"), ("World",), "dimensionless")
-    np.testing.assert_allclose(a_2.get(), ta_2)
+    a_2 = parameterset.scalar(("Top", "a", "2"), "dimensionless")
+    np.testing.assert_allclose(a_2.value, ta_2)
 
-    a = parameterset.get_scalar_view(("Top", "a"), ("World",), "dimensionless")
-    np.testing.assert_allclose(a.get(), ta_1 + ta_2)
+    a = parameterset.scalar(("Top", "a"), "dimensionless")
+    np.testing.assert_allclose(a.value, ta_1 + ta_2)
 
-    b = parameterset.get_scalar_view(("Top", "b"), ("World",), "dimensionless")
-    np.testing.assert_allclose(b.get(), tb)
+    b = parameterset.scalar(("Top", "b"), "dimensionless")
+    np.testing.assert_allclose(b.value, tb)
 
     with pytest.raises(ParameterReadonlyError):
-        parameterset.get_writable_scalar_view(("Top", "a"), ("World",), "dimensionless")
+        parameterset.scalar(("Top", "a"), "dimensionless").value = 0
 
-    total = parameterset.get_scalar_view(("Top"), ("World",), "dimensionless")
-    np.testing.assert_allclose(total.get(), ta_1 + ta_2 + tb)
+    total = parameterset.scalar(("Top"), "dimensionless")
+    np.testing.assert_allclose(total.value, ta_1 + ta_2 + tb)
 
 
 @pytest.fixture(
@@ -259,14 +332,13 @@ def series(request):
     return np.array(request.param[0]), np.array(request.param[1])
 
 
-def test_timeseries_parameter_view(core, start_time, series):
+def test_timeseries_parameter_view(model, start_time, series):
     inseries = series[0]
     outseries = series[1]
 
-    parameterset = core.parameters
-    carbon = parameterset.get_timeseries_view(
+    parameterset = model.parameters
+    carbon = parameterset.timeseries(
         ("Emissions", "CO2"),
-        ("World",),
         "GtCO2/a",
         create_time_points(
             start_time,
@@ -274,58 +346,46 @@ def test_timeseries_parameter_view(core, start_time, series):
             len(outseries),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    assert carbon.is_empty
+    assert carbon.empty
     with pytest.raises(ParameterEmptyError):
-        carbon.get()
+        carbon.values
 
-    carbon_writable = parameterset.get_writable_timeseries_view(
+    carbon_writable = parameterset.timeseries(
         ("Emissions", "CO2"),
-        ("World",),
         "ktC/d",
         create_time_points(
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
     with pytest.raises(TimeseriesPointsValuesMismatchError):
-        carbon_writable.set(inseries[::2])
-    carbon_writable.set(inseries)
+        carbon_writable.values = inseries[::2]
+    carbon_writable.values = inseries
     assert carbon_writable.length == len(inseries)
     np.testing.assert_allclose(
-        carbon_writable.get(), inseries, atol=inseries.max() * 1e-10
+        carbon_writable.values, inseries, atol=inseries.max() * 1e-10
     )
     assert carbon.length == 5
-    np.testing.assert_allclose(carbon.get(), outseries, rtol=1e-3)
+    np.testing.assert_allclose(carbon.values, outseries, rtol=1e-3)
     with pytest.raises(ParameterTypeError):
-        parameterset.get_scalar_view(("Emissions", "CO2"), ("World",), "GtCO2/a")
+        parameterset.scalar(("Emissions", "CO2"), "GtCO2/a")
     with pytest.raises(DimensionalityError):
-        parameterset.get_timeseries_view(
-            ("Emissions", "CO2"),
-            ("World",),
-            "kg",
-            (0,),
-            ParameterType.AVERAGE_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+        parameterset.timeseries(
+            ("Emissions", "CO2"), "kg", (0,), timeseries_type="average"
         )
 
 
-def test_timeseries_parameter_view_aggregation(core, start_time):
+def test_timeseries_parameter_view_aggregation(model, start_time):
     fossil_industry_emms = np.array([0, 1, 2])
     fossil_energy_emms = np.array([2, 1, 4])
     land_emms = np.array([0.05, 0.1, 0.2])
 
-    parameterset = core.parameters
+    parameterset = model.parameters
 
-    fossil_industry_writable = parameterset.get_writable_timeseries_view(
+    fossil_industry_writable = parameterset.timeseries(
         ("Emissions", "CO2", "Fossil", "Industry"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -333,15 +393,12 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_industry_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    fossil_industry_writable.set(fossil_industry_emms)
+    fossil_industry_writable.values = fossil_industry_emms
 
-    fossil_energy_writable = parameterset.get_writable_timeseries_view(
+    fossil_energy_writable = parameterset.timeseries(
         ("Emissions", "CO2", "Fossil", "Energy"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -349,15 +406,12 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    fossil_energy_writable.set(fossil_energy_emms)
+    fossil_energy_writable.values = fossil_energy_emms
 
-    land_writable = parameterset.get_writable_timeseries_view(
+    land_writable = parameterset.timeseries(
         ("Emissions", "CO2", "Land"),
-        ("World",),
         "MtC/yr",
         create_time_points(
             start_time,
@@ -365,15 +419,12 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    land_writable.set(land_emms * 1000)
+    land_writable.values = land_emms * 1000
 
-    fossil_industry = parameterset.get_timeseries_view(
+    fossil_industry = parameterset.timeseries(
         ("Emissions", "CO2", "Fossil", "Industry"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -381,19 +432,16 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_industry_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
     np.testing.assert_allclose(
-        fossil_industry.get(),
+        fossil_industry.values,
         fossil_industry_emms,
         atol=fossil_industry_emms.max() * 1e-10,
     )
 
-    fossil_energy = parameterset.get_timeseries_view(
+    fossil_energy = parameterset.timeseries(
         ("Emissions", "CO2", "Fossil", "Energy"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -401,15 +449,12 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    np.testing.assert_allclose(fossil_energy.get(), fossil_energy_emms)
+    np.testing.assert_allclose(fossil_energy.values, fossil_energy_emms)
 
-    fossil = parameterset.get_timeseries_view(
+    fossil = parameterset.timeseries(
         ("Emissions", "CO2", "Fossil"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -417,18 +462,15 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    np.testing.assert_allclose(fossil.get(), fossil_industry_emms + fossil_energy_emms)
+    np.testing.assert_allclose(fossil.values, fossil_industry_emms + fossil_energy_emms)
 
     # ensure that you can't write extra children once you've got a parent view, this
-    # avoids ever having the child views become out of date
+    # avoids ever having the child views being out of date
     with pytest.raises(ParameterReadError):
-        parameterset.get_writable_timeseries_view(
+        parameterset.timeseries(
             ("Emissions", "CO2", "Fossil", "Transport"),
-            ("World",),
             "GtC/yr",
             create_time_points(
                 start_time,
@@ -436,28 +478,22 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
                 len(fossil_industry_emms),
                 ParameterType.AVERAGE_TIMESERIES,
             ),
-            ParameterType.AVERAGE_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
+            timeseries_type="average",
         )
 
-    land = parameterset.get_timeseries_view(
+    land = parameterset.timeseries(
         ("Emissions", "CO2", "Land"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time, 24 * 3600, len(land_emms), ParameterType.AVERAGE_TIMESERIES
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
-    np.testing.assert_allclose(land.get(), land_emms)
+    np.testing.assert_allclose(land.values, land_emms)
 
     with pytest.raises(ParameterReadonlyError):
-        parameterset.get_writable_timeseries_view(
+        parameterset.timeseries(
             ("Emissions", "CO2"),
-            ("World",),
             "GtC/yr",
             create_time_points(
                 start_time,
@@ -465,14 +501,11 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
                 len(fossil_energy_emms),
                 ParameterType.AVERAGE_TIMESERIES,
             ),
-            ParameterType.AVERAGE_TIMESERIES,
-            InterpolationType.LINEAR,
-            ExtrapolationType.LINEAR,
-        )
+            timeseries_type="average",
+        ).values = np.ndarray([])
 
-    total = parameterset.get_timeseries_view(
+    total = parameterset.timeseries(
         ("Emissions", "CO2"),
-        ("World",),
         "GtC/yr",
         create_time_points(
             start_time,
@@ -480,29 +513,139 @@ def test_timeseries_parameter_view_aggregation(core, start_time):
             len(fossil_energy_emms),
             ParameterType.AVERAGE_TIMESERIES,
         ),
-        ParameterType.AVERAGE_TIMESERIES,
-        InterpolationType.LINEAR,
-        ExtrapolationType.LINEAR,
+        timeseries_type="average",
     )
     np.testing.assert_allclose(
-        total.get(), land_emms + fossil_energy_emms + fossil_industry_emms
+        total.values, land_emms + fossil_energy_emms + fossil_industry_emms
     )
 
 
-def test_generic_parameter_view(core):
-    parameterset = core.parameters
-    cs = parameterset.get_generic_view(("Model Options", "Generic Option"), ("World",))
+def test_generic_parameter_view(model):
+    parameterset = model.parameters
+    cs = parameterset.generic(("Model Options", "Generic Option"))
     with pytest.raises(ParameterAggregationError):
-        parameterset.get_generic_view(("Model Options"), ("World",))
+        parameterset.generic("Model Options")
     with pytest.raises(ParameterTypeError):
-        parameterset.get_scalar_view(("Model Options"), ("World",), "dimensionless")
+        parameterset.scalar("Model Options", "dimensionless")
     with pytest.raises(ParameterEmptyError):
-        cs.get()
-    assert cs.is_empty
-    cs_writable = parameterset.get_writable_generic_view(
-        ("Model Options", "Generic Option"), ("World",)
+        cs.value
+    assert cs.empty
+    cs_writable = parameterset.generic(("Model Options", "Generic Option"))
+    cs_writable.value = "enabled"
+    assert cs_writable.value == "enabled"
+    assert not cs.empty
+    assert cs.value == "enabled"
+    cs_writable.value = "enabled2"
+    assert cs_writable.value == "enabled2"
+
+
+@pytest.mark.parametrize("ptype", ["generic", "scalar", "timeseries"])
+def test_view_updates_with_new_write(ptype):
+    p = ParameterSet()
+    name = "example"
+    if ptype == "generic":
+        v = p.generic(name)
+    elif ptype == "scalar":
+        v = p.scalar(name, "g")
+    elif ptype == "timeseries":
+        tp = create_time_points(
+            np.datetime64("1989-03-05"), np.timedelta64(24, "s"), 3, "point"
+        )
+        v = p.timeseries(name, "A", tp)
+
+    assert v.version == 0
+    if ptype == "generic":
+        p.generic(name).value = 12
+        assert v.value == 12
+    elif ptype == "scalar":
+        p.scalar(name, "kg").value = 12
+        assert v.value == 12000
+    elif ptype == "timeseries":
+        p.timeseries(name, "mA", tp).values = np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, 10 ** -3 * np.arange(0, 3, 1))
+
+    assert v.version == 1
+    if ptype == "generic":
+        v.value = 16
+        assert v.value == 16
+    elif ptype == "scalar":
+        v.value = 1
+        assert v.value == 1
+    elif ptype == "timeseries":
+        v.values = -1 * np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, -1 * np.arange(0, 3, 1))
+
+    assert v.version == 2
+    if ptype == "generic":
+        p.generic(name).value = "hello"
+        assert v.value == "hello"
+    elif ptype == "scalar":
+        p.scalar(name, "kg").value = -3
+        assert v.value == -3000
+    elif ptype == "timeseries":
+        p.timeseries(name, "mA", tp).values = 3 * np.arange(0, 3, 1)
+        np.testing.assert_allclose(v.values, 3 * 10 ** -3 * np.arange(0, 3, 1))
+
+    assert v.version == 3
+
+
+def test_parameter_enums():
+    assert (
+        ParameterType.timeseries_type_to_string(ParameterType.AVERAGE_TIMESERIES)
+        == "average"
     )
-    cs_writable.set("enabled")
-    assert cs_writable.get() == "enabled"
-    assert not cs.is_empty
-    assert cs.get() == "enabled"
+    assert (
+        ParameterType.timeseries_type_to_string(ParameterType.POINT_TIMESERIES)
+        == "point"
+    )
+    with pytest.raises(ValueError, match="Timeseries type expected"):
+        ParameterType.timeseries_type_to_string(ParameterType.SCALAR)
+
+    assert (
+        ParameterType.from_timeseries_type("average")
+        == ParameterType.AVERAGE_TIMESERIES
+    )
+    assert ParameterType.from_timeseries_type("point") == ParameterType.POINT_TIMESERIES
+    timeseries_type = "invalid"
+    with pytest.raises(
+        ValueError, match="Unknown timeseries type '{}'".format(timeseries_type)
+    ):
+        ParameterType.from_timeseries_type(timeseries_type)
+    with pytest.raises(ValueError, match="Timeseries type expected"):
+        ParameterType.from_timeseries_type(ParameterType.SCALAR)
+
+
+def test_timeseries_class(model, start_time, series):
+    inseries = series[0]
+
+    parameterset = model.parameters
+    parameter = parameterset.timeseries(
+        "Parameter",
+        "",
+        create_time_points(
+            start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
+        ),
+        timeseries_type="average",
+    )
+    parameter.values = inseries
+
+    assert parameter.values.shape == inseries.shape
+    assert parameter.values.nbytes == inseries.nbytes
+    assert parameter.values.dtype == inseries.dtype
+    assert parameter.values.ndim == 1
+    assert np.all(parameter.values[:] == parameter.values[:])
+    assert str(parameter.values) == "timeseries({})".format(repr(inseries))
+
+    np.testing.assert_allclose(np.add(parameter.values, inseries), 2 * inseries)
+    assert np.sum(parameter.values) == np.sum(inseries)
+
+    out = np.empty_like(inseries, dtype=float)
+    np.sin(parameter.values, out=out)
+    np.testing.assert_allclose(out, np.sin(inseries))
+
+    out0 = np.empty_like(inseries, dtype=float)
+    out1 = np.empty_like(inseries, dtype=float)
+    np.modf(parameter.values, out=(out0, out1))
+    out = np.modf(inseries)
+    np.testing.assert_equal(out[0], out0)
+    np.testing.assert_equal(out[1], out1)

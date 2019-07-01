@@ -227,7 +227,6 @@ If your adapter needs additional dependencies add them to the
 ``REQUIREMENTS_MODELS`` dictionary in ``setup.py`` (see comment
 there).
 
-
 .. include:: ../CONTRIBUTING.rst
 
 

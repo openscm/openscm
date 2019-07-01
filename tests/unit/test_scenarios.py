@@ -12,7 +12,7 @@ def test_rcp26():
         .values
     )
 
-    assert len(value)
+    assert len(value) == 1
     np.testing.assert_allclose(value, 324.46375)
 
 
@@ -25,7 +25,7 @@ def test_rcp45():
         .values
     )
 
-    assert len(value)
+    assert len(value) == 1
     np.testing.assert_allclose(value, 0)
 
 
@@ -41,7 +41,7 @@ def test_rcp60():
         .values
     )
 
-    assert len(value)
+    assert len(value) == 1
     np.testing.assert_allclose(value, 10.61878)
 
 
@@ -54,5 +54,5 @@ def test_rcp85():
         .values
     )
 
-    assert len(value)
+    assert len(value) == 1
     np.testing.assert_allclose(value, 13.344)

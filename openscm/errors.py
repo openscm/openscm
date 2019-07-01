@@ -2,6 +2,11 @@
 Errors/Exceptions defined and used in OpenSCM.
 """
 
+from .core.units import (  # noqa: F401 # pylint: disable=unused-import
+    DimensionalityError,
+    UndefinedUnitError,
+)
+
 
 class AdapterNeedsModuleError(Exception):
     """Exception raised when an adapter needs a module that is not installed."""
@@ -9,9 +14,9 @@ class AdapterNeedsModuleError(Exception):
 
 class InsufficientDataError(ValueError):
     """
-    Exception raised when not enough data is available to convert from one
-    timeseries to another (e.g. when the target timeseries is outside the range of the
-    source timeseries) or when data is too short (fewer than 3 data points).
+    Exception raised when not enough data is available to convert from one timeseries to
+    another (e.g. when the target timeseries is outside the range of the source
+    timeseries) or when data is too short (fewer than 3 data points).
     """
 
 
@@ -23,8 +28,8 @@ class ParameterError(Exception):
 
 class ParameterAggregationError(ParameterError):
     """
-    Exception raised when a parameter is read from but has child parameters
-    which cannot be aggregated (boolean or string parameters).
+    Exception raised when a parameter is read from but has child parameters which cannot
+    be aggregated (boolean or string parameters).
     """
 
 
@@ -45,15 +50,14 @@ class ParameterReadonlyError(ParameterError):
     """
     Exception raised when a requested parameter is read-only.
 
-    This can happen, for instance, if a parameter's parent parameter
-    in the parameter hierarchy has already been requested as writable.
+    This can happen, for instance, if a parameter's parent parameter in the parameter
+    hierarchy has already been requested as writable.
     """
 
 
 class ParameterTypeError(ParameterError):
     """
-    Exception raised when a parameter is of a different type than
-    requested.
+    Exception raised when a parameter is of a different type than requested.
     """
 
 

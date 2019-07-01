@@ -1,29 +1,22 @@
-.. _core-reference:
-
-OpenSCM Core API
-----------------
-
 Core
-****
-
-.. automodule:: openscm.core
+----
 
 Parameters
 **********
 
-.. automodule:: openscm.parameters
+.. automodule:: openscm.core.parameters
 
 Parameter views
 ***************
 
-.. automodule:: openscm.parameter_views
+.. automodule:: openscm.core.views
 
 Regions
 *******
 
-.. automodule:: openscm.regions
+.. automodule:: openscm.core.regions
 
-Timeseries converter
-********************
+Time
+****
 
-.. automodule:: openscm.timeseries_converter
+.. automodule:: openscm.core.time

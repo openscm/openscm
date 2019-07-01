@@ -2,11 +2,10 @@
 Handling of region information.
 """
 
-from typing import Dict, Optional, Tuple, cast
+from typing import Dict, Optional, Tuple
 
+from ..errors import RegionAggregatedError
 from . import parameters
-from .errors import RegionAggregatedError
-from .utils import ensure_input_is_tuple
 
 # pylint: disable=protected-access
 
@@ -21,7 +20,7 @@ class _Region:
 
     _has_been_aggregated: bool
     """
-    If True, a parameter of this region has already been read in an aggregated way,
+    If ``True``, a parameter of this region has already been read in an aggregated way,
     i.e., aggregating over subregions
      """
 
@@ -32,7 +31,7 @@ class _Region:
     """Parameters"""
 
     _parent: Optional["_Region"]
-    """Parent region (or `None` if root region)"""
+    """Parent region (or ``None`` if root region)"""
 
     def __init__(self, name: str):
         """
@@ -79,7 +78,7 @@ class _Region:
             self._children[name] = res
         return res
 
-    def get_subregion(self, name: Tuple[str, ...]) -> Optional["_Region"]:
+    def get_subregion(self, name: "parameters.HierarchicalName") -> Optional["_Region"]:
         """
         Get a subregion of this region or ``None`` if not found.
 
@@ -93,8 +92,9 @@ class _Region:
         Optional[_Region]
             Subregion or ``None`` if not found
         """
-        name = ensure_input_is_tuple(name)
         if name:
+            if isinstance(name, str):
+                name = name.split(parameters.HIERARCHY_SEPARATOR)
             res = self._children.get(name[0], None)
             if res is not None:
                 return res.get_subregion(name[1:])
@@ -122,7 +122,9 @@ class _Region:
             self._parameters[name] = res
         return res
 
-    def get_parameter(self, name: Tuple[str, ...]) -> Optional["parameters._Parameter"]:
+    def get_parameter(
+        self, name: "parameters.HierarchicalName"
+    ) -> Optional["parameters._Parameter"]:
         """
         Get a (root or sub-) parameter for this region or ``None`` if not found.
 
@@ -141,9 +143,10 @@ class _Region:
         ValueError
             Name not given
         """
-        name = ensure_input_is_tuple(name)
         if not name:
             raise ValueError("No parameter name given")
+        if isinstance(name, str):
+            name = name.split(parameters.HIERARCHY_SEPARATOR)
         root_parameter = self._parameters.get(name[0], None)
         if root_parameter is not None and len(name) > 1:
             return root_parameter.get_subparameter(name[1:])
@@ -157,7 +160,7 @@ class _Region:
         self._has_been_aggregated = True
 
     @property
-    def full_name(self) -> Tuple[str]:
+    def full_name(self) -> Tuple[str, ...]:
         """
         Full hierarchical name
         """
@@ -167,7 +170,7 @@ class _Region:
             r.append(p.name)
             p = p._parent
         r.append(p.name)
-        return cast(Tuple[str], tuple(reversed(r)))
+        return tuple(reversed(r))
 
     @property
     def name(self) -> str:

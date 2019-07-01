@@ -12,11 +12,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from openscm import timeseries_converter
-from openscm.core import ParameterSet
-from openscm.parameters import ParameterType
+from openscm.core import time
+from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
 from openscm.scmdataframe import ScmDataFrame
-from openscm.utils import convert_openscm_time_to_datetime
 
 try:
     from pyam import IamDataFrame
@@ -137,7 +136,7 @@ def doesnt_warn():
     def check_context():
         with pytest.warns(None) as record:
             yield
-        if len(record):
+        if record:
             pytest.fail(
                 "The following warnings were raised: {}".format(
                     [w.message for w in record.list]
@@ -399,13 +398,12 @@ def rcp26():
     return ScmDataFrame(fname)
 
 
+@pytest.fixture
 def test_adapter(request):
     """
     Get an initialized instance of an the requesting classes ``tadapter`` property.
     """
     parameters = ParameterSet()
-    parameters.get_writable_scalar_view(("ecs",), ("World",), "K").set(3)
-    parameters.get_writable_scalar_view(("rf2xco2",), ("World",), "W / m^2").set(4.0)
     output_parameters = ParameterSet()
     try:
         yield request.cls.tadapter(parameters, output_parameters)
@@ -413,54 +411,44 @@ def test_adapter(request):
         pytest.skip("{} cannot be instantiated".format(str(request.cls.tadapter)))
 
 
-@pytest.fixture
-def assert_core():
-    def check_func(expected, time, test_core, name, region, unit, time_points):
-        pview = test_core.parameters.get_timeseries_view(
-            name, region, unit, time_points, ParameterType.POINT_TIMESERIES
-        )
-        relevant_idx = (np.abs(time_points - time)).argmin()
-        np.testing.assert_allclose(pview.get()[relevant_idx], expected)
-
-    return check_func
-
-
 @pytest.fixture(scope="function")
 def test_run_parameters():
     RunParameters = namedtuple("RunParameters", ["start_time", "stop_time"])
-    yield RunParameters(start_time=0, stop_time=100 * 365 * 24 * 60 * 60)
+    yield RunParameters(
+        start_time=np.datetime64("2000-01-01"), stop_time=np.datetime64("2100-01-01")
+    )
 
 
 possible_source_values = [[1, 5, 3, 5, 7, 3, 2, 9]]
 
-possible_target_values = [
+possible_target_values = [  # TODO: Use years here after create_time_points has been fixed
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=-5,
-        target_period_length=5,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01") - np.timedelta64(5, "D"),
+        target_period_length=np.timedelta64(5, "D"),
         source_values=possible_source_values[0],
         target_values=[-1, 1, 3, 5, 4, 3, 4, 5, 6, 7, 5, 3, 2.5, 2, 5.5, 9, 12.5],
         timeseries_type=ParameterType.POINT_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=-50,
-        target_period_length=50,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01") - np.timedelta64(50, "D"),
+        target_period_length=np.timedelta64(50, "D"),
         source_values=possible_source_values[0],
         target_values=[1, 1, 3, 9],
         timeseries_type=ParameterType.POINT_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.CONSTANT,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.CONSTANT,
     ),
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=4,
-        target_period_length=7,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01") + np.timedelta64(4, "D"),
+        target_period_length=np.timedelta64(7, "D"),
         source_values=possible_source_values[0],
         target_values=[
             2.02142857,
@@ -476,14 +464,14 @@ possible_target_values = [
             10.75,
         ],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
-        source_start_time=0,
-        source_period_length=10,
-        target_start_time=0,
-        target_period_length=5,
+        source_start_time=np.datetime64("2000-01-01"),
+        source_period_length=np.timedelta64(10, "D"),
+        target_start_time=np.datetime64("2000-01-01"),
+        target_period_length=np.timedelta64(5, "D"),
         source_values=possible_source_values[0],
         target_values=[
             0.0,
@@ -504,19 +492,19 @@ possible_target_values = [
             10.75,
         ],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
     dict(
-        source_start_time=3,
-        source_period_length=3,
-        target_start_time=0,
-        target_period_length=5,
+        source_start_time=np.datetime64("2000-01-01") + np.timedelta64(3, "D"),
+        source_period_length=np.timedelta64(3, "D"),
+        target_start_time=np.datetime64("2000-01-01"),
+        target_period_length=np.timedelta64(5, "D"),
         source_values=possible_source_values[0],
         target_values=[-1.66666667, 4.13333333, 4.13333333, 5.51666667, 3.01666667],
         timeseries_type=ParameterType.AVERAGE_TIMESERIES,
-        interpolation_type=timeseries_converter.InterpolationType.LINEAR,
-        extrapolation_type=timeseries_converter.ExtrapolationType.LINEAR,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
 ]
 
@@ -537,14 +525,14 @@ Combination = namedtuple(
 for index in possible_target_values:
     combination = Combination(
         source_values=np.array(index["source_values"]),
-        source=timeseries_converter.create_time_points(
+        source=time.create_time_points(
             index["source_start_time"],
             index["source_period_length"],
             len(index["source_values"]),
             index["timeseries_type"],
         ),
         target_values=np.array(index["target_values"]),
-        target=timeseries_converter.create_time_points(
+        target=time.create_time_points(
             index["target_start_time"],
             index["target_period_length"],
             len(index["target_values"]),
@@ -564,20 +552,20 @@ def combo(request):
 
 @pytest.fixture(params=test_combinations, scope="function")
 def combo_df(request):
-    combo = deepcopy(request.param)
-    vals = combo._asdict()
-    df_dts = [convert_openscm_time_to_datetime(d) for d in combo.source]
+    combination = deepcopy(request.param)
+    vals = combination._asdict()
+    source = combination.source
 
     # For average timeseries we drop the last time value so that the data and times are same length
-    if combo.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-        assert df_dts[-1] - df_dts[-2] == df_dts[-2] - df_dts[-3]
-        df_dts = df_dts[:-1]
-        vals["target"] = combo.target.copy()[:-1]
-        assert len(vals["target"]) == len(combo.target_values)
-        assert len(df_dts) == len(combo.source_values)
+    if combination.timeseries_type == ParameterType.AVERAGE_TIMESERIES:
+        assert source[-1] - source[-2] == source[-2] - source[-3]
+        source = source[:-1]
+        vals["target"] = combination.target.copy()[:-1]
+        assert len(vals["target"]) == len(combination.target_values)
+        assert len(source) == len(combination.source_values)
 
     df = ScmDataFrame(
-        combo.source_values,
+        combination.source_values,
         columns={
             "scenario": ["a_scenario"],
             "model": ["a_model"],
@@ -587,12 +575,12 @@ def combo_df(request):
             "parameter_type": [
                 (
                     "point"
-                    if combo.timeseries_type == ParameterType.POINT_TIMESERIES
+                    if combination.timeseries_type == ParameterType.POINT_TIMESERIES
                     else "average"
                 )
             ],
         },
-        index=df_dts,
+        index=source,
     )
 
     return Combination(**vals), df

@@ -1,7 +1,7 @@
 .. _scmdataframe:
 
-OpenSCM ScmDataFrame API
-------------------------
+ScmDataFrame
+------------
 
 ScmDataFrame
 ************
@@ -18,11 +18,6 @@ Filters
 
 .. automodule:: openscm.scmdataframe.filters
 
-TimeIndex
-*********
-
-.. automodule:: openscm.scmdataframe.timeindex
-
 Offsets
 *******
 
@@ -32,4 +27,4 @@ Pyam Compatibilty
 *****************
 
 .. automodule:: openscm.scmdataframe.pyam_compat
-
+    :exclude-members: Axes,IamDataFrame

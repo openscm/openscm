@@ -17,7 +17,7 @@ def test_adapter_registry():
 @patch("openscm.adapters._loaded_adapters", new={})
 def test_load_model():
     with patch.dict(sys.modules, {"openscm.adapters.modelname": MagicMock()}):
-        load_adapter("MODELNAME")
+        load_adapter("DICE")
 
 
 def test_adapter_registry_unknown_model():
@@ -31,9 +31,9 @@ def test_adapter_registry_unknown_model():
 
 def test_adapter_registry_import_error():
     error_msg = re.escape(
-        "To run 'MODELNAME' you need to install additional dependencies. Please "
-        "install them using `pip install openscm[model-MODELNAME]`."
+        "To run 'DICE' you need to install additional dependencies. Please "
+        "install them using `pip install openscm[model-DICE]`."
     )
-    with patch.dict(sys.modules, {"openscm.adapters.modelname": None}):
+    with patch.dict(sys.modules, {"openscm.adapters.dice": None}):
         with pytest.raises(AdapterNeedsModuleError, match=error_msg):
-            load_adapter("MODELNAME")
+            load_adapter("DICE")

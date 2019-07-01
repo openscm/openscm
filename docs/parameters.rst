@@ -30,7 +30,8 @@ relative to the mean of. For example, 'surface temperature relative to
 a 1961-1990 reference period' refers to surface temperatures relative
 to the mean of the period 1961-1990. We are not yet sure how best to
 handle these reference periods in variables, if you have ideas please
-contribute to the discussions in `#167 <https://github.com/openclimatedata/openscm/issues/167>`_.
+contribute to the discussions in `#167
+<https://github.com/openclimatedata/openscm/issues/167>`_.
 
 
 Aggregation
@@ -66,6 +67,8 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
 .. csv-table:: Standard parameters
     :header: "Parameter name 0", "Parameter name 1", "Parameter name 2", "Unit type", "Note"
 
+    ``Start Time``,,, :class:`np.datetime64` object, Time of the first time step of the model run
+    ``Stop Time``,,, :class:`np.datetime64` object, Time of the last time step of the model run
     ``Emissions``, ``<GAS>``,, "mass <GAS> / time"
     ``Atmospheric Concentrations``, ``<GAS>``,, "parts per X where X is million, billion, trillion etc.", "Aggregation possible, but does not always make sense"
     ``Pool``, ``<GAS>``,, "mass <GAS>"
@@ -83,14 +86,14 @@ In the following, ``<GAS>`` can be one of the standard :ref:`gases`.
     ``Radiative Forcing``, ``Volcanic``
     ``Radiative Forcing``, ``Solar``
     ``Radiative Forcing``, ``External``
-    ``X to Y Flux``,,, "mass / time", "See :ref:`material_fluxes`"
+    ``<X> to <Y> Flux``,,, "mass / time", "See :ref:`material_fluxes`"
     ``Surface Temperature``,,, "temperature", "Surface air temperature i.e. ``tas``"
     ``Ocean Temperature``,,, "temperature", "Surface ocean temperature i.e. ``tos``"
     ``Ocean Heat Content``,,, "energy"
     ``Sea Level Rise``,,, "length"
     ``Equilibrium Climate Sensitivity``,,, "temperature"
     ``Transient Climate Response``,,, "temperature"
-    ``f2xco2``,,, "power / area", "Radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level"
+    ``Radiative Forcing 2xCO2``,,, "power / area", "Radiative forcing due to a doubling of atmospheric |CO2| concentrations from pre-industrial level"
 
 .. _gases:
 
@@ -158,9 +161,9 @@ Material Fluxes
 ***************
 
 These variables can be used to store the flux of material within the
-model. They should be of the form ``X to Y Flux`` where the material
-is flowing from ``X`` into ``Y`` (and hence negative values represent
-flows from ``Y`` into ``X``):
+model. They should be of the form ``<X> to <Y> Flux`` where the
+material is flowing from ``<X>`` into ``<Y>`` (and hence negative
+values represent flows from ``<Y>`` into ``<X>``):
 
 - ``Land to Air Flux|CO2|Permafrost`` (mass carbon / time) - land to
   air flux of |CO2| from permafrost
@@ -175,14 +178,26 @@ which are higher in the hierarchy are the sum of all the regions which
 are one level below them in the hierarchy (be careful of this when
 looking at e.g. |CO2| concentration data at a regional level).
 
-The hemispheric regions should be fairly obvious and well-defined.
-The land/ocean split is somewhat fuzzily defined as the transition between land and ocean does not have a precise definition.
-We don't provide a clear definition because a) there isn't an agreed one in the literature and b) no simple climate model is detailed enough for the slight fuzziness around these definitions to matter.
-We choose to put the hemispheres before the ocean/land split in the hierarchy because it makes more sense to us but are happy to discuss further if desired (raise an issue).
+The hemispheric regions should be fairly obvious and well-defined. The
+land/ocean split is somewhat fuzzily defined as the transition between
+land and ocean does not have a precise definition. We don't provide a
+clear definition because a) there isn't an agreed one in the
+literature and b) no simple climate model is detailed enough for the
+slight fuzziness around these definitions to matter. We choose to put
+the hemispheres before the ocean/land split in the hierarchy because
+it makes more sense to us but are happy to discuss further if desired
+(raise an issue).
 
-Descriptions of the rest of the regions can be found in the 'Description' column below.
+Descriptions of the rest of the regions can be found in the
+'Description' column below.
 
-**Warning** Be careful, if you mix multiple regional conventions (e.g. reporting both ``("World", "Land")`` and ``("World", "R5ASIA")``), then your ``("World")`` total will double count some quantities and so may provide misleading information. There is no way for OpenSCM to reasonably keep track of what overlaps with what so we can't automate this process (if you think you have an idea of how to do this, please make a PR :D).
+**Warning** Be careful, if you mix multiple regional conventions (e.g.
+reporting both ``("World", "Land")`` and ``("World", "R5ASIA")``),
+then your ``("World")`` total will double count some quantities and so
+may provide misleading information. There is no way for OpenSCM to
+reasonably keep track of what overlaps with what so we can't automate
+this process (if you think you have an idea of how to do this, please
+make a PR :D).
 
 .. csv-table:: Gases
     :header: "Name 0", "Name 1", "Name 2", "Description"

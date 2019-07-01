@@ -3,4 +3,4 @@
 Units
 -----
 
-.. automodule:: openscm.units
+.. automodule:: openscm.core.units

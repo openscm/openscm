@@ -36,9 +36,15 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = ["numpy", "scipy", "pint", "pandas", "python-dateutil"]
+REQUIREMENTS_INSTALL = ["numpy>=1.7", "scipy", "pint", "pandas", "python-dateutil"]
 REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0"]
-REQUIREMENTS_TESTS = ["codecov", "nbval", "pytest", "pytest-cov", "pyam-iamc>=0.2.0"]
+REQUIREMENTS_TESTS = [
+    "codecov",
+    "nbval",
+    "pytest==4.5.0",  # TODO lift restriction after pytest 4.7
+    "pytest-cov",
+    "pyam-iamc>=0.2.0",
+]
 REQUIREMENTS_DOCS = ["sphinx>=1.8", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
 REQUIREMENTS_DEV = (
@@ -50,7 +56,7 @@ REQUIREMENTS_DEV = (
         "isort",
         "mypy",
         "pydocstyle",
-        "pylint @ git+https://github.com/PyCQA/pylint.git@master",  # TODO: change when new release comes out
+        "pylint @ git+https://github.com/PyCQA/pylint.git@b1ee385",  # TODO: change when new release comes out
     ]
     + REQUIREMENTS_NOTEBOOKS
     + REQUIREMENTS_TESTS
@@ -80,7 +86,7 @@ for k, v in REQUIREMENTS_MODELS.items():
     REQUIREMENTS_EXTRAS["tests"] += v
     REQUIREMENTS_EXTRAS["dev"] += v
 
-PACKAGE_DATA = {"openscm": ["units/*.csv", "scenarios/*.csv"]}
+PACKAGE_DATA = {"openscm": ["data/*.csv", "scenarios/*.csv"]}
 
 # Get the long description from the README file
 with open("README.rst", "r", encoding="utf-8") as f:
@@ -116,6 +122,7 @@ CMDCLASS.update({"test": OpenSCMTest})
 setup(
     name=NAME,
     version=versioneer.get_version(),
+    python_requires=">3.7",
     description=SHORT_DESCRIPTION,
     long_description="\n".join(README_LINES),
     long_description_content_type="text/x-rst",

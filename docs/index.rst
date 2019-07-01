@@ -30,17 +30,25 @@ Schema
     parameters
     fileformats
 
+..
+    TODO: split into public and internals
+
 .. toctree::
     :maxdepth: 2
-    :caption: API reference
+    :caption: Public API
 
-    core
     openscm
-    adapter
     errors
-    units
     scenarios
     scmdataframe
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Internal API
+
+    adapter
+    core
+    units
 
 .. toctree::
     :maxdepth: 2

@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#146 <https://github.com/openclimatedata/openscm/pull/146>`_) Refactor the core interface
 - (`#168 <https://github.com/openclimatedata/openscm/pull/168>`_) Fix false positive detection of duplicates when appending timeseries
 - (`#166 <https://github.com/openclimatedata/openscm/pull/166>`_) Add usage guidelines
 - (`#165 <https://github.com/openclimatedata/openscm/pull/165>`_) Add ``openscm.scenarios`` module with commonly used scenarios
