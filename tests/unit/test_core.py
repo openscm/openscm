@@ -659,15 +659,19 @@ def test_view_units(view_type):
 
     if view_type == "scalar":
         v1 = p.scalar('example', a_unit)
+        v1.value = 2
     else:
-        v1 = p.timeseries("example", a_unit, [0])
-    v1.value = 2
-    assert v1.unit == 'kg'
+        v1 = p.timeseries("example", a_unit, [0, 1, 2])
+        v1.values = np.array([0, 1, 2])
+
+    assert v1.unit == a_unit
 
     if view_type == "scalar":
         v2 = p.scalar('example', b_unit)
+        assert v2.value == v1.value * 1000
     else:
-        v2 = p.timeseries("example", b_unit, [0])
+        v2 = p.timeseries("example", b_unit, [0, 1, 2])
+        # should we just make this `.value` too?
+        assert (v2.values == v1.values * 1000).all()
 
-    assert v2.value == v1.value * 1000
-    assert v2.unit == 'g'
+    assert v2.unit == b_unit
