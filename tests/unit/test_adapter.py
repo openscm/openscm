@@ -13,37 +13,15 @@ def test_adapter_base_class_init():
     assert adapter._output == outputstub
 
 
-def test_adapter_base_class_initialize_model_input():
-    Adapter.__abstractmethods__ = set()
-    adapter = Adapter(  # pylint: disable=abstract-class-instantiated
-        ParameterSet(), ParameterSet()
-    )
-
-    adapter.initialize_model_input()
-    assert adapter._initialized
-
-
-def test_adapter_base_class_initialize_run_parameters():
-    Adapter.__abstractmethods__ = set()
-    adapter = Adapter(  # pylint: disable=abstract-class-instantiated
-        ParameterSet(), ParameterSet()
-    )
-    adapter.initialize_run_parameters()
-    assert adapter._initialized
-
-
 def test_adapter_base_class_run():
     start_time = 20
 
+    Adapter._start_time = start_time
     Adapter.__abstractmethods__ = set()
-    in_parameters = ParameterSet()
-    in_parameters.generic("Start Time").value = start_time
     adapter = Adapter(  # pylint: disable=abstract-class-instantiated
-        in_parameters, ParameterSet()
+        ParameterSet(), ParameterSet()
     )
 
-    adapter.initialize_model_input()
-    adapter.initialize_run_parameters()
     adapter.reset()
     assert adapter._current_time == start_time
     adapter.run()
