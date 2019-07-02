@@ -766,3 +766,43 @@ def test_timeseries_view_time_points():
         [np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)]
     )
     np.testing.assert_array_equal(view.values, np.arange(20, 31))
+
+
+@pytest.mark.parametrize("view_type", ["generic", "scalar", "timeseries"])
+def test_outdated(view_type):
+    p = ParameterSet()
+    a_unit = "kg"
+    b_unit = "g"
+
+    if view_type == "generic":
+        view = p.generic("example")
+        view.value = ["hi", 2, 3]
+    elif view_type == "scalar":
+        view = p.scalar("example", a_unit)
+        view.value = 2
+    else:
+        view = p.timeseries("example", a_unit, [0, 1, 2])
+        # should we just make this `.value` too?
+        view.values = np.array([0, 1, 2])
+
+    assert not view.outdated
+
+    if view_type == "generic":
+        p.generic("example").value = ["hi", 2, 4]
+    elif view_type == "scalar":
+        p.scalar("example", b_unit).value = 2
+    else:
+        # should we just make this `.value` too?
+        p.timeseries("example", b_unit, [0, 1, 2]).values = np.array([0, 1, 2])
+
+    assert view.outdated
+
+    # read value
+    if view_type == "generic":
+        view.value
+    elif view_type == "scalar":
+        view.value
+    else:
+        view.values
+
+    assert not view.outdated
