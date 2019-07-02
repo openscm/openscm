@@ -16,23 +16,12 @@ Petschel-Held, G., Schellnhuber, H.-J., Bruckner, T., Toth, F. L., and Hasselman
 The tolerable windows approach: Theoretical and methodological foundations, Climatic
 Change, 41, 303–331, 1999.
 """
-from copy import deepcopy
+import copy
 
 import numpy as np
 
 from ..core.units import _unit_registry
 from ..errors import OutOfBoundsError, OverwriteError
-
-
-"""
-TODO: put this somewhere
-Decisions as I write:
-- A model should take in a time start and have a timeperiod attribute. This avoids:
-    - requiring models to interpolate internally, that should be somewhere else in pre-processing.
-    - having to worry about irregular timesteps
-        - with Pint, a month is just 1/12 of a year so that would also be a regular timestep from a Pint point of view
-        - if people want to convert back to human calendars later, they can do so but that should also be a pre/post-processing step.
-"""
 
 
 class PH99Model:  # pylint: disable=too-many-instance-attributes
@@ -336,8 +325,8 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
         Parameters
         ----------
-        drivers
-            The driver for this run. # TODO: add list of options
+        drivers : {"emissions"}
+            The driver for this run
 
         Raises
         ------
@@ -349,20 +338,20 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
         self.time_current = self.time_start
 
-        initialiser = np.nan * np.zeros_like(self.emissions.magnitude)
+        initialiser = np.nan * np.zeros_like(self._emissions)
 
-        cumulative_emissions_init = deepcopy(initialiser)
+        cumulative_emissions_init = copy.deepcopy(initialiser)
         cumulative_emissions_init[0] = 0
         self.cumulative_emissions = _unit_registry.Quantity(
             cumulative_emissions_init, "GtC"
         )
 
-        concentrations_init = deepcopy(initialiser)
+        concentrations_init = copy.deepcopy(initialiser)
         concentrations_init[0] = 290  # todo: remove hard coding
         self.concentrations = _unit_registry.Quantity(concentrations_init, "ppm")
 
-        temperatures_init = deepcopy(initialiser)
-        temperatures_init[0] = 14.6
+        temperatures_init = copy.deepcopy(initialiser)
+        temperatures_init[0] = 14.6  # todo: remove hard coding
         self.temperatures = _unit_registry.Quantity(temperatures_init, "delta_degC")
 
     def run(self) -> None:
