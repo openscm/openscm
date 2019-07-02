@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from openscm.core.parameters import ParameterType
-from openscm.core.time import TimeseriesConverter, ExtrapolationType
+from openscm.core.time import ExtrapolationType, TimeseriesConverter
 from openscm.errors import InsufficientDataError
 
 

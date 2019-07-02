@@ -499,4 +499,3 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
         """
         if not isinstance(value, type(self.alpha)):
             raise TypeError("Input must be a Pint Quantity")
-
