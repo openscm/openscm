@@ -65,3 +65,12 @@ def test_no_overlap(combo, miss_type):
             combo.interpolation_type,
             ExtrapolationType.NONE,
         )
+
+    # all ok if extrapolation is not NONE
+    TimeseriesConverter(
+        combo.source,
+        no_overlap_target,
+        combo.timeseries_type,
+        combo.interpolation_type,
+        ExtrapolationType.LINEAR,
+    )
