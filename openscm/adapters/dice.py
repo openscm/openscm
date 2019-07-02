@@ -13,7 +13,7 @@ variable naming. Original comments are marked by "Original:".
 
 from collections import namedtuple
 from math import log2
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 
@@ -27,7 +27,7 @@ YEAR = np.timedelta64(365, "D")  # pylint: disable=too-many-function-args
 _default_start_time = np.datetime64("1000-01-01")
 _default_stop_time = np.datetime64("3100-01-01")
 
-MODEL_PARAMETER_DEFAULTS = {
+MODEL_PARAMETER_DEFAULTS: Dict[str, Tuple] = {
     # Initial size of atmospheric CO2 pool
     #     Original: "Initial Concentration in atmosphere 2010 (GtC)"
     "mat0": (830.4, "GtC"),  # 851
@@ -102,6 +102,12 @@ class DICE(Adapter):
     _timestep_count: int
     """Total number of time steps"""
 
+    _time_points = None
+    """Time points for point data"""
+
+    _time_points_for_averages = None
+    """Time points for average data"""
+
     _values: Any
     """Parameter views"""
 
@@ -116,6 +122,9 @@ class DICE(Adapter):
 
     @property
     def name(self):
+        """
+        Name of the model as used in OpenSCM parameters
+        """
         return "DICE"
 
     def _initialize_model(self) -> None:
@@ -210,10 +219,7 @@ class DICE(Adapter):
         )  # include self._stop_time
 
     def _timeseries_time_points_require_update(self):
-        try:
-            self._time_points
-            self._time_points_for_averages
-        except AttributeError:
+        if self._time_points is None or self._time_points_for_averages is None:
             return True
 
         names_to_check = ["Start Time", "Stop Time", "Step Length"]

@@ -3,14 +3,13 @@ Module including all model adapters shipped with OpenSCM.
 """
 import warnings
 from abc import ABCMeta, abstractmethod, abstractproperty
-from collections import namedtuple
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
 from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType
 from ..core.parameterset import ParameterSet
-from ..core.time import ExtrapolationType, InterpolationType, create_time_points
+from ..core.time import ExtrapolationType, InterpolationType
 from ..errors import AdapterNeedsModuleError
 
 _loaded_adapters: Dict[str, type] = {}
@@ -84,7 +83,7 @@ class Adapter(metaclass=ABCMeta):
         """
         self._shutdown()
 
-    def _add_parameter_view(
+    def _add_parameter_view(  # pylint: disable=too-many-arguments
         self,
         full_name: HierarchicalName,
         value: Optional[Any] = None,
@@ -93,9 +92,13 @@ class Adapter(metaclass=ABCMeta):
         timeseries_type: Optional[Union[ParameterType, str]] = None,
         time_points: Optional[np.ndarray] = None,
         region: HierarchicalName = ("World",),
-        interpolation: Union[InterpolationType, str] = "linear",
-        extrapolation: Union[ExtrapolationType, str] = "none",
-    ):
+        interpolation: Union[  # pylint: disable=unused-argument # here or Parameters?
+            InterpolationType, str
+        ] = "linear",
+        extrapolation: Union[  # pylint: disable=unused-argument # here or Parameters?
+            ExtrapolationType, str
+        ] = "none",
+    ) -> None:
         """
         Add parameter view to ``self._parameter_views``
 
@@ -105,11 +108,15 @@ class Adapter(metaclass=ABCMeta):
         if unit is None:
             p = self._parameters.generic(full_name, region=region)
         elif timeseries_type is None:
-            p = self._parameters.scalar(full_name, unit, region=region)
+            p = self._parameters.scalar(full_name, unit, region=region)  # type: ignore
         else:
             # we can't yet 'reserve' timeseries units (see #178) so set to dict
             # instead
-            p = {"unit": unit, "region": region, "timeseries_type": timeseries_type}
+            p = {  # type: ignore
+                "unit": unit,
+                "region": region,
+                "timeseries_type": timeseries_type,
+            }
             # # this is how I think this should work
             # p = self._parameters.timeseries(
             #     full_name, unit, region=region, timeseries_type=timeseries_type
@@ -128,7 +135,8 @@ class Adapter(metaclass=ABCMeta):
 
             self._parameter_versions[full_name] = p.version
 
-    def _set_parameter_value(self, p, value):
+    @staticmethod  # should we unify setters?
+    def _set_parameter_value(p, value):
         if p.parameter_type in (ParameterType.SCALAR, ParameterType.GENERIC):
             p.value = value
         else:
@@ -171,10 +179,16 @@ class Adapter(metaclass=ABCMeta):
         update_time_points = self._timeseries_time_points_require_update()
         for name, view in self._get_view_iterator():
             pv = self._parameter_views[name]
-            update_time = isinstance(pv, dict)  or (update_time_points and (pv.parameter_type in (
-                                        ParameterType.POINT_TIMESERIES,
-                                        ParameterType.AVERAGE_TIMESERIES,
-                                    )))
+            update_time = isinstance(pv, dict) or (
+                update_time_points
+                and (
+                    pv.parameter_type
+                    in (
+                        ParameterType.POINT_TIMESERIES,
+                        ParameterType.AVERAGE_TIMESERIES,
+                    )
+                )
+            )
             if update_time:
                 if isinstance(pv, dict):
                     unit = pv["unit"]
@@ -195,7 +209,11 @@ class Adapter(metaclass=ABCMeta):
                     interpolation="linear",  # TODO: take these from ParameterSet
                     extrapolation="none",
                 )
-            update_para = isinstance(pv, dict) or self._parameter_versions[name] < view.version or update_time
+            update_para = (
+                isinstance(pv, dict)
+                or self._parameter_versions[name] < view.version
+                or update_time
+            )
             if update_para:
                 if isinstance(name, tuple) and name[0] == self.name:
                     self._direct_set = True
@@ -207,29 +225,38 @@ class Adapter(metaclass=ABCMeta):
         view_iterator = self._parameter_views.items()
         view_iterator = sorted(view_iterator, key=lambda s: len(s[0]))
         generic_views = [
-            v for v in view_iterator if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.GENERIC
+            v
+            for v in view_iterator
+            if not isinstance(v[1], dict)
+            and v[1].parameter_type == ParameterType.GENERIC
         ]
         scalar_views = [
-            v for v in view_iterator if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.SCALAR
+            v
+            for v in view_iterator
+            if not isinstance(v[1], dict)
+            and v[1].parameter_type == ParameterType.SCALAR
         ]
         other_views = [
             v
             for v in view_iterator
-            if isinstance(v[1], dict) or v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
+            if isinstance(v[1], dict)
+            or v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
         ]
         return generic_views + scalar_views + other_views
 
-    def _update_model_parameter(self, name: HierarchicalName):
+    def _update_model_parameter(self, name: HierarchicalName) -> None:
         para = self._parameter_views[name]
         self._update_model(name, para)
 
-    def _get_parameter_value(self, p):
+    @staticmethod  # should we unify getters?
+    def _get_parameter_value(p):
         if p.parameter_type in (ParameterType.SCALAR, ParameterType.GENERIC):
             return p.value
-        else:
-            return p.values
+        return p.values
 
-    def _check_derived_paras(self, paras: List[ParameterInfo], name: HierarchicalName):
+    def _check_derived_paras(
+        self, paras: List[Union[str, Sequence[str]]], name: HierarchicalName
+    ) -> None:
         for para in paras:
             p = self._parameter_views[para]
             if p.version > 1:

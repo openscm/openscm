@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
-import pytest
 from base import _AdapterTester
 
 from openscm.adapters.dice import DICE, YEAR
 from openscm.core.parameters import ParameterType
 from openscm.core.time import create_time_points
-from openscm.errors import DimensionalityError
 
 
 def _run_and_compare(test_adapter, filename, timestep_count=None):
@@ -155,9 +153,9 @@ class TestMyAdapter(_AdapterTester):
         first_run_temperature = output.timeseries(*check_args_temperature).values
 
         test_adapter.reset()
-        # currently failing
-        # assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        # assert output.timeseries(*check_args_temperature).empty
+        # currently failing as we don't reset output to zero
+        assert output.timeseries(*check_args_rf, timeseries_type="average").empty
+        assert output.timeseries(*check_args_temperature).empty
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, timeseries_type="average"
@@ -198,9 +196,9 @@ class TestMyAdapter(_AdapterTester):
         ).values
         first_run_temperature = output.timeseries(*check_args_temperature).values
         test_adapter.reset()
-        # currently failing
-        # assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        # assert output.timeseries(*check_args_temperature).empty
+        # currently failing as we don't reset output to zero
+        assert output.timeseries(*check_args_rf, timeseries_type="average").empty
+        assert output.timeseries(*check_args_temperature).empty
         test_adapter.step()
         test_adapter.step()
         first_two_steps_rf = output.timeseries(
@@ -214,14 +212,17 @@ class TestMyAdapter(_AdapterTester):
         ).values
         # currently failing
         # for some reason accessing the first two elements of a `Timeseries` resets everything to zero
+        np.testing.assert_allclose(first_run_rf[:2], first_two_steps_rf)
+        np.testing.assert_allclose(
+            first_run_temperature[:2], first_two_steps_temperature
+        )
         # so we require this hack...
-        # np.testing.assert_allclose(np.array(first_run_rf, copy=True)[:2], first_two_steps_rf)
         # np.testing.assert_allclose(np.array(first_run_temperature, copy=True)[:2], first_two_steps_temperature)
 
         test_adapter.reset()
         # currently failing
-        # assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        # assert output.timeseries(*check_args_temperature).empty
+        assert output.timeseries(*check_args_rf, timeseries_type="average").empty
+        assert output.timeseries(*check_args_temperature).empty
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, timeseries_type="average"
@@ -241,6 +242,7 @@ class TestMyAdapter(_AdapterTester):
         parameters.scalar(
             "Equilibrium Climate Sensitivity", "delta_degC"
         ).value = ecs_magnitude
+
         parameters.scalar(("DICE", "t2xco2"), "delta_degC").value = 2 * ecs_magnitude
 
         self.prepare_run_input(
@@ -257,19 +259,19 @@ class TestMyAdapter(_AdapterTester):
             parameters.scalar(("DICE", "t2xco2"), "delta_degC").value == ecs_magnitude
         )
 
-        # currently failing
-        # assert (
-        #     output_parameters.scalar(
-        #         "Equilibrium Climate Sensitivity", "delta_degC"
-        #     ).value
-        #     == ecs_magnitude
-        # )
-        # assert output_parameters.generic("Start Time").value == np.datetime64(
-        #     "1850-01-01"
-        # )
-        # assert output_parameters.generic("Stop Time").value == np.datetime64(
-        #     "2100-01-01"
-        # )
+        # currently failing as we don't write parameters into output
+        assert (
+            output_parameters.scalar(
+                "Equilibrium Climate Sensitivity", "delta_degC"
+            ).value
+            == ecs_magnitude
+        )
+        assert output_parameters.generic("Start Time").value == np.datetime64(
+            "1850-01-01"
+        )
+        assert output_parameters.generic("Stop Time").value == np.datetime64(
+            "2100-01-01"
+        )
 
     def prepare_run_input(self, test_adapter, start_time, stop_time):
         test_adapter._parameters.generic("Start Time").value = start_time

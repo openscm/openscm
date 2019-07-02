@@ -1,8 +1,10 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-import pytest
+import numpy as np
 
+from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
+from openscm.core.time import create_time_points
 
 
 class _AdapterTester(metaclass=ABCMeta):
@@ -35,7 +37,7 @@ class _AdapterTester(metaclass=ABCMeta):
         """
         parameters = ParameterSet()
         output_parameters = ParameterSet()
-        tadapter = self.tadapter(parameters, output_parameters)
+        self.tadapter(parameters, output_parameters)
 
     @abstractmethod
     def test_shutdown(self, test_adapter):
@@ -248,7 +250,9 @@ class _AdapterTester(metaclass=ABCMeta):
         test_adapter._parameters.generic("Start Time").value = start_time
         test_adapter._parameters.generic("Stop Time").value = stop_time
 
-        npoints = int((stop_time - start_time) / np.timedelta64(365, "D")) + 1  # include self._stop_time
+        npoints = (
+            int((stop_time - start_time) / np.timedelta64(365, "D")) + 1
+        )  # include self._stop_time
 
         time_points_for_averages = create_time_points(
             start_time,
