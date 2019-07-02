@@ -266,10 +266,7 @@ def test_run_already_done(ph99):
             ph99.run()
 
 
-# test that input arrays (time, emissions) are all same length
-# test that initially all arrays are np.nan if not passed in
-# setting time should set time_current too
-# test of restart flag in run
-
 # pending discussions in issues:
 #   - test that input arrays (time, emissions) are all Pint arrays (for unit handling), error if not
+#   - test that input scalars are all Pint scalars (for unit handling), error if not
+#   - test that t_0 values are passed properly
