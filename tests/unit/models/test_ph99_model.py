@@ -126,11 +126,10 @@ def test_update_concentrations():
 
         ph99._update_concentrations()
         # calculated from previous year values
-        # TODO: check/discuss/explain. There is a more complex way of doing this
-        # gradient calculation that means it's not actually forward differencing but
-        # rather assuming constant emissions over the time period. It makes the
-        # calculation much more complex (maybe even unsolvable...) for little reward
-        # in my opinion but we should discuss/I should check.
+        # There is a more complex way of doing this gradient calculation that means
+        # it's not actually forward differencing but rather assuming constant
+        # emissions over the time period. It makes the calculation much more complex (
+        # maybe even unsolvable...) for little reward but maybe worth checking one day.
         grad = (
             tb * tcumulative_emissions[0]
             + tbeta * temissions[0]
@@ -253,7 +252,7 @@ def test_run(ph99):
     assert ph99.step.call_count == len(ph99.emissions)
 
 
-def test_run_already_done(ph99):
+def test_run_already_done():
     with patch(
         "openscm.models.PH99Model.emissions_idx", new_callable=PropertyMock
     ) as mocked_emissions_idx:
@@ -266,7 +265,25 @@ def test_run_already_done(ph99):
             ph99.run()
 
 
-# pending discussions in issues:
-#   - test that input arrays (time, emissions) are all Pint arrays (for unit handling), error if not
-#   - test that input scalars are all Pint scalars (for unit handling), error if not
-#   - test that t_0 values are passed properly
+_ph99_tmp = PH99Model()
+@pytest.mark.parametrize("att", [a for a in dir(_ph99_tmp) if not a.startswith("_") and not a == "emissions_idx" and isinstance(getattr(_ph99_tmp, a), type(_ph99_tmp.alpha))])
+@pytest.mark.parametrize("setter", [10, 12.3, np.array([1, -1, 10]), "hi"])
+def test_non_pint_setting_error(att, setter):
+    ph99 = PH99Model()
+    with pytest.raises(TypeError, match="Input must be a Pint Quantity"):
+        setattr(ph99, att, setter)
+
+
+def test_t_0_values(ph99):
+    ph99.emissions = np.array([2, 3, 1, -1]) * _unit_registry("GtC/yr")
+
+    c_t_0 = 300 * _unit_registry("ppm")
+    ph99.concentrations_t_0 = c_t_0
+    T_t_0 = 15.2 * _unit_registry("delta_degC")
+    ph99.temperatures_t_0 = T_t_0
+
+    ph99.initialise_timeseries()
+    ph99.run()
+
+    assert_pint_equal(ph99.concentrations[0], c_t_0)
+    assert_pint_equal(ph99.temperatures[0], T_t_0)
