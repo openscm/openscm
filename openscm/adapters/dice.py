@@ -90,11 +90,10 @@ class DICE(Adapter):
     Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
     model.
 
-    TODO: use original calibration
+    TODO: use original calibration (as given by the extra values in the comments)
 
     TODO: look at DICE original documentation to work out what it's convention for emissions
-    and radiative forcing is. It could actually be point, I need to check (sorry Sven for all 
-    this mucking around, one day it will end...)
+    and radiative forcing is. It could actually be point...
     """
 
     _timestep: int
@@ -140,7 +139,7 @@ class DICE(Adapter):
 
         imap = self._inverse_openscm_standard_parameter_mappings
         for name, settings in MODEL_PARAMETER_DEFAULTS.items():
-            full_name = ("DICE", name)
+            full_name = (self.name, name)
             if len(settings) == 2:
                 default, unit = settings
 
@@ -189,22 +188,22 @@ class DICE(Adapter):
     def _start_time(self):
         try:
             return self._parameter_views["Start Time"].value
-        except:
-            return self._parameter_views[("DICE", "start_time")].value
+        except ParameterEmptyError:
+            return self._parameter_views[(self.name, "start_time")].value
 
     @property
     def _period_length(self):
         try:
             return self._parameter_views["Step Length"].value
-        except:
-            return self._parameter_views[("DICE", "period_length")].value
+        except ParameterEmptyError:
+            return self._parameter_views[(self.name, "period_length")].value
 
     @property
     def _timestep_count(self):
         try:
             stop_time = self._parameter_views["Stop Time"].value
-        except:
-            stop_time = self._parameter_views[("DICE", "stop_time")].value
+        except ParameterEmptyError:
+            stop_time = self._parameter_views[(self.name, "stop_time")].value
 
         return (
             int((stop_time - self._start_time) / self._period_length) + 1
@@ -242,7 +241,9 @@ class DICE(Adapter):
                 setattr(self._values, model_name[1], para)
                 self._set_parameter_value(self._parameter_views[model_name], values)
             else:
-                assert name[0] == self.name, "..."
+                if name[0] != self.name:
+                    # emergency valve for now, must be smarter way to handle this
+                    raise ValueError("How did non-DICE parameter end up here?")
                 setattr(self._values, name[1], para)
 
         except ParameterEmptyError:
@@ -424,8 +425,6 @@ class DICE(Adapter):
             ) / (v.forcoth_saturation_time.value - v.start_time.value)
 
         # Original: "Increase in radiative forcing (watts per m2 from 1900)"
-        # import pdb
-        # pdb.set_trace()
         v.forc.values[self._timestep] = (
             v.fco22x.value * log2(v.mat.values[self._timestep] / v.mateq.value)
             + forcoth
