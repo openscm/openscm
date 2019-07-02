@@ -266,7 +266,18 @@ def test_run_already_done():
 
 
 _ph99_tmp = PH99Model()
-@pytest.mark.parametrize("att", [a for a in dir(_ph99_tmp) if not a.startswith("_") and not a == "emissions_idx" and isinstance(getattr(_ph99_tmp, a), type(_ph99_tmp.alpha))])
+
+
+@pytest.mark.parametrize(
+    "att",
+    [
+        a
+        for a in dir(_ph99_tmp)
+        if not a.startswith("_")
+        and not a == "emissions_idx"
+        and isinstance(getattr(_ph99_tmp, a), type(_ph99_tmp.alpha))
+    ],
+)
 @pytest.mark.parametrize("setter", [10, 12.3, np.array([1, -1, 10]), "hi"])
 def test_non_pint_setting_error(att, setter):
     ph99 = PH99Model()

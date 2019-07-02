@@ -47,14 +47,12 @@ def test_none_extrapolation_error(combo):
 @pytest.mark.parametrize("miss_type", ["forward", "backward"])
 def test_no_overlap(combo, miss_type):
     if miss_type == "forward":
-        no_overlap_target = (
-            combo.target
-            + (combo.source[-1] - combo.target[0] + np.timedelta64(365, "D"))
+        no_overlap_target = combo.target + (
+            combo.source[-1] - combo.target[0] + np.timedelta64(365, "D")
         )
     else:
-        no_overlap_target = (
-            combo.target
-            - (combo.target[-1] - combo.source[0] + np.timedelta64(365, "D"))
+        no_overlap_target = combo.target - (
+            combo.target[-1] - combo.source[0] + np.timedelta64(365, "D")
         )
 
     with pytest.raises(InsufficientDataError):
