@@ -235,3 +235,30 @@ class _AdapterTester(metaclass=ABCMeta):
         assert output_parameters.generic("Stop Time").value == np.datetime64(
             "2100-01-01"
         )
+
+    @abstractmethod
+    def prepare_run_input(self, test_adapter, start_time, stop_time):
+        """
+        Overload this in your adapter test if you need to set required input parameters.
+
+        This method is called directly before
+        :func:`test_adapter.initialize_model_input` during tests.
+        """
+        # e.g.
+        test_adapter._parameters.generic("Start Time").value = start_time
+        test_adapter._parameters.generic("Stop Time").value = stop_time
+
+        npoints = int((stop_time - start_time) / np.timedelta64(365, "D")) + 1  # include self._stop_time
+
+        time_points_for_averages = create_time_points(
+            start_time,
+            stop_time - start_time,
+            npoints,
+            ParameterType.AVERAGE_TIMESERIES,
+        )
+        test_adapter._parameters.timeseries(
+            ("Emissions", "CO2"),
+            "GtCO2/a",
+            time_points_for_averages,
+            timeseries_type="average",
+        ).values = np.zeros(npoints)

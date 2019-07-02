@@ -48,8 +48,8 @@ class Adapter(metaclass=ABCMeta):
     """
     Mapping from OpenSCM parameters to model parameters.
 
-    If required, use property setters to add extra behaviour (like calculating a model 
-    parameter based on the value of the OpenSCM parameter) when setting a model 
+    If required, use property setters to add extra behaviour (like calculating a model
+    parameter based on the value of the OpenSCM parameter) when setting a model
     parameter from an OpenSCM parameter.
     """
 
@@ -60,7 +60,7 @@ class Adapter(metaclass=ABCMeta):
         """
         Initialize the adapter as well as the model sitting underneath it.
 
-        *Note:* as part of this process, all available model parameters are added to 
+        *Note:* as part of this process, all available model parameters are added to
         ``input_parameters`` (if they're not already there).
 
         Parameters
@@ -99,7 +99,7 @@ class Adapter(metaclass=ABCMeta):
         """
         Add parameter view to ``self._parameter_views``
 
-        This method also allows default values to be set if the parameter is empty (or 
+        This method also allows default values to be set if the parameter is empty (or
         ``overwrite`` is True) and stores the version of parameters too.
         """
         if unit is None:
@@ -107,20 +107,26 @@ class Adapter(metaclass=ABCMeta):
         elif timeseries_type is None:
             p = self._parameters.scalar(full_name, unit, region=region)
         else:
-            p = self._parameters.timeseries(
-                full_name, unit, region=region, timeseries_type=timeseries_type
-            )
+            # we can't yet 'reserve' timeseries units (see #178) so set to dict
+            # instead
+            p = {"unit": unit, "region": region, "timeseries_type": timeseries_type}
+            # # this is how I think this should work
+            # p = self._parameters.timeseries(
+            #     full_name, unit, region=region, timeseries_type=timeseries_type
+            # )
 
         self._parameter_views[full_name] = p
+        if isinstance(p, dict):
+            self._parameter_versions[full_name] = 0
+        else:
+            if value is not None and (p.empty or overwrite):
+                # match parameterview to value
+                self._set_parameter_value(p, value)
+            elif not p.empty and (time_points is not None or timeseries_type is None):
+                # match model to parameter view
+                self._update_model(full_name, p)
 
-        if value is not None and (p.empty or overwrite):
-            # match parameterview to value
-            self._set_parameter_value(p, value)
-        elif not p.empty and (time_points is not None or timeseries_type is None):
-            # match model to parameter view
-            self._update_model(full_name, p)
-
-        self._parameter_versions[full_name] = p.version
+            self._parameter_versions[full_name] = p.version
 
     def _set_parameter_value(self, p, value):
         if p.parameter_type in (ParameterType.SCALAR, ParameterType.GENERIC):
@@ -136,7 +142,7 @@ class Adapter(metaclass=ABCMeta):
         to :func:`step`.
 
         *Note:* this method sets the model configuration to match the values in
-        `self._parameters``, which is not necessarily the same as the state which was 
+        `self._parameters``, which is not necessarily the same as the state which was
         used at the start of the last run.
         """
         self._current_time = self._start_time
@@ -164,24 +170,32 @@ class Adapter(metaclass=ABCMeta):
     def _set_model_from_parameters(self):
         update_time_points = self._timeseries_time_points_require_update()
         for name, view in self._get_view_iterator():
-            update_time = update_time_points and self._parameter_views[
-                name
-            ].parameter_type in (
-                ParameterType.POINT_TIMESERIES,
-                ParameterType.AVERAGE_TIMESERIES,
-            )
+            pv = self._parameter_views[name]
+            update_time = isinstance(pv, dict)  or (update_time_points and (pv.parameter_type in (
+                                        ParameterType.POINT_TIMESERIES,
+                                        ParameterType.AVERAGE_TIMESERIES,
+                                    )))
             if update_time:
-                current_view = self._parameter_views[name]
+                if isinstance(pv, dict):
+                    unit = pv["unit"]
+                    region = pv["region"]
+                    timeseries_type = pv["timeseries_type"]
+                else:
+                    current_view = self._parameter_views[name]
+                    unit = current_view.unit
+                    region = current_view.region
+                    timeseries_type = current_view.parameter_type
+
                 self._parameter_views[name] = self._parameters.timeseries(
                     name,
-                    current_view.unit,
-                    time_points=self._get_time_points(current_view.parameter_type),
-                    region=current_view.region,
-                    timeseries_type=current_view.parameter_type,
+                    unit,
+                    time_points=self._get_time_points(timeseries_type),
+                    region=region,
+                    timeseries_type=timeseries_type,
                     interpolation="linear",  # TODO: take these from ParameterSet
                     extrapolation="none",
                 )
-            update_para = self._parameter_versions[name] < view.version or update_time
+            update_para = isinstance(pv, dict) or self._parameter_versions[name] < view.version or update_time
             if update_para:
                 if isinstance(name, tuple) and name[0] == self.name:
                     self._direct_set = True
@@ -193,15 +207,15 @@ class Adapter(metaclass=ABCMeta):
         view_iterator = self._parameter_views.items()
         view_iterator = sorted(view_iterator, key=lambda s: len(s[0]))
         generic_views = [
-            v for v in view_iterator if v[1].parameter_type == ParameterType.GENERIC
+            v for v in view_iterator if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.GENERIC
         ]
         scalar_views = [
-            v for v in view_iterator if v[1].parameter_type == ParameterType.SCALAR
+            v for v in view_iterator if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.SCALAR
         ]
         other_views = [
             v
             for v in view_iterator
-            if v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
+            if isinstance(v[1], dict) or v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
         ]
         return generic_views + scalar_views + other_views
 
@@ -230,7 +244,7 @@ class Adapter(metaclass=ABCMeta):
     @abstractmethod
     def _initialize_model(self) -> None:
         """
-        Initialize the model, including collecting all relevant ParameterViews. 
+        Initialize the model, including collecting all relevant ParameterViews.
 
         Called only once, during :func:`__init__`.
         """
