@@ -17,6 +17,7 @@ The tolerable windows approach: Theoretical and methodological foundations, Clim
 Change, 41, 303–331, 1999.
 """
 import copy
+from typing import Any
 
 import numpy as np
 
@@ -53,6 +54,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @timestep.setter
     def timestep(self, value):
+        self._check_is_pint_quantity(value)
         self._timestep = value.to(self._timestep_units).magnitude
 
     _timestep_units = _unit_registry("yr")
@@ -67,6 +69,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @time_start.setter
     def time_start(self, value):
+        self._check_is_pint_quantity(value)
         self._time_start = value.to(self._timestep_units).magnitude
 
     _time_start = 0
@@ -80,6 +83,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @time_current.setter
     def time_current(self, value):
+        self._check_is_pint_quantity(value)
         self._time_current = value.to(self._timestep_units).magnitude
 
     _time_current = 0
@@ -93,6 +97,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @emissions.setter
     def emissions(self, value):
+        self._check_is_pint_quantity(value)
         self._emissions = value.to(self._emissions_units).magnitude
         self._emissions_nan = np.isnan(np.sum(self._emissions))
 
@@ -109,6 +114,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @cumulative_emissions.setter
     def cumulative_emissions(self, value):
+        self._check_is_pint_quantity(value)
         self._cumulative_emissions = value.to(
             self._cumulative_emissions_units
         ).magnitude
@@ -125,10 +131,26 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @concentrations.setter
     def concentrations(self, value):
+        self._check_is_pint_quantity(value)
         self._concentrations = value.to(self._concentrations_units).magnitude
 
     _concentrations_units = _unit_registry("ppm")
     _concentrations = np.array([np.nan])
+
+    @property
+    def concentrations_t_0(self):
+        """
+        :obj:`pint.Quantity`: |CO2| concentrations in first time step
+        """
+        return self._concentrations_t_0 * self._concentrations_t_0_units
+
+    @concentrations_t_0.setter
+    def concentrations_t_0(self, value):
+        self._check_is_pint_quantity(value)
+        self._concentrations_t_0 = value.to(self._concentrations_t_0_units).magnitude
+
+    _concentrations_t_0_units = _concentrations_units
+    _concentrations_t_0 = 290
 
     @property
     def temperatures(self):
@@ -139,12 +161,28 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @temperatures.setter
     def temperatures(self, value):
+        self._check_is_pint_quantity(value)
         self._temperatures = value.to(self._temperatures_units).magnitude
 
     # have to initialise like this to avoid ambiguity...
     _temperatures_tmp = _unit_registry.Quantity(np.array([np.nan]), "delta_degC")
     _temperatures_units = _temperatures_tmp.units
     _temperatures = _temperatures_tmp.magnitude
+
+    @property
+    def temperatures_t_0(self):
+        """
+        :obj:`pint.Quantity`: |CO2| concentrations in first time step
+        """
+        return self._temperatures_t_0 * self._temperatures_t_0_units
+
+    @temperatures_t_0.setter
+    def temperatures_t_0(self, value):
+        self._check_is_pint_quantity(value)
+        self._temperatures_t_0 = value.to(self._temperatures_t_0_units).magnitude
+
+    _temperatures_t_0_units = _temperatures_units
+    _temperatures_t_0 = 14.6
 
     @property
     def b(self):
@@ -155,6 +193,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @b.setter
     def b(self, value):
+        self._check_is_pint_quantity(value)
         self._b = value.to(self._b_units).magnitude
 
     _b_units = _unit_registry("ppm / (GtC * yr)")
@@ -171,6 +210,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @beta.setter
     def beta(self, value):
+        self._check_is_pint_quantity(value)
         self._beta = value.to(self._beta_units).magnitude
 
     _beta_units = _unit_registry("ppm/GtC")
@@ -187,6 +227,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @sigma.setter
     def sigma(self, value):
+        self._check_is_pint_quantity(value)
         self._sigma = value.to(self._sigma_units).magnitude
 
     _sigma_units = _unit_registry("1/yr")
@@ -203,6 +244,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @c1.setter
     def c1(self, value):
+        self._check_is_pint_quantity(value)
         self._c1 = value.to(self._c1_units).magnitude
 
     _c1_units = _unit_registry("ppm")
@@ -221,6 +263,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @mu.setter
     def mu(self, value):
+        self._check_is_pint_quantity(value)
         self._mu = value.to(self._mu_units).magnitude
 
     # have to initialise like this to avoid ambiguity...
@@ -239,6 +282,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @alpha.setter
     def alpha(self, value):
+        self._check_is_pint_quantity(value)
         self._alpha = value.to(self._alpha_units).magnitude
 
     _alpha_units = _unit_registry("1/yr")
@@ -257,6 +301,7 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
 
     @t1.setter
     def t1(self, value):
+        self._check_is_pint_quantity(value)
         self._t1 = value.to(self._t1_units).magnitude
 
     # have to initialise like this to avoid ambiguity...
@@ -347,11 +392,11 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
         )
 
         concentrations_init = copy.deepcopy(initialiser)
-        concentrations_init[0] = 290  # todo: remove hard coding
+        concentrations_init[0] = self._concentrations_t_0
         self.concentrations = _unit_registry.Quantity(concentrations_init, "ppm")
 
         temperatures_init = copy.deepcopy(initialiser)
-        temperatures_init[0] = 14.6  # todo: remove hard coding
+        temperatures_init[0] = self._temperatures_t_0
         self.temperatures = _unit_registry.Quantity(temperatures_init, "delta_degC")
 
     def run(self) -> None:
@@ -437,3 +482,21 @@ class PH99Model:  # pylint: disable=too-many-instance-attributes
             raise OverwriteError(
                 "Stepping {} will overwrite existing data".format(attribute_to_check)
             )
+
+    def _check_is_pint_quantity(self, value: Any) -> None:
+        """
+        Check value is a Pint quantity
+
+        Parameters
+        ----------
+        value
+            Value to check
+
+        Raises
+        ------
+        TypeError
+            If value is not a Pint quantity
+        """
+        if not isinstance(value, type(self.alpha)):
+            raise TypeError("Input must be a Pint Quantity")
+
