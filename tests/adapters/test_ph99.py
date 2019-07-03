@@ -83,13 +83,11 @@ class TestPH99Adapter(_AdapterTester):
             test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
         )
 
-        time_points = np.array(
-            [
-                np.datetime64("{}-01-01".format(y))
-                .astype("datetime64[s]")
-                .astype(float)
-                for y in range(2010, 2091, 10)
-            ]
+        time_points = create_time_points(
+            test_adapter._start_time,
+            test_adapter._period_length,
+            test_adapter._timestep_count,
+            "point",
         )
         check_args_conc = [("Atmospheric Concentrations", "CO2"), "ppm", time_points]
         check_args_temperature = [
@@ -103,11 +101,17 @@ class TestPH99Adapter(_AdapterTester):
 
         test_adapter.reset()
         test_adapter.run()
-        first_run_conc = output.timeseries(*check_args_conc).values
-        first_run_temperature = output.timeseries(*check_args_temperature).values
+        # why is this copying required?
+        first_run_conc = np.copy(output.timeseries(*check_args_conc).values)
+        first_run_temperature = np.copy(
+            output.timeseries(*check_args_temperature).values
+        )
+
         test_adapter.reset()
-        assert output.timeseries(*check_args_conc, timeseries_type="average").empty
-        assert output.timeseries(*check_args_temperature).empty
+        assert np.isnan(
+            output.timeseries(*check_args_conc, timeseries_type="point").values[1:]
+        ).all()
+        assert np.isnan(output.timeseries(*check_args_temperature).values[1:]).all()
         test_adapter.step()
         test_adapter.step()
         first_two_steps_conc = output.timeseries(
@@ -122,8 +126,10 @@ class TestPH99Adapter(_AdapterTester):
         )
 
         test_adapter.reset()
-        assert output.timeseries(*check_args_conc, timeseries_type="average").empty
-        assert output.timeseries(*check_args_temperature).empty
+        assert np.isnan(
+            output.timeseries(*check_args_conc, timeseries_type="point").values[1:]
+        ).all()
+        assert np.isnan(output.timeseries(*check_args_temperature).values[1:]).all()
         test_adapter.run()
         second_run_conc = output.timeseries(*check_args_conc).values
         second_run_temperature = output.timeseries(*check_args_temperature).values

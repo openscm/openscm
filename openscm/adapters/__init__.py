@@ -242,7 +242,9 @@ class Adapter(metaclass=ABCMeta):
                 )
 
     @property
-    def _inverse_openscm_standard_parameter_mappings(self) -> Dict[str, HierarchicalName]:
+    def _inverse_openscm_standard_parameter_mappings(
+        self
+    ) -> Dict[str, HierarchicalName]:
         return {v: k for k, v in self._openscm_standard_parameter_mappings.items()}
 
     @abstractmethod

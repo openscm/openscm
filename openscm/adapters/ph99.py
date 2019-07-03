@@ -215,7 +215,8 @@ class PH99(Adapter):
             v = self._parameter_views[(self.name, "time_start")].value
             if int(v) != v:
                 raise ValueError("('PH99', 'time_start') should be an integer")
-            return self._base_time + np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
+            diff = np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
+            return self._base_time + diff
 
     @property
     def _period_length(self):
@@ -225,7 +226,7 @@ class PH99(Adapter):
             v = self._parameter_views[(self.name, "timestep")].value
             if int(v) != v:
                 raise ValueError("('PH99', 'timestep') should be an integer")
-            return np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
+            return np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
 
     @property
     def _timestep_count(self):
@@ -316,7 +317,8 @@ class PH99(Adapter):
         v = self.model.time_start.to("s").magnitude
         if int(v) != v:
             raise ValueError("_time_start should be an integer")
-        return self._base_time + np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
+        diff = np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
+        return self._base_time + diff
 
     @_time_start.setter
     def _time_start(self, v):
@@ -328,7 +330,7 @@ class PH99(Adapter):
         v = self.model.timestep.to("s").magnitude
         if int(v) != v:
             raise ValueError("_timestep should be an integer")
-        return np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
+        return np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
 
     @_timestep.setter
     def _timestep(self, v):
@@ -338,7 +340,8 @@ class PH99(Adapter):
         v = self.model.time_start.to("s").magnitude
         if int(v) != v:
             raise ValueError("_timestep should be an integer")
-        return self._base_time + np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
+        diff = np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
+        return self._base_time + diff
 
     @property
     def _emissions(self):
@@ -356,6 +359,24 @@ class PH99(Adapter):
             raise ParameterEmptyError(
                 "{} requires ('Emissions', 'CO2') in order to run".format(self.name)
             )
+        self.model.initialise_timeseries()
+        imap = {v: k for k, v in self._openscm_output_mappings.items()}
+        for att in dir(self.model):
+            # all time parameters captured in parameterset output
+            if not att.startswith(("_", "time", "emissions_idx")):
+                value = getattr(self.model, att)
+                if callable(value) or not isinstance(value.magnitude, np.ndarray):
+                    continue
+
+                self._output.timeseries(  # type: ignore
+                    imap[att],
+                    str(value.units),
+                    time_points=self._get_time_points(
+                        self._internal_timeseries_conventions[att]
+                    ),
+                    region="World",
+                    timeseries_type=self._internal_timeseries_conventions[att],
+                ).values = value.magnitude
 
     def _shutdown(self) -> None:
         pass
@@ -397,5 +418,23 @@ class PH99(Adapter):
         self.model.step()
         self._current_time = self._parameters.generic(
             "Start Time"
-        ).value + np.timedelta64(int(self.model.time_current.to("s").magnitude), "s")  # pylint: disable=too-many-function-args
-        # TODO: update output
+        ).value + np.timedelta64(  # pylint: disable=too-many-function-args
+            int(self.model.time_current.to("s").magnitude), "s"
+        )
+        imap = {v: k for k, v in self._openscm_output_mappings.items()}
+        for att in dir(self.model):
+            # all time parameters captured in parameterset output
+            if not att.startswith(("_", "time", "emissions_idx")):
+                value = getattr(self.model, att)
+                if callable(value) or not isinstance(value.magnitude, np.ndarray):
+                    continue
+
+                self._output.timeseries(  # type: ignore
+                    imap[att],
+                    str(value.units),
+                    time_points=self._get_time_points(
+                        self._internal_timeseries_conventions[att]
+                    ),
+                    region="World",
+                    timeseries_type=self._internal_timeseries_conventions[att],
+                ).values = value.magnitude
