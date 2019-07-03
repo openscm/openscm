@@ -146,13 +146,32 @@ _Timeseries._add_arithmetic_ops()
 _Timeseries._add_comparison_ops()
 
 
-class ScalarView(ParameterInfo):
+class _ParameterView(ParameterInfo):
+    """
+    Base class for parameter views.
+    """
+
+    _version: int
+    """Version of cache"""
+
+    @property
+    def outdated(self) -> bool:
+        """
+        Is the cache out of date with respect to the underlying parameter?
+        """
+        return self._version < self._parameter.version
+
+
+class ScalarView(_ParameterView):
     """
     View of a scalar parameter.
     """
 
     _child_data_views: Sequence["ScalarView"]
     """List of views to the child parameters for aggregated reads"""
+
+    _data: Optional[float]
+    """Chache for underlying data"""
 
     _unit_converter: UnitConverter
     """Unit converter"""
@@ -172,6 +191,7 @@ class ScalarView(ParameterInfo):
             Unit for the values in the view
         """
         super().__init__(parameter)
+        self._data = None
         self._unit_converter = UnitConverter(cast(str, parameter.unit), unit)
         self._writable = False
 
@@ -193,6 +213,19 @@ class ScalarView(ParameterInfo):
                 self._parameter
             )
 
+    def _read(self):
+        if self._data is None or self.outdated:
+            if self._parameter.children:
+                self._data = sum(v.value for v in self._child_data_views)
+                self._version = self._parameter.version
+            elif self.empty:
+                raise ParameterEmptyError
+            else:
+                self._data = self._unit_converter.convert_from(
+                    cast(float, self._parameter.data)
+                )
+                self._version = self._parameter.version
+
     @property
     def value(self) -> float:
         """
@@ -208,12 +241,8 @@ class ScalarView(ParameterInfo):
         ParameterReadonlyError
             Parameter is read-only (e.g. because its parent has been written to)
         """
-        if self._parameter.children:
-            return sum(v.value for v in self._child_data_views)
-        if self.empty:
-            raise ParameterEmptyError
-
-        return self._unit_converter.convert_from(cast(float, self._parameter.data))
+        self._read()
+        return cast(float, self._data)
 
     @value.setter
     def value(self, v: float) -> None:
@@ -227,6 +256,7 @@ class ScalarView(ParameterInfo):
             self._writable = True
         self._parameter.data = self._unit_converter.convert_to(v)
         self._parameter.version += 1
+        self._read()
 
     @property
     def unit(self) -> Optional[str]:
@@ -242,7 +272,7 @@ class ScalarView(ParameterInfo):
         return "View of scalar {}".format(str(self._parameter))
 
 
-class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attributes
+class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attributes
     """
     View of a timeseries.
     """
@@ -279,9 +309,6 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
 
     _unit_converter: UnitConverter
     """Unit converter"""
-
-    _version: int
-    """Version of cache"""
 
     _writable: bool
     """Is this view writable? Is set to ``True`` once this view is written to."""
@@ -420,7 +447,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             self._data = np.asarray(v).copy()
             self._timeseries = _Timeseries(self._data, self)
         else:
-            np.copyto(self._data, np.asarray(v))
+            np.copyto(self._data, np.asarray(v), casting="unsafe")
         self._write()
 
     @property
@@ -501,10 +528,13 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         self._write()
 
 
-class GenericView(ParameterInfo):
+class GenericView(_ParameterView):
     """
     View of a generic parameter.
     """
+
+    _data: Optional[Any]
+    """Chache for underlying data"""
 
     _writable: bool
     """Is this view writable? Is set to ``True`` once this view is written to."""
@@ -519,7 +549,16 @@ class GenericView(ParameterInfo):
            Parameter to handle
         """
         super().__init__(parameter)
+        self._data = None
         self._writable = False
+
+    def _read(self):
+        if self._data is None or self.outdated:
+            if self.empty:
+                raise ParameterEmptyError
+
+            self._data = self._parameter.data
+            self._version = self._parameter.version
 
     @property
     def value(self) -> Any:
@@ -533,10 +572,8 @@ class GenericView(ParameterInfo):
         ParameterReadonlyError
             Parameter is read-only (e.g. because its parent has been written to)
         """
-        if self.empty:
-            raise ParameterEmptyError
-
-        return self._parameter.data
+        self._read()
+        return self._data
 
     @value.setter
     def value(self, v: Any) -> None:
@@ -548,6 +585,7 @@ class GenericView(ParameterInfo):
             self._writable = True
         self._parameter.data = v
         self._parameter.version += 1
+        self._read()
 
     def __str__(self) -> str:
         """
