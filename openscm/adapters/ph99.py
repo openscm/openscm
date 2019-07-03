@@ -27,6 +27,12 @@ class PH99(Adapter):
     foundations, Climatic Change, 41, 303–331, 1999.
     """
 
+    _time_points = None
+    """Time points for point data"""
+
+    _time_points_for_averages = None
+    """Time points for average data"""
+
     _hc_per_m2_approx = 1.34 * 10 ** 9 * _unit_registry("J / kelvin / m^2")
     """Approximate heat capacity per unit area (used to estimate rf2xco2)"""
 
@@ -57,13 +63,10 @@ class PH99(Adapter):
 
     @property
     def name(self):
+        """
+        Name of the model as used in OpenSCM parameters
+        """
         return "PH99"
-
-    @property
-    def _ecs(self):
-        return self._parameters.scalar(
-            "Equilibrium Climate Sensitivity", "delta_degC"
-        ).value * _unit_registry("delta_degC")
 
     def _initialize_model(self) -> None:
         """
@@ -125,28 +128,28 @@ class PH99(Adapter):
                                 openscm_name, unit=str(value.units)
                             )
 
-        for openscm_name, self_att in self._openscm_standard_parameter_mappings.items():
+        for o_name, self_att in self._openscm_standard_parameter_mappings.items():
             value = getattr(self, self_att)
             try:
                 if isinstance(value.magnitude, np.ndarray):
                     model_name = self_att[1:]
-                    self._add_parameter_view(
-                        openscm_name,
+                    self._add_parameter_view(  # type: ignore
+                        o_name,
                         unit=str(value.units),
                         timeseries_type=self._internal_timeseries_conventions[
                             model_name
                         ],
                     )
                 else:
-                    self._add_parameter_view(openscm_name, unit=str(value.units))
+                    self._add_parameter_view(o_name, unit=str(value.units))
             except AttributeError:
-                self._add_parameter_view(openscm_name)
+                self._add_parameter_view(o_name)  # type: ignore
 
         # set a stop time because PH99 model doesn't have one, probably shouldn't do this
         # implicitly...
         self._add_parameter_view("Stop Time")
         if self._parameter_views["Stop Time"].empty:
-            self._parameter_views["Stop Time"].value = (
+            self._parameter_views["Stop Time"].value = (  # type: ignore
                 self._start_time + 500 * self._period_length
             )
 
@@ -154,19 +157,24 @@ class PH99(Adapter):
         view_iterator = self._parameter_views.items()
         view_iterator = sorted(view_iterator, key=lambda s: len(s[0]))
         generic_views = [
-            v for v in view_iterator if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.GENERIC
+            v
+            for v in view_iterator
+            if not isinstance(v[1], dict)
+            and v[1].parameter_type == ParameterType.GENERIC
         ]
         scalar_views_model = [
             v
             for v in view_iterator
-            if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.SCALAR
+            if not isinstance(v[1], dict)
+            and v[1].parameter_type == ParameterType.SCALAR
             and isinstance(v[0], tuple)
             and len(v[0]) > 1
         ]
         scalar_views_openscm = [
             v
             for v in view_iterator
-            if not isinstance(v[1], dict) and v[1].parameter_type == ParameterType.SCALAR
+            if not isinstance(v[1], dict)
+            and v[1].parameter_type == ParameterType.SCALAR
             and (not isinstance(v[0], tuple) or len(v[0]) == 1)
         ]
         scalar_views_openscm = sorted(  # ensure ECS considered before Radiative Forcing 2xCO2
@@ -175,7 +183,8 @@ class PH99(Adapter):
         other_views = [
             v
             for v in view_iterator
-            if isinstance(v[1], dict) or v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
+            if isinstance(v[1], dict)
+            or v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
         ]
         return generic_views + scalar_views_model + scalar_views_openscm + other_views
 
@@ -204,8 +213,9 @@ class PH99(Adapter):
             return self._parameter_views["Start Time"].value
         except ParameterEmptyError:
             v = self._parameter_views[(self.name, "time_start")].value
-            assert int(v) == v, "..."
-            return self._base_time + np.timedelta64(int(v), "s")
+            if int(v) != v:
+                raise ValueError("('PH99', 'time_start') should be an integer")
+            return self._base_time + np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
 
     @property
     def _period_length(self):
@@ -213,8 +223,9 @@ class PH99(Adapter):
             return self._parameter_views["Step Length"].value
         except ParameterEmptyError:
             v = self._parameter_views[(self.name, "timestep")].value
-            assert int(v) == v, "..."
-            return np.timedelta64(int(v), "s")
+            if int(v) != v:
+                raise ValueError("('PH99', 'timestep') should be an integer")
+            return np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
 
     @property
     def _timestep_count(self):
@@ -225,10 +236,7 @@ class PH99(Adapter):
         )  # include self._stop_time
 
     def _timeseries_time_points_require_update(self):
-        try:
-            self._time_points
-            self._time_points_for_averages
-        except AttributeError:
+        if self._time_points is None or self._time_points_for_averages is None:
             return True
 
         names_to_check = ["Start Time", "Stop Time", "Step Length"]
@@ -252,7 +260,9 @@ class PH99(Adapter):
             elif name in self._openscm_standard_parameter_mappings:
                 self._set_model_para_from_openscm_para(name, value, para.unit)
             else:
-                assert name[0] == self.name, "..."
+                if name[0] != self.name:
+                    # emergency valve for now, must be smarter way to handle this
+                    raise ValueError("How did non-PH99 parameter end up here?")
                 setattr(self.model, name[1], value * _unit_registry(para.unit))
 
         except ParameterEmptyError:
@@ -304,8 +314,9 @@ class PH99(Adapter):
     @property
     def _time_start(self):
         v = self.model.time_start.to("s").magnitude
-        assert int(v) == v, "..."
-        return self._base_time + np.timedelta64(int(v), "s")
+        if int(v) != v:
+            raise ValueError("_time_start should be an integer")
+        return self._base_time + np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
 
     @_time_start.setter
     def _time_start(self, v):
@@ -315,8 +326,9 @@ class PH99(Adapter):
     @property
     def _timestep(self):
         v = self.model.timestep.to("s").magnitude
-        assert int(v) == v, "..."
-        return np.timedelta64(int(v), "s")
+        if int(v) != v:
+            raise ValueError("_timestep should be an integer")
+        return np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
 
     @_timestep.setter
     def _timestep(self, v):
@@ -324,8 +336,9 @@ class PH99(Adapter):
 
         pdb.set_trace()
         v = self.model.time_start.to("s").magnitude
-        assert int(v) == v, "..."
-        return self._base_time + np.timedelta64(int(v), "s")
+        if int(v) != v:
+            raise ValueError("_timestep should be an integer")
+        return self._base_time + np.timedelta64(int(v), "s")# pylint: disable=too-many-function-args
 
     @property
     def _emissions(self):
@@ -334,36 +347,6 @@ class PH99(Adapter):
     @_emissions.setter
     def _emissions(self, v):
         self.model.emissions = v
-
-    def _initialize_openscm_standard_parameters(self):
-        start_time = self._parameters.generic("Start Time")
-        if start_time.empty:
-            start_time.value = self._base_time + np.timedelta64(
-                int(self.model.time_start.to("s").magnitude), "s"
-            )
-
-        ecs = self._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC")
-        if ecs.empty:
-            ecs.value = (
-                (self.model.mu * np.log(2) / self.model.alpha)
-                .to("delta_degC")
-                .magnitude
-            )
-        else:
-            self._set_model_parameter(
-                "Equilibrium Climate Sensitivity",
-                ecs.value * _unit_registry("delta_degC"),
-            )
-
-        rf2xco2 = self._parameters.scalar("Radiative Forcing 2xCO2", "W/m^2")
-        if rf2xco2.empty:
-            rf2xco2.value = (
-                (self.model.mu * self._hc_per_m2_approx).to("W/m^2").magnitude
-            )
-        else:
-            self._set_model_parameter(
-                "Radiative Forcing 2xCO2", rf2xco2.value * _unit_registry("W/m^2")
-            )
 
     def _reset(self) -> None:
         if (
@@ -382,7 +365,6 @@ class PH99(Adapter):
         self.model.run()
 
         imap = {v: k for k, v in self._openscm_output_mappings.items()}
-        self._inverse_openscm_standard_parameter_mappings
         for att in dir(self.model):
             # all time parameters captured in parameterset output
             if not att.startswith(("_", "time", "emissions_idx")):
@@ -390,7 +372,7 @@ class PH99(Adapter):
                 if callable(value) or not isinstance(value.magnitude, np.ndarray):
                     continue
 
-                self._output.timeseries(
+                self._output.timeseries(  # type: ignore
                     imap[att],
                     str(value.units),
                     time_points=self._get_time_points(
@@ -415,5 +397,5 @@ class PH99(Adapter):
         self.model.step()
         self._current_time = self._parameters.generic(
             "Start Time"
-        ).value + np.timedelta64(int(self.model.time_current.to("s").magnitude), "s")
+        ).value + np.timedelta64(int(self.model.time_current.to("s").magnitude), "s")  # pylint: disable=too-many-function-args
         # TODO: update output

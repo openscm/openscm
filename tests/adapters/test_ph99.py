@@ -7,7 +7,6 @@ from conftest import assert_pint_equal
 
 from openscm.adapters.ph99 import PH99
 from openscm.core import ParameterSet
-from openscm.core.parameters import ParameterType
 from openscm.core.time import create_time_points
 from openscm.core.units import _unit_registry
 from openscm.errors import ParameterEmptyError
@@ -107,9 +106,8 @@ class TestPH99Adapter(_AdapterTester):
         first_run_conc = output.timeseries(*check_args_conc).values
         first_run_temperature = output.timeseries(*check_args_temperature).values
         test_adapter.reset()
-        # currently failing
-        # assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        # assert output.timeseries(*check_args_temperature).empty
+        assert output.timeseries(*check_args_conc, timeseries_type="average").empty
+        assert output.timeseries(*check_args_temperature).empty
         test_adapter.step()
         test_adapter.step()
         first_two_steps_conc = output.timeseries(
@@ -118,16 +116,14 @@ class TestPH99Adapter(_AdapterTester):
         first_two_steps_temperature = output.timeseries(
             "Surface Temperature Increase", "delta_degC", time_points[:2]
         ).values
-        # currently failing
-        # for some reason accessing the first two elements of a `Timeseries` resets everything to zero
-        # so we require this hack...
-        # np.testing.assert_allclose(np.array(first_run_conc, copy=True)[:2], first_two_steps_conc)
-        # np.testing.assert_allclose(np.array(first_run_temperature, copy=True)[:2], first_two_steps_temperature)
+        np.testing.assert_allclose(first_run_conc[:2], first_two_steps_conc)
+        np.testing.assert_allclose(
+            first_run_temperature[:2], first_two_steps_temperature
+        )
 
         test_adapter.reset()
-        # currently failing
-        # assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        # assert output.timeseries(*check_args_temperature).empty
+        assert output.timeseries(*check_args_conc, timeseries_type="average").empty
+        assert output.timeseries(*check_args_temperature).empty
         test_adapter.run()
         second_run_conc = output.timeseries(*check_args_conc).values
         second_run_temperature = output.timeseries(*check_args_temperature).values
