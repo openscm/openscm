@@ -153,9 +153,8 @@ class TestMyAdapter(_AdapterTester):
         first_run_temperature = output.timeseries(*check_args_temperature).values
 
         test_adapter.reset()
-        # currently failing as we don't reset output to zero
-        assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        assert output.timeseries(*check_args_temperature).empty
+        assert (output.timeseries(*check_args_rf, timeseries_type="average").values < 10**-10).all()
+        assert (output.timeseries(*check_args_temperature).values < 10**-10).all()
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, timeseries_type="average"
@@ -171,13 +170,8 @@ class TestMyAdapter(_AdapterTester):
             test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
         )
 
-        time_points = np.array(
-            [
-                np.datetime64("{}-01-01".format(y))
-                .astype("datetime64[s]")
-                .astype(float)
-                for y in range(2010, 2091, 10)
-            ]
+        time_points = create_time_points(
+            test_adapter._start_time, test_adapter._period_length, test_adapter._timestep_count, "point"
         )
         check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2", time_points]
         check_args_temperature = [
@@ -191,16 +185,19 @@ class TestMyAdapter(_AdapterTester):
 
         test_adapter.reset()
         test_adapter.run()
-        first_run_rf = output.timeseries(
-            *check_args_rf, timeseries_type="average"
-        ).values
-        first_run_temperature = output.timeseries(*check_args_temperature).values
+        # why is this copying required?
+        first_run_rf = np.copy(output.timeseries(
+                    *check_args_rf, timeseries_type="average"
+                ).values)
+        first_run_temperature = np.copy(output.timeseries(*check_args_temperature).values)
+
         test_adapter.reset()
-        # currently failing as we don't reset output to zero
-        assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        assert output.timeseries(*check_args_temperature).empty
+        assert (output.timeseries(*check_args_rf, timeseries_type="average").values[1:] < 10**-10).all()
+        assert (output.timeseries(*check_args_temperature).values[1:] < 10**-10).all()
+
         test_adapter.step()
         test_adapter.step()
+
         first_two_steps_rf = output.timeseries(
             ("Radiative Forcing", "CO2"),
             "W/m^2",
@@ -210,19 +207,16 @@ class TestMyAdapter(_AdapterTester):
         first_two_steps_temperature = output.timeseries(
             "Surface Temperature Increase", "delta_degC", time_points[:2]
         ).values
-        # currently failing
-        # for some reason accessing the first two elements of a `Timeseries` resets everything to zero
         np.testing.assert_allclose(first_run_rf[:2], first_two_steps_rf)
         np.testing.assert_allclose(
             first_run_temperature[:2], first_two_steps_temperature
         )
-        # so we require this hack...
-        # np.testing.assert_allclose(np.array(first_run_temperature, copy=True)[:2], first_two_steps_temperature)
 
         test_adapter.reset()
-        # currently failing
-        assert output.timeseries(*check_args_rf, timeseries_type="average").empty
-        assert output.timeseries(*check_args_temperature).empty
+
+        assert (output.timeseries(*check_args_rf, timeseries_type="average").values[1:] < 10**-10).all()
+        assert (output.timeseries(*check_args_temperature).values[1:] < 10**-10).all()
+
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, timeseries_type="average"
@@ -259,17 +253,17 @@ class TestMyAdapter(_AdapterTester):
             parameters.scalar(("DICE", "t2xco2"), "delta_degC").value == ecs_magnitude
         )
 
-        # currently failing as we don't write parameters into output
+        # double check the model didn't do anything funky
         assert (
-            output_parameters.scalar(
+            parameters.scalar(
                 "Equilibrium Climate Sensitivity", "delta_degC"
             ).value
             == ecs_magnitude
         )
-        assert output_parameters.generic("Start Time").value == np.datetime64(
+        assert parameters.generic("Start Time").value == np.datetime64(
             "1850-01-01"
         )
-        assert output_parameters.generic("Stop Time").value == np.datetime64(
+        assert parameters.generic("Stop Time").value == np.datetime64(
             "2100-01-01"
         )
 
