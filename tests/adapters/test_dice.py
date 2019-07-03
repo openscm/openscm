@@ -153,8 +153,11 @@ class TestMyAdapter(_AdapterTester):
         first_run_temperature = output.timeseries(*check_args_temperature).values
 
         test_adapter.reset()
-        assert (output.timeseries(*check_args_rf, timeseries_type="average").values < 10**-10).all()
-        assert (output.timeseries(*check_args_temperature).values < 10**-10).all()
+        assert (
+            output.timeseries(*check_args_rf, timeseries_type="average").values
+            < 10 ** -10
+        ).all()
+        assert (output.timeseries(*check_args_temperature).values < 10 ** -10).all()
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, timeseries_type="average"
@@ -171,7 +174,10 @@ class TestMyAdapter(_AdapterTester):
         )
 
         time_points = create_time_points(
-            test_adapter._start_time, test_adapter._period_length, test_adapter._timestep_count, "point"
+            test_adapter._start_time,
+            test_adapter._period_length,
+            test_adapter._timestep_count,
+            "point",
         )
         check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2", time_points]
         check_args_temperature = [
@@ -186,14 +192,19 @@ class TestMyAdapter(_AdapterTester):
         test_adapter.reset()
         test_adapter.run()
         # why is this copying required?
-        first_run_rf = np.copy(output.timeseries(
-                    *check_args_rf, timeseries_type="average"
-                ).values)
-        first_run_temperature = np.copy(output.timeseries(*check_args_temperature).values)
+        first_run_rf = np.copy(
+            output.timeseries(*check_args_rf, timeseries_type="average").values
+        )
+        first_run_temperature = np.copy(
+            output.timeseries(*check_args_temperature).values
+        )
 
         test_adapter.reset()
-        assert (output.timeseries(*check_args_rf, timeseries_type="average").values[1:] < 10**-10).all()
-        assert (output.timeseries(*check_args_temperature).values[1:] < 10**-10).all()
+        assert (
+            output.timeseries(*check_args_rf, timeseries_type="average").values[1:]
+            < 10 ** -10
+        ).all()
+        assert (output.timeseries(*check_args_temperature).values[1:] < 10 ** -10).all()
 
         test_adapter.step()
         test_adapter.step()
@@ -214,8 +225,11 @@ class TestMyAdapter(_AdapterTester):
 
         test_adapter.reset()
 
-        assert (output.timeseries(*check_args_rf, timeseries_type="average").values[1:] < 10**-10).all()
-        assert (output.timeseries(*check_args_temperature).values[1:] < 10**-10).all()
+        assert (
+            output.timeseries(*check_args_rf, timeseries_type="average").values[1:]
+            < 10 ** -10
+        ).all()
+        assert (output.timeseries(*check_args_temperature).values[1:] < 10 ** -10).all()
 
         test_adapter.run()
         second_run_rf = output.timeseries(
@@ -228,7 +242,6 @@ class TestMyAdapter(_AdapterTester):
 
     def test_openscm_standard_parameters_handling(self, test_adapter):
         parameters = test_adapter._parameters
-        output_parameters = test_adapter._output
 
         parameters.generic("Start Time").value = np.datetime64("1850-01-01")
         parameters.generic("Stop Time").value = np.datetime64("2100-01-01")
@@ -255,17 +268,11 @@ class TestMyAdapter(_AdapterTester):
 
         # double check the model didn't do anything funky
         assert (
-            parameters.scalar(
-                "Equilibrium Climate Sensitivity", "delta_degC"
-            ).value
+            parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value
             == ecs_magnitude
         )
-        assert parameters.generic("Start Time").value == np.datetime64(
-            "1850-01-01"
-        )
-        assert parameters.generic("Stop Time").value == np.datetime64(
-            "2100-01-01"
-        )
+        assert parameters.generic("Start Time").value == np.datetime64("1850-01-01")
+        assert parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
 
     def prepare_run_input(self, test_adapter, start_time, stop_time):
         test_adapter._parameters.generic("Start Time").value = start_time
