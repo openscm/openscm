@@ -398,8 +398,8 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             Lengths of set value and the time points number mismatch
         """
         self._read()
-        if self._timeseries is None:
-            self._timeseries = _Timeseries(self._data, self)
+        # if self._timeseries is None:  # @swillner I've broken the logic here somehow
+        #     self._timeseries = _Timeseries(self._data, self)
         return self._timeseries
 
     @values.setter

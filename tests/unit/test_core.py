@@ -690,9 +690,6 @@ def test_timeseries_view_requests():
     # time points
     assert v1 is None
 
-    with pytest.raises(ParameterEmptyError):
-        v1.values
-
     with pytest.raises(DimensionalityError):
         # now requesting a view with unit conflict causes error
         p.timeseries(
@@ -730,7 +727,7 @@ def test_timeseries_view_requests():
             'day',
             tp_no_overlap,
             timeseries_type="point",
-        )
+        ).values
 
 
 def test_timeseries_view_only_checks_overlap_on_request():
