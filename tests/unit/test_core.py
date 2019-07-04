@@ -675,3 +675,59 @@ def test_view_units(view_type):
         assert (v2.values == v1.values * 1000).all()
 
     assert v2.unit == b_unit
+
+
+def test_timeseries_view_requests():
+    p = ParameterSet()
+
+    v1 = p.timeseries(
+        'example',
+        's',
+        timeseries_type="point"
+    )
+    # no timepoints specified so return None as you can't do e.g. `.values` without
+    # time points
+    assert v1 is None
+
+    with pytest.raises(ParameterEmptyError):
+        v1.values
+
+    with pytest.raises(DimensionalityError):
+        # now requesting a view with unit conflict causes error
+        p.timeseries(
+            'example',
+            'kg',
+            timeseries_type="point"
+        )
+
+    with pytest.raises(ParameterTypeError):
+        # at least until we get the point <-> average conversion working
+        p.timeseries(
+            'example',
+            's',
+            timeseries_type="average"
+        )
+
+    tph = create_time_points(
+        np.datetime64("2000-01-01"),
+        np.timedelta64(365, "D"),
+        3,
+        "point",
+    )
+    v2 = p.timeseries(
+        'example',
+        'day',
+        tph,
+        timeseries_type="point",
+    )
+    v2.values = np.array([1, 2, 3])
+
+    tp_no_overlap = tph + np.timedelta64(3000, "D")
+    # should raise some error, need to double check which
+    p.timeseries(
+        'example',
+        'day',
+        tp_no_overlap,
+        timeseries_type="point",
+    )
+    assert False
