@@ -343,12 +343,10 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             )
 
     def _read(self):
-        if self._data is None:
+        if self._data is None or self._version != self._parameter.version:
             self._data = self._get_values()
             self._version = self._parameter.version
-        elif self._version != self._parameter.version:
-            np.copyto(self._data, self._get_values())
-            self._version = self._parameter.version
+            self._timeseries = _Timeseries(self._data, self)
 
     def _check_write(self):
         if not self._writable:
@@ -420,6 +418,27 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         else:
             np.copyto(self._data, np.asarray(v))
         self._write()
+
+    @property
+    def timepoints(self) -> np.ndarray:
+        """
+        Time points of this view
+        """
+        return np.array(self._timeseries_converter._target).astype(np.datetime64, copy=True)
+
+    @timepoints.setter
+    def timepoints(self, v: np.ndarray) -> None:
+        """
+        Time points of this view
+        """
+        self._timeseries_converter = TimeseriesConverter(
+            self._parameter.time_points,
+            v,
+            self._timeseries_converter._timeseries_type,
+            self._timeseries_converter._interpolation_type,
+            self._timeseries_converter._extrapolation_type,
+        )
+        self._version -= 1
 
     @property
     def unit(self) -> Optional[str]:

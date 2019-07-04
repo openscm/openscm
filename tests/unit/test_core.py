@@ -810,6 +810,7 @@ def test_timeseries_view_timepoints():
         's',
         tp1,
     )
+    np.testing.assert_array_equal(view.timepoints, tp1)
     np.testing.assert_array_equal(view.values, np.arange(len(tp1)))
 
     view.timepoints = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)])
