@@ -10,6 +10,7 @@ from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 from openscm.errors import (
     DimensionalityError,
+    InsufficientDataError,
     ParameterAggregationError,
     ParameterEmptyError,
     ParameterReadError,
@@ -723,11 +724,72 @@ def test_timeseries_view_requests():
     v2.values = np.array([1, 2, 3])
 
     tp_no_overlap = tph + np.timedelta64(3000, "D")
-    # should raise some error, need to double check which
-    p.timeseries(
+    with pytest.raises(InsufficientDataError):
+        p.timeseries(
+            'example',
+            'day',
+            tp_no_overlap,
+            timeseries_type="point",
+        )
+
+
+def test_timeseries_view_only_checks_overlap_on_request():
+    p = ParameterSet()
+
+    tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
+    v1 = p.timeseries(
         'example',
-        'day',
-        tp_no_overlap,
-        timeseries_type="point",
+        's',
+        tp1,
     )
-    assert False
+
+    tp2 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1900, 2051)])
+    v2 = p.timeseries(
+        'example',
+        's',
+        tp2,
+    )
+
+    tp3 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1800, 2301)])
+    v3 = p.timeseries(
+        'example',
+        's',
+        tp3,
+    )
+    v3.values = np.arange(len(tp3))
+    np.testing.assert_array_equal(v1.values, np.arange(200, 301))
+    np.testing.assert_array_equal(v2.values, np.arange(100, 251))
+
+    tp4 = tp3 - np.timedelta64(3650, "D")
+    v4 = p.timeseries(
+        'example',
+        's',
+        tp4,
+    )
+    with pytest.raises(InsufficientDataError):
+        v4.values
+
+    # works with extrapolation
+    v4_extrap = p.timeseries(
+        'example',
+        's',
+        tp4,
+        extrapolation="constant"
+    )
+    np.testing.assert_array_equal(v4_extrap.values, np.arange(100, 250))
+
+    # setting values again overwrites time points too
+    v4.values = np.arange(len(tp4))
+
+    # now v3 won't work cause it doesn't overlap
+    with pytest.raises(InsufficientDataError):
+        v3.values
+
+    # with extrapolation all works again
+    v3_extrap = p.timeseries(
+        'example',
+        's',
+        tp3,
+        extrapolation="linear"
+    )
+    np.testing.assert_array_equal(v3_extrap.values, np.arange(100, 250))
