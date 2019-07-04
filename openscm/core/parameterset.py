@@ -246,7 +246,7 @@ class ParameterSet:
                 extrapolation,
             )  # TimeseriesView
 
-        return None  # no time points so can't get values anyway
+        return None  # no time points so can't get values
 
     def generic(
         self, name: HierarchicalName, region: HierarchicalName = ("World",)
