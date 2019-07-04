@@ -259,11 +259,23 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
     write)?
     """
 
+    _interpolation_type: InterpolationType
+    """Interpolation to use on the view"""
+
+    _extrapolation_type: ExtrapolationType
+    """Extrapolation to use on the view"""
+
+    _time_points: np.ndarray
+    """Time points of this view"""
+
     _timeseries: Optional[_Timeseries]
     """Time series handler"""
 
-    _timeseries_converter: TimeseriesConverter
+    _timeseries_converter: Optional[TimeseriesConverter]
     """Timeseries converter"""
+
+    _timeseries_type: ParameterType
+    """Timeseries type of view"""
 
     _unit_converter: UnitConverter
     """Unit converter"""
@@ -303,62 +315,48 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         """
         super().__init__(parameter)
         self._unit_converter = UnitConverter(cast(str, parameter.unit), unit)
-        self._timeseries_converter = TimeseriesConverter(
-            parameter.time_points,
-            time_points,
-            timeseries_type,
-            interpolation_type,
-            extrapolation_type,
-        )
+        self._timeseries_converter = None
+        self._timeseries_type = timeseries_type
+        self._interpolation_type = interpolation_type
+        self._extrapolation_type = extrapolation_type
         self._data = None
         self._locked = False
         self._timeseries = None
+        self._version = 0
         self._writable = False
 
-        def get_data_views_for_children_or_parameter(
-            parameter: _Parameter
-        ) -> Sequence["TimeseriesView"]:
-            if parameter.children:
-                return sum(
-                    (
-                        get_data_views_for_children_or_parameter(p)
-                        for p in parameter.children.values()
-                    ),
-                    [],
-                )
-            return [
-                TimeseriesView(
-                    parameter,
-                    self._unit_converter.target,
-                    self._timeseries_converter._target,  # pylint: disable=protected-access
-                    timeseries_type,
-                    interpolation_type,
-                    extrapolation_type,
-                )
-            ]
-
-        if self._parameter.children:
-            self._child_data_views = get_data_views_for_children_or_parameter(
-                self._parameter
-            )
+        self.time_points = time_points
 
     def _read(self):
         if self._data is None or self._version != self._parameter.version:
+            self._timeseries_converter = TimeseriesConverter(
+                self._parameter.time_points,
+                self._time_points,
+                self._timeseries_type,
+                self._interpolation_type,
+                self._extrapolation_type,
+            )
             self._data = self._get_values()
             self._version = self._parameter.version
             self._timeseries = _Timeseries(self._data, self)
 
     def _check_write(self):
-        if not self._writable:
-            self._parameter.attempt_write(
-                self._timeseries_converter._timeseries_type,
-                self._unit_converter.target,
-                self._timeseries_converter._target,
-            )
-            self._writable = True
+        self._parameter.attempt_write(
+            self._timeseries_type,
+            self._unit_converter.target,
+            self._time_points,
+        )
+        self._writable = True
 
     def _write(self):
         if not self._locked:
+            self._timeseries_converter = TimeseriesConverter(
+                self._parameter.time_points,
+                self._time_points,
+                self._timeseries_type,
+                self._interpolation_type,
+                self._extrapolation_type,
+            )
             self._parameter.data = self._timeseries_converter.convert_to(
                 self._unit_converter.convert_to(self._data)
             )
@@ -409,7 +407,15 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         """
         Value of the full timeseries
         """
+        self._parameter.parameter_type = None
         self._check_write()
+        self._timeseries_converter = TimeseriesConverter(
+            self._parameter.time_points,
+            self._time_points,
+            self._timeseries_type,
+            self._interpolation_type,
+            self._extrapolation_type,
+        )
         if len(v) != self._timeseries_converter.target_length:
             raise TimeseriesPointsValuesMismatchError
         if self._data is None:
@@ -420,25 +426,46 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         self._write()
 
     @property
-    def timepoints(self) -> np.ndarray:
+    def time_points(self) -> np.ndarray:
         """
         Time points of this view
         """
-        return np.array(self._timeseries_converter._target).astype(np.datetime64, copy=True)
+        return self._time_points
 
-    @timepoints.setter
-    def timepoints(self, v: np.ndarray) -> None:
+    @time_points.setter
+    def time_points(self, v: np.ndarray) -> None:
         """
         Time points of this view
         """
-        self._timeseries_converter = TimeseriesConverter(
-            self._parameter.time_points,
-            v,
-            self._timeseries_converter._timeseries_type,
-            self._timeseries_converter._interpolation_type,
-            self._timeseries_converter._extrapolation_type,
-        )
+        self._time_points = v
         self._version -= 1
+
+        def get_data_views_for_children_or_parameter(
+            parameter: _Parameter
+        ) -> Sequence["TimeseriesView"]:
+            if parameter.children:
+                return sum(
+                    (
+                        get_data_views_for_children_or_parameter(p)
+                        for p in parameter.children.values()
+                    ),
+                    [],
+                )
+            return [
+                TimeseriesView(
+                    parameter,
+                    self._unit_converter.target,
+                    self._time_points,
+                    self._timeseries_type,
+                    self._interpolation_type,
+                    self._extrapolation_type,
+                )
+            ]
+
+        if self._parameter.children:
+            self._child_data_views = get_data_views_for_children_or_parameter(
+                self._parameter
+            )
 
     @property
     def unit(self) -> Optional[str]:

@@ -757,10 +757,11 @@ def test_timeseries_view_only_checks_overlap_on_request():
         tp3,
     )
     v3.values = np.arange(len(tp3))
+
     np.testing.assert_array_equal(v1.values, np.arange(200, 301))
     np.testing.assert_array_equal(v2.values, np.arange(100, 251))
 
-    tp4 = tp3 - np.timedelta64(3650, "D")
+    tp4 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1790, 2291)])
     v4 = p.timeseries(
         'example',
         's',
@@ -776,7 +777,7 @@ def test_timeseries_view_only_checks_overlap_on_request():
         tp4,
         extrapolation="constant"
     )
-    np.testing.assert_array_equal(v4_extrap.values, np.arange(100, 250))
+    np.testing.assert_array_equal(v4_extrap.values, np.concatenate([[0] * 10, np.arange(491)]))
 
     # setting values again overwrites time points too
     v4.values = np.arange(len(tp4))
@@ -792,10 +793,14 @@ def test_timeseries_view_only_checks_overlap_on_request():
         tp3,
         extrapolation="linear"
     )
-    np.testing.assert_array_equal(v3_extrap.values, np.arange(100, 250))
+    np.testing.assert_allclose(
+        v3_extrap.values,
+        np.arange(10, 511),
+        rtol=2*1e-5  # not perfect as a year is not always 365 days
+    )
 
 
-def test_timeseries_view_timepoints():
+def test_timeseries_view_time_points():
     p = ParameterSet()
 
     tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
@@ -810,8 +815,8 @@ def test_timeseries_view_timepoints():
         's',
         tp1,
     )
-    np.testing.assert_array_equal(view.timepoints, tp1)
+    np.testing.assert_array_equal(view.time_points, tp1)
     np.testing.assert_array_equal(view.values, np.arange(len(tp1)))
 
-    view.timepoints = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)])
+    view.time_points = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)])
     np.testing.assert_array_equal(view.values, np.arange(20, 31))
