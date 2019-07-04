@@ -793,3 +793,24 @@ def test_timeseries_view_only_checks_overlap_on_request():
         extrapolation="linear"
     )
     np.testing.assert_array_equal(v3_extrap.values, np.arange(100, 250))
+
+
+def test_timeseries_view_timepoints():
+    p = ParameterSet()
+
+    tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
+    p.timeseries(
+        'example',
+        's',
+        tp1,
+    ).values = np.arange(len(tp1))
+
+    view = p.timeseries(
+        'example',
+        's',
+        tp1,
+    )
+    np.testing.assert_array_equal(view.values, np.arange(len(tp1)))
+
+    view.timepoints = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)])
+    np.testing.assert_array_equal(view.values, np.arange(20, 31))
