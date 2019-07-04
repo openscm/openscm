@@ -267,18 +267,18 @@ class DICE(Adapter):
         v.b32 = v.b23.value * v.mueq.value / v.mleq.value
         v.b33 = 1 - v.b32
 
-        v.mat.values = np.empty(self._timestep_count)
+        v.mat.values = np.full(self._timestep_count, np.nan)
         v.mat.values[0] = v.mat0.value
-        v.ml.values = np.empty(self._timestep_count)
+        v.ml.values = np.full(self._timestep_count, np.nan)
         v.ml.values[0] = v.ml0.value
-        v.mu.values = np.empty(self._timestep_count)
+        v.mu.values = np.full(self._timestep_count, np.nan)
         v.mu.values[0] = v.mu0.value
-        v.tatm.values = np.empty(self._timestep_count)
+        v.tatm.values = np.full(self._timestep_count, np.nan)
         v.tatm.values[0] = v.tatm0.value
-        v.tocean.values = np.empty(self._timestep_count)
+        v.tocean.values = np.full(self._timestep_count, np.nan)
         v.tocean.values[0] = v.tocean0.value
 
-        v.forc.values = np.empty(self._timestep_count)
+        v.forc.values = np.full(self._timestep_count, np.nan)
         v.forc.values[0] = (
             v.fco22x.value * log2(v.mat0.value / v.mateq.value) + v.fex0.value
         )

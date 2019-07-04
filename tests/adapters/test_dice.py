@@ -153,11 +153,10 @@ class TestMyAdapter(_AdapterTester):
         first_run_temperature = output.timeseries(*check_args_temperature).values
 
         test_adapter.reset()
-        assert (
+        assert np.isnan(
             output.timeseries(*check_args_rf, timeseries_type="average").values
-            < 10 ** -10
         ).all()
-        assert (output.timeseries(*check_args_temperature).values < 10 ** -10).all()
+        assert np.isnan(output.timeseries(*check_args_temperature).values).all()
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, timeseries_type="average"
@@ -200,13 +199,14 @@ class TestMyAdapter(_AdapterTester):
         )
 
         test_adapter.reset()
-        assert (
+        assert np.isnan(
             output.timeseries(*check_args_rf, timeseries_type="average").values[1:]
-            < 10 ** -10
         ).all()
-        assert (output.timeseries(*check_args_temperature).values[1:] < 10 ** -10).all()
+        assert np.isnan(output.timeseries(*check_args_temperature).values[1:]).all()
 
         test_adapter.step()
+        test_adapter.step()
+        # need this so average over first two time points has no nans
         test_adapter.step()
 
         first_two_steps_rf = output.timeseries(
@@ -224,12 +224,10 @@ class TestMyAdapter(_AdapterTester):
         )
 
         test_adapter.reset()
-
-        assert (
+        assert np.isnan(
             output.timeseries(*check_args_rf, timeseries_type="average").values[1:]
-            < 10 ** -10
         ).all()
-        assert (output.timeseries(*check_args_temperature).values[1:] < 10 ** -10).all()
+        assert np.isnan(output.timeseries(*check_args_temperature).values[1:]).all()
 
         test_adapter.run()
         second_run_rf = output.timeseries(
