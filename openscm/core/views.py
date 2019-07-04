@@ -342,9 +342,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
 
     def _check_write(self):
         self._parameter.attempt_write(
-            self._timeseries_type,
-            self._unit_converter.target,
-            self._time_points,
+            self._timeseries_type, self._unit_converter.target, self._time_points
         )
         self._writable = True
 
@@ -373,7 +371,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
 
         return cast(
             Sequence[float],
-            self._timeseries_converter.convert_from(
+            self._timeseries_converter.convert_from(  # type: ignore
                 self._unit_converter.convert_from(
                     cast(Sequence[float], self._parameter.data)
                 )
@@ -400,7 +398,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         self._read()
         # if self._timeseries is None:  # @swillner I've broken the logic here somehow
         #     self._timeseries = _Timeseries(self._data, self)
-        return self._timeseries
+        return cast(_Timeseries, self._timeseries)
 
     @values.setter
     def values(self, v: np.ndarray) -> None:
@@ -479,7 +477,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         """
         Length of timeseries
         """
-        return self._timeseries_converter.target_length
+        return self._timeseries_converter.target_length  # type: ignore
 
     def __str__(self) -> str:
         """

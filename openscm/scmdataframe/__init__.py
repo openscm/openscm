@@ -156,7 +156,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                 region=region,
                 timeseries_type=para_type,
             )
-            data.append(ts.values)
+            data.append(ts.values)  # type: ignore
             metadata["variable"].append(parameter_name_to_scm(param_name))
             metadata["region"].append(parameter_name_to_scm(region))
             metadata["unit"].append(cast(str, p_info.unit))

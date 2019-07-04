@@ -514,7 +514,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
                 delta_t = time_points[-1] - time_points[-2]
                 time_points = np.concatenate((time_points, [time_points[-1] + delta_t]))
 
-            parameterset.timeseries(
+            parameterset.timeseries(  # type: ignore
                 variable,
                 unit,
                 time_points,

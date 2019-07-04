@@ -1,11 +1,10 @@
 """
 Bundling parameters in a parameter set.
 """
-from typing import cast, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
-from ..errors import ParameterTypeError
 from .parameters import (
     HIERARCHY_SEPARATOR,
     HierarchicalName,
@@ -182,7 +181,7 @@ class ParameterSet:
         timeseries_type: Union[ParameterType, str] = ParameterType.POINT_TIMESERIES,
         interpolation: Union[InterpolationType, str] = InterpolationType.LINEAR,
         extrapolation: Union[ExtrapolationType, str] = ExtrapolationType.NONE,
-    ) -> TimeseriesView:
+    ) -> Optional[TimeseriesView]:
         """
         Get a view to a timeseries parameter.
 
@@ -223,11 +222,13 @@ class ParameterSet:
 
         if parameter.unit is not None:
             # check conversion can be done
-            UnitConverter(cast(str, parameter.unit), unit)
+            UnitConverter(parameter.unit, unit)
 
         if time_points is None:
             # fill with junk as can be overwritten later anyway
-            _time_points = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1990, 1995)])
+            _time_points = np.array(
+                [np.datetime64("{}-01-01".format(y)) for y in range(1990, 1995)]
+            )
         else:
             _time_points = time_points
 
@@ -237,7 +238,12 @@ class ParameterSet:
         parameter.attempt_read(timeseries_type, unit, _time_points)
         if time_points is not None:
             return TimeseriesView(
-                parameter, unit, time_points, timeseries_type, interpolation, extrapolation
+                parameter,
+                unit,
+                time_points,
+                timeseries_type,
+                interpolation,
+                extrapolation,
             )  # TimeseriesView
 
         return None  # no time points so can't get values anyway
