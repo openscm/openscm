@@ -110,7 +110,7 @@ class Adapter(metaclass=ABCMeta):
         elif timeseries_type is None:
             p = self._parameters.scalar(full_name, unit, region=region)  # type: ignore
         else:
-            p = self._parameters.timeseries(
+            p = self._parameters.timeseries(  # type: ignore
                 full_name, unit, region=region, timeseries_type=timeseries_type
             )
 
@@ -168,13 +168,10 @@ class Adapter(metaclass=ABCMeta):
         update_time_points = self._timeseries_time_points_require_update()
         for name, view in self._get_view_iterator():
             pv = self._parameter_views[name]
-            update_time = (
-                pv.parameter_type in (
-                    ParameterType.POINT_TIMESERIES,
-                    ParameterType.AVERAGE_TIMESERIES,
-                )
-                and (update_time_points or pv.empty)
-            )
+            update_time = pv.parameter_type in (
+                ParameterType.POINT_TIMESERIES,
+                ParameterType.AVERAGE_TIMESERIES,
+            ) and (update_time_points or pv.empty)
             if update_time:
                 current_view = self._parameter_views[name]
                 unit = current_view.unit
@@ -191,12 +188,8 @@ class Adapter(metaclass=ABCMeta):
                     extrapolation="none",
                 )
 
-            update_para = (
-                not self._parameter_views[name].empty
-                and (
-                    self._parameter_versions[name] < view.version
-                    or update_time
-                )
+            update_para = not self._parameter_views[name].empty and (
+                self._parameter_versions[name] < view.version or update_time
             )
             if update_para:
                 if isinstance(name, tuple) and name[0] == self.name:
