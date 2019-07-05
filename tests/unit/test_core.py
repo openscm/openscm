@@ -687,6 +687,7 @@ def test_timeseries_view_requests():
     assert v1.unit == "s"
     assert v1.region == ("World",)
     assert v1.parameter_type == ParameterType.from_timeseries_type("point")
+    assert v1.empty
     with pytest.raises(AttributeError):
         v1.values
 

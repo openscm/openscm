@@ -110,30 +110,19 @@ class Adapter(metaclass=ABCMeta):
         elif timeseries_type is None:
             p = self._parameters.scalar(full_name, unit, region=region)  # type: ignore
         else:
-            # we can't yet 'reserve' timeseries units (see #178) so set to dict
-            # instead
-            p = {  # type: ignore
-                "unit": unit,
-                "region": region,
-                "timeseries_type": timeseries_type,
-            }
-            # # this is how I think this should work
-            # p = self._parameters.timeseries(
-            #     full_name, unit, region=region, timeseries_type=timeseries_type
-            # )
+            p = self._parameters.timeseries(
+                full_name, unit, region=region, timeseries_type=timeseries_type
+            )
 
         self._parameter_views[full_name] = p
-        if isinstance(p, dict):
-            self._parameter_versions[full_name] = 0
-        else:
-            if value is not None and (p.empty or overwrite):
-                # match parameterview to value
-                self._set_parameter_value(p, value)
-            elif not p.empty and (time_points is not None or timeseries_type is None):
-                # match model to parameter view
-                self._update_model(full_name, p)
+        if value is not None and (p.empty or overwrite):
+            # match parameterview to value
+            self._set_parameter_value(p, value)
+        elif not p.empty and (time_points is not None or timeseries_type is None):
+            # match model to parameter view
+            self._update_model(full_name, p)
 
-            self._parameter_versions[full_name] = p.version
+        self._parameter_versions[full_name] = p.version
 
     @staticmethod  # should we unify setters?
     def _set_parameter_value(p, value):
@@ -179,26 +168,18 @@ class Adapter(metaclass=ABCMeta):
         update_time_points = self._timeseries_time_points_require_update()
         for name, view in self._get_view_iterator():
             pv = self._parameter_views[name]
-            update_time = isinstance(pv, dict) or (
-                update_time_points
-                and (
-                    pv.parameter_type
-                    in (
-                        ParameterType.POINT_TIMESERIES,
-                        ParameterType.AVERAGE_TIMESERIES,
-                    )
+            update_time = (
+                pv.parameter_type in (
+                    ParameterType.POINT_TIMESERIES,
+                    ParameterType.AVERAGE_TIMESERIES,
                 )
+                and (update_time_points or pv.empty)
             )
             if update_time:
-                if isinstance(pv, dict):
-                    unit = pv["unit"]
-                    region = pv["region"]
-                    timeseries_type = pv["timeseries_type"]
-                else:
-                    current_view = self._parameter_views[name]
-                    unit = current_view.unit
-                    region = current_view.region
-                    timeseries_type = current_view.parameter_type
+                current_view = self._parameter_views[name]
+                unit = current_view.unit
+                region = current_view.region
+                timeseries_type = current_view.parameter_type
 
                 self._parameter_views[name] = self._parameters.timeseries(
                     name,
@@ -209,10 +190,13 @@ class Adapter(metaclass=ABCMeta):
                     interpolation="linear",  # TODO: take these from ParameterSet
                     extrapolation="none",
                 )
+
             update_para = (
-                isinstance(pv, dict)
-                or self._parameter_versions[name] < view.version
-                or update_time
+                not self._parameter_views[name].empty
+                and (
+                    self._parameter_versions[name] < view.version
+                    or update_time
+                )
             )
             if update_para:
                 if isinstance(name, tuple) and name[0] == self.name:
