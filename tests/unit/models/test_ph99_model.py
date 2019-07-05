@@ -9,7 +9,7 @@ from openscm.core.units import _unit_registry
 from openscm.errors import OutOfBoundsError, OverwriteError
 from openscm.models import PH99Model
 
-ONE_YEAR = 1 * _unit_registry.year.to("s")
+ONE_YEAR = (1 * _unit_registry.year).to("s")
 
 
 @pytest.fixture(scope="function")
