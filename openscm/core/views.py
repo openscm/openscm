@@ -154,6 +154,18 @@ class _ParameterView(ParameterInfo):
     _version: int
     """Version of cache"""
 
+    def __init__(self, parameter: _Parameter):
+        """
+        Initialize.
+
+        Parameters
+        ----------
+        parameter
+            Parameter
+        """
+        super().__init__(parameter)
+        self._version = 0
+
     @property
     def outdated(self) -> bool:
         """

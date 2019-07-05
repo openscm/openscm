@@ -786,6 +786,7 @@ def test_outdated(view_type):
         # should we just make this `.value` too?
         view.values = np.array([0, 1, 2])
 
+    assert view._version == 0
     assert not view.outdated
 
     if view_type == "generic":
