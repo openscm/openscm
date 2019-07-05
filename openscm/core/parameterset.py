@@ -181,7 +181,7 @@ class ParameterSet:
         timeseries_type: Union[ParameterType, str] = ParameterType.POINT_TIMESERIES,
         interpolation: Union[InterpolationType, str] = InterpolationType.LINEAR,
         extrapolation: Union[ExtrapolationType, str] = ExtrapolationType.NONE,
-    ) -> Optional[TimeseriesView]:
+    ) -> Union[ParameterInfo, TimeseriesView]:
         """
         Get a view to a timeseries parameter.
 
@@ -246,7 +246,7 @@ class ParameterSet:
                 extrapolation,
             )  # TimeseriesView
 
-        return None  # no time points so can't get values
+        return ParameterInfo(parameter)  # no time points so can't get values
 
     def generic(
         self, name: HierarchicalName, region: HierarchicalName = ("World",)

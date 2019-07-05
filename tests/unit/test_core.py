@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from openscm import OpenSCM
-from openscm.core.parameters import ParameterType
+from openscm.core.parameters import ParameterInfo, ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 from openscm.errors import (
@@ -682,9 +682,13 @@ def test_timeseries_view_requests():
     p = ParameterSet()
 
     v1 = p.timeseries("example", "s", timeseries_type="point")
-    # no timepoints specified so return None as you can't do e.g. `.values` without
-    # time points
-    assert v1 is None
+    # no timepoints specified so return ParameterInfo
+    assert isinstance(v1, ParameterInfo)
+    assert v1.unit == "s"
+    assert v1.region == ("World",)
+    assert v1.parameter_type == ParameterType.from_timeseries_type("point")
+    with pytest.raises(AttributeError):
+        v1.values
 
     with pytest.raises(DimensionalityError):
         # now requesting a view with unit conflict causes error
