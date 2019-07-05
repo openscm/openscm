@@ -167,9 +167,9 @@ class PH99(AdapterConstantTimestep):
         if isinstance(st, float):
             if int(st) != st:
                 raise ValueError("('PH99', 'time_start') should be an integer")
-            diff = np.timedelta64(
+            diff = np.timedelta64(  # pylint: disable=too-many-function-args
                 int(st), "s"
-            )  # pylint: disable=too-many-function-args
+            )
             return self._base_time + diff
         return st
 
@@ -179,9 +179,9 @@ class PH99(AdapterConstantTimestep):
         if isinstance(pl, float):
             if int(pl) != pl:
                 raise ValueError("('PH99', 'timestep') should be an integer")
-            return np.timedelta64(
+            return np.timedelta64(  # pylint: disable=too-many-function-args
                 int(pl), "s"
-            )  # pylint: disable=too-many-function-args
+            )
         return pl
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
