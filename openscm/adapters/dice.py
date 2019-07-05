@@ -10,7 +10,6 @@ http://www.econ.yale.edu/~nordhaus/homepage/homepage/DICE2016R-091916ap.gms
 This implementation follows the original DICE code closely, especially regarding
 variable naming. Original comments are marked by "Original:".
 """
-
 from collections import namedtuple
 from math import log2
 from typing import Any, Dict, Tuple, Union

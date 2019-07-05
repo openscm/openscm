@@ -186,6 +186,7 @@ class _Parameter:
         ParameterReadError
             If the child parameter would need to be added, but this parameter has
             already been read from. In this case a child parameter cannot be added.
+
         ParameterWrittenError
             If the child parameter would need to be added, but this parameter has
             already been written to. In this case a child parameter cannot be added.

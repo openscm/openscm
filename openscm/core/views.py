@@ -368,6 +368,9 @@ class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attri
 
     def _read(self):
         if self._data is None or self._version != self._parameter.version:
+            if not self._parameter.children and self.empty:
+                raise ParameterEmptyError
+
             self._timeseries_converter = TimeseriesConverter(
                 self._parameter.time_points,
                 self._time_points,
@@ -405,8 +408,6 @@ class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attri
             return cast(
                 Sequence[float], sum((v.values for v in self._child_data_views))
             )
-        if self.empty:
-            raise ParameterEmptyError
 
         return cast(
             Sequence[float],
@@ -475,7 +476,8 @@ class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attri
         Time points of this view
         """
         self._time_points = v
-        self._version -= 1
+        if self._version > 0:
+            self._version -= 1
 
         def get_data_views_for_children_or_parameter(
             parameter: _Parameter
@@ -516,6 +518,7 @@ class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attri
         """
         Length of timeseries
         """
+        self._read()  # make sure we're up to date
         return self._timeseries_converter.target_length  # type: ignore
 
     def __str__(self) -> str:

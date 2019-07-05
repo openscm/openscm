@@ -386,8 +386,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     parameterset = model.parameters
 
     fossil_industry_writable = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Industry"),
-        "GtC/yr",
+        ("Emissions", "CH4", "Fossil", "Industry"),
+        "GtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -399,8 +399,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     fossil_industry_writable.values = fossil_industry_emms
 
     fossil_energy_writable = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Energy"),
-        "GtC/yr",
+        ("Emissions", "CH4", "Fossil", "Energy"),
+        "GtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -412,8 +412,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     fossil_energy_writable.values = fossil_energy_emms
 
     land_writable = parameterset.timeseries(
-        ("Emissions", "CO2", "Land"),
-        "MtC/yr",
+        ("Emissions", "CH4", "Land"),
+        "MtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -425,8 +425,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     land_writable.values = land_emms * 1000
 
     fossil_industry = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Industry"),
-        "GtC/yr",
+        ("Emissions", "CH4", "Fossil", "Industry"),
+        "GtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -442,8 +442,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     )
 
     fossil_energy = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Energy"),
-        "GtC/yr",
+        ("Emissions", "CH4", "Fossil", "Energy"),
+        "GtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -455,8 +455,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     np.testing.assert_allclose(fossil_energy.values, fossil_energy_emms)
 
     fossil = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil"),
-        "GtC/yr",
+        ("Emissions", "CH4", "Fossil"),
+        "GtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -471,8 +471,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     # avoids ever having the child views being out of date
     with pytest.raises(ParameterReadError):
         parameterset.timeseries(
-            ("Emissions", "CO2", "Fossil", "Transport"),
-            "GtC/yr",
+            ("Emissions", "CH4", "Fossil", "Transport"),
+            "GtCH4/yr",
             create_time_points(
                 start_time,
                 24 * 3600,
@@ -483,8 +483,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
         )
 
     land = parameterset.timeseries(
-        ("Emissions", "CO2", "Land"),
-        "GtC/yr",
+        ("Emissions", "CH4", "Land"),
+        "GtCH4/yr",
         create_time_points(
             start_time, 24 * 3600, len(land_emms), ParameterType.AVERAGE_TIMESERIES
         ),
@@ -494,8 +494,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
 
     with pytest.raises(ParameterReadonlyError):
         parameterset.timeseries(
-            ("Emissions", "CO2"),
-            "GtC/yr",
+            ("Emissions", "CH4"),
+            "GtCH4/yr",
             create_time_points(
                 start_time,
                 24 * 3600,
@@ -506,8 +506,8 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
         ).values = np.ndarray([])
 
     total = parameterset.timeseries(
-        ("Emissions", "CO2"),
-        "GtC/yr",
+        ("Emissions", "CH4"),
+        "GtCH4/yr",
         create_time_points(
             start_time,
             24 * 3600,
@@ -777,16 +777,19 @@ def test_outdated(view_type):
 
     if view_type == "generic":
         view = p.generic("example")
+        assert view._version == 0
         view.value = ["hi", 2, 3]
     elif view_type == "scalar":
         view = p.scalar("example", a_unit)
+        assert view._version == 0
         view.value = 2
     else:
         view = p.timeseries("example", a_unit, [0, 1, 2])
+        assert view._version == 0
         # should we just make this `.value` too?
         view.values = np.array([0, 1, 2])
 
-    assert view._version == 0
+    assert view._version == 1
     assert not view.outdated
 
     if view_type == "generic":
