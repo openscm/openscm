@@ -8,8 +8,10 @@ from openscm import OpenSCM
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
+from openscm.core.views import TimeseriesView
 from openscm.errors import (
     DimensionalityError,
+    InsufficientDataError,
     ParameterAggregationError,
     ParameterEmptyError,
     ParameterReadError,
@@ -675,3 +677,93 @@ def test_view_units(view_type):
         assert (v2.values == v1.values * 1000).all()
 
     assert v2.unit == b_unit
+
+
+def test_timeseries_view_requests():
+    p = ParameterSet()
+
+    v1 = p.timeseries("example", "s", timeseries_type="point")
+
+    assert isinstance(v1, TimeseriesView)
+    assert v1.unit == "s"
+    assert v1.region == ("World",)
+    assert v1.parameter_type == ParameterType.from_timeseries_type("point")
+    with pytest.raises(AttributeError):
+        v1.values
+
+    with pytest.raises(DimensionalityError):
+        # now requesting a view with unit conflict causes error
+        p.timeseries("example", "kg", timeseries_type="point")
+
+    with pytest.raises(ParameterTypeError):
+        # at least until we get the point <-> average conversion working
+        p.timeseries("example", "s", timeseries_type="average")
+
+    tph = create_time_points(
+        np.datetime64("2000-01-01"), np.timedelta64(365, "D"), 3, "point"
+    )
+    v2 = p.timeseries("example", "day", tph, timeseries_type="point")
+    v2.values = np.array([1, 2, 3])
+
+    tp_no_overlap = tph + np.timedelta64(3000, "D")
+    with pytest.raises(InsufficientDataError):
+        p.timeseries("example", "day", tp_no_overlap, timeseries_type="point").values
+
+
+def test_timeseries_view_only_checks_overlap_on_request():
+    p = ParameterSet()
+
+    tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
+    v1 = p.timeseries("example", "s", tp1)
+
+    tp2 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1900, 2051)])
+    v2 = p.timeseries("example", "s", tp2)
+
+    tp3 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1800, 2301)])
+    v3 = p.timeseries("example", "s", tp3)
+    v3.values = np.arange(len(tp3))
+
+    np.testing.assert_array_equal(v1.values, np.arange(200, 301))
+    np.testing.assert_array_equal(v2.values, np.arange(100, 251))
+
+    tp4 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1790, 2291)])
+    v4 = p.timeseries("example", "s", tp4)
+    with pytest.raises(InsufficientDataError):
+        v4.values
+
+    # works with extrapolation
+    v4_extrap = p.timeseries("example", "s", tp4, extrapolation="constant")
+    np.testing.assert_array_equal(
+        v4_extrap.values, np.concatenate([[0] * 10, np.arange(491)])
+    )
+
+    # setting values again overwrites time points too
+    v4.values = np.arange(len(tp4))
+
+    # now v3 won't work cause it doesn't overlap
+    with pytest.raises(InsufficientDataError):
+        v3.values
+
+    # with extrapolation all works again
+    v3_extrap = p.timeseries("example", "s", tp3, extrapolation="linear")
+    np.testing.assert_allclose(
+        v3_extrap.values,
+        np.arange(10, 511),
+        rtol=2 * 1e-5,  # not perfect as a year is not always 365 days
+    )
+
+
+def test_timeseries_view_time_points():
+    p = ParameterSet()
+
+    tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
+    p.timeseries("example", "s", tp1).values = np.arange(len(tp1))
+
+    view = p.timeseries("example", "s", tp1)
+    np.testing.assert_array_equal(view.time_points, tp1)
+    np.testing.assert_array_equal(view.values, np.arange(len(tp1)))
+
+    view.time_points = np.array(
+        [np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)]
+    )
+    np.testing.assert_array_equal(view.values, np.arange(20, 31))
