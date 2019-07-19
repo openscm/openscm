@@ -259,21 +259,13 @@ class _Parameter:
         if self.parameter_type is None:
             self.unit = unit
             self.parameter_type = parameter_type
-            if parameter_type == ParameterType.SCALAR:
-                self.data = float("NaN")
-            elif parameter_type == ParameterType.GENERIC:
+            if parameter_type == ParameterType.GENERIC:
                 if self.children:
                     raise ParameterAggregationError
-                self.data = None
-            else:  # parameter is a timeseries
-                self.data = np.full(
-                    (
-                        (len(time_points) - 1)  # type: ignore
-                        if parameter_type == ParameterType.AVERAGE_TIMESERIES
-                        else len(time_points)  # type: ignore
-                    ),
-                    float("NaN"),
-                )
+            is_timeseries = parameter_type in (
+                ParameterType.POINT_TIMESERIES, ParameterType.AVERAGE_TIMESERIES
+            )
+            if is_timeseries and time_points is not None:
                 self.time_points = np.array(time_points, copy=True)
         self.has_been_read_from = True
 
