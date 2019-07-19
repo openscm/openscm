@@ -262,10 +262,13 @@ class _Parameter:
             if parameter_type == ParameterType.GENERIC:
                 if self.children:
                     raise ParameterAggregationError
+        if time_points is not None:
             is_timeseries = parameter_type in (
                 ParameterType.POINT_TIMESERIES, ParameterType.AVERAGE_TIMESERIES
             )
-            if is_timeseries and time_points is not None:
+            if not is_timeseries:
+                raise ParameterTypeError
+            if not hasattr(self, "time_points"):
                 self.time_points = np.array(time_points, copy=True)
         self.has_been_read_from = True
 
