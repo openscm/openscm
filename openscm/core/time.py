@@ -428,7 +428,7 @@ class TimeseriesConverter:
             )
             raise InsufficientDataError(error_msg)
 
-    def points_are_compatible(self, source: np.ndarray, target: np.ndarray):
+    def points_are_compatible(self, source: np.ndarray, target: np.ndarray) -> bool:
         """
         Are the two sets of time points compatible i.e. can I convert between the two?
 
@@ -449,7 +449,6 @@ class TimeseriesConverter:
                 return False
 
         return True
-
 
     def _calc_continuous_representation(
         # TODO: remove when NotImplementedError removed:

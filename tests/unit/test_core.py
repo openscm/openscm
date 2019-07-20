@@ -708,7 +708,9 @@ def test_timeseries_view_requests():
 
     tp_no_overlap = tph + np.timedelta64(3000, "D")
     with pytest.raises(InsufficientDataError):
-        p.timeseries("example", "day", time_points=tp_no_overlap, timeseries_type="point").values
+        p.timeseries(
+            "example", "day", time_points=tp_no_overlap, timeseries_type="point"
+        ).values
 
 
 def test_timeseries_view_only_checks_overlap_on_request():

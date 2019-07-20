@@ -181,7 +181,10 @@ class DICE(Adapter):
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
         self._values.mat = self._output.timeseries(
-            ("Pool", "CO2", "Atmosphere"), "GtC", time_points=time_points, timeseries_type="point"
+            ("Pool", "CO2", "Atmosphere"),
+            "GtC",
+            time_points=time_points,
+            timeseries_type="point",
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"

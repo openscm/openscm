@@ -264,7 +264,8 @@ class _Parameter:
                     raise ParameterAggregationError
         if time_points is not None:
             is_timeseries = parameter_type in (
-                ParameterType.POINT_TIMESERIES, ParameterType.AVERAGE_TIMESERIES
+                ParameterType.POINT_TIMESERIES,
+                ParameterType.AVERAGE_TIMESERIES,
             )
             if not is_timeseries:
                 raise ParameterTypeError
