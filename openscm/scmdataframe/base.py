@@ -517,7 +517,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             parameterset.timeseries(
                 variable,
                 unit,
-                time_points,
+                time_points=time_points,
                 region=region,
                 timeseries_type=timeseries_type,
             ).values = vals.values

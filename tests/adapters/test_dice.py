@@ -25,7 +25,7 @@ def _run_and_compare(test_adapter, filename):
         ParameterType.AVERAGE_TIMESERIES,
     )
     test_adapter._parameters.timeseries(
-        ("Emissions", "CO2"), "GtCO2/a", time_points, timeseries_type="average"
+        ("Emissions", "CO2"), "GtCO2/a", time_points=time_points, timeseries_type="average"
     ).values = original_data.E.values[:timestep_count]
 
     test_adapter.initialize_model_input()
@@ -46,7 +46,7 @@ def _run_and_compare(test_adapter, filename):
             test_adapter._output.timeseries(
                 name,
                 unit,
-                time_points[:-1],  # these are point timeseries
+                time_points=time_points[:-1],  # these are point timeseries
                 timeseries_type=timeseries_type,
             ).values,
             original_data[original_name][
@@ -88,7 +88,7 @@ class TestMyAdapter(_AdapterTester):
         test_adapter._parameters.timeseries(
             ("Emissions", "CO2"),
             "GtCO2/a",
-            time_points_for_averages,
+            time_points=time_points_for_averages,
             timeseries_type="average",
         ).values = np.zeros(npoints)
 

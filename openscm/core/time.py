@@ -422,7 +422,11 @@ class TimeseriesConverter:
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
         if not self.points_are_compatible(self._source, self._target):
-            raise InsufficientDataError
+            error_msg = (
+                "Target time points are outside the source time points, use an "
+                "extrapolation type other than None"
+            )
+            raise InsufficientDataError(error_msg)
 
     def points_are_compatible(self, source: np.ndarray, target: np.ndarray):
         """
