@@ -410,6 +410,21 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
         ),
         timeseries_type="average",
     )
+
+    fossil = parameterset.timeseries(
+        ("Emissions", "CO2", "Fossil"),
+        "GtC/yr",
+        time_points=create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
+        timeseries_type="average",
+    )
+    with pytest.raises(ParameterEmptyError):
+        fossil.values
+
     fossil_energy_writable.values = fossil_energy_emms
 
     land_writable = parameterset.timeseries(
@@ -455,17 +470,6 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     )
     np.testing.assert_allclose(fossil_energy.values, fossil_energy_emms)
 
-    fossil = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil"),
-        "GtC/yr",
-        time_points=create_time_points(
-            start_time,
-            24 * 3600,
-            len(fossil_energy_emms),
-            ParameterType.AVERAGE_TIMESERIES,
-        ),
-        timeseries_type="average",
-    )
     np.testing.assert_allclose(fossil.values, fossil_industry_emms + fossil_energy_emms)
 
     # ensure that you can't write extra children once you've got a parent view, this
@@ -704,13 +708,24 @@ def test_timeseries_view_requests():
         np.datetime64("2000-01-01"), np.timedelta64(365, "D"), 3, "point"
     )
     v2 = p.timeseries("example", "day", time_points=tph, timeseries_type="point")
-    v2.values = np.array([1, 2, 3])
+    tvalues = np.array([1, 2, 3])
+    v2.values = tvalues
+    np.testing.assert_array_equal(v2.values, tvalues)
+
+    # make sure writing with float now works
+    tvalues = np.array([-1.2, 0.3, 4.5])
+    v2.values = tvalues
+    np.testing.assert_array_equal(v2.values, tvalues)
 
     tp_no_overlap = tph + np.timedelta64(3000, "D")
     with pytest.raises(InsufficientDataError):
         p.timeseries(
             "example", "day", time_points=tp_no_overlap, timeseries_type="point"
         ).values
+
+    v3 = p.timeseries("example", "day", timeseries_type="point")
+    with pytest.raises(TimeseriesPointsValuesMismatchError):
+        v3.values
 
 
 def test_timeseries_view_only_checks_overlap_on_request():
@@ -770,3 +785,12 @@ def test_timeseries_view_time_points():
         [np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)]
     )
     np.testing.assert_array_equal(view.values, np.arange(20, 31))
+
+
+def test_request_time_points_with_scalar_view_error():
+    pset = ParameterSet()
+    tparameter = pset._get_or_create_parameter(
+        ("Emissions", "CO2"), pset._get_or_create_region(("World",))
+    )
+    with pytest.raises(ParameterTypeError):
+        tparameter.attempt_read(ParameterType.SCALAR, "GtCO2/a", np.array([0, 1]))

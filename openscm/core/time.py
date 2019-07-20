@@ -554,9 +554,8 @@ class TimeseriesConverter:
         ------
         InsufficientDataError
             Length of the time series is too short to convert
-        InsufficientDataError
-            Target time points are outside the source time points and
-            :attr:`_extrapolation_type` is :attr:`ExtrapolationType.NONE`
+        ValueError
+            Timeseries conversion fails
 
         Returns
         -------
@@ -568,12 +567,9 @@ class TimeseriesConverter:
 
         try:
             return self._convert_unsafe(values, source_time_points, target_time_points)
-        except ValueError:
-            error_msg = (
-                "Target time points are outside the source time points, use an "
-                "extrapolation type other than None"
-            )
-            raise InsufficientDataError(error_msg)
+        except ValueError:  # pragma: no cover # emergency valve
+            print("Timeseries conversion failed")
+            raise
 
     def _convert_unsafe(
         self,

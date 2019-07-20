@@ -13,7 +13,6 @@ from pandas.core.arrays.base import ExtensionOpsMixin
 from ..errors import (
     InsufficientDataError,
     ParameterEmptyError,
-    ParameterTypeError,
     TimeseriesPointsValuesMismatchError,
 )
 from .parameters import ParameterInfo, ParameterType, _Parameter
@@ -329,8 +328,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
         self._timeseries_type = timeseries_type
-        if self._timeseries_type != parameter.parameter_type:
-            raise ParameterTypeError  # TODO: relax this constraint
+        # TODO work out a way to convert average to point timeseries and back
         self._version = 0
         if time_points is not None:
             self.time_points = time_points
@@ -402,8 +400,6 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
             return cast(
                 Sequence[float], sum((v.values for v in self._child_data_views))
             )
-        if self.empty:
-            raise ParameterEmptyError
 
         return cast(
             Sequence[float],
@@ -461,6 +457,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         if v.dtype == "float" and self._data.dtype == "int":
             self._data = self._data.astype(float)
         np.copyto(self._data, np.asarray(v), casting="safe")
+        self._timeseries = _Timeseries(self._data, self)
 
     @property
     def time_points(self) -> np.ndarray:
