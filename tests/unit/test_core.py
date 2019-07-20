@@ -504,7 +504,7 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
                 ParameterType.AVERAGE_TIMESERIES,
             ),
             timeseries_type="average",
-        ).values = np.ndarray([])
+        ).values = np.array([1, 2, 3])
 
     total = parameterset.timeseries(
         ("Emissions", "CO2"),
@@ -688,6 +688,7 @@ def test_timeseries_view_requests():
     assert v1.unit == "s"
     assert v1.region == ("World",)
     assert v1.parameter_type == ParameterType.from_timeseries_type("point")
+
     with pytest.raises(ParameterEmptyError):
         v1.values
 

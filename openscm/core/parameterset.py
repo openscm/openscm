@@ -221,7 +221,7 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_read(timeseries_type, unit, time_points)
+        parameter.attempt_read(timeseries_type, unit)
         return TimeseriesView(
             parameter, unit, timeseries_type, interpolation, extrapolation, time_points=time_points,
         )  # TimeseriesView

@@ -175,20 +175,20 @@ class DICE(Adapter):
         self._values.E = self._parameters.timeseries(
             ("Emissions", "CO2"),
             "GtCO2/a" if self._values.original_rounding.value else "GtC/a",
-            time_points_for_averages,
+            time_points=time_points_for_averages,
             timeseries_type="average",
         )
 
         # Original: "Carbon concentration increase in atmosphere (GtC from 1750)"
         self._values.mat = self._output.timeseries(
-            ("Pool", "CO2", "Atmosphere"), "GtC", time_points, timeseries_type="point"
+            ("Pool", "CO2", "Atmosphere"), "GtC", time_points=time_points, timeseries_type="point"
         )
 
         # Original: "Carbon concentration increase in lower oceans (GtC from 1750)"
         self._values.ml = self._output.timeseries(
             ("Pool", "CO2", "Ocean", "lower"),
             "GtC",
-            time_points,
+            time_points=time_points,
             timeseries_type="point",
         )
 
@@ -196,7 +196,7 @@ class DICE(Adapter):
         self._values.mu = self._output.timeseries(
             ("Pool", "CO2", "Ocean", "shallow"),
             "GtC",
-            time_points,
+            time_points=time_points,
             timeseries_type="point",
         )
 
@@ -204,7 +204,7 @@ class DICE(Adapter):
         self._values.tatm = self._output.timeseries(
             ("Surface Temperature", "Increase"),
             "delta_degC",
-            time_points,
+            time_points=time_points,
             timeseries_type="point",
         )
 
@@ -212,7 +212,7 @@ class DICE(Adapter):
         self._values.tocean = self._output.timeseries(
             ("Ocean Temperature", "Increase"),
             "delta_degC",
-            time_points,
+            time_points=time_points,
             timeseries_type="point",
         )
 
@@ -220,7 +220,7 @@ class DICE(Adapter):
         self._values.forc = self._output.timeseries(
             ("Radiative Forcing", "CO2"),
             "W/m^2",
-            time_points_for_averages,
+            time_points=time_points_for_averages,
             timeseries_type="average",
         )
 

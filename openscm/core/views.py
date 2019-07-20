@@ -10,7 +10,7 @@ import numpy as np
 from numpy.lib.mixins import NDArrayOperatorsMixin
 from pandas.core.arrays.base import ExtensionOpsMixin
 
-from ..errors import ParameterEmptyError, TimeseriesPointsValuesMismatchError
+from ..errors import InsufficientDataError, ParameterEmptyError, TimeseriesPointsValuesMismatchError
 from .parameters import ParameterInfo, ParameterType, _Parameter
 from .time import ExtrapolationType, InterpolationType, TimeseriesConverter
 from .units import UnitConverter
@@ -318,25 +318,28 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         self._version = 0
         if time_points is not None:
             self.time_points = time_points
-            self._timeseries_converter = TimeseriesConverter(
-                parameter.time_points,
-                time_points,
-                timeseries_type,
-                interpolation_type,
-                extrapolation_type,
-            )
+
         self._data = None
         self._locked = False
         self._timeseries = None
         self._writable = False
 
     def _read(self):
+        self._check_empty()
+        self._check_timeseries_converter()
         if self._data is None:
             self._data = self._get_values()
             self._version = self._parameter.version
         elif self._version != self._parameter.version:
-            np.copyto(self._data, self._get_values())
+            self._copy_values_to_data(self._get_values())
             self._version = self._parameter.version
+
+    def _check_empty(self):
+        if self.empty:
+            if not self._parameter.children:
+                raise ParameterEmptyError
+            if any([v.empty for v in self._child_data_views]):
+                raise ParameterEmptyError
 
     def _check_write(self):
         if not self._writable:
@@ -346,6 +349,32 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
                 self._time_points
             )
             self._writable = True
+
+    def _check_timeseries_converter(self):
+        try:
+            self._parameter.attempt_read(
+                self._parameter.parameter_type,
+                self._parameter.unit,
+                self._time_points
+            )
+        except AttributeError:
+            raise TimeseriesPointsValuesMismatchError("View `time_points` not set")
+
+        if self._timeseries_converter is None:
+            self._timeseries_converter = TimeseriesConverter(
+                self._parameter.time_points,
+                self._time_points,
+                self._parameter.parameter_type,
+                self._interpolation_type,
+                self._extrapolation_type,
+            )
+        else:
+            compatible_read = self._timeseries_converter.points_are_compatible(
+                self._parameter.time_points,
+                self._time_points
+            )
+            if not compatible_read:
+                raise InsufficientDataError
 
     def _write(self):
         if not self._locked:
@@ -399,15 +428,24 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         """
         Value of the full timeseries
         """
-        self._check_write()
+        if hasattr(self._parameter, "time_points") and not np.array_equal(self._time_points, self._parameter.time_points):
+            del self._parameter.time_points
+
+        self._check_timeseries_converter()
         if len(v) != self._timeseries_converter.target_length:
             raise TimeseriesPointsValuesMismatchError
+        self._check_write()
         if self._data is None:
             self._data = np.asarray(v).copy()
             self._timeseries = _Timeseries(self._data, self)
         else:
-            np.copyto(self._data, np.asarray(v))
+            self._copy_values_to_data(v)
         self._write()
+
+    def _copy_values_to_data(self, v):
+        if v.dtype == "float" and self._data.dtype == "int":
+            self._data = self._data.astype(float)
+        np.copyto(self._data, np.asarray(v), casting="safe")
 
     @property
     def time_points(self) -> np.ndarray:
@@ -422,14 +460,9 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         Time points of this view
         """
         self._time_points = v
-        self._version -= 1
-        self._timeseries_converter = TimeseriesConverter(
-            self._parameter.time_points,
-            v,
-            self._parameter.parameter_type,
-            self._interpolation_type,
-            self._extrapolation_type,
-        )
+        self._timeseries_converter = None
+        self._data = None
+        self._timeseries = None
 
         def get_data_views_for_children_or_parameter(
             parameter: _Parameter
@@ -449,7 +482,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
                     self._parameter.parameter_type,
                     self._interpolation_type,
                     self._extrapolation_type,
-                    time_points=self._timeseries_converter._target,  # pylint: disable=protected-access
+                    time_points=v,
                 )
             ]
 
@@ -470,6 +503,7 @@ class TimeseriesView(ParameterInfo):  # pylint: disable=too-many-instance-attrib
         """
         Length of timeseries
         """
+        self._check_timeseries_converter()
         return self._timeseries_converter.target_length
 
     def __str__(self) -> str:

@@ -421,10 +421,31 @@ class TimeseriesConverter:
         self._timeseries_type = timeseries_type
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
+        if not self.points_are_compatible(self._source, self._target):
+            raise InsufficientDataError
 
-        if extrapolation_type == ExtrapolationType.NONE:
-            if self._source[0] > self._target[0] or self._source[-1] < self._target[-1]:
-                raise InsufficientDataError
+    def points_are_compatible(self, source: np.ndarray, target: np.ndarray):
+        """
+        Are the two sets of time points compatible i.e. can I convert between the two?
+
+        Parameters
+        ----------
+        source
+            Source timeseries time points
+        target
+            Target timeseries time points
+
+        Returns
+        -------
+        bool
+            Can I convert between the time points?
+        """
+        if self._extrapolation_type == ExtrapolationType.NONE:
+            if source[0] > target[0] or source[-1] < target[-1]:
+                return False
+
+        return True
+
 
     def _calc_continuous_representation(
         # TODO: remove when NotImplementedError removed:
