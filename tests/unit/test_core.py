@@ -812,7 +812,7 @@ def test_outdated(view_type):
         assert view._version == 0
         view.value = 2
     else:
-        view = p.timeseries("example", a_unit, [0, 1, 2])
+        view = p.timeseries("example", a_unit, time_points=[0, 1, 2])
         assert view._version == 0
         # should we just make this `.value` too?
         view.values = np.array([0, 1, 2])
@@ -825,7 +825,7 @@ def test_outdated(view_type):
         p.scalar("example", b_unit).value = 2
     else:
         # should we just make this `.value` too?
-        p.timeseries("example", b_unit, [0, 1, 2]).values = np.array([0, 1, 2])
+        p.timeseries("example", b_unit, time_points=[0, 1, 2]).values = np.array([0, 1, 2])
 
     assert view.outdated
 
