@@ -98,9 +98,6 @@ class DICE(Adapter):
     _timestep: int
     """Current time step"""
 
-    _timestep_count: int
-    """Total number of time steps"""
-
     _time_points = None
     """Time points for point data"""
 
