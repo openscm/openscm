@@ -161,7 +161,8 @@ class _ParameterView(ParameterInfo):
     def __init__(self, parameter: _Parameter):
         """
         Initialize.
-         Parameters
+
+        Parameters
         ----------
         parameter
             Parameter

@@ -100,18 +100,15 @@ class _AdapterTester(metaclass=ABCMeta):
             test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
         )
 
-        check_args = [
-            "Surface Temperature",
-            "K",
-        ]
-        tp=np.array(
-                [
-                    np.datetime64(
-                        "{}-01-01".format(y).astype("datetime64[s]").astype(float)
-                    )
-                    for y in range(2010, 2090, 10)
-                ]
-            )
+        check_args = ["Surface Temperature", "K"]
+        tp = np.array(
+            [
+                np.datetime64(
+                    "{}-01-01".format(y).astype("datetime64[s]").astype(float)
+                )
+                for y in range(2010, 2090, 10)
+            ]
+        )
         assert output.timeseries(*check_args, time_points=tp).empty
 
         test_adapter.reset()
@@ -140,18 +137,15 @@ class _AdapterTester(metaclass=ABCMeta):
             test_adapter, test_run_parameters.start_time, test_run_parameters.stop_time
         )
 
-        check_args = [
-            "Surface Temperature",
-            "K",
-        ]
+        check_args = ["Surface Temperature", "K"]
         tp = np.array(
-                [
-                    np.datetime64(
-                        "{}-01-01".format(y).astype("datetime64[s]").astype(float)
-                    )
-                    for y in range(2010, 2091, 10)
-                ]
-            )
+            [
+                np.datetime64(
+                    "{}-01-01".format(y).astype("datetime64[s]").astype(float)
+                )
+                for y in range(2010, 2091, 10)
+            ]
+        )
         assert output.timeseries(*check_args, time_points=tp).empty
 
         test_adapter.reset()

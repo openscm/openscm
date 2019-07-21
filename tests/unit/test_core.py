@@ -825,11 +825,13 @@ def test_outdated(view_type):
         p.scalar("example", b_unit).value = 2
     else:
         # should we just make this `.value` too?
-        p.timeseries("example", b_unit, time_points=[0, 1, 2]).values = np.array([0, 1, 2])
+        p.timeseries("example", b_unit, time_points=[0, 1, 2]).values = np.array(
+            [0, 1, 2]
+        )
 
     assert view.outdated
 
-     # read value
+    # read value
     if view_type == "generic":
         view.value
     elif view_type == "scalar":

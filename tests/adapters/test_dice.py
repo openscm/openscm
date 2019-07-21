@@ -28,7 +28,10 @@ def _run_and_compare(test_adapter, filename, timestep_count=None):
         ParameterType.AVERAGE_TIMESERIES,
     )
     test_adapter._parameters.timeseries(
-        ("Emissions", "CO2"), "GtCO2/a", time_points=time_points, timeseries_type="average"
+        ("Emissions", "CO2"),
+        "GtCO2/a",
+        time_points=time_points,
+        timeseries_type="average",
     ).values = original_data.E.values[:timestep_count]
 
     test_adapter.reset()
@@ -94,7 +97,9 @@ class TestMyAdapter(_AdapterTester):
         assert test_adapter._parameters.timeseries(
             ("Emissions", "CO2"),
             "GtCO2/a",
-            time_points=np.array([np.datetime64("{}-01-01".format(y)) for y in [2010, 2020, 2030]]),
+            time_points=np.array(
+                [np.datetime64("{}-01-01".format(y)) for y in [2010, 2020, 2030]]
+            ),
             timeseries_type="average",
             extrapolation="linear",
         ).empty
@@ -137,11 +142,10 @@ class TestMyAdapter(_AdapterTester):
             ]
         )
         check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2"]
-        check_args_temperature = [
-            "Surface Temperature Increase",
-            "delta_degC",
-        ]
-        assert output.timeseries(*check_args_rf, time_points=time_points, timeseries_type="average").empty
+        check_args_temperature = ["Surface Temperature Increase", "delta_degC"]
+        assert output.timeseries(
+            *check_args_rf, time_points=time_points, timeseries_type="average"
+        ).empty
         assert output.timeseries(*check_args_temperature, time_points=time_points).empty
 
         test_adapter.reset()
@@ -149,18 +153,26 @@ class TestMyAdapter(_AdapterTester):
         first_run_rf = output.timeseries(
             *check_args_rf, time_points=time_points, timeseries_type="average"
         ).values
-        first_run_temperature = output.timeseries(*check_args_temperature, time_points=time_points).values
+        first_run_temperature = output.timeseries(
+            *check_args_temperature, time_points=time_points
+        ).values
 
         test_adapter.reset()
         assert np.isnan(
-            output.timeseries(*check_args_rf, time_points=time_points, timeseries_type="average").values
+            output.timeseries(
+                *check_args_rf, time_points=time_points, timeseries_type="average"
+            ).values
         ).all()
-        assert np.isnan(output.timeseries(*check_args_temperature, time_points=time_points).values).all()
+        assert np.isnan(
+            output.timeseries(*check_args_temperature, time_points=time_points).values
+        ).all()
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, time_points=time_points, timeseries_type="average"
         ).values
-        second_run_temperature = output.timeseries(*check_args_temperature, time_points=time_points).values
+        second_run_temperature = output.timeseries(
+            *check_args_temperature, time_points=time_points
+        ).values
         np.testing.assert_allclose(first_run_temperature, second_run_temperature)
         np.testing.assert_allclose(first_run_rf, second_run_rf)
 
@@ -177,21 +189,21 @@ class TestMyAdapter(_AdapterTester):
             test_adapter._timestep_count,
             "point",
         )
-        check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2", time_points]
-        check_args_temperature = [
-            "Surface Temperature Increase",
-            "delta_degC",
-            time_points,
-        ]
+        check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2"]
+        check_args_temperature = ["Surface Temperature Increase", "delta_degC"]
 
-        assert output.timeseries(*check_args_rf, time_points=time_points, timeseries_type="average").empty
+        assert output.timeseries(
+            *check_args_rf, time_points=time_points, timeseries_type="average"
+        ).empty
         assert output.timeseries(*check_args_temperature, time_points=time_points).empty
 
         test_adapter.reset()
         test_adapter.run()
         # why is this copying required?
         first_run_rf = np.copy(
-            output.timeseries(*check_args_rf, time_points=time_points, timeseries_type="average").values
+            output.timeseries(
+                *check_args_rf, time_points=time_points, timeseries_type="average"
+            ).values
         )
         first_run_temperature = np.copy(
             output.timeseries(*check_args_temperature, time_points=time_points).values
@@ -199,9 +211,15 @@ class TestMyAdapter(_AdapterTester):
 
         test_adapter.reset()
         assert np.isnan(
-            output.timeseries(*check_args_rf, time_points=time_points, timeseries_type="average").values[1:]
+            output.timeseries(
+                *check_args_rf, time_points=time_points, timeseries_type="average"
+            ).values[1:]
         ).all()
-        assert np.isnan(output.timeseries(*check_args_temperature, time_points=time_points).values[1:]).all()
+        assert np.isnan(
+            output.timeseries(*check_args_temperature, time_points=time_points).values[
+                1:
+            ]
+        ).all()
 
         test_adapter.step()
         test_adapter.step()
@@ -224,15 +242,23 @@ class TestMyAdapter(_AdapterTester):
 
         test_adapter.reset()
         assert np.isnan(
-            output.timeseries(*check_args_rf, time_points=time_points, timeseries_type="average").values[1:]
+            output.timeseries(
+                *check_args_rf, time_points=time_points, timeseries_type="average"
+            ).values[1:]
         ).all()
-        assert np.isnan(output.timeseries(*check_args_temperature, time_points=time_points).values[1:]).all()
+        assert np.isnan(
+            output.timeseries(*check_args_temperature, time_points=time_points).values[
+                1:
+            ]
+        ).all()
 
         test_adapter.run()
         second_run_rf = output.timeseries(
             *check_args_rf, time_points=time_points, timeseries_type="average"
         ).values
-        second_run_temperature = output.timeseries(*check_args_temperature, time_points=time_points).values
+        second_run_temperature = output.timeseries(
+            *check_args_temperature, time_points=time_points
+        ).values
 
         np.testing.assert_allclose(first_run_rf, second_run_rf)
         np.testing.assert_allclose(first_run_temperature, second_run_temperature)

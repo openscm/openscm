@@ -428,7 +428,9 @@ class TimeseriesConverter:
             )
             raise InsufficientDataError(error_msg)
 
-    def points_are_compatible(self, source: np.ndarray, target: np.ndarray) -> bool:
+    def points_are_compatible(
+        self, source: Union[list, np.ndarray], target: Union[list, np.ndarray]
+    ) -> bool:
         """
         Are the two sets of time points compatible i.e. can I convert between the two?
 
@@ -445,17 +447,22 @@ class TimeseriesConverter:
             Can I convert between the time points?
         """
         if self._extrapolation_type == ExtrapolationType.NONE:
+
+            def _wrong_type(inp):
+                return not isinstance(inp, np.ndarray) or inp.dtype != _TARGET_TYPE
+
+            if _wrong_type(source):
+                source = np.array(source).astype(_TARGET_TYPE)
+            if _wrong_type(target):
+                target = np.array(target).astype(_TARGET_TYPE)
+
             if source[0] > target[0] or source[-1] < target[-1]:
                 return False
 
         return True
 
     def _calc_continuous_representation(
-        # TODO: remove when NotImplementedError removed:
-        # pylint: disable=missing-raises-doc
-        self,
-        time_points: np.ndarray,
-        values: np.ndarray,
+        self, time_points: np.ndarray, values: np.ndarray
     ) -> Callable[[float], float]:
         """
         Calculate a "continuous" representation of a timeseries (see
@@ -475,6 +482,11 @@ class TimeseriesConverter:
             Function that represents the interpolated timeseries. It takes a single
             argument, time ("x-value"), and returns a single float, the value of the
             interpolated timeseries at that point in time ("y-value").
+
+        Raises
+        ------
+        NotImplementedError
+            A conversion which has not yet been implemented is requested.
         """
         if (self._timeseries_type == ParameterType.AVERAGE_TIMESERIES) and (
             self._interpolation_type == InterpolationType.LINEAR
