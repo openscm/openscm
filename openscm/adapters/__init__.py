@@ -354,12 +354,6 @@ def load_adapter(name: str) -> type:
             from .dice import DICE  # pylint: disable=cyclic-import
 
             adapter = DICE
-
-        elif name == "PH99":
-            from .ph99 import PH99  # pylint: disable=cyclic-import
-
-            adapter = PH99
-
         """
         When implementing an additional adapter, include your adapter NAME here as:
         ```
