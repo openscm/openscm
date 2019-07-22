@@ -260,3 +260,35 @@ class _AdapterTester(metaclass=ABCMeta):
             time_points=time_points_for_averages,
             timeseries_type="average",
         ).values = np.zeros(npoints)
+
+    @abstractmethod
+    def test_openscm_standard_parameters_handling_on_init(self):
+        """
+        Test how the adapter handles OpenSCM's standard parameters on initialisation.
+
+        Implementers must implement this method to check what the user would get when
+        OpenSCM's standard parameters are passed to the adapter upon initialisation.
+        It might be that they get used, that they are re-mapped to a different name,
+        that they are not supported and hence nothing is done. All these behaviours
+        are valid, they just need to be tested and validated.
+
+        We give an example of how such a test might look below.
+        """
+        parameters = ParameterSet()
+        output_parameters = ParameterSet()
+
+        ecs_magnitude = 2.76
+        parameters.scalar(
+            "Equilibrium Climate Sensitivity", "delta_degC"
+        ).value = ecs_magnitude
+
+        tadapter = self.tadapter(parameters, output_parameters)
+
+        # From here onwards you can test whether e.g. the parameters have been used as
+        # intended, an error was thrown or the parameters were not used.
+        # If you're testing the parameters are used as intended, it might look
+        # something like:
+        assert (
+            # make sure OpenSCM ECS value was passed correctly
+            tadapter.model.getattr("model ecs parameter") == ecs_magnitude
+        )

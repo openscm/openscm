@@ -5,6 +5,7 @@ from base import _AdapterTester
 
 from openscm.adapters.dice import DICE, YEAR
 from openscm.core.parameters import ParameterType
+from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 from openscm.errors import DimensionalityError
 
@@ -315,3 +316,45 @@ class TestMyAdapter(_AdapterTester):
             time_points=time_points_for_averages,
             timeseries_type="average",
         ).values = np.zeros(npoints)
+
+    def test_openscm_standard_parameters_handling_on_init(self):
+        """
+        Test how the adapter handles OpenSCM's standard parameters on initialisation.
+
+        Implementers must implement this method to check what the user would get when
+        OpenSCM's standard parameters are passed to the adapter upon initialisation.
+        It might be that they get used, that they are re-mapped to a different name,
+        that they are not supported and hence nothing is done. All these behaviours
+        are valid, they just need to be tested and validated.
+
+        We give an example of how such a test might look below.
+        """
+        parameters = ParameterSet()
+        output_parameters = ParameterSet()
+
+        ecs_magnitude = 2.76
+        parameters.scalar(
+            "Equilibrium Climate Sensitivity", "delta_degC"
+        ).value = ecs_magnitude
+
+        tadapter = self.tadapter(parameters, output_parameters)
+
+        # From here onwards you can test whether e.g. the parameters have been used as
+        # intended, an error was thrown or the parameters were not used.
+        # If you're testing the parameters are used as intended, it might look
+        # something like:
+        assert (
+            # make sure OpenSCM ECS value was passed correctly
+            tadapter._values.t2xco2.value == ecs_magnitude
+        )
+
+    def test_defaults(self, test_adapter):
+        assert test_adapter._start_time == np.datetime64("1000-01-01")
+        assert test_adapter._timestep_count == 2102
+
+    def test_timeseries_time_points_require_update(self, test_adapter):
+        assert test_adapter._timeseries_time_points_require_update()
+        test_adapter._set_model_from_parameters()
+        assert not test_adapter._timeseries_time_points_require_update()
+        test_adapter._parameter_views["Start Time"].value = np.datetime64("1500-01-01")
+        assert test_adapter._timeseries_time_points_require_update()

@@ -163,12 +163,11 @@ class DICE(Adapter):
                 )
                 setattr(self._values, name, self._parameter_views[full_name])
 
-                if name in imap:
-                    openscm_name = imap[name]
-                    # don't set default here, leave that for later
-                    self._add_parameter_view(
-                        openscm_name, unit=unit, timeseries_type=timeseries_type
-                    )
+                openscm_name = imap[name]
+                # don't set default here, leave that for later
+                self._add_parameter_view(
+                    openscm_name, unit=unit, timeseries_type=timeseries_type
+                )
 
     def _get_time_points(
         self, timeseries_type: Union[ParameterType, str]
@@ -222,34 +221,30 @@ class DICE(Adapter):
         for n in names_to_check:
             if self._parameter_views[n].version > self._parameter_versions[n]:
                 return True
-            if n in self._openscm_standard_parameter_mappings:
-                model_n = (self.name, self._openscm_standard_parameter_mappings[n])
-                if (
-                    self._parameter_views[model_n].version
-                    > self._parameter_versions[model_n]
-                ):
-                    return True
+
+            model_n = (self.name, self._openscm_standard_parameter_mappings[n])
+            if (
+                self._parameter_views[model_n].version
+                > self._parameter_versions[model_n]
+            ):
+                return True
         return False
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
-        try:
-            values = self._get_parameter_value(para)
-            if name in self._openscm_standard_parameter_mappings:
-                model_name = (
-                    self.name,
-                    self._openscm_standard_parameter_mappings[name],
-                )
-                self._check_derived_paras([model_name], name)
-                setattr(self._values, model_name[1], para)
-                self._set_parameter_value(self._parameter_views[model_name], values)
-            else:
-                if name[0] != self.name:
-                    # emergency valve for now, must be smarter way to handle this
-                    raise ValueError("How did non-DICE parameter end up here?")
-                setattr(self._values, name[1], para)
-
-        except ParameterEmptyError:
-            pass
+        values = self._get_parameter_value(para)
+        if name in self._openscm_standard_parameter_mappings:
+            model_name = (
+                self.name,
+                self._openscm_standard_parameter_mappings[name],
+            )
+            self._check_derived_paras([model_name], name)
+            setattr(self._values, model_name[1], para)
+            self._set_parameter_value(self._parameter_views[model_name], values)
+        else:
+            if name[0] != self.name:
+                # emergency valve for now, must be smarter way to handle this
+                raise ValueError("How did non-DICE parameter end up here?")
+            setattr(self._values, name[1], para)
 
     def _reset(self) -> None:
         self._set_output_views()
