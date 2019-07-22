@@ -11,7 +11,7 @@ dedicated `Jupyter Notebook
 import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Sequence, Union
+from typing import Any, Callable, Dict, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -393,16 +393,14 @@ def _calc_integral_preserving_linear_interpolation(values: np.ndarray) -> np.nda
 
 
 @lru_cache()
-def _calc_integral_preserving_linearization_points(
-    time_points: List
-) -> np.ndarray:
-    time_points = np.array(time_points)
+def _calc_integral_preserving_linearization_points(time_points: Tuple) -> np.ndarray:
+    time_points_array = np.array(time_points)
     return (
         np.concatenate(
             (
                 # [time_points[0] - (time_points[1] - time_points[0]) / 2],
-                time_points,
-                (time_points[1:] + time_points[:-1]) / 2,
+                time_points_array,
+                (time_points_array[1:] + time_points_array[:-1]) / 2,
                 [0],
             )
         )
