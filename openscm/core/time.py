@@ -1,6 +1,6 @@
 """
 Different climate models often use different time frames for their input and output
-data. This includes different 'integralings' of time steps (e.g. beginning vs middle of
+data. This includes different 'meanings' of time steps (e.g. beginning vs middle of
 year) and different lengths of the time steps (e.g. years vs months). Accordingly,
 OpenSCM supports the conversion of timeseries data between such timeseries, which is
 handled in this module. A thorough explaination of the procedure used is given in a
@@ -315,9 +315,6 @@ def _calc_linear_interval_averages(
     np.ndarray
         Array of the interval/period averages
     """
-    # TODO: numerical integration here could be very expensive
-    # TODO: update to include caching and/or analytic solutions depending on interpolation choice
-
     int_averages = [np.nan] * len(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
         u = target_intervals[i + 1]
@@ -497,7 +494,7 @@ class TimeseriesConverter:
         if (self._timeseries_type == ParameterType.AVERAGE_TIMESERIES) and (
             self._interpolation_type == InterpolationType.LINEAR
         ):
-            # our custom implementation of a integral preserving linear interpolation
+            # our custom implementation of an integral preserving linear interpolation
             linearization_points = _calc_integral_preserving_linearization_points(
                 tuple(time_points.tolist())
             )
