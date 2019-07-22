@@ -233,10 +233,7 @@ class DICE(Adapter):
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
         values = self._get_parameter_value(para)
         if name in self._openscm_standard_parameter_mappings:
-            model_name = (
-                self.name,
-                self._openscm_standard_parameter_mappings[name],
-            )
+            model_name = (self.name, self._openscm_standard_parameter_mappings[name])
             self._check_derived_paras([model_name], name)
             setattr(self._values, model_name[1], para)
             self._set_parameter_value(self._parameter_views[model_name], values)

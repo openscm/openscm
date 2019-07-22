@@ -345,7 +345,8 @@ class TestMyAdapter(_AdapterTester):
         # something like:
         assert (
             # make sure OpenSCM ECS value was passed correctly
-            tadapter._values.t2xco2.value == ecs_magnitude
+            tadapter._values.t2xco2.value
+            == ecs_magnitude
         )
 
     def test_defaults(self, test_adapter):

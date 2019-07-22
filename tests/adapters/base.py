@@ -290,5 +290,6 @@ class _AdapterTester(metaclass=ABCMeta):
         # something like:
         assert (
             # make sure OpenSCM ECS value was passed correctly
-            tadapter.model.getattr("model ecs parameter") == ecs_magnitude
+            tadapter.model.getattr("model ecs parameter")
+            == ecs_magnitude
         )
