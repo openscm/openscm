@@ -463,6 +463,6 @@ class TestPH99Adapter(_AdapterTester):
 
         assert (
             # make sure OpenSCM ECS value was passed correctly
-            tadapter._values.t2xco2.value
-            == ecs_magnitude
+            tadapter.model.alpha
+            == tadapter.model.mu * np.log(2) / (ecs_magnitude * _unit_registry("delta_degC"))
         )

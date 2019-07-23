@@ -9,8 +9,8 @@ import numpy as np
 
 from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType
 from ..core.parameterset import ParameterSet
-from ..core.time import ExtrapolationType, InterpolationType
-from ..errors import AdapterNeedsModuleError
+from ..core.time import ExtrapolationType, InterpolationType, create_time_points
+from ..errors import AdapterNeedsModuleError, ParameterEmptyError
 
 _loaded_adapters: Dict[str, type] = {}
 
@@ -54,6 +54,12 @@ class Adapter(metaclass=ABCMeta):
 
     _direct_set: bool
     """Be careful about overwriting other parameters when setting a model parameter?"""
+
+    _time_points: Optional[int] = None
+    """Time points for point data"""
+
+    _time_points_for_averages: Optional[int] = None
+    """Time points for average data"""
 
     def __init__(self, input_parameters: ParameterSet, output_parameters: ParameterSet):
         """
@@ -201,25 +207,46 @@ class Adapter(metaclass=ABCMeta):
     def _get_view_iterator(self):
         view_iterator = self._parameter_views.items()
         view_iterator = sorted(view_iterator, key=lambda s: len(s[0]))
-        generic_views = [
+        generic_views = self._get_generic_views(view_iterator)
+        scalar_views_model = self._get_scalar_views_model(view_iterator)
+        scalar_views_openscm = self._get_scalar_views_openscm(view_iterator)
+        timeseries_views = self._get_timeseries_views(view_iterator)
+        return (
+            generic_views + scalar_views_model + scalar_views_openscm + timeseries_views
+        )
+
+    @staticmethod
+    def _get_generic_views(view_iterator):
+        return [
+            v for v in view_iterator if v[1].parameter_type == ParameterType.GENERIC
+        ]
+
+    @staticmethod
+    def _get_scalar_views_model(view_iterator):
+        return [
             v
             for v in view_iterator
-            if not isinstance(v[1], dict)
-            and v[1].parameter_type == ParameterType.GENERIC
-        ]
-        scalar_views = [
-            v
-            for v in view_iterator
-            if not isinstance(v[1], dict)
-            and v[1].parameter_type == ParameterType.SCALAR
-        ]
-        other_views = [
-            v
-            for v in view_iterator
-            if isinstance(v[1], dict)
-            or v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
-        ]
-        return generic_views + scalar_views + other_views
+            if v[1].parameter_type == ParameterType.SCALAR
+            and isinstance(v[0], tuple)
+            and len(v[0]) > 1
+         ]
+
+    @staticmethod
+    def _get_scalar_views_openscm(view_iterator):
+        return [
+             v
+             for v in view_iterator
+            if v[1].parameter_type == ParameterType.SCALAR
+            and (not isinstance(v[0], tuple) or len(v[0]) == 1)
+         ]
+
+    @staticmethod
+    def _get_timeseries_views(view_iterator):
+        return [
+             v
+             for v in view_iterator
+            if v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
+         ]
 
     def _update_model_parameter(self, name: HierarchicalName) -> None:
         para = self._parameter_views[name]
@@ -242,7 +269,9 @@ class Adapter(metaclass=ABCMeta):
                 )
 
     @property
-    def _inverse_openscm_standard_parameter_mappings(self):
+    def _inverse_openscm_standard_parameter_mappings(
+        self
+    ) -> Dict[str, HierarchicalName]:
         return {v: k for k, v in self._openscm_standard_parameter_mappings.items()}
 
     @abstractmethod
@@ -290,6 +319,49 @@ class Adapter(metaclass=ABCMeta):
             Type of timeseries for which to get points
         """
 
+    @abstractproperty
+    def _timestep_count(self):
+        """
+        Get number of timesteps in the run
+        """
+
+    @property
+    def _start_time(self):
+        """
+        Start time of the run
+        """
+        try:
+            return self._parameter_views["Start Time"].value
+        except ParameterEmptyError:
+            return self._parameter_views[
+                (self.name, self._openscm_standard_parameter_mappings["Start Time"])
+            ].value
+
+    def _timeseries_time_points_require_update(self) -> bool:
+        """
+        Determine if the timeseries view time points require updating
+
+        Returns
+        -------
+        bool
+            Do the timeseries time points require updating?
+        """
+        if self._time_points is None or self._time_points_for_averages is None:
+            return True
+
+        names_to_check = ["Start Time", "Stop Time", "Step Length"]
+        for n in names_to_check:
+            if self._parameter_views[n].version > self._parameter_versions[n]:
+                return True
+            if n in self._openscm_standard_parameter_mappings:
+                model_n = (self.name, self._openscm_standard_parameter_mappings[n])
+                if (
+                    self._parameter_views[model_n].version
+                    > self._parameter_versions[model_n]
+                ):
+                    return True
+        return False
+
     @abstractmethod
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
         """
@@ -304,27 +376,79 @@ class Adapter(metaclass=ABCMeta):
             Parameter view to use for the update
         """
 
-    @abstractmethod
-    def _timeseries_time_points_require_update(self) -> None:
-        """
-        Determine if the timeseries view time points require updating
-        """
-
     @abstractproperty
     def name(self):
         """
         Name of the model as used in OpenSCM parameters
         """
 
-    @abstractproperty
-    def _start_time(self):
-        """
-        Start time of the run
-        """
 
+class AdapterConstantTimestep(
+    Adapter, metaclass=ABCMeta
+):  # pylint: disable=abstract-method
+    """
+    Base class for Adapters which wrap models with a constant timestep
 
-class AdapterConstantTimestep(Adapter):
-    pass
+    This class implements some time related methods which rely on the assumption that
+    the underlying model is running on a constant timestep.
+    """
+
+    def _get_time_points(
+        self, timeseries_type: Union[ParameterType, str]
+    ) -> np.ndarray:
+        """
+        Get time points for timeseries views.
+
+        Parameters
+        ----------
+        timeseries_type
+            Type of timeseries for which to get points
+
+        Returns
+        -------
+        np.ndarray
+            Time points for the given ``timeseries_type``
+        """
+        if self._timeseries_time_points_require_update():
+
+            def get_time_points(tt):
+                return create_time_points(
+                    self._start_time, self._period_length, self._timestep_count, tt
+                )
+
+            self._time_points = get_time_points("point")
+            self._time_points_for_averages = get_time_points("average")
+
+        return (
+            self._time_points
+            if timeseries_type in ("point", ParameterType.POINT_TIMESERIES)
+            else self._time_points_for_averages
+        )
+
+    @property
+    def _timestep_count(self):
+        try:
+            stop_time = self._parameter_views["Stop Time"].value
+        except ParameterEmptyError:
+            stop_time = self._parameter_views[
+                (self.name, self._openscm_standard_parameter_mappings["Stop Time"])
+            ].value
+
+        return (
+            int((stop_time - self._start_time) / self._period_length) + 1
+        )  # include self._stop_time
+
+    @property
+    def _period_length(self):
+        """
+        Length of a step in the model
+        """
+        try:
+            return self._parameter_views["Step Length"].value
+        except ParameterEmptyError:
+            return self._parameter_views[
+                (self.name, self._openscm_standard_parameter_mappings["Step Length"])
+            ].value
 
 
 def load_adapter(name: str) -> type:
@@ -358,6 +482,11 @@ def load_adapter(name: str) -> type:
             from .dice import DICE  # pylint: disable=cyclic-import
 
             adapter = DICE
+
+        elif name == "PH99":
+            from .ph99 import PH99  # pylint: disable=cyclic-import
+
+            adapter = PH99
         """
         When implementing an additional adapter, include your adapter NAME here as:
         ```
