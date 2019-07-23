@@ -10,11 +10,11 @@ dedicated `Jupyter Notebook
 
 import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Sequence, Union
+from functools import lru_cache
+from typing import Any, Callable, Dict, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import scipy.integrate as integrate
 import scipy.interpolate as interpolate
 from dateutil import parser
 
@@ -288,8 +288,10 @@ def create_time_points(  # TODO: replace by simpler function
     )
 
 
-def _calc_interval_averages(
-    continuous_representation: Callable[[float], float], target_intervals: np.ndarray
+def _calc_linear_interval_averages(
+    continuous_representation: Callable[[float], float],
+    linearization_points: np.ndarray,
+    target_intervals: np.ndarray,
 ) -> np.ndarray:
     """
     Calculate the interval averages of a continuous function.
@@ -303,6 +305,8 @@ def _calc_interval_averages(
         Continuous function from which to calculate the interval averages. Should be
         calculated using
         :func:`openscm.timeseries_converter.TimeseriesConverter._calc_continuous_representation`.
+    linearization_points
+        Intervals used in the source data.
     target_intervals
         Intervals to calculate the average of.
 
@@ -311,12 +315,31 @@ def _calc_interval_averages(
     np.ndarray
         Array of the interval/period averages
     """
-    # TODO: numerical integration here could be very expensive
-    # TODO: update to include caching and/or analytic solutions depending on interpolation choice
     int_averages = [np.nan] * len(target_intervals[:-1])
     for i, l in enumerate(target_intervals[:-1]):
         u = target_intervals[i + 1]
-        y, _ = integrate.quad(continuous_representation, l, u)
+        y = 0
+        kink_points = np.concatenate(
+            [
+                [l],
+                linearization_points[
+                    np.where(
+                        np.logical_and(
+                            linearization_points > l, linearization_points < u
+                        )
+                    )
+                ],
+                [u],
+            ]
+        )
+
+        for j, kink_point in enumerate(kink_points[:-1]):
+            next_kink_point = kink_points[j + 1]
+            left_edge = continuous_representation(kink_point)
+            right_edge = continuous_representation(next_kink_point)
+            dx = next_kink_point - kink_point
+            y += (left_edge + right_edge) * dx / 2
+
         int_averages[i] = y / (u - l)
 
     return np.array(int_averages)
@@ -363,6 +386,23 @@ def _calc_integral_preserving_linear_interpolation(values: np.ndarray) -> np.nda
             ).T.reshape(2 * len(values)),
             [last_edge_point_value],
         )
+    )
+
+
+@lru_cache()
+def _calc_integral_preserving_linearization_points(time_points: Tuple) -> np.ndarray:
+    time_points_array = np.array(time_points)
+    return (
+        np.concatenate(
+            (
+                # [time_points[0] - (time_points[1] - time_points[0]) / 2],
+                time_points_array,
+                (time_points_array[1:] + time_points_array[:-1]) / 2,
+                [0],
+            )
+        )
+        .reshape((2, len(time_points)))
+        .T.flatten()[:-1]
     )
 
 
@@ -491,18 +531,9 @@ class TimeseriesConverter:
         if (self._timeseries_type == ParameterType.AVERAGE_TIMESERIES) and (
             self._interpolation_type == InterpolationType.LINEAR
         ):
-            # our custom implementation of a mean preserving linear interpolation
-            linearization_points = (
-                np.concatenate(
-                    (
-                        # [time_points[0] - (time_points[1] - time_points[0]) / 2],
-                        time_points,
-                        (time_points[1:] + time_points[:-1]) / 2,
-                        [0],
-                    )
-                )
-                .reshape((2, len(time_points)))
-                .T.flatten()[:-1]
+            # our custom implementation of an integral preserving linear interpolation
+            linearization_points = _calc_integral_preserving_linearization_points(
+                tuple(time_points.tolist())
             )
             linearization_values = _calc_integral_preserving_linear_interpolation(
                 values
@@ -613,9 +644,14 @@ class TimeseriesConverter:
             Converted time period average data for timeseries :obj:`values`
         """
         if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-            return _calc_interval_averages(
+            if self._interpolation_type != InterpolationType.LINEAR:
+                raise NotImplementedError  # pragma: no cover # emergency valve
+            return _calc_linear_interval_averages(
                 self._calc_continuous_representation(
                     source_time_points.astype(_TARGET_TYPE), values
+                ),
+                _calc_integral_preserving_linearization_points(
+                    tuple(source_time_points.astype(_TARGET_TYPE).tolist())
                 ),
                 target_time_points.astype(_TARGET_TYPE),
             )
