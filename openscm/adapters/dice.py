@@ -19,7 +19,7 @@ import numpy as np
 from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType
 from ..core.time import create_time_points
 from ..errors import ParameterEmptyError
-from . import Adapter
+from . import AdapterConstantTimestep
 
 YEAR = np.timedelta64(365, "D")  # pylint: disable=too-many-function-args
 
@@ -84,7 +84,7 @@ MODEL_PARAMETER_DEFAULTS: Dict[str, Tuple] = {
 }
 
 
-class DICE(Adapter):
+class DICE(AdapterConstantTimestep):
     """
     Adapter for the climate component from the Dynamic Integrated Climate-Economy (DICE)
     model.
@@ -95,14 +95,8 @@ class DICE(Adapter):
     and radiative forcing is. It could actually be point...
     """
 
-    _timestep: int
+    _timestep: int = 0
     """Current time step"""
-
-    _time_points = None
-    """Time points for point data"""
-
-    _time_points_for_averages = None
-    """Time points for average data"""
 
     _values: Any
     """Parameter views"""
@@ -169,66 +163,6 @@ class DICE(Adapter):
                     openscm_name, unit=unit, timeseries_type=timeseries_type
                 )
 
-    def _get_time_points(
-        self, timeseries_type: Union[ParameterType, str]
-    ) -> np.ndarray:
-        if self._timeseries_time_points_require_update():
-
-            def get_time_points(tt):
-                return create_time_points(
-                    self._start_time, self._period_length, self._timestep_count, tt
-                )
-
-            self._time_points = get_time_points("point")
-            self._time_points_for_averages = get_time_points("average")
-
-        return (
-            self._time_points
-            if timeseries_type in ("point", ParameterType.POINT_TIMESERIES)
-            else self._time_points_for_averages
-        )
-
-    @property
-    def _start_time(self):
-        try:
-            return self._parameter_views["Start Time"].value
-        except ParameterEmptyError:
-            return self._parameter_views[(self.name, "start_time")].value
-
-    @property
-    def _period_length(self):
-        try:
-            return self._parameter_views["Step Length"].value
-        except ParameterEmptyError:
-            return self._parameter_views[(self.name, "period_length")].value
-
-    @property
-    def _timestep_count(self):
-        try:
-            stop_time = self._parameter_views["Stop Time"].value
-        except ParameterEmptyError:
-            stop_time = self._parameter_views[(self.name, "stop_time")].value
-
-        return (
-            int((stop_time - self._start_time) / self._period_length) + 1
-        )  # include self._stop_time
-
-    def _timeseries_time_points_require_update(self):
-        if self._time_points is None or self._time_points_for_averages is None:
-            return True
-
-        names_to_check = ["Start Time", "Stop Time", "Step Length"]
-        for n in names_to_check:
-            if self._parameter_views[n].version > self._parameter_versions[n]:
-                return True
-
-            model_n = (self.name, self._openscm_standard_parameter_mappings[n])
-            if (
-                self._parameter_views[model_n].version
-                > self._parameter_versions[model_n]
-            ):
-                return True
-        return False
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
         values = self._get_parameter_value(para)

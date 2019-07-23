@@ -53,25 +53,30 @@ class TestPH99Adapter(_AdapterTester):
             ]
         )
         check_args_concs = [("Atmospheric Concentrations", "CO2"), "ppm"]
-        check_args_temperature = [
-            "Surface Temperature Increase",
-            "delta_degC",
-        ]
+        check_args_temperature = ["Surface Temperature Increase", "delta_degC"]
         assert output.timeseries(*check_args_concs, time_points=time_points).empty
         assert output.timeseries(*check_args_temperature, time_points=time_points).empty
 
         test_adapter.reset()
         test_adapter.run()
-        first_run_conc = output.timeseries(*check_args_concs, time_points=time_points).values
-        first_run_temperature = output.timeseries(*check_args_temperature, time_points=time_points).values
+        first_run_conc = output.timeseries(
+            *check_args_concs, time_points=time_points
+        ).values
+        first_run_temperature = output.timeseries(
+            *check_args_temperature, time_points=time_points
+        ).values
 
         test_adapter.reset()
         # currently failing
         # assert output.timeseries(*check_args_concs).empty
         # assert output.timeseries(*check_args_temperature).empty
         test_adapter.run()
-        second_run_conc = output.timeseries(*check_args_concs, time_points=time_points).values
-        second_run_temperature = output.timeseries(*check_args_temperature, time_points=time_points).values
+        second_run_conc = output.timeseries(
+            *check_args_concs, time_points=time_points
+        ).values
+        second_run_temperature = output.timeseries(
+            *check_args_temperature, time_points=time_points
+        ).values
         np.testing.assert_allclose(first_run_temperature, second_run_temperature)
         np.testing.assert_allclose(first_run_conc, second_run_conc)
 
@@ -89,10 +94,7 @@ class TestPH99Adapter(_AdapterTester):
             "point",
         )
         check_args_conc = [("Atmospheric Concentrations", "CO2"), "ppm"]
-        check_args_temperature = [
-            "Surface Temperature Increase",
-            "delta_degC",
-        ]
+        check_args_temperature = ["Surface Temperature Increase", "delta_degC"]
 
         assert output.timeseries(*check_args_conc, time_points=time_points).empty
         assert output.timeseries(*check_args_temperature, time_points=time_points).empty
@@ -100,16 +102,24 @@ class TestPH99Adapter(_AdapterTester):
         test_adapter.reset()
         test_adapter.run()
         # why is this copying required?
-        first_run_conc = np.copy(output.timeseries(*check_args_conc, time_points=time_points).values)
+        first_run_conc = np.copy(
+            output.timeseries(*check_args_conc, time_points=time_points).values
+        )
         first_run_temperature = np.copy(
             output.timeseries(*check_args_temperature, time_points=time_points).values
         )
 
         test_adapter.reset()
         assert np.isnan(
-            output.timeseries(*check_args_conc, time_points=time_points, timeseries_type="point").values[1:]
+            output.timeseries(
+                *check_args_conc, time_points=time_points, timeseries_type="point"
+            ).values[1:]
         ).all()
-        assert np.isnan(output.timeseries(*check_args_temperature, time_points=time_points).values[1:]).all()
+        assert np.isnan(
+            output.timeseries(*check_args_temperature, time_points=time_points).values[
+                1:
+            ]
+        ).all()
         test_adapter.step()
         test_adapter.step()
         first_two_steps_conc = output.timeseries(
@@ -125,12 +135,22 @@ class TestPH99Adapter(_AdapterTester):
 
         test_adapter.reset()
         assert np.isnan(
-            output.timeseries(*check_args_conc, time_points=time_points, timeseries_type="point").values[1:]
+            output.timeseries(
+                *check_args_conc, time_points=time_points, timeseries_type="point"
+            ).values[1:]
         ).all()
-        assert np.isnan(output.timeseries(*check_args_temperature, time_points=time_points).values[1:]).all()
+        assert np.isnan(
+            output.timeseries(*check_args_temperature, time_points=time_points).values[
+                1:
+            ]
+        ).all()
         test_adapter.run()
-        second_run_conc = output.timeseries(*check_args_conc, time_points=time_points).values
-        second_run_temperature = output.timeseries(*check_args_temperature, time_points=time_points).values
+        second_run_conc = output.timeseries(
+            *check_args_conc, time_points=time_points
+        ).values
+        second_run_temperature = output.timeseries(
+            *check_args_temperature, time_points=time_points
+        ).values
 
         np.testing.assert_allclose(first_run_conc, second_run_conc)
         np.testing.assert_allclose(first_run_temperature, second_run_temperature)
@@ -315,7 +335,10 @@ class TestPH99Adapter(_AdapterTester):
             start_time, stop_time - start_time, npoints, "point"
         )
         test_adapter._parameters.timeseries(
-            ("Emissions", "CO2"), "GtCO2/a", time_points=time_points, timeseries_type="point"
+            ("Emissions", "CO2"),
+            "GtCO2/a",
+            time_points=time_points,
+            timeseries_type="point",
         ).values = np.zeros(npoints)
 
     def test_openscm_standard_parameters_take_priority(self):
@@ -464,5 +487,7 @@ class TestPH99Adapter(_AdapterTester):
         assert (
             # make sure OpenSCM ECS value was passed correctly
             tadapter.model.alpha
-            == tadapter.model.mu * np.log(2) / (ecs_magnitude * _unit_registry("delta_degC"))
+            == tadapter.model.mu
+            * np.log(2)
+            / (ecs_magnitude * _unit_registry("delta_degC"))
         )

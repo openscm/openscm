@@ -229,24 +229,24 @@ class Adapter(metaclass=ABCMeta):
             if v[1].parameter_type == ParameterType.SCALAR
             and isinstance(v[0], tuple)
             and len(v[0]) > 1
-         ]
+        ]
 
     @staticmethod
     def _get_scalar_views_openscm(view_iterator):
         return [
-             v
-             for v in view_iterator
+            v
+            for v in view_iterator
             if v[1].parameter_type == ParameterType.SCALAR
             and (not isinstance(v[0], tuple) or len(v[0]) == 1)
-         ]
+        ]
 
     @staticmethod
     def _get_timeseries_views(view_iterator):
         return [
-             v
-             for v in view_iterator
+            v
+            for v in view_iterator
             if v[1].parameter_type not in (ParameterType.GENERIC, ParameterType.SCALAR)
-         ]
+        ]
 
     def _update_model_parameter(self, name: HierarchicalName) -> None:
         para = self._parameter_views[name]
