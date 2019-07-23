@@ -238,7 +238,7 @@ class _AdapterTester(metaclass=ABCMeta):
         Overload this in your adapter test if you need to set required input parameters.
 
         This method is called directly before
-        :func:`test_adapter.initialize_model_input` during tests.
+        :func:`test_adapter.reset` during tests.
         """
         # e.g.
         test_adapter._parameters.generic("Start Time").value = start_time
