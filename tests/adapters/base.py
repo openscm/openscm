@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
 
+from openscm.adapters import load_adapter
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
@@ -24,6 +25,10 @@ class _AdapterTester(metaclass=ABCMeta):
         Adapter to test
         """
         pass
+
+    def test_load_adapter(self, test_adapter):
+        loaded_adapter = load_adapter(test_adapter.name)(ParameterSet(), ParameterSet())
+        assert isinstance(loaded_adapter, test_adapter.__class__)
 
     @abstractmethod
     def test_initialize(self, test_adapter):

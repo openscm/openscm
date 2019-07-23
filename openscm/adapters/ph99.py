@@ -182,23 +182,21 @@ class PH99(AdapterConstantTimestep):
             return np.timedelta64(  # pylint: disable=too-many-function-args
                 int(pl), "s"
             )
-        return pl
+        return np.timedelta64(  # pylint: disable=too-many-function-args
+            pl, "s"
+        )
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
-        try:
-            value = self._get_parameter_value(para)
-            if name == "Stop Time":
-                pass
-            elif name in self._openscm_standard_parameter_mappings:
-                self._set_model_para_from_openscm_para(name, value, para.unit)
-            else:
-                if name[0] != self.name:
-                    # emergency valve for now, must be smarter way to handle this
-                    raise ValueError("How did non-PH99 parameter end up here?")
-                setattr(self.model, name[1], value * _unit_registry(para.unit))
-
-        except ParameterEmptyError:
+        value = self._get_parameter_value(para)
+        if name == "Stop Time":
             pass
+        elif name in self._openscm_standard_parameter_mappings:
+            self._set_model_para_from_openscm_para(name, value, para.unit)
+        else:
+            if name[0] != self.name:
+                # emergency valve for now, must be smarter way to handle this
+                raise ValueError("How did non-PH99 parameter end up here?")
+            setattr(self.model, name[1], value * _unit_registry(para.unit))
 
     def _set_model_para_from_openscm_para(self, openscm_name, value, unit):
         model_name = self._openscm_standard_parameter_mappings[openscm_name]
@@ -262,8 +260,12 @@ class PH99(AdapterConstantTimestep):
 
     @time_start.setter
     def time_start(self, v):
-        v = int((v - self._base_time).item().total_seconds())
-        self.model.time_start = v * _unit_registry("s")
+        v = (v - self._base_time).item().total_seconds()
+        if int(v) != v:
+            warnings.warn(
+                "Rounding {} time_start to nearest integer".format(self.name)
+            )
+        self.model.time_start = int(v) * _unit_registry("s")
 
     @property
     def timestep(self) -> np.timedelta64:
@@ -277,11 +279,9 @@ class PH99(AdapterConstantTimestep):
 
     @timestep.setter
     def timestep(self, v):
-        v = self.model.time_start.to("s").magnitude
-        if int(v) != v:
+        if int(v.magnitude) != v.magnitude:
             raise ValueError("_timestep should be an integer")
-        diff = np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
-        return self._base_time + diff
+        self.model.timestep = v.to("s")
 
     @property
     def emissions(self):

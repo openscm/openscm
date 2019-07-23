@@ -1,4 +1,5 @@
 import re
+import warnings
 
 import numpy as np
 import pytest
@@ -491,3 +492,26 @@ class TestPH99Adapter(_AdapterTester):
             * np.log(2)
             / (ecs_magnitude * _unit_registry("delta_degC"))
         )
+
+    def test_integer_period_length(self, test_adapter):
+        tval = np.timedelta64(240, "s")
+        test_adapter._parameters.generic(("Step Length",)).value = tval
+        assert test_adapter._period_length == np.timedelta64(tval, "s")
+
+    @pytest.mark.parametrize("attribute", ["time_start", "timestep"])
+    def test_non_integer_start_time_period_length_errors(self, attribute):
+        input_paras = ParameterSet()
+        tadapter = self.tadapter(input_paras, ParameterSet())
+        input_paras.scalar(("PH99", attribute), "s").value = 10.5
+        error_msg = re.escape("('PH99', '{}') should be an integer".format(attribute))
+        with pytest.raises(ValueError, match=error_msg):
+            tadapter.reset()
+
+        setattr(tadapter.model, attribute, 10.5 * _unit_registry("s"))
+        error_msg = re.escape("_{} should be an integer".format(attribute))
+        with pytest.raises(ValueError, match=error_msg):
+            getattr(tadapter, attribute)
+
+        # make sure you can't convert float to numpy datetime so setters are ok
+        with pytest.raises(ValueError):
+            np.datetime64(10.5, "s")
