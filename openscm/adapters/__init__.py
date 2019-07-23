@@ -323,6 +323,10 @@ class Adapter(metaclass=ABCMeta):
         """
 
 
+class AdapterConstantTimestep(Adapter):
+    pass
+
+
 def load_adapter(name: str) -> type:
     """
     Load adapter with a given name.

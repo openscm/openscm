@@ -449,3 +449,20 @@ class TestPH99Adapter(_AdapterTester):
             region=("World",),
             timeseries_type="point",
         ).values = self._test_emissions.magnitude
+
+    def test_openscm_standard_parameters_handling_on_init(self):
+        parameters = ParameterSet()
+        output_parameters = ParameterSet()
+
+        ecs_magnitude = 2.76
+        parameters.scalar(
+            "Equilibrium Climate Sensitivity", "delta_degC"
+        ).value = ecs_magnitude
+
+        tadapter = self.tadapter(parameters, output_parameters)
+
+        assert (
+            # make sure OpenSCM ECS value was passed correctly
+            tadapter._values.t2xco2.value
+            == ecs_magnitude
+        )

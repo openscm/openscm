@@ -80,3 +80,20 @@ class TimeseriesPointsValuesMismatchError(IndexError):
     timeseries mismatch (depending on the type of timeseries these must equal or deviate
     by one).
     """
+
+class OutOfBoundsError(IndexError):
+    """
+    Error raised when the user attempts to step a model beyond its input range.
+    """
+
+
+class OverwriteError(AssertionError):
+    """
+    Error raised when the user's action will overwrite existing data.
+    """
+
+
+class ModelNotInitialisedError(Exception):
+    """
+    Exception raised when a model is being used before being initiliased
+    """

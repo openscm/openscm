@@ -318,17 +318,6 @@ class TestMyAdapter(_AdapterTester):
         ).values = np.zeros(npoints)
 
     def test_openscm_standard_parameters_handling_on_init(self):
-        """
-        Test how the adapter handles OpenSCM's standard parameters on initialisation.
-
-        Implementers must implement this method to check what the user would get when
-        OpenSCM's standard parameters are passed to the adapter upon initialisation.
-        It might be that they get used, that they are re-mapped to a different name,
-        that they are not supported and hence nothing is done. All these behaviours
-        are valid, they just need to be tested and validated.
-
-        We give an example of how such a test might look below.
-        """
         parameters = ParameterSet()
         output_parameters = ParameterSet()
 
@@ -339,10 +328,6 @@ class TestMyAdapter(_AdapterTester):
 
         tadapter = self.tadapter(parameters, output_parameters)
 
-        # From here onwards you can test whether e.g. the parameters have been used as
-        # intended, an error was thrown or the parameters were not used.
-        # If you're testing the parameters are used as intended, it might look
-        # something like:
         assert (
             # make sure OpenSCM ECS value was passed correctly
             tadapter._values.t2xco2.value
