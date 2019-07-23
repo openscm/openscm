@@ -182,9 +182,7 @@ class PH99(AdapterConstantTimestep):
             return np.timedelta64(  # pylint: disable=too-many-function-args
                 int(pl), "s"
             )
-        return np.timedelta64(  # pylint: disable=too-many-function-args
-            pl, "s"
-        )
+        return np.timedelta64(pl, "s")  # pylint: disable=too-many-function-args
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
         value = self._get_parameter_value(para)
@@ -262,9 +260,7 @@ class PH99(AdapterConstantTimestep):
     def time_start(self, v):
         v = (v - self._base_time).item().total_seconds()
         if int(v) != v:
-            warnings.warn(
-                "Rounding {} time_start to nearest integer".format(self.name)
-            )
+            warnings.warn("Rounding {} time_start to nearest integer".format(self.name))
         self.model.time_start = int(v) * _unit_registry("s")
 
     @property
