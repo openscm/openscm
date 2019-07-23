@@ -12,7 +12,7 @@ variable naming. Original comments are marked by "Original:".
 """
 from collections import namedtuple
 from math import log2
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Sequence, Tuple
 
 import numpy as np
 
@@ -99,7 +99,7 @@ class DICE(AdapterConstantTimestep):
     _values: Any
     """Parameter views"""
 
-    _openscm_standard_parameter_mappings = {
+    _openscm_standard_parameter_mappings: Dict[Sequence[str], str] = {
         "Equilibrium Climate Sensitivity": "t2xco2",
         "Radiative Forcing 2xCO2": "fco22x",
         "Start Time": "start_time",

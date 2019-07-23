@@ -2,7 +2,7 @@
 Adapter for the simple climate model first presented in Petschel-Held Climatic Change 1999.
 """
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Sequence
 
 import numpy as np
 
@@ -35,7 +35,7 @@ class PH99(AdapterConstantTimestep):
     _base_time = np.datetime64("1750-01-01")
     """Base time. PH99 has no concept of datetimes so we make it up here"""
 
-    _openscm_standard_parameter_mappings = {
+    _openscm_standard_parameter_mappings: Dict[Sequence[str], str] = {
         "Equilibrium Climate Sensitivity": "ecs",
         "Radiative Forcing 2xCO2": "rf2xco2",
         "Start Time": "time_start",
@@ -89,7 +89,7 @@ class PH99(AdapterConstantTimestep):
             value = getattr(self, self_att)
             try:
                 if isinstance(value.magnitude, np.ndarray):
-                    self._add_parameter_view(  # type: ignore
+                    self._add_parameter_view(
                         o_name,
                         unit=str(value.units),
                         timeseries_type=self._internal_timeseries_conventions[self_att],
@@ -97,7 +97,7 @@ class PH99(AdapterConstantTimestep):
                 else:
                     self._add_parameter_view(o_name, unit=str(value.units))
             except AttributeError:
-                self._add_parameter_view(o_name)  # type: ignore
+                self._add_parameter_view(o_name)
 
         # set a stop time because PH99 model doesn't have one, probably shouldn't do this
         # implicitly...
