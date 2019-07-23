@@ -12,13 +12,11 @@ variable naming. Original comments are marked by "Original:".
 """
 from collections import namedtuple
 from math import log2
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Tuple
 
 import numpy as np
 
-from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType
-from ..core.time import create_time_points
-from ..errors import ParameterEmptyError
+from ..core.parameters import HierarchicalName, ParameterInfo
 from . import AdapterConstantTimestep
 
 YEAR = np.timedelta64(365, "D")  # pylint: disable=too-many-function-args
@@ -162,7 +160,6 @@ class DICE(AdapterConstantTimestep):
                 self._add_parameter_view(
                     openscm_name, unit=unit, timeseries_type=timeseries_type
                 )
-
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
         values = self._get_parameter_value(para)
