@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple, Union, cast
 
 import numpy as np
 
+from ..errors import ParameterEmptyError
 from ..core.parameters import ParameterInfo, ParameterType, _Parameter
 from ..core.parameterset import ParameterSet
 from .base import ScmDataFrameBase, df_append  # noqa: F401
@@ -156,7 +157,11 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                 region=region,
                 timeseries_type=para_type,
             )
-            data.append(ts.values)
+            try:
+                data.append(ts.values)
+            except ParameterEmptyError:
+                print("Empty {}".format(param_name))
+                continue
             metadata["variable"].append(parameter_name_to_scm(param_name))
             metadata["region"].append(parameter_name_to_scm(region))
             metadata["unit"].append(cast(str, p_info.unit))
