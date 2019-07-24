@@ -53,7 +53,7 @@ class PH99(AdapterConstantTimestep):
     _internal_timeseries_conventions = {
         "concentrations": "point",
         "cumulative_emissions": "point",
-        "emissions": "point",
+        "emissions": "average",  # should be point but being lazy
         "temperatures": "point",
     }
 
@@ -310,9 +310,7 @@ class PH99(AdapterConstantTimestep):
                 self._output.timeseries(  # type: ignore
                     imap[att],
                     str(value.units),
-                    time_points=self._get_time_points(
-                        self._internal_timeseries_conventions[att]
-                    ),
+                    time_points=self._get_time_points(self._internal_timeseries_conventions[att]),
                     region="World",
                     timeseries_type=self._internal_timeseries_conventions[att],
                 ).values = value.magnitude

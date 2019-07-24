@@ -377,6 +377,9 @@ class ParameterInfo:
         """
         Check if parameter is empty, i.e. has not yet been written to.
         """
+        if self._parameter.children:
+            # this is also still wrong as it only checks one level...
+            return any([not v.has_been_written_to for v in self._parameter.children.values()])
         return not self._parameter.has_been_written_to
 
     @property
