@@ -42,6 +42,7 @@ REQUIREMENTS_INSTALL = [
     "pint",
     "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
     "python-dateutil",
+    "tqdm",
 ]
 REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0"]
 REQUIREMENTS_TESTS = [

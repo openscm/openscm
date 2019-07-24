@@ -53,7 +53,7 @@ class PH99(AdapterConstantTimestep):
     _internal_timeseries_conventions = {
         "concentrations": "point",
         "cumulative_emissions": "point",
-        "emissions": "average",  # should be point but being lazy
+        "emissions": "point",
         "temperatures": "point",
     }
 
