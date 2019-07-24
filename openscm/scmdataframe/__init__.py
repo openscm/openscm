@@ -8,9 +8,9 @@ from typing import Dict, List, Tuple, Union, cast
 
 import numpy as np
 
-from ..errors import ParameterEmptyError
 from ..core.parameters import ParameterInfo, ParameterType, _Parameter
 from ..core.parameterset import ParameterSet
+from ..errors import ParameterEmptyError
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
 

@@ -310,7 +310,9 @@ class PH99(AdapterConstantTimestep):
                 self._output.timeseries(  # type: ignore
                     imap[att],
                     str(value.units),
-                    time_points=self._get_time_points(self._internal_timeseries_conventions[att]),
+                    time_points=self._get_time_points(
+                        self._internal_timeseries_conventions[att]
+                    ),
                     region="World",
                     timeseries_type=self._internal_timeseries_conventions[att],
                 ).values = value.magnitude
