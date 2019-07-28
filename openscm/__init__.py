@@ -42,9 +42,9 @@ def run(
         runner = emissions.copy()
 
     results = []
-    for climate_model in climate_models:
+    for climate_model in tqdm.tqdm_notebook(climate_models, desc="Climate Models"):
         unique_model_scens = runner[["model", "scenario"]].drop_duplicates()
-        for i, label in tqdm.tqdm(
+        for i, label in tqdm.tqdm_notebook(
             unique_model_scens.iterrows(),
             total=len(unique_model_scens),
             leave=True,
