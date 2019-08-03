@@ -44,7 +44,13 @@ REQUIREMENTS_INSTALL = [
     "python-dateutil",
     "tqdm",
 ]
-REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0", "ipywidgets"]
+REQUIREMENTS_NOTEBOOKS = [
+    "matplotlib",
+    "notebook",
+    "seaborn",
+    "pyam-iamc>=0.2.0",
+    "ipywidgets",
+]
 REQUIREMENTS_TESTS = [
     "codecov",
     "nbval",
