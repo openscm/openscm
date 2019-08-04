@@ -11,7 +11,7 @@ dedicated `Jupyter Notebook
 import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -418,8 +418,11 @@ class TimeseriesConverter:
     _target: np.ndarray
     """Target timeseries time points"""
 
-    _timeseries_type: ParameterType
-    """Time series type"""
+    _timeseries_type_source: ParameterType
+    """Timeseries type of the source"""
+
+    _timeseries_type_target: ParameterType
+    """Timeseries type of the target"""
 
     _interpolation_type: InterpolationType
     """Interpolation type"""
@@ -431,9 +434,10 @@ class TimeseriesConverter:
         self,
         source_time_points: np.ndarray,
         target_time_points: np.ndarray,
-        timeseries_type: ParameterType,
+        timeseries_type_source: ParameterType,
         interpolation_type: InterpolationType,
         extrapolation_type: ExtrapolationType,
+        timeseries_type_target: Optional[ParameterType] = None,
     ):
         """
         Initialize.
@@ -444,12 +448,14 @@ class TimeseriesConverter:
             Source timeseries time points
         target_time_points
             Target timeseries time points
-        timeseries_type
-            Time series type
+        timeseries_type_source
+            Timeseries type of the source
         interpolation_type
             Interpolation type
         extrapolation_type
             Extrapolation type
+        timeseries_type_target
+            Timeseries type of the target
 
         Raises
         ------
@@ -458,7 +464,12 @@ class TimeseriesConverter:
         """
         self._source = np.array(source_time_points).astype(_TARGET_TYPE, copy=True)
         self._target = np.array(target_time_points).astype(_TARGET_TYPE, copy=True)
-        self._timeseries_type = timeseries_type
+        self._timeseries_type_source = timeseries_type_source
+        self._timeseries_type_target = (
+            timeseries_type_target
+            if timeseries_type_target is not None
+            else timeseries_type_source
+        )
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
         if not self.points_are_compatible(self._source, self._target):
@@ -528,7 +539,7 @@ class TimeseriesConverter:
         NotImplementedError
             A conversion which has not yet been implemented is requested.
         """
-        if (self._timeseries_type == ParameterType.AVERAGE_TIMESERIES) and (
+        if (self._timeseries_type_source == ParameterType.AVERAGE_TIMESERIES) and (
             self._interpolation_type == InterpolationType.LINEAR
         ):
             # our custom implementation of an integral preserving linear interpolation
@@ -546,7 +557,7 @@ class TimeseriesConverter:
             )  # type: Callable[[float], float]
             return res_average
 
-        if self._timeseries_type == ParameterType.POINT_TIMESERIES:
+        if self._timeseries_type_source == ParameterType.POINT_TIMESERIES:
             res_point = interpolate.interp1d(
                 time_points,
                 values,
@@ -643,9 +654,27 @@ class TimeseriesConverter:
         np.ndarray
             Converted time period average data for timeseries :obj:`values`
         """
-        if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES:
-            if self._interpolation_type != InterpolationType.LINEAR:
-                raise NotImplementedError  # pragma: no cover # emergency valve
+        if self._timeseries_type_source == ParameterType.AVERAGE_TIMESERIES:
+            return self._convert_unsafe_average(
+                values, source_time_points, target_time_points
+            )
+
+        if self._timeseries_type_source == ParameterType.POINT_TIMESERIES:
+            return self._convert_unsafe_point(
+                values, source_time_points, target_time_points
+            )
+
+        raise NotImplementedError
+
+    def _convert_unsafe_average(
+        self,
+        values: np.ndarray,
+        source_time_points: np.ndarray,
+        target_time_points: np.ndarray,
+    ) -> np.ndarray:
+        if self._interpolation_type != InterpolationType.LINEAR:
+            raise NotImplementedError  # pragma: no cover # emergency valve
+        if self._timeseries_type_target == ParameterType.AVERAGE_TIMESERIES:
             return _calc_linear_interval_averages(
                 self._calc_continuous_representation(
                     source_time_points.astype(_TARGET_TYPE), values
@@ -655,12 +684,29 @@ class TimeseriesConverter:
                 ),
                 target_time_points.astype(_TARGET_TYPE),
             )
-        if self._timeseries_type == ParameterType.POINT_TIMESERIES:
+        else:
             return self._calc_continuous_representation(
                 source_time_points.astype(_TARGET_TYPE), values
             )(target_time_points.astype(_TARGET_TYPE))
 
-        raise NotImplementedError
+    def _convert_unsafe_point(
+        self,
+        values: np.ndarray,
+        source_time_points: np.ndarray,
+        target_time_points: np.ndarray,
+    ) -> np.ndarray:
+        if self._timeseries_type_target == ParameterType.POINT_TIMESERIES:
+            return self._calc_continuous_representation(
+                source_time_points.astype(_TARGET_TYPE), values
+            )(target_time_points.astype(_TARGET_TYPE))
+        else:
+            return _calc_linear_interval_averages(
+                self._calc_continuous_representation(
+                    source_time_points.astype(_TARGET_TYPE), values
+                ),
+                source_time_points,
+                target_time_points.astype(_TARGET_TYPE),
+            )
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
         """
@@ -694,6 +740,18 @@ class TimeseriesConverter:
         np.ndarray
             Converted array
         """
+        # TODO: split all conversion stuff out, away from self so it's easier to go
+        # back and forth
+        if self._timeseries_type_source != self._timeseries_type_target:
+            helper = TimeseriesConverter(
+                self._target,
+                self._source,
+                self._timeseries_type_target,
+                self._interpolation_type,
+                self._extrapolation_type,
+                self._timeseries_type_source
+            )
+            return helper.convert_from(values)
         return self._convert(values, self._target, self._source)
 
     @property
@@ -702,7 +760,7 @@ class TimeseriesConverter:
         Length of source timeseries
         """
         return len(self._source) - (
-            1 if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES else 0
+            1 if self._timeseries_type_source == ParameterType.AVERAGE_TIMESERIES else 0
         )
 
     @property
@@ -711,5 +769,5 @@ class TimeseriesConverter:
         Length of target timeseries
         """
         return len(self._target) - (
-            1 if self._timeseries_type == ParameterType.AVERAGE_TIMESERIES else 0
+            1 if self._timeseries_type_source == ParameterType.AVERAGE_TIMESERIES else 0
         )
