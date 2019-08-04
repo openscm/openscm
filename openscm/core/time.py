@@ -470,6 +470,7 @@ class TimeseriesConverter:
             if timeseries_type_target is not None
             else timeseries_type_source
         )
+
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
         if not self.points_are_compatible(self._source, self._target):
@@ -478,6 +479,7 @@ class TimeseriesConverter:
                 "extrapolation type other than None"
             )
             raise InsufficientDataError(error_msg)
+        self.__inverter = None
 
     def points_are_compatible(
         self, source: Union[list, np.ndarray], target: Union[list, np.ndarray]
@@ -740,19 +742,20 @@ class TimeseriesConverter:
         np.ndarray
             Converted array
         """
-        # TODO: split all conversion stuff out, away from self so it's easier to go
-        # back and forth
-        if self._timeseries_type_source != self._timeseries_type_target:
-            helper = TimeseriesConverter(
+        return self._inverter.convert_from(values)
+
+    @property
+    def _inverter(self):
+        if self.__inverter is None:
+            self.__inverter = self.__class__(
                 self._target,
                 self._source,
                 self._timeseries_type_target,
                 self._interpolation_type,
                 self._extrapolation_type,
-                self._timeseries_type_source
+                self._timeseries_type_source,
             )
-            return helper.convert_from(values)
-        return self._convert(values, self._target, self._source)
+        return self.__inverter
 
     @property
     def source_length(self) -> int:

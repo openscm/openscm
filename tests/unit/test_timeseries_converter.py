@@ -129,5 +129,9 @@ def test_point_to_average_conversion():
     np.testing.assert_array_equal(average_to_point_result, average_to_point_expected)
     np.testing.assert_array_equal(
         converter_average_to_point.convert_to(average_to_point_result),
-        np.array([1, 2.5, 3])
+        np.array([1, 2.5, 3]),
     )  # this isn't circular because of information loss and assumptions we make
+    np.testing.assert_array_equal(
+        converter_average_to_point.convert_to(average_to_point_result),
+        np.array([1, 2.5, 3]),
+    )  # check doing twice gives same result
