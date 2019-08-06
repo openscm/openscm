@@ -72,27 +72,41 @@ def test_no_overlap(combo, miss_type):
     )
 
 
-@pytest.mark.parametrize("circular,point_times,point_values,average_times,average_values,point_to_average_expected,average_to_point_expected",[
+@pytest.mark.parametrize(
     (
-        False,
-        np.array([0, 1, 2, 5, 10]),
-        np.array([-1, 2, 3, 6, 5.5]),
-        np.array([0, 2, 3, 10]),
-        np.array([1, 3, 3]),
-        np.array([1.5, 3.5, 5.535714]),
-        np.array([0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3]),
+        "circular,point_times,point_values,average_times,average_values,"
+        "point_to_average_expected,average_to_point_expected"
     ),
-    (
-        True,
-        np.arange(0, 11),
-        np.arange(0, 11),
-        np.arange(0, 11),
-        np.arange(0, 10) + 0.5,
-        np.arange(0, 10) + 0.5,
-        np.arange(0, 11),
-    ),
-])
-def test_point_to_average_conversion(circular,point_times,point_values,average_times,average_values,point_to_average_expected,average_to_point_expected):
+    [
+        (
+            False,
+            np.array([0, 1, 2, 5, 10]),
+            np.array([-1, 2, 3, 6, 5.5]),
+            np.array([0, 2, 3, 10]),
+            np.array([1, 3, 3]),
+            np.array([1.5, 3.5, 5.535714]),
+            np.array([0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3]),
+        ),
+        (
+            True,
+            np.arange(0, 11),
+            np.arange(0, 11),
+            np.arange(0, 11),
+            np.arange(0, 10) + 0.5,
+            np.arange(0, 10) + 0.5,
+            np.arange(0, 11),
+        ),
+    ],
+)
+def test_point_to_average_conversion(
+    circular,
+    point_times,
+    point_values,
+    average_times,
+    average_values,
+    point_to_average_expected,
+    average_to_point_expected,
+):
     converter_point_to_average = TimeseriesConverter(
         point_times,
         average_times,
@@ -108,16 +122,14 @@ def test_point_to_average_conversion(circular,point_times,point_values,average_t
     # moving between the two conventions
     if circular:
         np.testing.assert_array_equal(
-            converter_point_to_average.convert_to(point_to_average_result),
-            point_values
+            converter_point_to_average.convert_to(point_to_average_result), point_values
         )
     else:
         with pytest.raises(AssertionError):
             np.testing.assert_array_equal(
                 converter_point_to_average.convert_to(point_to_average_result),
-                point_values
+                point_values,
             )
-
 
     converter_average_to_point_circular = TimeseriesConverter(
         average_times,
@@ -133,17 +145,22 @@ def test_point_to_average_conversion(circular,point_times,point_values,average_t
     if circular:
         np.testing.assert_array_equal(average_to_point_result_circular, point_values)
         np.testing.assert_array_equal(
-            converter_average_to_point_circular.convert_to(average_to_point_result_circular),
-            average_values
+            converter_average_to_point_circular.convert_to(
+                average_to_point_result_circular
+            ),
+            average_values,
         )
     else:
         with pytest.raises(AssertionError):
-            np.testing.assert_array_equal(average_to_point_result_circular, point_values)
             np.testing.assert_array_equal(
-                converter_average_to_point_circular.convert_to(average_to_point_result_circular),
-                point_values
+                average_to_point_result_circular, point_values
             )
-
+            np.testing.assert_array_equal(
+                converter_average_to_point_circular.convert_to(
+                    average_to_point_result_circular
+                ),
+                point_values,
+            )
 
     converter_average_to_point = TimeseriesConverter(
         average_times,
