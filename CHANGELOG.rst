@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#193 <https://github.com/openclimatedata/openscm/pull/193>`_) Add point <-> average timeseries conversion
 - (`#191 <https://github.com/openclimatedata/openscm/pull/191>`_) Add PH99 adapter
 - (`#190 <https://github.com/openclimatedata/openscm/pull/190>`_) Switch to analytic integration for linear interpolation
 - (`#187 <https://github.com/openclimatedata/openscm/pull/187>`_) Update timeseries view setting based on `#178 <https://github.com/openclimatedata/openscm/issues/178>`_ and fix bug in time axis overlap checking
