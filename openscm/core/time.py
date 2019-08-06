@@ -686,10 +686,10 @@ class TimeseriesConverter:
                 ),
                 target_time_points.astype(_TARGET_TYPE),
             )
-        else:
-            return self._calc_continuous_representation(
-                source_time_points.astype(_TARGET_TYPE), values
-            )(target_time_points.astype(_TARGET_TYPE))
+
+        return self._calc_continuous_representation(
+            source_time_points.astype(_TARGET_TYPE), values
+        )(target_time_points.astype(_TARGET_TYPE))
 
     def _convert_unsafe_point(
         self,
@@ -701,14 +701,14 @@ class TimeseriesConverter:
             return self._calc_continuous_representation(
                 source_time_points.astype(_TARGET_TYPE), values
             )(target_time_points.astype(_TARGET_TYPE))
-        else:
-            return _calc_linear_interval_averages(
-                self._calc_continuous_representation(
-                    source_time_points.astype(_TARGET_TYPE), values
-                ),
-                source_time_points,
-                target_time_points.astype(_TARGET_TYPE),
-            )
+
+        return _calc_linear_interval_averages(
+            self._calc_continuous_representation(
+                source_time_points.astype(_TARGET_TYPE), values
+            ),
+            source_time_points,
+            target_time_points.astype(_TARGET_TYPE),
+        )
 
     def convert_from(self, values: np.ndarray) -> np.ndarray:
         """

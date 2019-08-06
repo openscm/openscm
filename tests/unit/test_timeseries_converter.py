@@ -72,13 +72,27 @@ def test_no_overlap(combo, miss_type):
     )
 
 
-def test_point_to_average_conversion():
-    point_times = np.array([0, 1, 2, 5, 10])
-    point_values = np.array([-1, 2, 3, 6, 5.5])
-
-    average_times = np.array([0, 2, 3, 10])
-    average_values = np.array([1, 3, 3])
-
+@pytest.mark.parametrize("circular,point_times,point_values,average_times,average_values,point_to_average_expected,average_to_point_expected",[
+    (
+        False,
+        np.array([0, 1, 2, 5, 10]),
+        np.array([-1, 2, 3, 6, 5.5]),
+        np.array([0, 2, 3, 10]),
+        np.array([1, 3, 3]),
+        np.array([1.5, 3.5, 5.535714]),
+        np.array([0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3]),
+    ),
+    (
+        True,
+        np.arange(0, 11),
+        np.arange(0, 11),
+        np.arange(0, 11),
+        np.arange(0, 10) + 0.5,
+        np.arange(0, 10) + 0.5,
+        np.arange(0, 11),
+    ),
+])
+def test_point_to_average_conversion(circular,point_times,point_values,average_times,average_values,point_to_average_expected,average_to_point_expected):
     converter_point_to_average = TimeseriesConverter(
         point_times,
         average_times,
@@ -87,6 +101,24 @@ def test_point_to_average_conversion():
         ExtrapolationType.NONE,
         timeseries_type_target=ParameterType.AVERAGE_TIMESERIES,
     )
+    point_to_average_result = converter_point_to_average.convert_from(point_values)
+    np.testing.assert_allclose(point_to_average_result, point_to_average_expected)
+
+    # circular conversions only possible in special cases due to information loss in
+    # moving between the two conventions
+    if circular:
+        np.testing.assert_array_equal(
+            converter_point_to_average.convert_to(point_to_average_result),
+            point_values
+        )
+    else:
+        with pytest.raises(AssertionError):
+            np.testing.assert_array_equal(
+                converter_point_to_average.convert_to(point_to_average_result),
+                point_values
+            )
+
+
     converter_average_to_point_circular = TimeseriesConverter(
         average_times,
         point_times,
@@ -95,26 +127,23 @@ def test_point_to_average_conversion():
         ExtrapolationType.NONE,
         timeseries_type_target=ParameterType.POINT_TIMESERIES,
     )
+    average_to_point_result_circular = converter_average_to_point_circular.convert_from(
+        point_to_average_result
+    )
+    if circular:
+        np.testing.assert_array_equal(average_to_point_result_circular, point_values)
+        np.testing.assert_array_equal(
+            converter_average_to_point_circular.convert_to(average_to_point_result_circular),
+            average_values
+        )
+    else:
+        with pytest.raises(AssertionError):
+            np.testing.assert_array_equal(average_to_point_result_circular, point_values)
+            np.testing.assert_array_equal(
+                converter_average_to_point_circular.convert_to(average_to_point_result_circular),
+                point_values
+            )
 
-    point_to_average_result = converter_point_to_average.convert_from(point_values)
-    point_to_average_expected = np.array([1.5, 3.5, 5.535714])
-    np.testing.assert_allclose(point_to_average_result, point_to_average_expected)
-    # currently failing as our conversions aren't circular due to assumptions made in
-    # interpolating
-    # np.testing.assert_array_equal(
-    #     converter_point_to_average.convert_to(point_to_average_result),
-    #     point_values
-    # )
-
-    # currently failing as our conversions aren't circular due to assumptions made in
-    # average_to_point_result_circular = converter_average_to_point_circular.convert_from(
-    #     point_to_average_result
-    # )
-    # np.testing.assert_array_equal(average_to_point_result_circular, point_values)
-    # np.testing.assert_array_equal(
-    #     converter_average_to_point_circular.convert_to(average_to_point_result_circular),
-    #     point_values
-    # )
 
     converter_average_to_point = TimeseriesConverter(
         average_times,
@@ -125,13 +154,16 @@ def test_point_to_average_conversion():
         timeseries_type_target=ParameterType.POINT_TIMESERIES,
     )
     average_to_point_result = converter_average_to_point.convert_from(average_values)
-    average_to_point_expected = np.array([0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3])
     np.testing.assert_array_equal(average_to_point_result, average_to_point_expected)
-    np.testing.assert_array_equal(
-        converter_average_to_point.convert_to(average_to_point_result),
-        np.array([1, 2.5, 3]),
-    )  # this isn't circular because of information loss and assumptions we make
-    np.testing.assert_array_equal(
-        converter_average_to_point.convert_to(average_to_point_result),
-        np.array([1, 2.5, 3]),
-    )  # check doing twice gives same result
+    for _ in range(2):  # check doing twice gives same result
+        if circular:
+            np.testing.assert_array_equal(
+                converter_average_to_point.convert_to(average_to_point_result),
+                average_values,
+            )
+        else:
+            with pytest.raises(AssertionError):
+                np.testing.assert_array_equal(
+                    converter_average_to_point.convert_to(average_to_point_result),
+                    average_values,
+                )
