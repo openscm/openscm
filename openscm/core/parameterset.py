@@ -197,7 +197,7 @@ class ParameterSet:
         region
             Hierarchical name of the region
         timeseries_type
-            Time series type
+            Time series type for this view
         interpolation_type
             Interpolation type
         extrapolation_type
@@ -221,7 +221,13 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-        parameter.attempt_read(timeseries_type, unit)
+        para_timeseries_type = (
+            parameter.parameter_type
+            if parameter.parameter_type
+            in (ParameterType.POINT_TIMESERIES, ParameterType.AVERAGE_TIMESERIES)
+            else timeseries_type
+        )
+        parameter.attempt_read(para_timeseries_type, unit)
         return TimeseriesView(
             parameter,
             unit,

@@ -416,11 +416,12 @@ class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attri
 
         if self._timeseries_converter is None:
             self._timeseries_converter = TimeseriesConverter(
-                self._parameter.time_points,
-                self._time_points,
-                self._parameter.parameter_type,
-                self._interpolation_type,
-                self._extrapolation_type,
+                source_time_points=self._parameter.time_points,
+                target_time_points=self._time_points,
+                timeseries_type_source=self._parameter.parameter_type,
+                interpolation_type=self._interpolation_type,
+                extrapolation_type=self._extrapolation_type,
+                timeseries_type_target=self._timeseries_type,
             )
         else:
             compatible_read = self._timeseries_converter.points_are_compatible(
