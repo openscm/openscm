@@ -701,9 +701,8 @@ def test_timeseries_view_requests():
         # now requesting a view with unit conflict causes error
         p.timeseries("example", "kg", timeseries_type="point")
 
-    with pytest.raises(ParameterTypeError):
-        # at least until we get the point <-> average conversion working
-        p.timeseries("example", "s", timeseries_type="average")
+    # check we can also request a view with the opposite timeseries_type
+    p.timeseries("example", "s", timeseries_type="average")
 
     tph = create_time_points(
         np.datetime64("2000-01-01"), np.timedelta64(365, "D"), 3, "point"
@@ -795,6 +794,25 @@ def test_request_time_points_with_scalar_view_error():
     )
     with pytest.raises(ParameterTypeError):
         tparameter.attempt_read(ParameterType.SCALAR, "GtCO2/a", np.array([0, 1]))
+
+
+def test_timeseries_view_different_type():
+    p = ParameterSet()
+    point_view = p.timeseries(
+        ("Emissions", "N2O"),
+        "MtN2O / yr",
+        time_points=np.arange(11),
+        timeseries_type=ParameterType.POINT_TIMESERIES,
+    )
+    point_view.values = np.arange(11)
+
+    average_view = p.timeseries(
+        ("Emissions", "N2O"),
+        "MtN2O / yr",
+        time_points=np.arange(11),
+        timeseries_type=ParameterType.AVERAGE_TIMESERIES,
+    )
+    np.testing.assert_array_equal(average_view.values, np.arange(10) + 0.5)
 
 
 @pytest.mark.parametrize("view_type", ["generic", "scalar", "timeseries"])
