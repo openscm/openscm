@@ -1,7 +1,9 @@
-from pymagicc.core import MAGICC6
-from typing import TYPE_CHECKING, Dict, Sequence
+import numpy as np
+import pymagicc.core
+from typing import TYPE_CHECKING, Dict, Sequence, Union
 
 from . import Adapter
+from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -66,10 +68,10 @@ class MAGICC6(Adapter):
         return "MAGICC6"
 
     def _initialize_model(self) -> None:
-        self.model = MAGICC6()
+        self.model = pymagicc.core.MAGICC6()
         self.model.create_copy()
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         self.model.default_config()
 
     def _shutdown(self) -> None:
@@ -78,8 +80,8 @@ class MAGICC6(Adapter):
     def _get_time_points(
         self, timeseries_type: Union[ParameterType, str]
     ) -> np.ndarray:
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         if self._timeseries_time_points_require_update():
 
             def get_time_points(tt):
@@ -97,5 +99,76 @@ class MAGICC6(Adapter):
         )
 
     def _timeseries_time_points_require_update(self) -> bool:
-        import pdb
-        pdb.set_trace()
+        pass
+        # import pdb
+        # pdb.set_trace()
+
+    def _reset(self) -> None:
+        pass
+        # import pdb
+        # pdb.set_trace()
+
+    def _run(self) -> None:
+        self.model.initialise_timeseries()
+        res = self.model.run()
+
+        # import pdb
+        # pdb.set_trace()
+        imap = {v: k for k, v in self._openscm_output_mappings.items()}
+        for att in dir(self.model):
+            # all time parameters captured in parameterset output
+            if not att.startswith(("_", "time", "emissions_idx")):
+                value = getattr(self.model, att)
+                if callable(value) or not isinstance(value.magnitude, np.ndarray):
+                    continue
+
+                self._output.timeseries(  # type: ignore
+                    imap[att],
+                    str(value.units),
+                    time_points=self._get_time_points(
+                        self._internal_timeseries_conventions[att]
+                    ),
+                    region="World",
+                    timeseries_type=self._internal_timeseries_conventions[att],
+                ).values = value.magnitude
+
+        ecs = (self.model.mu * np.log(2) / self.model.alpha).to("K")
+        self._output.scalar(
+            ("Equilibrium Climate Sensitivity",), str(ecs.units), region=("World",)
+        ).value = ecs.magnitude
+
+        rf2xco2 = self.model.mu * self._hc_per_m2_approx
+        self._output.scalar(
+            ("Radiative Forcing 2xCO2",), str(rf2xco2.units), region=("World",)
+        ).value = rf2xco2.magnitude
+
+    def _step(self) -> None:
+        raise NotImplementedError
+
+    def _timestep_count(self):
+        pass
+        # import pdb
+        # pdb.set_trace()
+
+    def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
+        value = self._get_parameter_value(para)
+        if name in self._openscm_standard_parameter_mappings:
+            self._set_model_para_from_openscm_para(name, value, para.unit)
+        else:
+            if name[0] != self.name:
+                # emergency valve for now, must be smarter way to handle this
+                raise ValueError("How did non-MAGICC6 parameter end up here?")
+            # import pdb
+            # pdb.set_trace()
+            setattr(self.model, name[1], value * _unit_registry(para.unit))
+
+    def _set_model_para_from_openscm_para(self, openscm_name, value, unit):
+        # import pdb
+        # pdb.set_trace()
+        model_name = self._openscm_standard_parameter_mappings[openscm_name]
+        if unit is not None:
+            pv = value * _unit_registry(unit)
+        else:
+            pv = value
+
+        setattr(self, model_name, pv)
