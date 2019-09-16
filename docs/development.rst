@@ -43,6 +43,8 @@ the PR page).
 Creating an :class:`~openscm.adapter.Adapter` subclass
 ******************************************************
 
+**Out of date: needs to be re-written/we should probably just refer to the source code rather than duplicating the docs until things are properly stable.**
+
 Create your adapter source file in ``openscm/adapters/``, e.g.
 ``myadapter.py``, and subclass the :class:`openscm.adapter.Adapter`
 class:
@@ -51,11 +53,12 @@ class:
 
     # openscm/adapters/myadapter.py
 
-    from ..adapter import Adapter
+    from . import Adapter
 
     YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
     class MyAdapter(Adapter):
+
 
 Implement the relevant methods (or just do ``pass`` if you do not need
 to do anything in the particular method). The only part of OpenSCM
@@ -173,6 +176,8 @@ with which adapters should interact is
 
 Reading model and input parameters and writing output parameters
 ****************************************************************
+
+**Out of date: needs to be re-written**
 
 Model parameters and input data (referred to as general "parameters"
 in OpenSCM) are **pulled** from the
