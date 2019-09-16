@@ -1,10 +1,10 @@
-from openscm.adapters.magicc7 import MAGICC7
+from openscm.adapters.magicc6 import MAGICC6
 
 from base import _AdapterTester
 
 
-class TestMyAdapter(_AdapterTester):
-    tadapter = MAGICC7
+class TestMAGICC6(_AdapterTester):
+    tadapter = MAGICC6
 
     # if necessary, you can extend the tests e.g.
     def test_run(self, test_adapter, test_run_parameters):
