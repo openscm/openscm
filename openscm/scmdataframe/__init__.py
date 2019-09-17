@@ -129,8 +129,11 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                 raise ValueError(
                     "Only generic types with Region==World can be extracted"
                 )
+            value = parameterset.generic(param_name, region=region).value
+            if isinstance(value, list):
+                value = tuple(value)
             metadata[parameter_name_to_scm(param_name)] = [
-                parameterset.generic(param_name, region=region).value
+                value
             ]
         elif p_info.parameter_type == ParameterType.SCALAR:
             if region != ("World",):
@@ -138,9 +141,12 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                     "Only scalar types with Region==World can be extracted"
                 )
             meta_key = "{} ({})".format(parameter_name_to_scm(param_name), p_info.unit)
-            meta_value = parameterset.scalar(
-                param_name, unit=cast(str, p_info.unit)
-            ).value
+            try:
+                meta_value = parameterset.scalar(
+                    param_name, unit=cast(str, p_info.unit)
+                ).value
+            except ParameterEmptyError:  # hack hack hack
+                continue
             metadata[meta_key] = [meta_value]
         else:
             para_type = cast(ParameterType, p_info.parameter_type)

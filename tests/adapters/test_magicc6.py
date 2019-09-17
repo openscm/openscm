@@ -1,4 +1,5 @@
 import numpy as np
+import pymagicc
 import pytest
 from base import _AdapterTester
 
@@ -7,9 +8,8 @@ from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 from openscm.errors import DimensionalityError
+from openscm.scmdataframe import convert_openscm_to_scmdataframe
 
-# TODO: RCP tests i.e. run RCPs directly via pymagicc and via OpenSCM and make sure
-# results are the same
 
 class TestMAGICC6(_AdapterTester):
     tadapter = MAGICC6
@@ -93,7 +93,7 @@ class TestMAGICC6(_AdapterTester):
         time_points = np.array(
             [
                 np.datetime64("{}-01-01".format(y))
-                .astype("datetime64[D]")  # TODO: fix bug, if this is datetime64[s] this doesn't work...
+                .astype("datetime64[s]")
                 .astype(float)
                 for y in range(1850, 2101, 1)
             ]
@@ -165,28 +165,46 @@ class TestMAGICC6(_AdapterTester):
             parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value
             == ecs_magnitude
         )
-        assert parameters.generic("Start Time").value == np.datetime64("1850-01-01")
-        assert parameters.generic("Stop Time").value == np.datetime64("2100-01-01")
+        # TODO: fix D vs. s bug
+        assert parameters.generic("Start Time").value == np.datetime64("1850-01-01").astype("datetime64[s]")
+        assert parameters.generic("Stop Time").value == np.datetime64("2100-01-01").astype("datetime64[s]")
 
     def prepare_run_input(self, test_adapter, start_time, stop_time):
         pass
-        # test_adapter._parameters.generic("Start Time").value = start_time
-        # test_adapter._parameters.generic("Stop Time").value = stop_time
 
-        # npoints = int((stop_time - start_time) / YEAR) + 1  # include self._stop_time
+    @pytest.mark.parametrize("rcp", [pymagicc.scenarios.rcp26, pymagicc.scenarios.rcp45, pymagicc.scenarios.rcp60, pymagicc.scenarios.rcp85])
+    def test_rcps(self, test_adapter, rcp):
+        # running regions in too hard basket for now
+        # TODO: add test of rcp.to_parameterset() as this would fail at the moment
+        world_only_rcp = rcp.filter(region="World")
+        with pymagicc.core.MAGICC6() as magicc6_pymagicc:
+            res_pymagicc = magicc6_pymagicc.run(
+                world_only_rcp, startyear=1765, endyear=2499  # TODO: fix last year issue
+            )
 
-        # time_points_for_averages = create_time_points(
-        #     start_time,
-        #     stop_time - start_time,
-        #     npoints,
-        #     ParameterType.AVERAGE_TIMESERIES,
-        # )
-        # test_adapter._parameters.timeseries(
-        #     ("Emissions", "CO2"),
-        #     "GtCO2/a",
-        #     time_points=time_points_for_averages,
-        #     timeseries_type="average",
-        # ).values = np.zeros(npoints)
+        world_only_rcp.set_meta("point", "parameter_type")
+        rcp_paras = world_only_rcp.to_parameterset()
+        rcp_paras.generic("Start Time").value = np.datetime64(world_only_rcp["time"].min())
+        rcp_paras.generic("Stop Time").value = np.datetime64(world_only_rcp["time"].max())
+        outputs = ParameterSet()
+        runner = self.tadapter(rcp_paras, outputs)
+        runner.reset()
+        runner.run()
+
+        res_openscm = convert_openscm_to_scmdataframe(
+                runner._output,
+                time_points=res_pymagicc["time"])
+
+        variables_to_test = [
+            ("Surface Temperature", "Surface Temperature Increase")
+        ]
+        for pymagicc_var, openscm_var in variables_to_test:
+            np.testing.assert_allclose(
+                res_pymagicc.filter(variable=pymagicc_var, region="World").values,
+                res_openscm.filter(variable=openscm_var, region="World").values,
+                atol=1e-5,
+                rtol=1e-5,
+            )
 
     def test_openscm_standard_parameters_handling_on_init(self):
         parameters = ParameterSet()

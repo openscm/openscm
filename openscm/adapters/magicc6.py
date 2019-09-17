@@ -1,4 +1,5 @@
 import os.path
+import warnings
 
 import numpy as np
 import pymagicc.core
@@ -9,7 +10,7 @@ from . import Adapter
 from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType, HIERARCHY_SEPARATOR
 from ..core.time import ExtrapolationType, InterpolationType, create_time_points
 from ..errors import ParameterEmptyError
-from ..scmdataframe import ScmDataFrame
+from ..scmdataframe import ScmDataFrame, convert_openscm_to_scmdataframe
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -62,7 +63,7 @@ class MAGICC6(Adapter):
 
     _internal_timeseries_conventions = {
         "Atmospheric Concentrations": "point",
-        "Emissions": "average",
+        "Emissions": "point",
         "Radiative Forcing": "point",
         "Temperatures": "point",
     }
@@ -107,9 +108,6 @@ class MAGICC6(Adapter):
             openscm_name = tuple(emms.split(HIERARCHY_SEPARATOR))
             self._initialize_timeseries_view(openscm_name, unit)
 
-        # hack to initialise input timeseries too, have to think through better in
-        # future...
-
     def _initialize_generic_view(self, full_name, value):
         self._add_parameter_view(full_name, value)
         model_name = full_name[1]
@@ -152,22 +150,17 @@ class MAGICC6(Adapter):
     ) -> np.ndarray:
         if self._timeseries_time_points_require_update():
             def get_time_points(tt):
-                if tt == "point":
-                    return np.array([
-                        np.datetime64("{}-01-01".format(y))
-                        for y in range(
-                            self._start_time.astype(object).year,
-                            self._end_time.astype(object).year,
-                        )
-                    ])
-                else:
-                    return np.array([
-                        np.datetime64("{}-01-01".format(y))
-                        for y in range(
-                            self._start_time.astype(object).year,
-                            self._end_time.astype(object).year + 1,
-                        )
-                    ])
+                end_year = self._end_time.astype(object).year
+                if tt == "average":
+                    end_year += 1
+
+                return np.array([
+                    np.datetime64("{}-01-01".format(y))
+                    for y in range(
+                        self._start_time.astype(object).year,
+                        end_year,
+                    )
+                ]).astype("datetime64[s]")
 
             self._time_points = get_time_points("point")
             self._time_points_for_averages = get_time_points("average")
@@ -185,23 +178,31 @@ class MAGICC6(Adapter):
         super()._set_model_from_parameters()
 
         if self._write_out_emissions:
-            import pdb
-            pdb.set_trace()
-            # dump out emissions to file now
+            scen = pymagicc.io.MAGICCData(convert_openscm_to_scmdataframe(
+                self._parameters,
+                time_points=self._get_time_points("point"),
+            )).filter(variable="Emissions|*")
+            if "todo" not in scen.meta:
+                scen.set_meta("SET", "todo")
+            scen.write(os.path.join(self.model.run_dir, "PYMAGICC.SCEN"), magicc_version=self.model.version)
+            self.model.update_config(file_emissionscenario="PYMAGICC.SCEN")
+
             self._write_out_emissions = False
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
+        timeseries_types  = (ParameterType.AVERAGE_TIMESERIES, ParameterType.POINT_TIMESERIES)
         value = self._get_parameter_value(para)
         if name in self._openscm_standard_parameter_mappings:
             self._set_model_para_from_openscm_para(name, value)
         else:
+            if para.parameter_type in timeseries_types:
+                self._write_out_emissions = True
+                return
+
             if name[0] != self.name:
                 # emergency valve for now, must be smarter way to handle this
                 raise ValueError("How did non-MAGICC6 parameter end up here?")
 
-            timeseries_types  = (ParameterType.AVERAGE_TIMESERIES, ParameterType.POINT_TIMESERIES)
-            if para.parameter_type in timeseries_types:
-                self._write_out_emissions = True
             self._run_kwargs[name[1]] = value
 
     def _set_model_para_from_openscm_para(self, openscm_name, value):
@@ -217,22 +218,22 @@ class MAGICC6(Adapter):
         for k, v in self._output._root._parameters.items():
             if v.unit is None:
                 continue
-            try:
-                tp = self._get_time_points(v.parameter_type)
-                view = self._output.timeseries(
-                    v.name,
-                    v.unit,
-                    time_points=tp,
-                    timeseries_type=v.parameter_type,
-                )
-                view.values = np.zeros(tp.shape) * np.nan
-            except ParameterEmptyError:  # not set yet
-                import pdb
-                pdb.set_trace()
-                continue
+
+            tp = self._get_time_points(v.parameter_type)
+            view = self._output.timeseries(
+                v.name,
+                v.unit,
+                time_points=tp,
+                timeseries_type=v.parameter_type,
+            )
+            view.values = np.zeros(tp.shape) * np.nan
 
     def _run(self) -> None:
-        res = self.model.run(**self._run_kwargs)
+        if "startyear" in self._run_kwargs:
+            self._run_kwargs.pop("startyear")
+            warnings.warn("MAGICC6 hard-coded to start in 1765 as there is a conflict between the concept of a start year and having continuous timeseries")
+
+        res = self.model.run(startyear=1765, **self._run_kwargs)
         # hack hack hack
         res_tmp = res.filter(region="World").filter(unit=["*CO2eq*"], keep=False).timeseries().reset_index()
         res_tmp["climate_model"] = "unspecified"
@@ -259,9 +260,10 @@ class MAGICC6(Adapter):
                         self._units[k]
                     ).value = v
                 else:
-                    self._output.generic(
-                        (self.name, k),
-                    ).value = v
+                    warnings.warn("Not returning parameters without units")
+                    # self._output.generic(
+                    #     (self.name, k),
+                    # ).value = v
 
     def _step(self) -> None:
         raise NotImplementedError

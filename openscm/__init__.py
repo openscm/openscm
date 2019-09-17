@@ -55,12 +55,6 @@ def run(
             scenario = label["scenario"]
             run_df = runner.filter(model=model, scenario=scenario)
 
-            if climate_model == "PH99":
-                # massive hack required only because of lack of point to average conversion
-                run_df = run_df.timeseries().reset_index()
-                run_df["parameter_type"] = "point"
-                run_df = ScmDataFrame(run_df)
-
             ps = ScmDataFrame(run_df).to_parameterset()
             ps.generic("Start Time").value = np.datetime64(run_df["time"].min())
             ps.generic("Stop Time").value = np.datetime64(run_df["time"].max())
