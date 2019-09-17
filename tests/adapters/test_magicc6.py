@@ -49,22 +49,22 @@ class TestMAGICC6(_AdapterTester):
     def test_shutdown(self, test_adapter):
         super().test_shutdown(test_adapter)
 
-    # if necessary, you can extend the tests e.g.
     def test_run(self, test_adapter, test_run_parameters):
         super().test_run(test_adapter, test_run_parameters)
         # assert default temperatures unchanged
         time_points = create_time_points(
-            np.datetime64("2098-01-01"),
+            np.datetime64("2094-01-01"),
             np.timedelta64(365, "D"),
             3,
-            ParameterType.AVERAGE_TIMESERIES,
+            ParameterType.POINT_TIMESERIES,
         )
-        np.testing.assert_allclose(test_adapter._parameters.timeseries(
+        run_res_temperature = test_adapter._output.timeseries(
             ("Surface Temperature Increase"),
-            "delta_degC",
+            "K",
             time_points=time_points,
-            timeseries_type="average",
-        ).values, np.array([1.1, 1.2, 1.3]))
+            timeseries_type="point",
+        ).values
+        np.testing.assert_allclose(run_res_temperature, np.array([1.5695633, 1.5683754, 1.5671952]))
 
     def test_step(self, test_adapter):
         test_adapter.reset()
@@ -98,7 +98,7 @@ class TestMAGICC6(_AdapterTester):
         check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2"]
         check_args_temperature = ["Surface Temperature Increase", "delta_degC"]
         assert output.timeseries(
-            *check_args_rf, time_points=time_points, timeseries_type="average"
+            *check_args_rf, time_points=time_points, timeseries_type="point"
         ).empty
         assert output.timeseries(*check_args_temperature, time_points=time_points).empty
 
@@ -152,9 +152,9 @@ class TestMAGICC6(_AdapterTester):
 
         # make sure OpenSCM ECS value was used preferentially to the model's
         # core_climatesensitivity
-        assert test_adapter._values.t2xco2.value == ecs_magnitude
+        assert test_adapter._output.scalar(("MAGICC6", "core_climatesensitivity"), "delta_degC").value == ecs_magnitude
         assert (
-            parameters.scalar(("MAGICC6", "core_climatesensitivity"), "delta_degC").value == ecs_magnitude
+            parameters.scalar(("MAGICC6", "core_climatesensitivity"), "delta_degC").value == 2*ecs_magnitude
         )
 
         # double check the model didn't do anything funky

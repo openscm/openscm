@@ -9,6 +9,7 @@ from . import Adapter
 from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType, HIERARCHY_SEPARATOR
 from ..core.time import ExtrapolationType, InterpolationType, create_time_points
 from ..errors import ParameterEmptyError
+from ..scmdataframe import ScmDataFrame
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -217,37 +218,33 @@ class MAGICC6(Adapter):
         pass
 
     def _run(self) -> None:
-        res = self.model.run()
-
-        import pdb
-        pdb.set_trace()
+        res = self.model.run(**self._run_kwargs)
+        # hack hack hack
+        res_tmp = res.filter(region="World").filter(unit=["*CO2eq*"], keep=False).timeseries().reset_index()
+        res_tmp["climate_model"] = "unspecified"
         imap = {v: k for k, v in self._openscm_output_mappings.items()}
-        for att in dir(self.model):
-            # all time parameters captured in parameterset output
-            if not att.startswith(("_", "time", "emissions_idx")):
-                value = getattr(self.model, att)
-                if callable(value) or not isinstance(value.magnitude, np.ndarray):
-                    continue
+        res_tmp["variable"] = res_tmp["variable"].apply(lambda x: imap[x] if x in imap else x)
+        # need to keep more than just world at some point in future, currently
+        # hierarchy doesn't work...
+        res_tmp = ScmDataFrame(res_tmp)
+        # how to solve fact that not all radiative forcing is reported all the time (
+        # parameterset doesn't work if you try to write e.g. `Radiative Forcing` and
+        # `Radiative Forcing|Greenhouse Gases`, `Radiative Forcing` will always be
+        # calculated from its children so need to report all the sub-components or
+        # none)
+        res_tmp.filter(variable="Radiative Forcing|*", keep=False).to_parameterset(parameterset=self._output)
 
-                self._output.timeseries(  # type: ignore
-                    imap[att],
-                    str(value.units),
-                    time_points=self._get_time_points(
-                        self._internal_timeseries_conventions[att]
-                    ),
-                    region="World",
-                    timeseries_type=self._internal_timeseries_conventions[att],
-                ).values = value.magnitude
-
-        ecs = (self.model.mu * np.log(2) / self.model.alpha).to("K")
-        self._output.scalar(
-            ("Equilibrium Climate Sensitivity",), str(ecs.units), region=("World",)
-        ).value = ecs.magnitude
-
-        rf2xco2 = self.model.mu * self._hc_per_m2_approx
-        self._output.scalar(
-            ("Radiative Forcing 2xCO2",), str(rf2xco2.units), region=("World",)
-        ).value = rf2xco2.magnitude
+        for nml, nml_values in res.metadata["parameters"].items():
+            for k, v in nml_values.items():
+                if k in self._units:
+                    self._output.scalar(
+                        (self.name, k),
+                        self._units[k]
+                    ).value = v
+                else:
+                    self._output.generic(
+                        (self.name, k),
+                    ).value = v
 
     def _step(self) -> None:
         raise NotImplementedError
