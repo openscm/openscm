@@ -8,6 +8,9 @@ from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 from openscm.errors import DimensionalityError
 
+# TODO: RCP tests i.e. run RCPs directly via pymagicc and via OpenSCM and make sure
+# results are the same
+
 class TestMAGICC6(_AdapterTester):
     tadapter = MAGICC6
     def test_initialize(self, test_adapter):
@@ -90,22 +93,22 @@ class TestMAGICC6(_AdapterTester):
         time_points = np.array(
             [
                 np.datetime64("{}-01-01".format(y))
-                .astype("datetime64[s]")
+                .astype("datetime64[D]")  # TODO: fix bug, if this is datetime64[s] this doesn't work...
                 .astype(float)
-                for y in range(1850, 2101, 10)
+                for y in range(1850, 2101, 1)
             ]
         )
-        check_args_rf = [("Radiative Forcing", "CO2"), "W/m^2"]
+        check_args_rf = [("Radiative Forcing"), "W/m^2"]
         check_args_temperature = ["Surface Temperature Increase", "delta_degC"]
         assert output.timeseries(
-            *check_args_rf, time_points=time_points, timeseries_type="point"
+            *check_args_rf, time_points=time_points
         ).empty
         assert output.timeseries(*check_args_temperature, time_points=time_points).empty
 
         test_adapter.reset()
         test_adapter.run()
         first_run_rf = output.timeseries(
-            *check_args_rf, time_points=time_points, timeseries_type="average"
+            *check_args_rf, time_points=time_points
         ).values
         first_run_temperature = output.timeseries(
             *check_args_temperature, time_points=time_points
@@ -114,7 +117,7 @@ class TestMAGICC6(_AdapterTester):
         test_adapter.reset()
         assert np.isnan(
             output.timeseries(
-                *check_args_rf, time_points=time_points, timeseries_type="average"
+                *check_args_rf, time_points=time_points
             ).values
         ).all()
         assert np.isnan(
@@ -122,7 +125,7 @@ class TestMAGICC6(_AdapterTester):
         ).all()
         test_adapter.run()
         second_run_rf = output.timeseries(
-            *check_args_rf, time_points=time_points, timeseries_type="average"
+            *check_args_rf, time_points=time_points
         ).values
         second_run_temperature = output.timeseries(
             *check_args_temperature, time_points=time_points

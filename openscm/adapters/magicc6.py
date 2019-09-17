@@ -63,6 +63,7 @@ class MAGICC6(Adapter):
     _internal_timeseries_conventions = {
         "Atmospheric Concentrations": "point",
         "Emissions": "average",
+        "Radiative Forcing": "point",
         "Temperatures": "point",
     }
 
@@ -212,18 +213,34 @@ class MAGICC6(Adapter):
             self._run_kwargs[magicc6_name] = value
 
     def _reset(self) -> None:
-        # TODO: clear all outputs here
-        # import pdb
-        # pdb.set_trace()
-        pass
+        # hack hack hack
+        for k, v in self._output._root._parameters.items():
+            if v.unit is None:
+                continue
+            try:
+                tp = self._get_time_points(v.parameter_type)
+                view = self._output.timeseries(
+                    v.name,
+                    v.unit,
+                    time_points=tp,
+                    timeseries_type=v.parameter_type,
+                )
+                view.values = np.zeros(tp.shape) * np.nan
+            except ParameterEmptyError:  # not set yet
+                import pdb
+                pdb.set_trace()
+                continue
 
     def _run(self) -> None:
         res = self.model.run(**self._run_kwargs)
         # hack hack hack
         res_tmp = res.filter(region="World").filter(unit=["*CO2eq*"], keep=False).timeseries().reset_index()
         res_tmp["climate_model"] = "unspecified"
+
         imap = {v: k for k, v in self._openscm_output_mappings.items()}
         res_tmp["variable"] = res_tmp["variable"].apply(lambda x: imap[x] if x in imap else x)
+        res_tmp["parameter_type"] = res_tmp["variable"].apply(lambda x: self._internal_timeseries_conventions[x.split("|")[0]] if x.split("|")[0] in self._internal_timeseries_conventions else "point")
+
         # need to keep more than just world at some point in future, currently
         # hierarchy doesn't work...
         res_tmp = ScmDataFrame(res_tmp)
