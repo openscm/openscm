@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Dict, Sequence, Union
 
 from . import Adapter
 from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType, HIERARCHY_SEPARATOR
+from ..core.time import ExtrapolationType, InterpolationType, create_time_points
 from ..errors import ParameterEmptyError
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
@@ -147,14 +148,24 @@ class MAGICC6(Adapter):
     def _get_time_points(
         self, timeseries_type: Union[ParameterType, str]
     ) -> np.ndarray:
-        # import pdb
-        # pdb.set_trace()
         if self._timeseries_time_points_require_update():
-
             def get_time_points(tt):
-                return create_time_points(
-                    self._start_time, self._period_length, self._timestep_count, tt
-                )
+                if tt == "point":
+                    return np.array([
+                        np.datetime64("{}-01-01".format(y))
+                        for y in range(
+                            self._start_time.astype(object).year,
+                            self._end_time.astype(object).year,
+                        )
+                    ])
+                else:
+                    return np.array([
+                        np.datetime64("{}-01-01".format(y))
+                        for y in range(
+                            self._start_time.astype(object).year,
+                            self._end_time.astype(object).year + 1,
+                        )
+                    ])
 
             self._time_points = get_time_points("point")
             self._time_points_for_averages = get_time_points("average")
@@ -165,10 +176,8 @@ class MAGICC6(Adapter):
             else self._time_points_for_averages
         )
 
-    def _timeseries_time_points_require_update(self) -> bool:
-        pass
-        # import pdb
-        # pdb.set_trace()
+    def _timeseries_time_points_require_update(self, names_to_check:list =["Start Time", "Stop Time", "Step Length"]) -> bool:
+        return super()._timeseries_time_points_require_update(names_to_check=["Start Time", "Stop Time"])
 
     def _set_model_from_parameters(self):
         super()._set_model_from_parameters()
@@ -202,9 +211,10 @@ class MAGICC6(Adapter):
             self._run_kwargs[magicc6_name] = value
 
     def _reset(self) -> None:
-        pass
+        # TODO: clear all outputs here
         # import pdb
         # pdb.set_trace()
+        pass
 
     def _run(self) -> None:
         res = self.model.run()

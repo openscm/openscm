@@ -337,7 +337,7 @@ class Adapter(metaclass=ABCMeta):
                 (self.name, self._openscm_standard_parameter_mappings["Start Time"])
             ].value
 
-    def _timeseries_time_points_require_update(self) -> bool:
+    def _timeseries_time_points_require_update(self, names_to_check:list =["Start Time", "Stop Time", "Step Length"]) -> bool:
         """
         Determine if the timeseries view time points require updating
 
@@ -349,7 +349,6 @@ class Adapter(metaclass=ABCMeta):
         if self._time_points is None or self._time_points_for_averages is None:
             return True
 
-        names_to_check = ["Start Time", "Stop Time", "Step Length"]
         for n in names_to_check:
             if self._parameter_views[n].version > self._parameter_versions[n]:
                 return True
