@@ -12,8 +12,7 @@ class TestMAGICC6(_AdapterTester):
     tadapter = MAGICC6
     def test_initialize(self, test_adapter):
         super().test_initialize(test_adapter)
-        assert test_adapter._values is not None
-        assert test_adapter._values.c3.value == 0.09175
+
         assert (
             test_adapter._parameters.scalar(("MAGICC6", "core_climatesensitivity"), "delta_degC").value
             == 3.0
@@ -28,7 +27,7 @@ class TestMAGICC6(_AdapterTester):
 
         with pytest.raises(DimensionalityError):
             test_adapter._parameters.timeseries(
-                ("Emissions", "CO2"),
+                ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
                 "GtN2O/a",
                 time_points=np.array(
                     [np.datetime64("{}-01-01".format(y)) for y in [1810, 2020, 2100]]
@@ -38,7 +37,7 @@ class TestMAGICC6(_AdapterTester):
             )
 
         assert test_adapter._parameters.timeseries(
-            ("Emissions", "CO2"),
+            ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
             "GtCO2/a",
             time_points=np.array(
                 [np.datetime64("{}-01-01".format(y)) for y in [1810, 2020, 2100]]
@@ -199,9 +198,16 @@ class TestMAGICC6(_AdapterTester):
 
         # will need to update this test
         assert (
-            # make sure OpenSCM ECS value was passed correctly
-            tadapter.model.get_config()["core_climatesensitivity"]
+            # OpenSCM ECS value passed into parameters
+            tadapter._parameters.scalar("Equilibrium Climate Sensitivity", "delta_degC").value
             == ecs_magnitude
+        )
+        assert (
+            # OpenSCM ECS value doesn't overwrite MAGICC value (may want to update in
+            # future, true test is what comes when `run` is called which is tested
+            # elsewhere)
+            tadapter._parameters.scalar(("MAGICC6", "core_climatesensitivity"), "delta_degC").value
+            == 3.0
         )
 
     def test_defaults(self, test_adapter):
