@@ -61,6 +61,7 @@ def run(
             # not how this should be done, should initialise earlier...
             climate_runner = OpenSCM(climate_model, ps)
             climate_runner.run()
+
             output_scmdf = convert_openscm_to_scmdataframe(
                 climate_runner.output,
                 time_points=output_time_points,

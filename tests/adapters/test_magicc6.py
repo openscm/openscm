@@ -173,13 +173,13 @@ class TestMAGICC6(_AdapterTester):
         pass
 
     @pytest.mark.parametrize("rcp", [pymagicc.scenarios.rcp26, pymagicc.scenarios.rcp45, pymagicc.scenarios.rcp60, pymagicc.scenarios.rcp85])
-    def test_rcps(self, test_adapter, rcp):
+    def test_rcps(self, rcp):
         # running regions in too hard basket for now
         # TODO: add test of rcp.to_parameterset() as this would fail at the moment
         world_only_rcp = rcp.filter(region="World")
         with pymagicc.core.MAGICC6() as magicc6_pymagicc:
             res_pymagicc = magicc6_pymagicc.run(
-                world_only_rcp, startyear=1765, endyear=2499  # TODO: fix last year issue
+                world_only_rcp, startyear=1765, endyear=world_only_rcp["time"].max().year
             )
 
         world_only_rcp.set_meta("point", "parameter_type")
@@ -193,18 +193,31 @@ class TestMAGICC6(_AdapterTester):
 
         res_openscm = convert_openscm_to_scmdataframe(
                 runner._output,
-                time_points=res_pymagicc["time"])
+                time_points=res_pymagicc["time"],
+                model=world_only_rcp["model"].unique()[0],
+                scenario =world_only_rcp["scenario"].unique()[0],
+                climate_model=world_only_rcp["climate_model"].unique()[0],
+        )
 
         variables_to_test = [
-            ("Surface Temperature", "Surface Temperature Increase")
+            ("Surface Temperature", "Surface Temperature Increase"),
+            ('Atmospheric Concentrations|CO2', 'Atmospheric Concentrations|CO2'),
+            ('Atmospheric Concentrations|CH4', 'Atmospheric Concentrations|CH4'),
+            ('Emissions|CO2|MAGICC Fossil and Industrial', 'Emissions|CO2|MAGICC Fossil and Industrial'),
+            ('Radiative Forcing', 'Radiative Forcing'),
         ]
         for pymagicc_var, openscm_var in variables_to_test:
+            res_pym_vals = res_pymagicc.filter(variable=pymagicc_var, region="World").values.squeeze()
+            res_ocm_vals = res_openscm.filter(variable=openscm_var, region="World").values.squeeze()
             np.testing.assert_allclose(
-                res_pymagicc.filter(variable=pymagicc_var, region="World").values,
-                res_openscm.filter(variable=openscm_var, region="World").values,
-                atol=1e-5,
+                res_pym_vals,
+                res_ocm_vals,
+                atol=1e-4*res_ocm_vals.max(),
                 rtol=1e-5,
             )
+
+
+            np.where(np.abs((res_pym_vals - res_ocm_vals) / res_pym_vals) > 0.001)
 
     def test_openscm_standard_parameters_handling_on_init(self):
         parameters = ParameterSet()

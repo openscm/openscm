@@ -132,7 +132,11 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
             value = parameterset.generic(param_name, region=region).value
             if isinstance(value, list):
                 value = tuple(value)
-            metadata[parameter_name_to_scm(param_name)] = [
+
+            meta_key = parameter_name_to_scm(param_name)
+            if meta_key in ["model", "scenario", "climate_model"]:
+                continue  # should always come from kwargs
+            metadata[meta_key] = [
                 value
             ]
         elif p_info.parameter_type == ParameterType.SCALAR:
@@ -141,6 +145,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                     "Only scalar types with Region==World can be extracted"
                 )
             meta_key = "{} ({})".format(parameter_name_to_scm(param_name), p_info.unit)
+
             try:
                 meta_value = parameterset.scalar(
                     param_name, unit=cast(str, p_info.unit)

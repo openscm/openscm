@@ -73,12 +73,6 @@ class MAGICC6(Adapter):
         "core_delq2xco2": "W/m^2",
     }
 
-    _write_out_emissions = False
-    """bool: do emissions need to be written to disk?"""
-
-    _run_kwargs = {}
-    """dict: kwargs to be passed to the MAGICC run call"""
-
     @property
     def name(self):
         """
@@ -87,6 +81,12 @@ class MAGICC6(Adapter):
         return "MAGICC6"
 
     def _initialize_model(self) -> None:
+        self._run_kwargs = {}
+        """dict: kwargs to be passed to the MAGICC run call"""
+
+        self._write_out_emissions = False
+        """bool: do emissions need to be written to disk?"""
+
         self.model = pymagicc.core.MAGICC6()
         self.model.create_copy()
         for nml_name, nml in self.model.default_config.items():
@@ -158,7 +158,7 @@ class MAGICC6(Adapter):
                     np.datetime64("{}-01-01".format(y))
                     for y in range(
                         self._start_time.astype(object).year,
-                        end_year,
+                        end_year + 1,
                     )
                 ]).astype("datetime64[s]")
 
