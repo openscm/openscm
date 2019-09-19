@@ -7,7 +7,12 @@ import pymagicc.io
 from typing import TYPE_CHECKING, Dict, Sequence, Union
 
 from . import Adapter
-from ..core.parameters import HierarchicalName, ParameterInfo, ParameterType, HIERARCHY_SEPARATOR
+from ..core.parameters import (
+    HierarchicalName,
+    ParameterInfo,
+    ParameterType,
+    HIERARCHY_SEPARATOR,
+)
 from ..core.time import ExtrapolationType, InterpolationType, create_time_points
 from ..errors import ParameterEmptyError
 from ..scmdataframe import ScmDataFrame, convert_openscm_to_scmdataframe
@@ -50,6 +55,7 @@ class MAGICC6(Adapter):
     Model description and calibration, Atmos. Chem. Phys., 11, 1417-1456,
     https://doi.org/10.5194/acp-11-1417-2011, 2011.
     """
+
     _openscm_standard_parameter_mappings: Dict[Sequence[str], str] = {
         "Equilibrium Climate Sensitivity": "core_climatesensitivity",
         "Radiative Forcing 2xCO2": "core_delq2xco2",
@@ -57,9 +63,7 @@ class MAGICC6(Adapter):
         "Stop Time": "endyear",
     }
 
-    _openscm_output_mappings = {
-        "Surface Temperature Increase": "Surface Temperature",
-    }
+    _openscm_output_mappings = {"Surface Temperature Increase": "Surface Temperature"}
 
     _internal_timeseries_conventions = {
         "Atmospheric Concentrations": "point",
@@ -68,10 +72,7 @@ class MAGICC6(Adapter):
         "Temperatures": "point",
     }
 
-    _units = {
-        "core_climatesensitivity": "delta_degC",
-        "core_delq2xco2": "W/m^2",
-    }
+    _units = {"core_climatesensitivity": "delta_degC", "core_delq2xco2": "W/m^2"}
 
     @property
     def name(self):
@@ -92,7 +93,9 @@ class MAGICC6(Adapter):
         for nml_name, nml in self.model.default_config.items():
             for para, value in nml.items():
                 if para in self._units:
-                    self._initialize_scalar_view((self.name, para), value, self._units[para])
+                    self._initialize_scalar_view(
+                        (self.name, para), value, self._units[para]
+                    )
                 else:
                     self._initialize_generic_view((self.name, para), value)
 
@@ -103,8 +106,12 @@ class MAGICC6(Adapter):
             else:
                 self._add_parameter_view(o_name)
 
-        scen_emms = pymagicc.io.MAGICCData(os.path.join(self.model.run_dir, "RCP26.SCEN")).filter(region="World")
-        for _, (emms, unit) in scen_emms.meta[["variable", "unit"]].drop_duplicates().iterrows():
+        scen_emms = pymagicc.io.MAGICCData(
+            os.path.join(self.model.run_dir, "RCP26.SCEN")
+        ).filter(region="World")
+        for _, (emms, unit) in (
+            scen_emms.meta[["variable", "unit"]].drop_duplicates().iterrows()
+        ):
             openscm_name = tuple(emms.split(HIERARCHY_SEPARATOR))
             self._initialize_timeseries_view(openscm_name, unit)
 
@@ -149,18 +156,20 @@ class MAGICC6(Adapter):
         self, timeseries_type: Union[ParameterType, str]
     ) -> np.ndarray:
         if self._timeseries_time_points_require_update():
+
             def get_time_points(tt):
                 end_year = self._end_time.astype(object).year
                 if tt == "average":
                     end_year += 1
 
-                return np.array([
-                    np.datetime64("{}-01-01".format(y))
-                    for y in range(
-                        self._start_time.astype(object).year,
-                        end_year + 1,
-                    )
-                ]).astype("datetime64[s]")
+                return np.array(
+                    [
+                        np.datetime64("{}-01-01".format(y))
+                        for y in range(
+                            self._start_time.astype(object).year, end_year + 1
+                        )
+                    ]
+                ).astype("datetime64[s]")
 
             self._time_points = get_time_points("point")
             self._time_points_for_averages = get_time_points("average")
@@ -171,26 +180,37 @@ class MAGICC6(Adapter):
             else self._time_points_for_averages
         )
 
-    def _timeseries_time_points_require_update(self, names_to_check:list =["Start Time", "Stop Time", "Step Length"]) -> bool:
-        return super()._timeseries_time_points_require_update(names_to_check=["Start Time", "Stop Time"])
+    def _timeseries_time_points_require_update(
+        self, names_to_check: list = ["Start Time", "Stop Time", "Step Length"]
+    ) -> bool:
+        return super()._timeseries_time_points_require_update(
+            names_to_check=["Start Time", "Stop Time"]
+        )
 
     def _set_model_from_parameters(self):
         super()._set_model_from_parameters()
 
         if self._write_out_emissions:
-            scen = pymagicc.io.MAGICCData(convert_openscm_to_scmdataframe(
-                self._parameters,
-                time_points=self._get_time_points("point"),
-            )).filter(variable="Emissions|*")
+            scen = pymagicc.io.MAGICCData(
+                convert_openscm_to_scmdataframe(
+                    self._parameters, time_points=self._get_time_points("point")
+                )
+            ).filter(variable="Emissions|*")
             if "todo" not in scen.meta:
                 scen.set_meta("SET", "todo")
-            scen.write(os.path.join(self.model.run_dir, "PYMAGICC.SCEN"), magicc_version=self.model.version)
+            scen.write(
+                os.path.join(self.model.run_dir, "PYMAGICC.SCEN"),
+                magicc_version=self.model.version,
+            )
             self.model.update_config(file_emissionscenario="PYMAGICC.SCEN")
 
             self._write_out_emissions = False
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
-        timeseries_types  = (ParameterType.AVERAGE_TIMESERIES, ParameterType.POINT_TIMESERIES)
+        timeseries_types = (
+            ParameterType.AVERAGE_TIMESERIES,
+            ParameterType.POINT_TIMESERIES,
+        )
         value = self._get_parameter_value(para)
         if name in self._openscm_standard_parameter_mappings:
             self._set_model_para_from_openscm_para(name, value)
@@ -221,26 +241,36 @@ class MAGICC6(Adapter):
 
             tp = self._get_time_points(v.parameter_type)
             view = self._output.timeseries(
-                v.name,
-                v.unit,
-                time_points=tp,
-                timeseries_type=v.parameter_type,
+                v.name, v.unit, time_points=tp, timeseries_type=v.parameter_type
             )
             view.values = np.zeros(tp.shape) * np.nan
 
     def _run(self) -> None:
         if "startyear" in self._run_kwargs:
             self._run_kwargs.pop("startyear")
-            warnings.warn("MAGICC6 hard-coded to start in 1765 as there is a conflict between the concept of a start year and having continuous timeseries")
+            warnings.warn(
+                "MAGICC6 hard-coded to start in 1765 as there is a conflict between the concept of a start year and having continuous timeseries"
+            )
 
         res = self.model.run(startyear=1765, **self._run_kwargs)
         # hack hack hack
-        res_tmp = res.filter(region="World").filter(unit=["*CO2eq*"], keep=False).timeseries().reset_index()
+        res_tmp = (
+            res.filter(region="World")
+            .filter(unit=["*CO2eq*"], keep=False)
+            .timeseries()
+            .reset_index()
+        )
         res_tmp["climate_model"] = "unspecified"
 
         imap = {v: k for k, v in self._openscm_output_mappings.items()}
-        res_tmp["variable"] = res_tmp["variable"].apply(lambda x: imap[x] if x in imap else x)
-        res_tmp["parameter_type"] = res_tmp["variable"].apply(lambda x: self._internal_timeseries_conventions[x.split("|")[0]] if x.split("|")[0] in self._internal_timeseries_conventions else "point")
+        res_tmp["variable"] = res_tmp["variable"].apply(
+            lambda x: imap[x] if x in imap else x
+        )
+        res_tmp["parameter_type"] = res_tmp["variable"].apply(
+            lambda x: self._internal_timeseries_conventions[x.split("|")[0]]
+            if x.split("|")[0] in self._internal_timeseries_conventions
+            else "point"
+        )
 
         # need to keep more than just world at some point in future, currently
         # hierarchy doesn't work...
@@ -250,15 +280,14 @@ class MAGICC6(Adapter):
         # `Radiative Forcing|Greenhouse Gases`, `Radiative Forcing` will always be
         # calculated from its children so need to report all the sub-components or
         # none)
-        res_tmp.filter(variable="Radiative Forcing|*", keep=False).to_parameterset(parameterset=self._output)
+        res_tmp.filter(variable="Radiative Forcing|*", keep=False).to_parameterset(
+            parameterset=self._output
+        )
 
         for nml, nml_values in res.metadata["parameters"].items():
             for k, v in nml_values.items():
                 if k in self._units:
-                    self._output.scalar(
-                        (self.name, k),
-                        self._units[k]
-                    ).value = v
+                    self._output.scalar((self.name, k), self._units[k]).value = v
                 else:
                     warnings.warn("Not returning parameters without units")
                     # self._output.generic(
@@ -294,4 +323,8 @@ class MAGICC6(Adapter):
     def _timestep_count(self):
         # MAGICC6 is always run with yearly drivers, the `stepsperyear` parameter is
         # internal only so can be ignored
-        return self._end_time.astype(object).year - self._start_time.astype(object).year + 1
+        return (
+            self._end_time.astype(object).year
+            - self._start_time.astype(object).year
+            + 1
+        )

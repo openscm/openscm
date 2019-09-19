@@ -136,9 +136,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
             meta_key = parameter_name_to_scm(param_name)
             if meta_key in ["model", "scenario", "climate_model"]:
                 continue  # should always come from kwargs
-            metadata[meta_key] = [
-                value
-            ]
+            metadata[meta_key] = [value]
         elif p_info.parameter_type == ParameterType.SCALAR:
             if region != ("World",):
                 raise ValueError(
