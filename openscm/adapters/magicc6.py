@@ -191,13 +191,31 @@ class MAGICC6(Adapter):
         super()._set_model_from_parameters()
 
         if self._write_out_emissions:
+            data = []
+            time = self._get_time_points("point")
+            variable = []
+            region = []
+            unit = []
+            for k, v in self._parameter_views.items():
+                if k[0] == "Emissions":
+                    data.append(v.values)
+                    variable.append(HIERARCHY_SEPARATOR.join(k))
+                    region.append(HIERARCHY_SEPARATOR.join(v.region))
+                    unit.append(v.unit)
+
             scen = pymagicc.io.MAGICCData(
-                convert_openscm_to_scmdataframe(
-                    self._parameters, time_points=self._get_time_points("point")
-                )
-            ).filter(variable="Emissions|*")
-            if "todo" not in scen.meta:
-                scen.set_meta("SET", "todo")
+                data=np.vstack(data).T,
+                index=time,
+                columns={
+                    "variable": variable,
+                    "region": region,
+                    "unit": unit,
+                    "model": "na",
+                    "scenario": "na",
+                    "todo": "SET",
+                }
+            )
+
             scen.write(
                 os.path.join(self.model.run_dir, "PYMAGICC.SCEN"),
                 magicc_version=self.model.version,

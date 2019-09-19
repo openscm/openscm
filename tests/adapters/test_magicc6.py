@@ -211,8 +211,8 @@ class TestMAGICC6(_AdapterTester):
         world_only_rcp.set_meta("point", "parameter_type")
         if fiddle_units:
             world_only_rcp = world_only_rcp.to_iamdataframe()
-            world_only_rcp = world_only_rcp.convert_unit({"Gt C / yr": ["MtCO2/yr", 44000/12]})
-            world_only_rcp = world_only_rcp.convert_unit({"Mt S / yr": ["MtSO2/yr", 2]})
+            world_only_rcp = world_only_rcp.convert_unit({"Gt C / yr": ["Mt CO2/yr", 44000/12]})
+            world_only_rcp = world_only_rcp.convert_unit({"Mt S / yr": ["Mt SO2/yr", 2]})
             world_only_rcp = ScmDataFrame(world_only_rcp)
 
         rcp_paras = world_only_rcp.to_parameterset()
