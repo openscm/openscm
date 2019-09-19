@@ -27,6 +27,12 @@ def test_conversion_sulfur():
     np.testing.assert_allclose(uc.convert_to(1), 2)
 
 
+def test_conversion_no2():
+    uc = UnitConverter("Mt NO2/yr", "Mt N/yr")
+    np.testing.assert_allclose(uc.convert_from(1), 14/(14+2*16))
+    np.testing.assert_allclose(uc.convert_to(1), 46/14)
+
+
 def test_conversion_unknown_unit():
     with pytest.raises(UndefinedUnitError):
         UnitConverter("UNKOWN", "degF")
