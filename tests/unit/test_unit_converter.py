@@ -21,6 +21,12 @@ def test_conversion_with_offset():
     np.testing.assert_allclose(uc.convert_to(1), -17.22222, rtol=1e-5)
 
 
+def test_conversion_sulfur():
+    uc = UnitConverter("Mt SO2/yr", "Mt S/yr")
+    np.testing.assert_allclose(uc.convert_from(1), 0.5)
+    np.testing.assert_allclose(uc.convert_to(1), 2)
+
+
 def test_conversion_unknown_unit():
     with pytest.raises(UndefinedUnitError):
         UnitConverter("UNKOWN", "degF")
