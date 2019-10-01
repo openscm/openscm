@@ -251,7 +251,7 @@ class PH99(AdapterConstantTimestep):
         Start time of the run
         """
         v = self.model.time_start.to("s").magnitude
-        if int(v) != v:
+        if not np.isclose(int(v), v):
             raise ValueError("_time_start should be an integer")
         diff = np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
         return self._base_time + diff
@@ -269,7 +269,7 @@ class PH99(AdapterConstantTimestep):
         Timestep of the run
         """
         v = self.model.timestep.to("s").magnitude
-        if int(v) != v:
+        if not np.isclose(int(v), v):
             raise ValueError("_timestep should be an integer")
         return np.timedelta64(int(v), "s")  # pylint: disable=too-many-function-args
 
