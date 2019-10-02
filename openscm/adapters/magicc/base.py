@@ -6,16 +6,16 @@ import pymagicc.core
 import pymagicc.io
 from typing import TYPE_CHECKING, Dict, Sequence, Union
 
-from . import Adapter
-from ..core.parameters import (
+from .. import Adapter
+from ...core.parameters import (
     HierarchicalName,
     ParameterInfo,
     ParameterType,
     HIERARCHY_SEPARATOR,
 )
-from ..core.time import ExtrapolationType, InterpolationType, create_time_points
-from ..errors import ParameterEmptyError
-from ..scmdataframe import ScmDataFrame, convert_openscm_to_scmdataframe
+from ...core.time import ExtrapolationType, InterpolationType, create_time_points
+from ...errors import ParameterEmptyError
+from ...scmdataframe import ScmDataFrame, convert_openscm_to_scmdataframe
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -38,9 +38,9 @@ YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 #   - follow lead of PH99 for implementation as it has a separate model module
 
 
-class MAGICC6(Adapter):
+class _MAGICCBase(Adapter):
     """
-    Adapter for the MAGICC model, version 6.
+    Base adapter for different MAGICC versions.
 
     The Model for the Assessment of Greenhouse Gas Induced Climate Change (MAGICC)
     projects atmospheric greenhouse gas concentrations, radiative forcing of
@@ -48,12 +48,6 @@ class MAGICC6(Adapter):
     sea-level rise from projected emissions of greenhouse gases and aerosols (its
     historical emissions/concentrations can also be specified but this functionality
     is not yet provided).
-
-    Further reference:
-    Meinshausen, M., Raper, S. C. B., and Wigley, T. M. L.: Emulating coupled
-    atmosphere-ocean and carbon cycle models with a simpler model, MAGICC6 – Part 1:
-    Model description and calibration, Atmos. Chem. Phys., 11, 1417-1456,
-    https://doi.org/10.5194/acp-11-1417-2011, 2011.
     """
 
     _openscm_standard_parameter_mappings: Dict[Sequence[str], str] = {
@@ -191,38 +185,11 @@ class MAGICC6(Adapter):
         super()._set_model_from_parameters()
 
         if self._write_out_emissions:
-            data = []
-            time = self._get_time_points("point")
-            variable = []
-            region = []
-            unit = []
-            for k, v in self._parameter_views.items():
-                if k[0] == "Emissions":
-                    data.append(v.values)
-                    variable.append(HIERARCHY_SEPARATOR.join(k))
-                    region.append(HIERARCHY_SEPARATOR.join(v.region))
-                    unit.append(v.unit)
-
-            scen = pymagicc.io.MAGICCData(
-                data=np.vstack(data).T,
-                index=time,
-                columns={
-                    "variable": variable,
-                    "region": region,
-                    "unit": unit,
-                    "model": "na",
-                    "scenario": "na",
-                    "todo": "SET",
-                }
-            )
-
-            scen.write(
-                os.path.join(self.model.run_dir, "PYMAGICC.SCEN"),
-                magicc_version=self.model.version,
-            )
-            self.model.update_config(file_emissionscenario="PYMAGICC.SCEN")
-
+            self._write_emissions_to_file()
             self._write_out_emissions = False
+
+    def _write_emissions_to_file(self):
+        raise NotImplementedError
 
     def _update_model(self, name: HierarchicalName, para: ParameterInfo) -> None:
         timeseries_types = (

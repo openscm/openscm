@@ -3,7 +3,7 @@ import pymagicc
 import pytest
 from base import _AdapterTester
 
-from openscm.adapters.magicc6 import MAGICC6
+from openscm.adapters.magicc.magicc6 import MAGICC6
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
