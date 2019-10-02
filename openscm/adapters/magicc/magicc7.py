@@ -7,9 +7,9 @@ import pymagicc.io
 from .base import _MAGICCBase
 from ...core.parameters import HIERARCHY_SEPARATOR
 
-class MAGICC6(_MAGICCBase):
+class MAGICC7(_MAGICCBase):
     """
-    Adapter for the MAGICC model, version 6.
+    Adapter for the MAGICC model, version 7.
 
     The Model for the Assessment of Greenhouse Gas Induced Climate Change (MAGICC)
     projects atmospheric greenhouse gas concentrations, radiative forcing of
@@ -19,17 +19,14 @@ class MAGICC6(_MAGICCBase):
     is not yet provided).
 
     Further reference:
-    Meinshausen, M., Raper, S. C. B., and Wigley, T. M. L.: Emulating coupled
-    atmosphere-ocean and carbon cycle models with a simpler model, MAGICC6 – Part 1:
-    Model description and calibration, Atmos. Chem. Phys., 11, 1417-1456,
-    https://doi.org/10.5194/acp-11-1417-2011, 2011.
+    TBC
     """
     @property
     def name(self):
         """
         Name of the model as used in OpenSCM parameters
         """
-        return "MAGICC6"
+        return "MAGICC7"
 
     def _initialize_model(self) -> None:
         self._run_kwargs = {}
@@ -38,7 +35,7 @@ class MAGICC6(_MAGICCBase):
         self._write_out_emissions = False
         """bool: do emissions need to be written to disk?"""
 
-        self.model = pymagicc.core.MAGICC6()
+        self.model = pymagicc.core.MAGICC7()
         self.model.create_copy()
         for nml_name, nml in self.model.default_config.items():
             for para, value in nml.items():
@@ -56,6 +53,7 @@ class MAGICC6(_MAGICCBase):
             else:
                 self._add_parameter_view(o_name)
 
+        # TODO: fix this to pull in all emissions
         scen_emms = pymagicc.io.MAGICCData(
             os.path.join(self.model.run_dir, "RCP26.SCEN")
         ).filter(region="World")

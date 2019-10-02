@@ -1,8 +1,8 @@
 import os.path
 import warnings
+from abc import abstractmethod, abstractproperty
 
 import numpy as np
-import pymagicc.core
 import pymagicc.io
 from typing import TYPE_CHECKING, Dict, Sequence, Union
 
@@ -68,46 +68,16 @@ class _MAGICCBase(Adapter):
 
     _units = {"core_climatesensitivity": "delta_degC", "core_delq2xco2": "W/m^2"}
 
-    @property
+    @abstractproperty
     def name(self):
         """
         Name of the model as used in OpenSCM parameters
         """
-        return "MAGICC6"
+        pass
 
+    @abstractmethod
     def _initialize_model(self) -> None:
-        self._run_kwargs = {}
-        """dict: kwargs to be passed to the MAGICC run call"""
-
-        self._write_out_emissions = False
-        """bool: do emissions need to be written to disk?"""
-
-        self.model = pymagicc.core.MAGICC6()
-        self.model.create_copy()
-        for nml_name, nml in self.model.default_config.items():
-            for para, value in nml.items():
-                if para in self._units:
-                    self._initialize_scalar_view(
-                        (self.name, para), value, self._units[para]
-                    )
-                else:
-                    self._initialize_generic_view((self.name, para), value)
-
-        for o_name, magicc6_name in self._openscm_standard_parameter_mappings.items():
-            value = self._get_magcfg_default_value(magicc6_name)
-            if magicc6_name in self._units:
-                self._add_parameter_view(o_name, unit=self._units[magicc6_name])
-            else:
-                self._add_parameter_view(o_name)
-
-        scen_emms = pymagicc.io.MAGICCData(
-            os.path.join(self.model.run_dir, "RCP26.SCEN")
-        ).filter(region="World")
-        for _, (emms, unit) in (
-            scen_emms.meta[["variable", "unit"]].drop_duplicates().iterrows()
-        ):
-            openscm_name = tuple(emms.split(HIERARCHY_SEPARATOR))
-            self._initialize_timeseries_view(openscm_name, unit)
+        pass
 
     def _initialize_generic_view(self, full_name, value):
         self._add_parameter_view(full_name, value)
@@ -137,11 +107,11 @@ class _MAGICCBase(Adapter):
             timeseries_type=self._internal_timeseries_conventions[top_key],
         )
 
-    def _get_magcfg_default_value(self, magicc6_name):
-        if magicc6_name in ("startyear", "endyear", "stepsperyear"):
-            return self.model.default_config["nml_years"][magicc6_name]
+    def _get_magcfg_default_value(self, magicc_name):
+        if magicc_name in ("startyear", "endyear", "stepsperyear"):
+            return self.model.default_config["nml_years"][magicc_name]
 
-        return self.model.default_config["nml_allcfgs"][magicc6_name]
+        return self.model.default_config["nml_allcfgs"][magicc_name]
 
     def _shutdown(self) -> None:
         self.model.remove_temp_copy()
@@ -206,17 +176,17 @@ class _MAGICCBase(Adapter):
 
             if name[0] != self.name:
                 # emergency valve for now, must be smarter way to handle this
-                raise ValueError("How did non-MAGICC6 parameter end up here?")
+                raise ValueError("How did non-{} parameter end up here?".format(self.name))
 
             self._run_kwargs[name[1]] = value
 
     def _set_model_para_from_openscm_para(self, openscm_name, value):
-        magicc6_name = self._openscm_standard_parameter_mappings[openscm_name]
+        magicc_name = self._openscm_standard_parameter_mappings[openscm_name]
 
-        if magicc6_name in ("startyear", "endyear"):
-            self._run_kwargs[magicc6_name] = value.astype(object).year
+        if magicc_name in ("startyear", "endyear"):
+            self._run_kwargs[magicc_name] = value.astype(object).year
         else:
-            self._run_kwargs[magicc6_name] = value
+            self._run_kwargs[magicc_name] = value
 
     def _reset(self) -> None:
         # hack hack hack
@@ -234,7 +204,7 @@ class _MAGICCBase(Adapter):
         if "startyear" in self._run_kwargs:
             self._run_kwargs.pop("startyear")
             warnings.warn(
-                "MAGICC6 hard-coded to start in 1765 as there is a conflict between the concept of a start year and having continuous timeseries"
+                "MAGICC is hard-coded to start in 1765 as there is a conflict between the concept of a start year and having continuous timeseries"
             )
 
         res = self.model.run(startyear=1765, **self._run_kwargs)
@@ -287,7 +257,7 @@ class _MAGICCBase(Adapter):
         st = super()._start_time
         if isinstance(st, (float, int)):
             if int(st) != st:
-                raise ValueError("('MAGICC6', 'startyear') should be an integer")
+                raise ValueError("('{}', 'startyear') should be an integer".format(self.name))
             return np.datetime64("{}-01-01".format(int(st)))
         return st
 
@@ -301,7 +271,7 @@ class _MAGICCBase(Adapter):
             ].value
             if isinstance(et, (int, float)):
                 if int(et) != et:
-                    raise ValueError("('MAGICC6', 'endyear') should be an integer")
+                    raise ValueError("('{}', 'endyear') should be an integer".format(self.name))
             return np.datetime64("{}-01-01".format(int(et)))
 
     @property
