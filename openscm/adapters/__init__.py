@@ -493,6 +493,11 @@ def load_adapter(name: str) -> type:
             from .magicc.magicc6 import MAGICC6  # pylint: disable=cyclic-import
 
             adapter = MAGICC6
+
+        elif name == "MAGICC7":
+            from .magicc.magicc7 import MAGICC7  # pylint: disable=cyclic-import
+
+            adapter = MAGICC7
         """
         When implementing an additional adapter, include your adapter NAME here as:
         ```
