@@ -15,7 +15,7 @@ from ...core.parameters import (
 )
 from ...core.time import ExtrapolationType, InterpolationType, create_time_points
 from ...errors import ParameterEmptyError
-from ...scmdataframe import ScmDataFrame, convert_openscm_to_scmdataframe
+from ...scmdataframe import OpenScmDataFrame, convert_openscm_to_scmdataframe
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -229,7 +229,7 @@ class _MAGICCBase(Adapter):
 
         # need to keep more than just world at some point in future, currently
         # hierarchy doesn't work...
-        res_tmp = ScmDataFrame(res_tmp)
+        res_tmp = OpenScmDataFrame(res_tmp)
         # how to solve fact that not all radiative forcing is reported all the time (
         # parameterset doesn't work if you try to write e.g. `Radiative Forcing` and
         # `Radiative Forcing|Greenhouse Gases`, `Radiative Forcing` will always be

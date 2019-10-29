@@ -14,7 +14,7 @@ would like us to consider doing so.
 """
 from os.path import dirname, join, realpath
 
-from ..scmdataframe import df_append
+from scmdata import df_append
 
 _here = dirname(realpath(__file__))
 

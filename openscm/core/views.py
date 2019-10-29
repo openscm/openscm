@@ -9,6 +9,7 @@ from typing import Any, Optional, Sequence, Tuple, cast
 import numpy as np
 from numpy.lib.mixins import NDArrayOperatorsMixin
 from pandas.core.arrays.base import ExtensionOpsMixin
+from scmdata.units import UnitConverter
 
 from ..errors import (
     InsufficientDataError,
@@ -17,7 +18,6 @@ from ..errors import (
 )
 from .parameters import ParameterInfo, ParameterType, _Parameter
 from .time import ExtrapolationType, InterpolationType, TimeseriesConverter
-from .units import UnitConverter
 
 # pylint: disable=protected-access
 

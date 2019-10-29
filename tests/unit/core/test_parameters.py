@@ -1,7 +1,6 @@
 import pytest
 
-from openscm.core.parameters import ParameterType
-from openscm.scmdataframe.parameter_type import guess_parameter_type
+from openscm.core.parameters import ParameterType, guess_parameter_type
 
 
 def test_with_units(magicc7_variable):

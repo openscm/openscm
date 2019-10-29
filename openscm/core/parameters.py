@@ -2,10 +2,13 @@
 Parameter handling.
 """
 
+import re
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
+from pint import UndefinedUnitError
+from scmdata.units import _unit_registry
 
 from ..errors import (
     ParameterAggregationError,
@@ -73,7 +76,7 @@ class ParameterType(Enum):
 
     @classmethod
     def from_timeseries_type(
-        cls, timeseries_type: Union["ParameterType", str]
+            cls, timeseries_type: Union["ParameterType", str]
     ) -> "ParameterType":
         """
         Get time series type (i.e. :attr:`ParameterType.AVERAGE_TIMESERIES` or
@@ -227,10 +230,10 @@ class _Parameter:
         return self
 
     def attempt_read(
-        self,
-        parameter_type: ParameterType,
-        unit: Optional[str] = None,
-        time_points: Optional[np.ndarray] = None,
+            self,
+            parameter_type: ParameterType,
+            unit: Optional[str] = None,
+            time_points: Optional[np.ndarray] = None,
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -274,10 +277,10 @@ class _Parameter:
         self.has_been_read_from = True
 
     def attempt_write(
-        self,
-        parameter_type: ParameterType,
-        unit: Optional[str] = None,
-        time_points: Optional[np.ndarray] = None,
+            self,
+            parameter_type: ParameterType,
+            unit: Optional[str] = None,
+            time_points: Optional[np.ndarray] = None,
     ) -> None:
         """
         Tell parameter that its data will be written to.
@@ -404,3 +407,67 @@ class ParameterInfo:
             raise ParameterEmptyError(
                 "Parameter {} is required but empty".format(str(self._parameter))
             )
+
+
+"""
+List of regex patterns for matching variable names to :obj:`ParameterType`.
+"""
+parameter_matches = [
+    (re.compile(r"^Emissions"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r".*_(GWP)?EMIS"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r".*Flux"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r".*_(PEFF|EFF|S)?RF"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r"^Radiative Forcing"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile("HEATUPTAKE_EBALANCE_TOTAL"), ParameterType.AVERAGE_TIMESERIES),
+    (re.compile(r"^Atmospheric Concentrations"), ParameterType.POINT_TIMESERIES),
+    (re.compile(r".*_CONC"), ParameterType.POINT_TIMESERIES),
+    (re.compile(r"(Surface Temperature|.*TEMP)"), ParameterType.POINT_TIMESERIES),
+]
+
+
+def guess_parameter_type(variable_name: str, unit: Optional[str]) -> ParameterType:
+    """
+    Attempt to guess the parameter of timeseries from a variable name and unit.
+
+    This :class:`ParameterType` is required when interpolating. We only use this
+    function if the user has not already specified which :class:`ParameterType` to use,
+    hence forcing us to guess.
+
+    If the units are available and the units include a "time" dimension, then
+    :attr:`ParameterType.AVERAGE_TIMESERIES` is always returned, otherwise
+    :attr:`ParameterType.POINT_TIMESERIES` is returned.
+
+    If the units are not available, we will guess based on the :obj:`variable_name`. If
+    we don't recognise the name, :attr:`ParameterType.POINT_TIMESERIES` is returned.
+
+    Parameters
+    ----------
+    variable_name
+        The full name of the variable of interest, including level separators
+    unit
+        Unit corresponding to the variable
+
+    Returns
+    -------
+    :obj:`ParameterType`
+        Our guess of the parameter type which should be used for this
+        :obj:`variable_name` and :obj:`unit`
+    """
+    if unit:
+        # try and determine if the unit contains a time dimension
+        try:
+            pint_unit = _unit_registry(unit).units
+            if "[time]" in str(pint_unit.dimensionality):
+                return ParameterType.AVERAGE_TIMESERIES
+
+            return ParameterType.POINT_TIMESERIES
+        except UndefinedUnitError:
+            # default to trying to parse from variable name
+            pass
+
+    for r, t in parameter_matches:
+        if r.match(variable_name):
+            return t
+
+    # Default to Point time series if unknown
+    return ParameterType.POINT_TIMESERIES
