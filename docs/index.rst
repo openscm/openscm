@@ -48,7 +48,6 @@ Schema
 
     adapter
     core
-    units
 
 .. toctree::
     :maxdepth: 2
