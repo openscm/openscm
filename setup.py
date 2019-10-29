@@ -38,6 +38,7 @@ CLASSIFIERS = [
 ]
 REQUIREMENTS_INSTALL = [
     "numpy>=1.7",
+    "scmdata",
     "scipy",
     "pint",
     "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
