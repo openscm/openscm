@@ -14,7 +14,7 @@ from openscm.core.time import create_time_points
 from openscm.scmdataframe import OpenScmDataFrame, convert_openscm_to_openscmdataframe
 
 
-#@pytest.mark.xfail(reason="MAGICC7 not yet publicly available")
+# @pytest.mark.xfail(reason="MAGICC7 not yet publicly available")
 class TestMAGICC7(_AdapterTester):
     tadapter = MAGICC7
 

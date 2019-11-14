@@ -191,12 +191,11 @@ values to :attr:`~openscm.adapter.Adapter._output`.
 For efficiency, the OpenSCM Core interface provides subclasses of
 :class:`~openscm.parameter_views.ParameterView` that provide a view
 into a parameter with a requested :ref:`time frame <timeframes>` and
-:ref:`unit <units>`. Conversion (aggregation, unit conversion, and
-time frame adjustment) is done interally if possible. Subclasses
-implement functionality for scalar and time series values, each for
-read-only as well as writable views, which you can get from the
-relevant :class:`~openscm.core.ParameterSet` (see
-:ref:`get-set-parameters`).
+`unit <scmdata.readthedocs.io/en/latest/scmdata.units.html>`_. Conversion (
+aggregation, unit conversion, and time frame adjustment) is done interally if
+possible. Subclasses implement functionality for scalar and time series values, each
+for read-only as well as writable views, which you can get from the relevant
+:class:`~openscm.core.ParameterSet` (see :ref:`get-set-parameters`).
 
 Accordingly, you should establish the views you need in the
 :func:`~openscm.adapter.Adapter._initialize_model` method and save
