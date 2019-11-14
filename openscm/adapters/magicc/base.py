@@ -1,21 +1,16 @@
-import os.path
+"""
+Base adapter for MAGICC
+"""
 import warnings
 from abc import abstractmethod, abstractproperty
+from typing import Dict, Sequence, Union, cast
 
 import numpy as np
-import pymagicc.io
-from typing import TYPE_CHECKING, Dict, Sequence, Union
 
-from .. import Adapter
-from ...core.parameters import (
-    HierarchicalName,
-    ParameterInfo,
-    ParameterType,
-    HIERARCHY_SEPARATOR,
-)
-from ...core.time import ExtrapolationType, InterpolationType, create_time_points
+from ...core.parameters import HierarchicalName, ParameterInfo, ParameterType
 from ...errors import ParameterEmptyError
 from ...scmdataframe import OpenScmDataFrame
+from .. import Adapter
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -73,7 +68,6 @@ class _MAGICCBase(Adapter):
         """
         Name of the model as used in OpenSCM parameters
         """
-        pass
 
     @abstractmethod
     def _initialize_model(self) -> None:
@@ -176,7 +170,9 @@ class _MAGICCBase(Adapter):
 
             if name[0] != self.name:
                 # emergency valve for now, must be smarter way to handle this
-                raise ValueError("How did non-{} parameter end up here?".format(self.name))
+                raise ValueError(
+                    "How did non-{} parameter end up here?".format(self.name)
+                )
 
             self._run_kwargs[name[1]] = value
 
@@ -190,13 +186,17 @@ class _MAGICCBase(Adapter):
 
     def _reset(self) -> None:
         # hack hack hack
-        for k, v in self._output._root._parameters.items():
+        for (
+            _,
+            v,
+        ) in self._output._root._parameters.items():  # pylint:disable=protected-access
             if v.unit is None:
                 continue
 
-            tp = self._get_time_points(v.parameter_type)
+            para_type = cast(ParameterType, v.parameter_type)
+            tp = self._get_time_points(para_type)
             view = self._output.timeseries(
-                v.name, v.unit, time_points=tp, timeseries_type=v.parameter_type
+                v.name, v.unit, time_points=tp, timeseries_type=para_type
             )
             view.values = np.zeros(tp.shape) * np.nan
 
@@ -239,7 +239,7 @@ class _MAGICCBase(Adapter):
             parameterset=self._output
         )
 
-        for nml, nml_values in res.metadata["parameters"].items():
+        for _, nml_values in res.metadata["parameters"].items():
             for k, v in nml_values.items():
                 if k in self._units:
                     self._output.scalar((self.name, k), self._units[k]).value = v
@@ -257,7 +257,9 @@ class _MAGICCBase(Adapter):
         st = super()._start_time
         if isinstance(st, (float, int)):
             if int(st) != st:
-                raise ValueError("('{}', 'startyear') should be an integer".format(self.name))
+                raise ValueError(
+                    "('{}', 'startyear') should be an integer".format(self.name)
+                )
             return np.datetime64("{}-01-01".format(int(st)))
         return st
 
@@ -271,7 +273,9 @@ class _MAGICCBase(Adapter):
             ].value
             if isinstance(et, (int, float)):
                 if int(et) != et:
-                    raise ValueError("('{}', 'endyear') should be an integer".format(self.name))
+                    raise ValueError(
+                        "('{}', 'endyear') should be an integer".format(self.name)
+                    )
             return np.datetime64("{}-01-01".format(int(et)))
 
     @property

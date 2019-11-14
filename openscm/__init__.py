@@ -9,7 +9,12 @@ from pyam import IamDataFrame
 
 from ._version import get_versions
 from .core import OpenSCM  # noqa: F401
-from .scmdataframe import ScmDataFrame, OpenScmDataFrame, convert_openscm_to_openscmdataframe, df_append
+from .scmdataframe import (
+    OpenScmDataFrame,
+    ScmDataFrame,
+    convert_openscm_to_openscmdataframe,
+    df_append,
+)
 
 __version__: str = get_versions()["version"]
 del get_versions
@@ -35,6 +40,13 @@ def run(
 
     output_time_points
         The points on which to report the results of the runs
+
+    Returns
+    -------
+    :obj:`DataFrame`
+        Run results in an :obj:`OpenScmDataFrame` (unless the input was an
+        :obj:`IamDataFrame` in which case the return type is an
+        :obj:`IamDataFrame`)
     """
     if isinstance(emissions, IamDataFrame):
         runner = ScmDataFrame(emissions)
@@ -44,7 +56,7 @@ def run(
     results = []
     for climate_model in tqdm.tqdm_notebook(climate_models, desc="Climate Models"):
         unique_model_scens = runner[["model", "scenario"]].drop_duplicates()
-        for i, label in tqdm.tqdm_notebook(
+        for _, label in tqdm.tqdm_notebook(
             unique_model_scens.iterrows(),
             total=len(unique_model_scens),
             leave=True,
@@ -62,7 +74,7 @@ def run(
             climate_runner = OpenSCM(climate_model, ps)
             climate_runner.run()
 
-            output_scmdf = convert_openscm_to_scmdataframe(
+            output_scmdf = convert_openscm_to_openscmdataframe(
                 climate_runner.output,
                 time_points=output_time_points,
                 climate_model=climate_model,

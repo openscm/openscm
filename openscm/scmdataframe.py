@@ -5,22 +5,28 @@ model data. ScmDataFrames are able to hold multiple model runs which aids in ana
 ensembles of model runs.
 """
 from __future__ import annotations
-from typing import Dict, List, Tuple, Union, cast, Optional
-import warnings
+
+import datetime
 import re
+import warnings
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
+from scmdata import ScmDataFrame, df_append  # noqa: F401 # pylint:disable=unused-import
 
-from openscm.core.parameters import ParameterInfo, ParameterType, _Parameter, guess_parameter_type
-from openscm.core.time import TimeseriesConverter, InterpolationType, ExtrapolationType
+from openscm.core.parameters import (
+    ParameterInfo,
+    ParameterType,
+    _Parameter,
+    guess_parameter_type,
+)
 from openscm.core.parameterset import ParameterSet
+from openscm.core.time import ExtrapolationType, InterpolationType, TimeseriesConverter
 from openscm.errors import ParameterEmptyError
-from scmdata import ScmDataFrame, df_append
-import datetime
 
 
-class OpenScmDataFrame(ScmDataFrame):
+class OpenScmDataFrame(ScmDataFrame):  # type: ignore
     """
     OpenSCM's custom ScmDataFrame implementation.
 
@@ -234,10 +240,10 @@ class OpenScmDataFrame(ScmDataFrame):
             )
 
         res["time"] = timeseries_index
-        return res
+        return cast(OpenScmDataFrame, res)
 
 
-def convert_openscm_to_openscmdataframe(  # pylint: disable=too-many-locals
+def convert_openscm_to_openscmdataframe(  # pylint: disable=too-many-locals,too-many-branches
     parameterset: ParameterSet,
     time_points: np.ndarray,
     model: str = "unspecified",

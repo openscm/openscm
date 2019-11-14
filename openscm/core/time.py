@@ -8,15 +8,12 @@ dedicated `Jupyter Notebook
 <https://github.com/openclimatedata/openscm/blob/master/notebooks/timeseries.ipynb>`_.
 """
 
-import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd
 import scipy.interpolate as interpolate
-from dateutil import parser
 
 from ..errors import InsufficientDataError
 from .parameters import ParameterType

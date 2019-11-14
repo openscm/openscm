@@ -3,7 +3,6 @@ import warnings
 import numpy as np
 import pytest
 from conftest import assert_pint_equal
-
 from scmdata.units import _unit_registry
 
 

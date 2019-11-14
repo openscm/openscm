@@ -1,11 +1,16 @@
+"""
+Adapter for MAGICC7 (Meinshausen et al. GMDD 2019, full publication in preparation)
+"""
 import os.path
 
 import numpy as np
 import pymagicc.core
 import pymagicc.io
 
-from .base import _MAGICCBase
 from ...core.parameters import HIERARCHY_SEPARATOR
+from ...core.parameterset import ParameterSet
+from .base import _MAGICCBase
+
 
 class MAGICC7(_MAGICCBase):
     """
@@ -21,6 +26,39 @@ class MAGICC7(_MAGICCBase):
     Further reference:
     TBC
     """
+
+    _pymagicc_class = pymagicc.core.MAGICC7
+    """
+    :cls:`pymagicc.core.MAGICCBase`: Pymagicc class which provides the MAGICC adapter
+    """
+
+    def __init__(self, input_parameters: ParameterSet, output_parameters: ParameterSet):
+        """
+        Initialize the MAGICC adapter as well as the Pymagicc class it will use.
+
+        *Note:* as part of this process, all available model parameters are added to
+        ``input_parameters`` (if they're not already there).
+
+        Parameters
+        ----------
+        input_parameters
+            Input parameter set to use
+
+        output_parameters
+            Output parameter set to use
+        """
+
+        self._run_kwargs = {}
+        """dict: kwargs to be passed to the MAGICC run call"""
+
+        self._write_out_emissions = False
+        """bool: do emissions need to be written to disk?"""
+
+        self.model = self._pymagicc_class()
+        """:obj:`pymagicc.core.MAGICCBase`: instance of the Pymagicc class"""
+
+        super().__init__(input_parameters, output_parameters)
+
     @property
     def name(self):
         """
@@ -29,15 +67,9 @@ class MAGICC7(_MAGICCBase):
         return "MAGICC7"
 
     def _initialize_model(self) -> None:
-        self._run_kwargs = {}
-        """dict: kwargs to be passed to the MAGICC run call"""
-
-        self._write_out_emissions = False
-        """bool: do emissions need to be written to disk?"""
-
-        self.model = pymagicc.core.MAGICC7()
+        self.model = self._pymagicc_class()
         self.model.create_copy()
-        for nml_name, nml in self.model.default_config.items():
+        for _, nml in self.model.default_config.items():
             for para, value in nml.items():
                 if para in self._units:
                     self._initialize_scalar_view(
@@ -86,11 +118,11 @@ class MAGICC7(_MAGICCBase):
                 "model": "na",
                 "scenario": "na",
                 "todo": "SET",
-            }
+            },
         )
 
         scen.write(
-            os.path.join(self.model.run_dir, "PYMAGICC.SCEN"),
+            os.path.join(self.model.run_dir, "PYMAGICC.SCEN7"),
             magicc_version=self.model.version,
         )
-        self.model.update_config(file_emissionscenario="PYMAGICC.SCEN")
+        self.model.update_config(file_emissionscenario="PYMAGICC.SCEN7")

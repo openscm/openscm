@@ -76,7 +76,7 @@ class ParameterType(Enum):
 
     @classmethod
     def from_timeseries_type(
-            cls, timeseries_type: Union["ParameterType", str]
+        cls, timeseries_type: Union["ParameterType", str]
     ) -> "ParameterType":
         """
         Get time series type (i.e. :attr:`ParameterType.AVERAGE_TIMESERIES` or
@@ -230,10 +230,10 @@ class _Parameter:
         return self
 
     def attempt_read(
-            self,
-            parameter_type: ParameterType,
-            unit: Optional[str] = None,
-            time_points: Optional[np.ndarray] = None,
+        self,
+        parameter_type: ParameterType,
+        unit: Optional[str] = None,
+        time_points: Optional[np.ndarray] = None,
     ) -> None:
         """
         Tell parameter that it will be read from. If the parameter has child parameters
@@ -277,10 +277,10 @@ class _Parameter:
         self.has_been_read_from = True
 
     def attempt_write(
-            self,
-            parameter_type: ParameterType,
-            unit: Optional[str] = None,
-            time_points: Optional[np.ndarray] = None,
+        self,
+        parameter_type: ParameterType,
+        unit: Optional[str] = None,
+        time_points: Optional[np.ndarray] = None,
     ) -> None:
         """
         Tell parameter that its data will be written to.

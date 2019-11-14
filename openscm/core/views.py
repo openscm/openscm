@@ -275,11 +275,11 @@ class ScalarView(_ParameterView):
         self._read()
 
     @property
-    def unit(self) -> Optional[str]:
+    def unit(self) -> str:
         """
         Parameter unit
         """
-        return self._unit_converter.target
+        return cast(str, self._unit_converter.target)
 
     def __str__(self) -> str:
         """
@@ -547,11 +547,11 @@ class TimeseriesView(_ParameterView):  # pylint: disable=too-many-instance-attri
             )
 
     @property
-    def unit(self) -> Optional[str]:
+    def unit(self) -> str:
         """
         Parameter unit
         """
-        return self._unit_converter.target
+        return cast(str, self._unit_converter.target)
 
     @property
     def length(self) -> int:
