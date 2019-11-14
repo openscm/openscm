@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+dev
+***
+
+- (`#200 <https://github.com/openclimatedata/openscm/pull/200>`_) Switch to using `scmdata`
+- (`#197 <https://github.com/openclimatedata/openscm/pull/197>`_) Add MAGICC6 adapter
+
 master
 ******
 
