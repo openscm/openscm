@@ -11,10 +11,10 @@ from openscm.adapters.magicc.magicc7 import MAGICC7
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.scmdataframe import ScmDataFrame, convert_openscm_to_openscmdataframe
+from openscm.scmdataframe import OpenScmDataFrame, convert_openscm_to_openscmdataframe
 
 
-@pytest.mark.xfail(reason="MAGICC7 not yet publicly available")
+#@pytest.mark.xfail(reason="MAGICC7 not yet publicly available")
 class TestMAGICC7(_AdapterTester):
     tadapter = MAGICC7
 
@@ -83,7 +83,7 @@ class TestMAGICC7(_AdapterTester):
             timeseries_type="point",
         ).values
         np.testing.assert_allclose(
-            run_res_temperature, np.array([1.5695633, 1.5683754, 1.5671952])
+            run_res_temperature, np.array([2.6907497, 2.6974658, 2.7042166])
         )
 
     def test_step(self, test_adapter):
@@ -211,12 +211,18 @@ class TestMAGICC7(_AdapterTester):
         # running regions in too hard basket for now
         # TODO: add test of rcp.to_parameterset() as this would fail at the moment
         world_only_rcp = rcp.filter(region="World")
-        with pymagicc.core.MAGICC7() as magicc6_pymagicc:
-            res_pymagicc = magicc6_pymagicc.run(
-                world_only_rcp,
+        with pymagicc.core.MAGICC7() as magicc7_pymagicc:
+            world_only_rcp_annual = world_only_rcp.resample("AS")
+            res_pymagicc = magicc7_pymagicc.run(
+                world_only_rcp_annual,
                 startyear=1765,
                 endyear=world_only_rcp["time"].max().year,
             )
+            # # import f90nml
+            # import pdb
+            # pdb.set_trace()
+            # magicc7_pymagicc.run_dir
+            # # f90nml.Namelist(res_pymagicc.metadata["parameters"]).write("pymagicc.cfg")
 
         world_only_rcp.set_meta("point", "parameter_type")
         if fiddle_units:
@@ -227,7 +233,8 @@ class TestMAGICC7(_AdapterTester):
             world_only_rcp = world_only_rcp.convert_unit(
                 {"Mt S / yr": ["Mt SO2/yr", 2]}
             )
-            world_only_rcp = ScmDataFrame(world_only_rcp)
+
+        world_only_rcp = OpenScmDataFrame(world_only_rcp)
 
         rcp_paras = world_only_rcp.to_parameterset()
         rcp_paras.generic("Start Time").value = np.datetime64(
@@ -270,7 +277,9 @@ class TestMAGICC7(_AdapterTester):
                 res_pym_vals, res_ocm_vals, atol=1e-4 * res_ocm_vals.max(), rtol=1e-5
             )
 
-            np.where(np.abs((res_pym_vals - res_ocm_vals) / res_pym_vals) > 0.001)
+            # res_pymagicc["time"].iloc[~np.isclose(res_pym_vals, res_ocm_vals, atol=1e-4 * res_ocm_vals.max(), rtol=1e-5)]
+            # res_pym_vals[~np.isclose(res_pym_vals, res_ocm_vals, atol=1e-4 * res_ocm_vals.max(), rtol=1e-5)]
+            # res_ocm_vals[~np.isclose(res_pym_vals, res_ocm_vals, atol=1e-4 * res_ocm_vals.max(), rtol=1e-5)]
 
     def test_openscm_standard_parameters_handling_on_init(self):
         parameters = ParameterSet()

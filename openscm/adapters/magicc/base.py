@@ -208,6 +208,11 @@ class _MAGICCBase(Adapter):
             )
 
         res = self.model.run(startyear=1765, **self._run_kwargs)
+        # import pdb
+        # pdb.set_trace()
+        # self.model.run_dir
+        # # import f90nml
+        # f90nml.Namelist(res.metadata["parameters"]).write("openscm.cfg")
         # hack hack hack
         res_tmp = (
             res.filter(region="World")
