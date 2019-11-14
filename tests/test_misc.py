@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from conftest import assert_pint_equal
 
-from openscm.core.units import _unit_registry
+from scmdata.units import _unit_registry
 
 
 def test_pint_array_comparison():

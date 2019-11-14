@@ -6,12 +6,12 @@ import numpy as np
 import pymagicc
 import pytest
 from base import _AdapterTester
+from pint.errors import DimensionalityError
 
 from openscm.adapters.magicc.magicc7 import MAGICC7
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.errors import DimensionalityError
 from openscm.scmdataframe import convert_openscm_to_scmdataframe, ScmDataFrame
 
 

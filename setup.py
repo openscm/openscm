@@ -86,7 +86,7 @@ When implementing an additional adapter, include your adapter NAME here as:
 ```
 """
 magicc_requirements = [
-    "pymagicc @ git+https://github.com/openclimatedata/pymagicc.git@openscm-update"
+    "pymagicc>=2.0.0b8"
 ]
 REQUIREMENTS_MODELS = {
     "MAGICC6": magicc_requirements,
