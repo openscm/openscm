@@ -120,9 +120,10 @@ class MAGICC7(_MAGICCBase):
                 "todo": "SET",
             },
         )
+        scen.metadata["header"] = "SCEN7 file written via openscm"
 
         scen.write(
             os.path.join(self.model.run_dir, "PYMAGICC.SCEN7"),
             magicc_version=self.model.version,
         )
-        self.model.update_config(file_emissionscenario="PYMAGICC.SCEN7")
+        self.model.update_config(file_emisscen="PYMAGICC.SCEN7")
