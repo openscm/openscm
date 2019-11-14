@@ -38,6 +38,7 @@ CLASSIFIERS = [
 ]
 REQUIREMENTS_INSTALL = [
     "numpy>=1.7",
+    "scmdata",
     "scipy",
     "pint",
     "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
@@ -85,7 +86,7 @@ When implementing an additional adapter, include your adapter NAME here as:
 ```
 """
 magicc_requirements = [
-    "pymagicc @ git+https://github.com/openclimatedata/pymagicc.git@openscm-update"
+    "pymagicc>=2.0.0b8"
 ]
 REQUIREMENTS_MODELS = {
     "MAGICC6": magicc_requirements,

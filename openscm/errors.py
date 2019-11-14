@@ -2,11 +2,6 @@
 Errors/Exceptions defined and used in OpenSCM.
 """
 
-from .core.units import (  # noqa: F401 # pylint: disable=unused-import
-    DimensionalityError,
-    UndefinedUnitError,
-)
-
 
 class AdapterNeedsModuleError(Exception):
     """Exception raised when an adapter needs a module that is not installed."""

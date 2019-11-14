@@ -9,19 +9,19 @@ from pyam import IamDataFrame
 
 from ._version import get_versions
 from .core import OpenSCM  # noqa: F401
-from .scmdataframe import ScmDataFrame, convert_openscm_to_scmdataframe, df_append
+from .scmdataframe import ScmDataFrame, OpenScmDataFrame, convert_openscm_to_openscmdataframe, df_append
 
 __version__: str = get_versions()["version"]
 del get_versions
 
 
 def run(
-    emissions: Union[ScmDataFrame, IamDataFrame],
+    emissions: Union[ScmDataFrame, OpenScmDataFrame, IamDataFrame],
     climate_models: List[str],
     output_time_points: np.ndarray = [
         np.datetime64("{}-01-01".format(y)) for y in range(1765, 2101)
     ],
-) -> Union[ScmDataFrame, IamDataFrame]:
+) -> Union[OpenScmDataFrame, IamDataFrame]:
     """
     Run a series of emissions scenarios
 
@@ -39,7 +39,7 @@ def run(
     if isinstance(emissions, IamDataFrame):
         runner = ScmDataFrame(emissions)
     else:
-        runner = emissions.copy()
+        runner = OpenScmDataFrame(emissions)
 
     results = []
     for climate_model in tqdm.tqdm_notebook(climate_models, desc="Climate Models"):
@@ -55,7 +55,7 @@ def run(
             scenario = label["scenario"]
             run_df = runner.filter(model=model, scenario=scenario)
 
-            ps = ScmDataFrame(run_df).to_parameterset()
+            ps = OpenScmDataFrame(run_df).to_parameterset()
             ps.generic("Start Time").value = np.datetime64(run_df["time"].min())
             ps.generic("Stop Time").value = np.datetime64(run_df["time"].max())
             # not how this should be done, should initialise earlier...
@@ -72,7 +72,7 @@ def run(
             results.append(output_scmdf.timeseries())
 
     # hack required to ensure IamDataFrame keeps all output
-    output_scmdf = ScmDataFrame(
+    output_scmdf = OpenScmDataFrame(
         df_append(results).timeseries().reset_index().fillna(-999)
     )
 

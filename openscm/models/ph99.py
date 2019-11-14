@@ -21,7 +21,7 @@ from typing import Any
 
 import numpy as np
 
-from ..core.units import _unit_registry
+from scmdata.units import _unit_registry
 from ..errors import OutOfBoundsError, OverwriteError
 
 

@@ -9,8 +9,8 @@ from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
 from openscm.core.views import TimeseriesView
+from pint import DimensionalityError
 from openscm.errors import (
-    DimensionalityError,
     InsufficientDataError,
     ParameterAggregationError,
     ParameterEmptyError,

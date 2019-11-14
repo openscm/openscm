@@ -4,11 +4,11 @@ import numpy as np
 import pytest
 from base import _AdapterTester
 from conftest import assert_pint_equal
+from scmdata.units import _unit_registry
 
 from openscm.adapters.ph99 import PH99
 from openscm.core import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.core.units import _unit_registry
 from openscm.errors import ParameterEmptyError
 
 

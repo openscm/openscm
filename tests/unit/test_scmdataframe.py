@@ -14,16 +14,16 @@ from pandas.errors import UnsupportedFunctionCall
 
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
-from openscm.errors import DimensionalityError, UndefinedUnitError
+from pint import DimensionalityError, UndefinedUnitError
 from openscm.scmdataframe import (
-    ScmDataFrame,
-    convert_openscm_to_scmdataframe,
+    OpenScmDataFrame,
+    convert_openscm_to_openscmdataframe,
     df_append,
 )
 
 
 def test_init_df_year_converted_to_datetime(test_pd_df):
-    res = ScmDataFrame(test_pd_df)
+    res = OpenScmDataFrame(test_pd_df)
     assert (res["year"].unique() == [2005, 2010, 2015]).all()
     assert (
         res["time"].unique()
@@ -95,7 +95,7 @@ def test_init_df_formats(test_pd_df, in_format):
             lambda x: "{}/1/1".format(x) if isinstance(x, int) else x
         )
 
-    res = ScmDataFrame(test_init)
+    res = OpenScmDataFrame(test_init)
     assert (res["year"].unique() == [2005, 2010, 2015]).all()
     assert (
         res["time"].unique()
@@ -121,7 +121,7 @@ def test_init_df_missing_time_axis_error(test_pd_df):
     test_init = test_init.drop("year", axis="columns")
     error_msg = re.escape("invalid time format, must have either `year` or `time`!")
     with pytest.raises(ValueError, match=error_msg):
-        ScmDataFrame(test_init)
+        OpenScmDataFrame(test_init)
 
 
 def test_init_df_missing_time_columns_error(test_pd_df):
@@ -134,20 +134,20 @@ def test_init_df_missing_time_columns_error(test_pd_df):
         "invalid column format, must contain some time (int, float or datetime) columns!"
     )
     with pytest.raises(ValueError, match=error_msg):
-        ScmDataFrame(test_init)
+        OpenScmDataFrame(test_init)
 
 
 def test_init_df_missing_col_error(test_pd_df):
     test_pd_df = test_pd_df.drop("model", axis="columns")
     error_msg = re.escape("missing required columns `['model']`!")
     with pytest.raises(ValueError, match=error_msg):
-        ScmDataFrame(test_pd_df)
+        OpenScmDataFrame(test_pd_df)
 
 
 def test_init_ts_missing_col_error(test_ts):
     error_msg = re.escape("missing required columns `['model']`!")
     with pytest.raises(ValueError, match=error_msg):
-        ScmDataFrame(
+        OpenScmDataFrame(
             test_ts,
             columns={
                 "climate_model": ["a_model"],
@@ -163,25 +163,25 @@ def test_init_ts_missing_col_error(test_ts):
 def test_init_multiple_file_error():
     error_msg = re.escape(
         "Initialising from multiple files not supported, use "
-        "`openscm.ScmDataFrame.append()`"
+        "`scmdata.dataframe.ScmDataFrame.append()`"
     )
     with pytest.raises(ValueError, match=error_msg):
-        ScmDataFrame(["file_1", "filepath_2"])
+        OpenScmDataFrame(["file_1", "filepath_2"])
 
 
 def test_init_unrecognised_type_error():
     fail_type = {"dict": "key"}
     error_msg = re.escape(
-        "Cannot load <class 'openscm.scmdataframe.ScmDataFrame'> from {}".format(
+        "Cannot load <class 'openscm.scmdataframe.OpenScmDataFrame'> from {}".format(
             type(fail_type)
         )
     )
     with pytest.raises(TypeError, match=error_msg):
-        ScmDataFrame(fail_type)
+        OpenScmDataFrame(fail_type)
 
 
 def test_init_ts_col_string(test_ts):
-    res = ScmDataFrame(
+    res = OpenScmDataFrame(
         test_ts,
         columns={
             "model": "an_iam",
@@ -208,7 +208,7 @@ def test_init_ts_col_wrong_length_error(test_ts, fail_setting):
         )
     )
     with pytest.raises(ValueError, match=error_msg):
-        ScmDataFrame(
+        OpenScmDataFrame(
             test_ts,
             columns={
                 "model": fail_setting,
@@ -234,7 +234,7 @@ def get_test_pd_df_with_datetime_columns(tpdf):
 
 
 def test_init_ts(test_ts, test_pd_df):
-    df = ScmDataFrame(
+    df = OpenScmDataFrame(
         test_ts,
         columns={
             "model": ["a_iam"],
@@ -250,7 +250,7 @@ def test_init_ts(test_ts, test_pd_df):
     tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
     pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
 
-    b = ScmDataFrame(test_pd_df)
+    b = OpenScmDataFrame(test_pd_df)
 
     pd.testing.assert_frame_equal(df.meta, b.meta, check_like=True)
     pd.testing.assert_frame_equal(df._data, b._data)
@@ -267,7 +267,7 @@ def test_init_with_years_as_str(test_pd_df, years):
     cols[-3:] = years
     df.columns = cols
 
-    df = ScmDataFrame(df)
+    df = OpenScmDataFrame(df)
 
     obs = df._data.index
     exp = pd.Index(
@@ -290,7 +290,7 @@ def test_col_order(test_scm_df):
 
 
 def test_init_with_year_columns(test_pd_df):
-    df = ScmDataFrame(test_pd_df)
+    df = OpenScmDataFrame(test_pd_df)
     tdf = get_test_pd_df_with_datetime_columns(test_pd_df)
     pd.testing.assert_frame_equal(df.timeseries().reset_index(), tdf, check_like=True)
 
@@ -306,7 +306,7 @@ def test_init_with_decimal_years():
         "unit": ["EJ/yr"],
     }
 
-    res = ScmDataFrame(d, columns=cols)
+    res = OpenScmDataFrame(d, columns=cols)
     assert (
         res["time"].unique()
         == [
@@ -319,7 +319,7 @@ def test_init_with_decimal_years():
 
 
 def test_init_df_from_timeseries(test_scm_df):
-    df = ScmDataFrame(test_scm_df.timeseries())
+    df = OpenScmDataFrame(test_scm_df.timeseries())
     pd.testing.assert_frame_equal(
         df.timeseries().reset_index(),
         test_scm_df.timeseries().reset_index(),
@@ -334,7 +334,7 @@ def test_init_df_with_extra_col(test_pd_df):
     extra_value = "scm_model"
     tdf[extra_col] = extra_value
 
-    df = ScmDataFrame(tdf)
+    df = OpenScmDataFrame(tdf)
 
     tdf = get_test_pd_df_with_datetime_columns(tdf)
     assert extra_col in df.meta
@@ -342,23 +342,23 @@ def test_init_df_with_extra_col(test_pd_df):
 
 
 def test_init_iam(test_iam_df, test_pd_df):
-    a = ScmDataFrame(test_iam_df)
-    b = ScmDataFrame(test_pd_df)
+    a = OpenScmDataFrame(test_iam_df)
+    b = OpenScmDataFrame(test_pd_df)
 
     pd.testing.assert_frame_equal(a.meta, b.meta)
     pd.testing.assert_frame_equal(a._data, b._data)
 
 
 def test_init_self(test_iam_df):
-    a = ScmDataFrame(test_iam_df)
-    b = ScmDataFrame(a)
+    a = OpenScmDataFrame(test_iam_df)
+    b = OpenScmDataFrame(a)
 
     pd.testing.assert_frame_equal(a.meta, b.meta)
     pd.testing.assert_frame_equal(a._data, b._data)
 
 
 def test_as_iam(test_iam_df, test_pd_df, iamdf_type):
-    df = ScmDataFrame(test_pd_df).to_iamdataframe()
+    df = OpenScmDataFrame(test_pd_df).to_iamdataframe()
 
     # test is skipped by test_iam_df fixture if pyam isn't installed
     assert isinstance(df, iamdf_type)
@@ -369,37 +369,6 @@ def test_as_iam(test_iam_df, test_pd_df, iamdf_type):
     tdf["year"] = tdf["time"].apply(lambda x: x.year)
     tdf.drop("time", axis="columns", inplace=True)
     pd.testing.assert_frame_equal(test_iam_df.data, tdf, check_like=True)
-
-
-@mock.patch("openscm.scmdataframe.base.LongDatetimeIamDataFrame", None)
-def test_pyam_missing(test_scm_df):
-    with pytest.raises(ImportError):
-        test_scm_df.to_iamdataframe()
-
-
-def test_pyam_missing_loading():
-    with mock.patch.dict(sys.modules, {"pyam": None}):
-        # not sure whether deleting like this is fine because of the context manager
-        # or a terrible idea...
-        del sys.modules["openscm.scmdataframe.pyam_compat"]
-        from openscm.scmdataframe.pyam_compat import IamDataFrame as res
-        from openscm.scmdataframe.pyam_compat import LongDatetimeIamDataFrame as res_3
-
-        assert all([r is None for r in [res, res_3]])
-
-    with mock.patch.dict(sys.modules, {"matplotlib.axes": None}):
-        # not sure whether deleting like this is fine because of the context manager
-        # or a terrible idea...
-        del sys.modules["openscm.scmdataframe.pyam_compat"]
-        from openscm.scmdataframe.pyam_compat import Axes as res_2
-
-        assert all([r is None for r in [res_2]])
-
-    from openscm.scmdataframe.pyam_compat import IamDataFrame as res
-    from openscm.scmdataframe.pyam_compat import Axes as res_2
-    from openscm.scmdataframe.pyam_compat import LongDatetimeIamDataFrame as res_3
-
-    assert all([r is not None for r in [res, res_2, res_3]])
 
 
 def test_get_item(test_scm_df):
@@ -449,7 +418,7 @@ def test_variable_depth_0(test_scm_df):
 
 
 def test_variable_depth_0_with_base():
-    tdf = ScmDataFrame(
+    tdf = OpenScmDataFrame(
         data=np.array([[1, 6.0, 7], [0.5, 3, 2], [2, 7, 0], [-1, -2, 3]]).T,
         columns={
             "model": ["a_iam"],
@@ -718,7 +687,7 @@ def test_filter_by_regexp(test_scm_df):
 
 
 def test_filter_timeseries_different_length():
-    df = ScmDataFrame(
+    df = OpenScmDataFrame(
         pd.DataFrame(
             np.array([[1.0, 2.0, 3.0], [4.0, 5.0, np.nan]]).T, index=[2000, 2001, 2002]
         ),
@@ -745,7 +714,7 @@ def test_filter_timeseries_different_length():
 
 @pytest.mark.parametrize("has_nan", [True, False])
 def test_filter_timeseries_nan_meta(has_nan):
-    df = ScmDataFrame(
+    df = OpenScmDataFrame(
         pd.DataFrame(
             np.array([[1.0, 2.0], [4.0, 5.0], [7.0, 8.0]]).T, index=[2000, 2001]
         ),
@@ -1037,7 +1006,7 @@ def test_append(test_scm_df):
     other.set_meta("b", name="col2")
 
     df = test_scm_df.append(other)
-    assert isinstance(df, ScmDataFrame)
+    assert isinstance(df, OpenScmDataFrame)
 
     # check that the new meta.index is updated, but not the original one
     assert "col1" in test_scm_df.meta
@@ -1220,7 +1189,7 @@ def get_append_col_order_time_dfs(base):
     other_2._meta["ecs"] = 3.0
     other_2._meta["climate_model"] = "a_model2"
 
-    exp = ScmDataFrame(
+    exp = OpenScmDataFrame(
         pd.DataFrame(
             np.array(
                 [
@@ -1273,7 +1242,7 @@ def test_append_column_order_time_interpolation(test_scm_df):
 
 
 def test_df_append_inplace_wrong_base(test_scm_df):
-    error_msg = "Can only append inplace to an ScmDataFrameBase"
+    error_msg = "Can only append inplace to an ScmDataFrame"
     with pytest.raises(TypeError, match=error_msg):
         with warnings.catch_warnings(record=True):  # ignore warnings in this test
             df_append([test_scm_df.timeseries(), test_scm_df], inplace=True)
@@ -1889,7 +1858,7 @@ def test_parameterset_non_world_generic_para_to_scmdataframe_raises(rcp26):
     with pytest.raises(
         ValueError, match="Only generic types with Region==World can be extracted"
     ):
-        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+        convert_openscm_to_openscmdataframe(start_point, rcp26.time_points)
 
 
 def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
@@ -1899,10 +1868,10 @@ def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
     with pytest.raises(
         ValueError, match="Only scalar types with Region==World can be extracted"
     ):
-        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+        convert_openscm_to_openscmdataframe(start_point, rcp26.time_points)
 
 
-def test_convert_openscm_to_scmdataframe_circularity(rcp26):
+def test_convert_openscm_to_openscmdataframe_circularity(rcp26):
     tdata = rcp26.copy()
     tdata.set_meta("average", name="parameter_type")
     tdata.set_meta(True, name="test_generic")
@@ -1916,7 +1885,7 @@ def test_convert_openscm_to_scmdataframe_circularity(rcp26):
     append_meta["parameter_type"] = "point"
     append_meta["test_gen_list"] = [append_meta["test_gen_list"]]
     tdata = tdata.append(
-        ScmDataFrame(
+        OpenScmDataFrame(
             data=np.arange(len(tdata.time_points)),
             index=tdata.time_points,
             columns=append_meta,
@@ -1926,7 +1895,7 @@ def test_convert_openscm_to_scmdataframe_circularity(rcp26):
 
     intermediate = tdata.to_parameterset()
 
-    res = convert_openscm_to_scmdataframe(
+    res = convert_openscm_to_openscmdataframe(
         intermediate,
         tdata["time"],
         model="IMAGE",
@@ -1949,7 +1918,7 @@ def test_resample():
         datetime.datetime(2002, 6, 1),
         datetime.datetime(2003, 1, 1),
     ]
-    df = ScmDataFrame(
+    df = OpenScmDataFrame(
         [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
         columns={
             "scenario": ["a_scenario"],
@@ -1970,7 +1939,7 @@ def test_resample():
 
 def test_resample_long_datetimes():
     df_dts = [datetime.datetime(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
-    df = ScmDataFrame(
+    df = OpenScmDataFrame(
         np.arange(1700, 2500 + 1, 100),
         columns={
             "scenario": ["a_scenario"],
@@ -2017,7 +1986,7 @@ def test_init_no_file():
     fname = "/path/to/nowhere"
     error_msg = re.escape("no data file `{}` found!".format(fname))
     with pytest.raises(OSError, match=error_msg):
-        ScmDataFrame(fname)
+        OpenScmDataFrame(fname)
 
 
 @pytest.mark.parametrize(
@@ -2026,7 +1995,7 @@ def test_init_no_file():
         (
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "../..",
+                "..",
                 "test_data",
                 "rcp26_emissions.csv",
             ),
@@ -2035,7 +2004,7 @@ def test_init_no_file():
         (
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "../..",
+                "..",
                 "test_data",
                 "rcp26_emissions.xls",
             ),
@@ -2044,7 +2013,7 @@ def test_init_no_file():
         (
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "../..",
+                "..",
                 "test_data",
                 "rcp26_emissions_multi_sheet.xlsx",
             ),
@@ -2053,7 +2022,7 @@ def test_init_no_file():
         (
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "../..",
+                "..",
                 "test_data",
                 "rcp26_emissions_multi_sheet_data.xlsx",
             ),
@@ -2062,7 +2031,7 @@ def test_init_no_file():
     ],
 )
 def test_read_from_disk(test_file, test_kwargs):
-    loaded = ScmDataFrame(test_file, **test_kwargs)
+    loaded = OpenScmDataFrame(test_file, **test_kwargs)
     assert (
         loaded.filter(variable="Emissions|N2O", year=1767).timeseries().values.squeeze()
         == 0.010116813

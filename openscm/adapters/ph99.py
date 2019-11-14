@@ -5,9 +5,9 @@ import warnings
 from typing import TYPE_CHECKING, Dict, Sequence
 
 import numpy as np
+from scmdata.units import _unit_registry
 
 from ..core.parameters import HierarchicalName, ParameterInfo
-from ..core.units import _unit_registry
 from ..errors import ParameterEmptyError
 from ..models import PH99Model
 from . import AdapterConstantTimestep

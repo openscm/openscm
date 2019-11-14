@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from base import _AdapterTester
+from pint.errors import DimensionalityError
 
 from openscm.adapters.dice import DICE, YEAR
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.errors import DimensionalityError
 
 
 def _run_and_compare(test_adapter, filename, timestep_count=None):

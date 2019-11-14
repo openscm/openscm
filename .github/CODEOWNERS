@@ -10,7 +10,6 @@ MANIFEST.in @rgieseke @swillner @znicholls
 Makefile @rgieseke @swillner
 README.rst @rgieseke @swillner @znicholls
 docs/sources/schema.tex @swillner
-notebooks/emissions-units-with-pint.ipynb @znicholls
 notebooks/pyam-integration.ipynb @znicholls
 notebooks/timeframes.ipynb @swillner
 openscm/__init__.py @rgieseke @swillner
