@@ -17,7 +17,7 @@ from openscm.core.parameterset import ParameterSet
 from pint import DimensionalityError, UndefinedUnitError
 from openscm.scmdataframe import (
     OpenScmDataFrame,
-    convert_openscm_to_scmdataframe,
+    convert_openscm_to_openscmdataframe,
     df_append,
 )
 
@@ -1858,7 +1858,7 @@ def test_parameterset_non_world_generic_para_to_scmdataframe_raises(rcp26):
     with pytest.raises(
         ValueError, match="Only generic types with Region==World can be extracted"
     ):
-        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+        convert_openscm_to_openscmdataframe(start_point, rcp26.time_points)
 
 
 def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
@@ -1868,10 +1868,10 @@ def test_parameterset_non_world_scalar_para_to_scmdataframe_raises(rcp26):
     with pytest.raises(
         ValueError, match="Only scalar types with Region==World can be extracted"
     ):
-        convert_openscm_to_scmdataframe(start_point, rcp26.time_points)
+        convert_openscm_to_openscmdataframe(start_point, rcp26.time_points)
 
 
-def test_convert_openscm_to_scmdataframe_circularity(rcp26):
+def test_convert_openscm_to_openscmdataframe_circularity(rcp26):
     tdata = rcp26.copy()
     tdata.set_meta("average", name="parameter_type")
     tdata.set_meta(True, name="test_generic")
@@ -1895,7 +1895,7 @@ def test_convert_openscm_to_scmdataframe_circularity(rcp26):
 
     intermediate = tdata.to_parameterset()
 
-    res = convert_openscm_to_scmdataframe(
+    res = convert_openscm_to_openscmdataframe(
         intermediate,
         tdata["time"],
         model="IMAGE",
