@@ -1,18 +1,14 @@
-import os.path
 import warnings
 from abc import abstractmethod, abstractproperty
-from typing import TYPE_CHECKING, Dict, Sequence, Union
+from typing import Dict, Sequence, Union
 
 import numpy as np
-import pymagicc.io
 
 from ...core.parameters import (
-    HIERARCHY_SEPARATOR,
     HierarchicalName,
     ParameterInfo,
     ParameterType,
 )
-from ...core.time import ExtrapolationType, InterpolationType, create_time_points
 from ...errors import ParameterEmptyError
 from ...scmdataframe import OpenScmDataFrame
 from .. import Adapter

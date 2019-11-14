@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
-from scmdata import ScmDataFrame, df_append
+from scmdata import ScmDataFrame, df_append  # noqa: F401
 
 from openscm.core.parameters import (
     ParameterInfo,
