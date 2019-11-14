@@ -12,9 +12,10 @@ from openscm.adapters.magicc.magicc7 import MAGICC7
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.scmdataframe import convert_openscm_to_scmdataframe, ScmDataFrame
+from openscm.scmdataframe import convert_openscm_to_openscmdataframe, ScmDataFrame
 
 
+@pytest.mark.xfail(reason="MAGICC7 not yet publicly available")
 class TestMAGICC7(_AdapterTester):
     tadapter = MAGICC7
 
@@ -237,7 +238,7 @@ class TestMAGICC7(_AdapterTester):
         runner.reset()
         runner.run()
 
-        res_openscm = convert_openscm_to_scmdataframe(
+        res_openscm = convert_openscm_to_openscmdataframe(
             runner._output,
             time_points=res_pymagicc["time"],
             model=world_only_rcp["model"].unique()[0],

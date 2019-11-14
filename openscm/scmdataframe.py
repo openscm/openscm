@@ -237,7 +237,7 @@ class OpenScmDataFrame(ScmDataFrame):
         return res
 
 
-def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
+def convert_openscm_to_openscmdataframe(  # pylint: disable=too-many-locals
     parameterset: ParameterSet,
     time_points: np.ndarray,
     model: str = "unspecified",

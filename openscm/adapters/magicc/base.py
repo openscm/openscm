@@ -15,7 +15,7 @@ from ...core.parameters import (
 )
 from ...core.time import ExtrapolationType, InterpolationType, create_time_points
 from ...errors import ParameterEmptyError
-from ...scmdataframe import OpenScmDataFrame, convert_openscm_to_scmdataframe
+from ...scmdataframe import OpenScmDataFrame
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 

@@ -9,7 +9,7 @@ from pyam import IamDataFrame
 
 from ._version import get_versions
 from .core import OpenSCM  # noqa: F401
-from .scmdataframe import ScmDataFrame, OpenScmDataFrame, convert_openscm_to_scmdataframe, df_append
+from .scmdataframe import ScmDataFrame, OpenScmDataFrame, convert_openscm_to_openscmdataframe, df_append
 
 __version__: str = get_versions()["version"]
 del get_versions
