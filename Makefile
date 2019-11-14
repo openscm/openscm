@@ -78,7 +78,7 @@ test-notebooks: venv  ## run all notebook tests
 test-all: test test-notebooks  ## run the testsuite and the notebook tests
 
 venv: setup.py  ## install a development virtual environment
-	[ -d ./venv ] || python3 -m venv ./venv
+	[ -d ./venv ] || python3.7 -m venv ./venv
 	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install -e .[dev]
 	touch venv
