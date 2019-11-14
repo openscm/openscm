@@ -83,7 +83,7 @@ class TestMAGICC7(_AdapterTester):
             timeseries_type="point",
         ).values
         np.testing.assert_allclose(
-            run_res_temperature, np.array([2.6907497, 2.6974658, 2.7042166])
+            run_res_temperature, np.array([2.6907497, 2.6974658, 2.7042166]), rtol=1e-5
         )
 
     def test_step(self, test_adapter):
