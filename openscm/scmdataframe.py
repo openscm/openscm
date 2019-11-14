@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
-from scmdata import ScmDataFrame, df_append  # noqa: F401
+from scmdata import ScmDataFrame, df_append  # noqa: F401 # pylint:disable=unused-import
 
 from openscm.core.parameters import (
     ParameterInfo,
@@ -26,7 +26,7 @@ from openscm.core.time import ExtrapolationType, InterpolationType, TimeseriesCo
 from openscm.errors import ParameterEmptyError
 
 
-class OpenScmDataFrame(ScmDataFrame):
+class OpenScmDataFrame(ScmDataFrame):  # type: ignore
     """
     OpenSCM's custom ScmDataFrame implementation.
 
@@ -240,10 +240,10 @@ class OpenScmDataFrame(ScmDataFrame):
             )
 
         res["time"] = timeseries_index
-        return res
+        return cast(OpenScmDataFrame, res)
 
 
-def convert_openscm_to_openscmdataframe(  # pylint: disable=too-many-locals
+def convert_openscm_to_openscmdataframe(  # pylint: disable=too-many-locals,too-many-branches
     parameterset: ParameterSet,
     time_points: np.ndarray,
     model: str = "unspecified",

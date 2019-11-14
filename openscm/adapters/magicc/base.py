@@ -1,14 +1,13 @@
+"""
+Base adapter for MAGICC
+"""
 import warnings
 from abc import abstractmethod, abstractproperty
-from typing import Dict, Sequence, Union
+from typing import Dict, Sequence, Union, cast
 
 import numpy as np
 
-from ...core.parameters import (
-    HierarchicalName,
-    ParameterInfo,
-    ParameterType,
-)
+from ...core.parameters import HierarchicalName, ParameterInfo, ParameterType
 from ...errors import ParameterEmptyError
 from ...scmdataframe import OpenScmDataFrame
 from .. import Adapter
@@ -69,7 +68,6 @@ class _MAGICCBase(Adapter):
         """
         Name of the model as used in OpenSCM parameters
         """
-        pass
 
     @abstractmethod
     def _initialize_model(self) -> None:
@@ -188,13 +186,17 @@ class _MAGICCBase(Adapter):
 
     def _reset(self) -> None:
         # hack hack hack
-        for k, v in self._output._root._parameters.items():
+        for (
+            _,
+            v,
+        ) in self._output._root._parameters.items():  # pylint:disable=protected-access
             if v.unit is None:
                 continue
 
-            tp = self._get_time_points(v.parameter_type)
+            para_type = cast(ParameterType, v.parameter_type)
+            tp = self._get_time_points(para_type)
             view = self._output.timeseries(
-                v.name, v.unit, time_points=tp, timeseries_type=v.parameter_type
+                v.name, v.unit, time_points=tp, timeseries_type=para_type
             )
             view.values = np.zeros(tp.shape) * np.nan
 
@@ -237,7 +239,7 @@ class _MAGICCBase(Adapter):
             parameterset=self._output
         )
 
-        for nml, nml_values in res.metadata["parameters"].items():
+        for _, nml_values in res.metadata["parameters"].items():
             for k, v in nml_values.items():
                 if k in self._units:
                     self._output.scalar((self.name, k), self._units[k]).value = v

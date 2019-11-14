@@ -40,6 +40,13 @@ def run(
 
     output_time_points
         The points on which to report the results of the runs
+
+    Returns
+    -------
+    :obj:`DataFrame`
+        Run results in an :obj:`OpenScmDataFrame` (unless the input was an
+        :obj:`IamDataFrame` in which case the return type is an
+        :obj:`IamDataFrame`)
     """
     if isinstance(emissions, IamDataFrame):
         runner = ScmDataFrame(emissions)
@@ -49,7 +56,7 @@ def run(
     results = []
     for climate_model in tqdm.tqdm_notebook(climate_models, desc="Climate Models"):
         unique_model_scens = runner[["model", "scenario"]].drop_duplicates()
-        for i, label in tqdm.tqdm_notebook(
+        for _, label in tqdm.tqdm_notebook(
             unique_model_scens.iterrows(),
             total=len(unique_model_scens),
             leave=True,
