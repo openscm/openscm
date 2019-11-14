@@ -4,8 +4,9 @@ import numpy as np
 import pymagicc.core
 import pymagicc.io
 
-from .base import _MAGICCBase
 from ...core.parameters import HIERARCHY_SEPARATOR
+from .base import _MAGICCBase
+
 
 class MAGICC6(_MAGICCBase):
     """
@@ -24,6 +25,7 @@ class MAGICC6(_MAGICCBase):
     Model description and calibration, Atmos. Chem. Phys., 11, 1417-1456,
     https://doi.org/10.5194/acp-11-1417-2011, 2011.
     """
+
     @property
     def name(self):
         """
@@ -88,7 +90,7 @@ class MAGICC6(_MAGICCBase):
                 "model": "na",
                 "scenario": "na",
                 "todo": "SET",
-            }
+            },
         )
 
         scen.write(

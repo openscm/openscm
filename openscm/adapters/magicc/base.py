@@ -1,21 +1,21 @@
 import os.path
 import warnings
 from abc import abstractmethod, abstractproperty
+from typing import TYPE_CHECKING, Dict, Sequence, Union
 
 import numpy as np
 import pymagicc.io
-from typing import TYPE_CHECKING, Dict, Sequence, Union
 
-from .. import Adapter
 from ...core.parameters import (
+    HIERARCHY_SEPARATOR,
     HierarchicalName,
     ParameterInfo,
     ParameterType,
-    HIERARCHY_SEPARATOR,
 )
 from ...core.time import ExtrapolationType, InterpolationType, create_time_points
 from ...errors import ParameterEmptyError
 from ...scmdataframe import OpenScmDataFrame
+from .. import Adapter
 
 YEAR = 365 * 24 * 60 * 60  # example time step length as used below
 
@@ -176,7 +176,9 @@ class _MAGICCBase(Adapter):
 
             if name[0] != self.name:
                 # emergency valve for now, must be smarter way to handle this
-                raise ValueError("How did non-{} parameter end up here?".format(self.name))
+                raise ValueError(
+                    "How did non-{} parameter end up here?".format(self.name)
+                )
 
             self._run_kwargs[name[1]] = value
 
@@ -257,7 +259,9 @@ class _MAGICCBase(Adapter):
         st = super()._start_time
         if isinstance(st, (float, int)):
             if int(st) != st:
-                raise ValueError("('{}', 'startyear') should be an integer".format(self.name))
+                raise ValueError(
+                    "('{}', 'startyear') should be an integer".format(self.name)
+                )
             return np.datetime64("{}-01-01".format(int(st)))
         return st
 
@@ -271,7 +275,9 @@ class _MAGICCBase(Adapter):
             ].value
             if isinstance(et, (int, float)):
                 if int(et) != et:
-                    raise ValueError("('{}', 'endyear') should be an integer".format(self.name))
+                    raise ValueError(
+                        "('{}', 'endyear') should be an integer".format(self.name)
+                    )
             return np.datetime64("{}-01-01".format(int(et)))
 
     @property

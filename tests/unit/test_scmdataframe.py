@@ -11,10 +11,10 @@ import pandas as pd
 import pytest
 from numpy import testing as npt
 from pandas.errors import UnsupportedFunctionCall
+from pint import DimensionalityError, UndefinedUnitError
 
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
-from pint import DimensionalityError, UndefinedUnitError
 from openscm.scmdataframe import (
     OpenScmDataFrame,
     convert_openscm_to_openscmdataframe,

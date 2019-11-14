@@ -8,7 +8,7 @@ from openscm.adapters.magicc.magicc6 import MAGICC6
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.scmdataframe import convert_openscm_to_openscmdataframe, OpenScmDataFrame
+from openscm.scmdataframe import OpenScmDataFrame, convert_openscm_to_openscmdataframe
 
 
 class TestMAGICC6(_AdapterTester):
@@ -192,8 +192,6 @@ class TestMAGICC6(_AdapterTester):
         [
             pymagicc.scenarios.rcp26,
             pymagicc.scenarios.rcp45,
-
-
             pymagicc.scenarios.rcp60,
             pymagicc.scenarios.rcp85,
         ],
@@ -213,8 +211,12 @@ class TestMAGICC6(_AdapterTester):
         world_only_rcp.set_meta("point", "parameter_type")
         if fiddle_units:
             world_only_rcp = world_only_rcp.to_iamdataframe()
-            world_only_rcp = world_only_rcp.convert_unit({"Gt C / yr": ["Mt CO2/yr", 44000/12]})
-            world_only_rcp = world_only_rcp.convert_unit({"Mt S / yr": ["Mt SO2/yr", 2]})
+            world_only_rcp = world_only_rcp.convert_unit(
+                {"Gt C / yr": ["Mt CO2/yr", 44000 / 12]}
+            )
+            world_only_rcp = world_only_rcp.convert_unit(
+                {"Mt S / yr": ["Mt SO2/yr", 2]}
+            )
 
         world_only_rcp = OpenScmDataFrame(world_only_rcp)
         rcp_paras = world_only_rcp.to_parameterset()

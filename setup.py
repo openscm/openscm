@@ -85,13 +85,8 @@ When implementing an additional adapter, include your adapter NAME here as:
 "NAME": [ ... additional pip modules you need ... ],
 ```
 """
-magicc_requirements = [
-    "pymagicc>=2.0.0b8"
-]
-REQUIREMENTS_MODELS = {
-    "MAGICC6": magicc_requirements,
-    "MAGICC7": magicc_requirements,
-}
+magicc_requirements = ["pymagicc>=2.0.0b8"]
+REQUIREMENTS_MODELS = {"MAGICC6": magicc_requirements, "MAGICC7": magicc_requirements}
 
 REQUIREMENTS_EXTRAS = {
     "notebooks": REQUIREMENTS_NOTEBOOKS,

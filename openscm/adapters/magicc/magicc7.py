@@ -4,8 +4,9 @@ import numpy as np
 import pymagicc.core
 import pymagicc.io
 
-from .base import _MAGICCBase
 from ...core.parameters import HIERARCHY_SEPARATOR
+from .base import _MAGICCBase
+
 
 class MAGICC7(_MAGICCBase):
     """
@@ -21,6 +22,7 @@ class MAGICC7(_MAGICCBase):
     Further reference:
     TBC
     """
+
     @property
     def name(self):
         """
@@ -86,7 +88,7 @@ class MAGICC7(_MAGICCBase):
                 "model": "na",
                 "scenario": "na",
                 "todo": "SET",
-            }
+            },
         )
 
         scen.write(

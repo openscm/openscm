@@ -5,19 +5,25 @@ model data. ScmDataFrames are able to hold multiple model runs which aids in ana
 ensembles of model runs.
 """
 from __future__ import annotations
-from typing import Dict, List, Tuple, Union, cast, Optional
-import warnings
+
+import datetime
 import re
+import warnings
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
-
-from openscm.core.parameters import ParameterInfo, ParameterType, _Parameter, guess_parameter_type
-from openscm.core.time import TimeseriesConverter, InterpolationType, ExtrapolationType
-from openscm.core.parameterset import ParameterSet
-from openscm.errors import ParameterEmptyError
 from scmdata import ScmDataFrame, df_append
-import datetime
+
+from openscm.core.parameters import (
+    ParameterInfo,
+    ParameterType,
+    _Parameter,
+    guess_parameter_type,
+)
+from openscm.core.parameterset import ParameterSet
+from openscm.core.time import ExtrapolationType, InterpolationType, TimeseriesConverter
+from openscm.errors import ParameterEmptyError
 
 
 class OpenScmDataFrame(ScmDataFrame):

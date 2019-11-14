@@ -1,6 +1,6 @@
-from unittest import mock
 import os
 import re
+from unittest import mock
 
 import numpy as np
 import pymagicc
@@ -12,7 +12,7 @@ from openscm.adapters.magicc.magicc7 import MAGICC7
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
-from openscm.scmdataframe import convert_openscm_to_openscmdataframe, ScmDataFrame
+from openscm.scmdataframe import ScmDataFrame, convert_openscm_to_openscmdataframe
 
 
 @pytest.mark.xfail(reason="MAGICC7 not yet publicly available")
@@ -222,8 +222,12 @@ class TestMAGICC7(_AdapterTester):
         world_only_rcp.set_meta("point", "parameter_type")
         if fiddle_units:
             world_only_rcp = world_only_rcp.to_iamdataframe()
-            world_only_rcp = world_only_rcp.convert_unit({"Gt C / yr": ["Mt CO2/yr", 44000/12]})
-            world_only_rcp = world_only_rcp.convert_unit({"Mt S / yr": ["Mt SO2/yr", 2]})
+            world_only_rcp = world_only_rcp.convert_unit(
+                {"Gt C / yr": ["Mt CO2/yr", 44000 / 12]}
+            )
+            world_only_rcp = world_only_rcp.convert_unit(
+                {"Mt S / yr": ["Mt SO2/yr", 2]}
+            )
             world_only_rcp = ScmDataFrame(world_only_rcp)
 
         rcp_paras = world_only_rcp.to_parameterset()

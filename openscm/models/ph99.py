@@ -20,8 +20,8 @@ import copy
 from typing import Any
 
 import numpy as np
-
 from scmdata.units import _unit_registry
+
 from ..errors import OutOfBoundsError, OverwriteError
 
 

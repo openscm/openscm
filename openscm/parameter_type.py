@@ -5,5 +5,3 @@ import re
 from typing import Optional
 
 from openscm.core.parameters import ParameterType
-
-
