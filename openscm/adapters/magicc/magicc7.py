@@ -67,8 +67,32 @@ class MAGICC7(_MAGICCBase):
         return "MAGICC7"
 
     def _initialize_model(self) -> None:
-        self.model = self._pymagicc_class()
+        self.model = self._pymagicc_class(strict=False)
         self.model.create_copy()
+        # nasty hard-coded hack for now
+        self.model.update_config(
+            "MAGCFG_USER.CFG",
+            **{
+                "file_emisscen": "WMO_MHALO.SCEN7",
+                "file_emisscen_2": "Velders_HFC_baseline_upper.SCEN7",
+                "file_emisscen_3": "RCP85.SCEN7",
+                "file_emisscen_4": "PYMAGICC.SCEN7",
+                "file_emisscen_5": "NONE",
+                "file_emisscen_6": "NONE",
+                "file_emisscen_7": "NONE",
+                "file_emisscen_8": "NONE",
+                "file_tuningmodel_1": "C4MIP_UVIC",
+                "file_tuningmodel_2": "FULLTUNE_MEDIUM_CMIP3_ECS2_5",
+                "file_tuningmodel_3": "PYMAGICC",
+                "file_tuningmodel_4": "USER",
+                "file_tuningmodel_5": "USER",
+                "file_tuningmodel_6": "USER",
+                "file_tuningmodel_7": "USER",
+                "file_tuningmodel_8": "USER",
+                "file_tuningmodel_9": "USER",
+                "file_tuningmodel_10": "USER",
+            },
+        )
         for _, nml in self.model.default_config.items():
             for para, value in nml.items():
                 if para in self._units:
@@ -126,4 +150,4 @@ class MAGICC7(_MAGICCBase):
             os.path.join(self.model.run_dir, "PYMAGICC.SCEN7"),
             magicc_version=self.model.version,
         )
-        self.model.update_config(file_emisscen="PYMAGICC.SCEN7")
+        self.model.update_config(file_emisscen_4="PYMAGICC.SCEN7")
