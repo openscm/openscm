@@ -207,7 +207,8 @@ class _MAGICCBase(Adapter):
                 "MAGICC is hard-coded to start in 1765 as there is a conflict between the concept of a start year and having continuous timeseries"
             )
 
-        res = self.model.run(startyear=1765, **self._run_kwargs)
+        warnings.warn("Hard-coded `out_forcing=1`")
+        res = self.model.run(startyear=1765, out_forcing=1, **self._run_kwargs)
         # import pdb
         # pdb.set_trace()
         # self.model.run_dir
@@ -240,9 +241,35 @@ class _MAGICCBase(Adapter):
         # `Radiative Forcing|Greenhouse Gases`, `Radiative Forcing` will always be
         # calculated from its children so need to report all the sub-components or
         # none)
-        res_tmp.filter(variable="Radiative Forcing|*", keep=False).to_parameterset(
-            parameterset=self._output
-        )
+        tmp_rf = res_tmp.filter(variable="Radiative Forcing").timeseries().reset_index()
+        if not tmp_rf.empty:
+            tmp_rf["variable"] = "Radiative Forcing|Total"
+            res_tmp = res_tmp.filter(variable="Radiative Forcing", keep=False).append(OpenScmDataFrame(tmp_rf))
+            res_tmp["variable"].unique()
+
+        tmp_effrf = res_tmp.filter(variable="Effective Radiative Forcing").timeseries().reset_index()
+        if not tmp_effrf.empty:
+            tmp_effrf["variable"] = "Effective Radiative Forcing|Total"
+            res_tmp = res_tmp.filter(variable="Radiative Forcing", keep=False).append(OpenScmDataFrame(tmp_effrf))
+            res_tmp["variable"].unique()
+
+        rf_split_vars = [
+            "Radiative Forcing|CO2",
+            "Radiative Forcing|CH4",
+            "Radiative Forcing|N2O",
+            "Radiative Forcing|Aerosols|*",
+            "Effective Radiative Forcing|CO2",
+            "Effective Radiative Forcing|CH4",
+            "Effective Radiative Forcing|N2O",
+            "CLOUD_TOT_EFFRF",
+            "TOTAER_DIR_EFFRF",
+        ]
+        tmp_rf_split = res_tmp.filter(variable=rf_split_vars)
+        if not tmp_rf_split.timeseries().empty:
+            res_tmp = res_tmp.filter(variable=["*Radiative Forcing*", "*RF*"], keep=False)
+            res_tmp = res_tmp.append(tmp_rf_split).append(tmp_rf).append(tmp_effrf)
+
+        res_tmp.to_parameterset(parameterset=self._output)
 
         for _, nml_values in res.metadata["parameters"].items():
             for k, v in nml_values.items():
