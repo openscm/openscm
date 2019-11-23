@@ -26,6 +26,7 @@ def run(
     output_time_points: np.ndarray = [
         np.datetime64("{}-01-01".format(y)) for y in range(1765, 2101)
     ],
+    notebook=False
 ) -> Union[OpenScmDataFrame, IamDataFrame]:
     """
     Run a series of emissions scenarios
@@ -54,9 +55,10 @@ def run(
         runner = OpenScmDataFrame(emissions)
 
     results = []
-    for climate_model in tqdm.tqdm_notebook(climate_models, desc="Climate Models"):
+    tqdm_bar = tqdm.tqdm if not notebook else tqdm.tqdm_notebook
+    for climate_model in tqdm_bar(climate_models, desc="Climate Models"):
         unique_model_scens = runner[["model", "scenario"]].drop_duplicates()
-        for _, label in tqdm.tqdm_notebook(
+        for _, label in tqdm_bar(
             unique_model_scens.iterrows(),
             total=len(unique_model_scens),
             leave=True,
