@@ -81,4 +81,5 @@ venv: setup.py  ## install a development virtual environment
 	[ -d ./venv ] || python3 -m venv ./venv
 	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install -e .[dev]
+	./venv/bin/jupyter nbextension enable --py widgetsnbextension
 	touch venv
