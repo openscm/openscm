@@ -1,0 +1,123 @@
+[
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-CSM2-MR model",
+        "name": "ar5ir2box-CMIP6-BCC-CSM2-MR_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.4395185057788764,
+            "c2": 1.6600176932094155,
+            "d1": 4.226911772914753,
+            "d2": 1214.967819659438,
+            "f2x": 4.186548271315887
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-ESM1 model",
+        "name": "ar5ir2box-CMIP6-BCC-ESM1_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.38619637106259846,
+            "c2": 0.8812223827952353,
+            "d1": 5.271898475097845,
+            "d2": 669.2868008327575,
+            "f2x": 4.583646459185962
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CanESM5 model",
+        "name": "ar5ir2box-CMIP6-CanESM5_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.6607336098859632,
+            "c2": 3.874137729059316,
+            "d1": 7.633434825792183,
+            "d2": 1833.2070359870006,
+            "f2x": 4.317757488823522
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the CNRM-CM6-1 model",
+        "name": "ar5ir2box-CMIP6-CNRM-CM6-1_r1i1p1f2-CALIB",
+        "parameter_values": {
+            "c1": 0.6852451143555405,
+            "c2": 1.7027049152064881,
+            "d1": 5.093565552342987,
+            "d2": 788.3482093001217,
+            "f2x": 3.3854712269840195
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the CNRM-ESM2-1 model",
+        "name": "ar5ir2box-CMIP6-CNRM-ESM2-1_r1i1p1f2-CALIB",
+        "parameter_values": {
+            "c1": 0.4976865152543621,
+            "c2": 1.1806868382870939,
+            "d1": 7.115309665785397,
+            "d2": 759.4808864877228,
+            "f2x": 4.473150371462198
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the EC-Earth3-Veg model",
+        "name": "ar5ir2box-CMIP6-EC-Earth3-Veg_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 2.2309226241620896,
+            "c2": 26.068012367973516,
+            "d1": 7.324408935167264,
+            "d2": 3285.8051599979012,
+            "f2x": 1.1231307100218653
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-1-G model",
+        "name": "ar5ir2box-CMIP6-GISS-E2-1-G_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.400100383319536,
+            "c2": 1.4539228229834424,
+            "d1": 3.0714292578917095,
+            "d2": 1982.3102918231134,
+            "f2x": 4.248481232291803
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-1-H model",
+        "name": "ar5ir2box-CMIP6-GISS-E2-1-H_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.3901094731371286,
+            "c2": 0.8359103309766464,
+            "d1": 4.667977346393746,
+            "d2": 797.1497932969079,
+            "f2x": 4.777152669019988
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the IPSL-CM6A-LR model",
+        "name": "ar5ir2box-CMIP6-IPSL-CM6A-LR_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.865439743092603,
+            "c2": 1.3281813360137367,
+            "d1": 13.545482586388607,
+            "d2": 1326.4586696773492,
+            "f2x": 3.423353777681101
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the MPI-ESM1-2-HR model",
+        "name": "ar5ir2box-CMIP6-MPI-ESM1-2-HR_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "c1": 0.4187024269004489,
+            "c2": 3.323967994362872,
+            "d1": 3.8128374501514206,
+            "d2": 2821.154006086931,
+            "f2x": 4.229181253338347
+        }
+    },
+    {
+        "descr": "AR5IR (Ch. 8 SM) calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the UKESM1-0-LL model",
+        "name": "ar5ir2box-CMIP6-UKESM1-0-LL_r1i1p1f2-CALIB",
+        "parameter_values": {
+            "c1": 0.7035804581472783,
+            "c2": 1.7129170738120925,
+            "d1": 6.96480644008492,
+            "d2": 740.0946819818964,
+            "f2x": 3.9070748367900663
+        }
+    }
+]
