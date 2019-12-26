@@ -3,208 +3,192 @@
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-CSM2-MR model",
         "name": "ar5ir3box-CMIP6-BCC-CSM2-MR_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 0.41726214209102014,
-            "c2": 0.11641422555002184,
-            "c3": 0.44400823894412755,
-            "d1": 215.60264596761755,
-            "d2": 2986.5794518473626,
-            "d3": 3.6798046167965155,
-            "f2x": 3.977134248598219
+            "c1": 0.7272176203787334,
+            "c2": 0.8683942562895806,
+            "c3": 0.4838703485002382,
+            "d1": 570.5177904072127,
+            "d2": 2234.54901422887,
+            "d3": 4.0644322975141325
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-ESM1 model",
         "name": "ar5ir3box-CMIP6-BCC-ESM1_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.0648130078945213,
-            "c2": 1.101536138387656,
-            "c3": 0.5553679300542109,
-            "d1": 587.6195093954656,
-            "d2": 2517.920314521109,
-            "d3": 4.0338987826339725,
-            "f2x": 3.0254146438089973
+            "c1": 1.413585141805078,
+            "c2": 0.2681025307484687,
+            "c3": 0.4723823288802797,
+            "d1": 935.8433561456172,
+            "d2": 3559.181468831774,
+            "d3": 5.238916198437908
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CanESM5 model",
         "name": "ar5ir3box-CMIP6-CanESM5_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.853654109886557,
-            "c2": 0.9038602678416687,
-            "c3": 0.938763121412049,
-            "d1": 672.0480060526318,
-            "d2": 1774.0083969679197,
-            "d3": 7.492653962972054,
-            "f2x": 3.008951813887496
+            "c1": 2.3148860136199634,
+            "c2": 0.08958320611523976,
+            "c3": 0.7571298671252442,
+            "d1": 914.550133181486,
+            "d2": 2289.4350203411886,
+            "d3": 7.477476368319569
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CESM2 model",
         "name": "ar5ir3box-CMIP6-CESM2_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.0270682042433739,
-            "c2": 0.1581449585586479,
-            "c3": 0.5338257522864606,
-            "d1": 684.8114567579051,
-            "d2": 1377.1897587962303,
-            "d3": 1.015060801901122,
-            "f2x": 4.537554432578305
+            "c1": 0.6090454854430662,
+            "c2": 1.105287879706056,
+            "c3": 0.5073258019202075,
+            "d1": 133.19039024030903,
+            "d2": 2025.1096522561672,
+            "d3": 4.30390291739941
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CESM2-WACCM model",
         "name": "ar5ir3box-CMIP6-CESM2-WACCM_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.896983638809697,
-            "c2": 0.1327671427780983,
-            "c3": 0.4341825094147819,
-            "d1": 886.9104063920258,
-            "d2": 1208.0610347872096,
-            "d3": 4.656440712166183,
-            "f2x": 4.662088226895167
+            "c1": 1.5306605832592655,
+            "c2": 1.5206634066167157,
+            "c3": 0.5380781639714035,
+            "d1": 635.8389826171434,
+            "d2": 3193.007698181736,
+            "d3": 4.600258129731206
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the CNRM-CM6-1 model",
         "name": "ar5ir3box-CMIP6-CNRM-CM6-1_r1i1p1f2-CALIB",
         "parameter_values": {
-            "c1": 1.0495832129415936,
-            "c2": 1.3832519768793539,
-            "c3": 0.6223131417085214,
-            "d1": 681.1350102044785,
-            "d2": 3360.0411400283183,
-            "d3": 5.095669696480919,
-            "f2x": 3.7291939226354143
+            "c1": 1.8085654743198898,
+            "c2": 0.007707426864479672,
+            "c3": 0.6213699008418406,
+            "d1": 942.5672271880906,
+            "d2": 3878.1767594826833,
+            "d3": 5.236703456867663
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the CNRM-ESM2-1 model",
         "name": "ar5ir3box-CMIP6-CNRM-ESM2-1_r1i1p1f2-CALIB",
         "parameter_values": {
-            "c1": 0.6104365144755693,
-            "c2": 0.3971535415156013,
-            "c3": 0.49547334997254905,
-            "d1": 359.2683596659518,
-            "d2": 3511.033878490703,
-            "d3": 6.808957700075209,
-            "f2x": 4.395229376944554
+            "c1": 0.5167761846958825,
+            "c2": 2.141332090144158,
+            "c3": 0.5980816147018159,
+            "d1": 864.1947185467258,
+            "d2": 1821.321611734456,
+            "d3": 7.144996480609038
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the EC-Earth3-Veg model",
         "name": "ar5ir3box-CMIP6-EC-Earth3-Veg_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.9873476203819305,
-            "c2": 0.6354434504315752,
-            "c3": 0.747216792244372,
-            "d1": 723.7320436246914,
-            "d2": 2401.876358131986,
-            "d3": 6.919836455175613,
-            "f2x": 3.288200536582962
+            "c1": 0.7992843629379404,
+            "c2": 0.7857784224402471,
+            "c3": 0.6402455976588358,
+            "d1": 283.3417550943397,
+            "d2": 3154.3200870611636,
+            "d3": 6.547269478237669
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-1-G model",
         "name": "ar5ir3box-CMIP6-GISS-E2-1-G_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 0.3900618702870358,
-            "c2": 0.3057206917728824,
-            "c3": 0.3708156537776145,
-            "d1": 599.5561848569814,
-            "d2": 3483.22277194242,
-            "d3": 3.038844949213453,
-            "f2x": 4.563754554864999
+            "c1": 1.2634150707917917,
+            "c2": 3.553815858496394,
+            "c3": 0.25893247687496856,
+            "d1": 447.4715375581444,
+            "d2": 3981.6241650683637,
+            "d3": 8.5077286629006
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-1-H model",
         "name": "ar5ir3box-CMIP6-GISS-E2-1-H_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 0.7070603299401138,
-            "c2": 0.30463025535068106,
-            "c3": 0.4977619981433493,
-            "d1": 562.3442678424381,
-            "d2": 2749.1701441632486,
-            "d3": 4.672974412712758,
-            "f2x": 3.7364542206318374
+            "c1": 0.5960477012815741,
+            "c2": 1.0614510111437294,
+            "c3": 0.49612324311156714,
+            "d1": 649.5560262289803,
+            "d2": 2423.666007714455,
+            "d3": 4.468690555616989
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-2-G model",
         "name": "ar5ir3box-CMIP6-GISS-E2-2-G_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.2415327325090242,
-            "c2": 1.1564893855754914,
-            "c3": 0.48901289247852514,
-            "d1": 969.4518382834984,
-            "d2": 3711.752020716922,
-            "d3": 6.905715386610921,
-            "f2x": 3.0545956241661867
+            "c1": 1.3117848772498464,
+            "c2": 3.5138684686196666,
+            "c3": 0.21670795839444953,
+            "d1": 486.9370517436095,
+            "d2": 3061.7255431623335,
+            "d3": 3.430393634380832
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the IPSL-CM6A-LR model",
         "name": "ar5ir3box-CMIP6-IPSL-CM6A-LR_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 0.5814030681638289,
-            "c2": 0.28031681958796034,
-            "c3": 0.699002055285114,
-            "d1": 442.8889803650173,
-            "d2": 3352.2463145783827,
-            "d3": 7.610407121922278,
-            "f2x": 3.8347393895756596
+            "c1": 0.5973762471816414,
+            "c2": 0.21465166712474582,
+            "c3": 0.7144955309209415,
+            "d1": 415.04254846802536,
+            "d2": 2780.492810273432,
+            "d3": 3.790515332735432
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the MPI-ESM1-2-HR model",
         "name": "ar5ir3box-CMIP6-MPI-ESM1-2-HR_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.1608383097305806,
-            "c2": 0.47246672077192514,
-            "c3": 0.5308972399990167,
-            "d1": 923.2831176562427,
-            "d2": 1383.3291234840472,
-            "d3": 3.7413266870009663,
-            "f2x": 3.3133684920122177
+            "c1": 1.1454982683503094,
+            "c2": 0.00950187397133001,
+            "c3": 0.4702626713191112,
+            "d1": 798.1129459466133,
+            "d2": 2815.5249263370924,
+            "d3": 3.830750867284252
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the NorCPM1 model",
         "name": "ar5ir3box-CMIP6-NorCPM1_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 1.2123468692671147,
-            "c2": 0.24465425110169375,
-            "c3": 0.40198338010997814,
-            "d1": 612.4473400933257,
-            "d2": 3439.9124498096185,
-            "d3": 3.7467403317283696,
-            "f2x": 3.7797820207036157
+            "c1": 1.9460022367927783,
+            "c2": 0.005370722131186556,
+            "c3": 0.348399250934704,
+            "d1": 590.5585770268245,
+            "d2": 557.606824398961,
+            "d3": 4.655240878923335
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the NorESM2-LM model",
         "name": "ar5ir3box-CMIP6-NorESM2-LM_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 0.13184692564608003,
-            "c2": 1.289844003022543,
-            "c3": 0.3440154108427055,
-            "d1": 156.1592425177074,
-            "d2": 1409.1020632788172,
-            "d3": 2.0437557041596466,
-            "f2x": 3.840278666878191
+            "c1": 0.18579310009093442,
+            "c2": 2.761316942423391,
+            "c3": 0.39062394848720955,
+            "d1": 806.5275370485939,
+            "d2": 2820.947301908453,
+            "d3": 2.202970099643386
         }
     },
     {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the UKESM1-0-LL model",
         "name": "ar5ir3box-CMIP6-UKESM1-0-LL_r1i1p1f2-CALIB",
         "parameter_values": {
-            "c1": 0.8718806940688737,
-            "c2": 0.22150273948517724,
-            "c3": 0.6245895017141624,
-            "d1": 453.0270080907587,
-            "d2": 738.4233180800179,
-            "d3": 6.829838494382327,
-            "f2x": 4.35963718563908
+            "c1": 0.8340230496629214,
+            "c2": 0.36163460985095813,
+            "c3": 0.7335055979493261,
+            "d1": 388.04807164113674,
+            "d2": 903.822328225556,
+            "d3": 7.04336469051669
         }
     }
 ]

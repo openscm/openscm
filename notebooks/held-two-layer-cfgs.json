@@ -1,0 +1,182 @@
+[
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-CSM2-MR model",
+        "name": "held-two-layer-uom-CMIP6-BCC-CSM2-MR_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 93559645.58031182,
+            "C_D": 1829168324.6738226,
+            "b": -0.0036624992393419643,
+            "epsilon": 10.959704053777843,
+            "eta": 0.09659984859140298,
+            "lambda_0": -1.411520803450022
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-ESM1 model",
+        "name": "held-two-layer-uom-CMIP6-BCC-ESM1_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 335193706.8727632,
+            "C_D": 9911449342.95266,
+            "b": 0.07610257917508007,
+            "epsilon": 2.7397743695526087,
+            "eta": 0.18721947146847945,
+            "lambda_0": -1.7929800538967509
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CanESM5 model",
+        "name": "held-two-layer-uom-CMIP6-CanESM5_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 190030444.8931214,
+            "C_D": 6887894073.256788,
+            "b": 0.04706987700392529,
+            "epsilon": 0.9341578651173729,
+            "eta": 9.22889318382844,
+            "lambda_0": -1.3392493448675908
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CESM2 model",
+        "name": "held-two-layer-uom-CMIP6-CESM2_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 573662727.3322378,
+            "C_D": 7619957182.466164,
+            "b": 0.04888805311263041,
+            "epsilon": 1.9998629043305105,
+            "eta": 0.20735812442327461,
+            "lambda_0": -1.2070265360830637
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the CESM2-WACCM model",
+        "name": "held-two-layer-uom-CMIP6-CESM2-WACCM_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 112445791.88051073,
+            "C_D": 3565867982.4337287,
+            "b": 0.10069872705527946,
+            "epsilon": 6.407134012881253,
+            "eta": 0.08958645143872844,
+            "lambda_0": -1.7230044063272647
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the CNRM-CM6-1 model",
+        "name": "held-two-layer-uom-CMIP6-CNRM-CM6-1_r1i1p1f2-CALIB",
+        "parameter_values": {
+            "C": 184848217.63579506,
+            "C_D": 9070491395.800352,
+            "b": 0.055542429826748424,
+            "epsilon": 2.5347407709482943,
+            "eta": 0.18355977056844144,
+            "lambda_0": -1.4457961056137
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the CNRM-ESM2-1 model",
+        "name": "held-two-layer-uom-CMIP6-CNRM-ESM2-1_r1i1p1f2-CALIB",
+        "parameter_values": {
+            "C": 153525836.00133234,
+            "C_D": 3119096793.3980045,
+            "b": 0.1086862789086611,
+            "epsilon": 1.9078019296415103,
+            "eta": 0.25906766947698234,
+            "lambda_0": -1.8841360139515804
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the EC-Earth3-Veg model",
+        "name": "held-two-layer-uom-CMIP6-EC-Earth3-Veg_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 282989382.1081985,
+            "C_D": 4091978574.0650024,
+            "b": 0.021132994102448985,
+            "epsilon": 2.05833592272411,
+            "eta": 0.27787992786510424,
+            "lambda_0": -1.141485595718567
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-1-G model",
+        "name": "held-two-layer-uom-CMIP6-GISS-E2-1-G_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 142071604.37712622,
+            "C_D": 4853099709.609093,
+            "b": 0.006480530503936297,
+            "epsilon": 19.66795009157528,
+            "eta": 0.037938112988912046,
+            "lambda_0": -1.510203125889225
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-1-H model",
+        "name": "held-two-layer-uom-CMIP6-GISS-E2-1-H_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 263752140.60708016,
+            "C_D": 7934955611.45482,
+            "b": 0.026227199234311684,
+            "epsilon": 3.263188553495798,
+            "eta": 0.18071241707516403,
+            "lambda_0": -1.5748095920432523
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the GISS-E2-2-G model",
+        "name": "held-two-layer-uom-CMIP6-GISS-E2-2-G_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 136718144.11332908,
+            "C_D": 4358598963.462334,
+            "b": -0.04644825762763006,
+            "epsilon": 2.293166728283944,
+            "eta": 0.38255698161183005,
+            "lambda_0": -1.8770060598585
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the IPSL-CM6A-LR model",
+        "name": "held-two-layer-uom-CMIP6-IPSL-CM6A-LR_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 584331050.1958368,
+            "C_D": 6411584401.963555,
+            "b": 0.007875619470998298,
+            "epsilon": 4.524631779054373,
+            "eta": 0.10180333092950843,
+            "lambda_0": -0.8545129452189649
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the MPI-ESM1-2-HR model",
+        "name": "held-two-layer-uom-CMIP6-MPI-ESM1-2-HR_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 217393448.04341683,
+            "C_D": 2191417198.406603,
+            "b": 0.09613714461126392,
+            "epsilon": 4.019663087093011,
+            "eta": 0.13205913122822702,
+            "lambda_0": -1.9333856115345178
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the NorCPM1 model",
+        "name": "held-two-layer-uom-CMIP6-NorCPM1_r1i1p1f1-CALIB",
+        "parameter_values": {
+            "C": 402302558.4376337,
+            "C_D": 6382394697.37067,
+            "b": 0.05234652033143447,
+            "epsilon": 15.60599587194463,
+            "eta": 0.07903844959834626,
+            "lambda_0": -1.1178726117943798
+        }
+    },
+    {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f2 variant of the UKESM1-0-LL model",
+        "name": "held-two-layer-uom-CMIP6-UKESM1-0-LL_r1i1p1f2-CALIB",
+        "parameter_values": {
+            "C": 310371250.53190094,
+            "C_D": 2548913795.4313602,
+            "b": -0.0033042326943570114,
+            "epsilon": 2.1175113244180475,
+            "eta": 0.2187477832582182,
+            "lambda_0": -0.8972926147674315
+        }
+    }
+]
