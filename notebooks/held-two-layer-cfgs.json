@@ -1,5 +1,17 @@
 [
     {
+        "descr": "Held two-layer model with state-dependent feedback factor implementation with ECS=3K adjusted to give moderate agreement with historical observations",
+        "name": "held-two-layer-uom-ECS-3K",
+        "parameter_values": {
+            "C": 209050000,
+            "C_D": 5017200000,
+            "b": 0.05,
+            "epsilon": 2.0,
+            "eta": 0.9,
+            "lambda_0": -1.397
+        }
+    },
+    {
         "descr": "Held two-layer model with state-dependent feedback factor implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-CSM2-MR model",
         "name": "held-two-layer-uom-CMIP6-BCC-CSM2-MR_r1i1p1f1-CALIB",
         "parameter_values": {

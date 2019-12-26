@@ -1,5 +1,17 @@
 [
     {
+        "descr": "AR5IR (Ch. 8 SM) 3 box implementation with ECS=3K and timescale parameters adjusted to give moderate agreement with historical observations.",
+        "name": "ar5ir3box-ECS-3K",
+        "parameter_values": {
+            "c1": 0.45,
+            "c2": 0.15,
+            "c3": 0.2,
+            "d1": 10.0,
+            "d2": 1500.0,
+            "d3": 1.0
+        }
+    },
+    {
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the BCC-CSM2-MR model",
         "name": "ar5ir3box-CMIP6-BCC-CSM2-MR_r1i1p1f1-CALIB",
         "parameter_values": {
