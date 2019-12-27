@@ -147,12 +147,12 @@
         "descr": "AR5IR (Ch. 8 SM) 3 box implementation calibrated to the idealised CO2-only experiments for the r1i1p1f1 variant of the IPSL-CM6A-LR model",
         "name": "ar5ir3box-CMIP6-IPSL-CM6A-LR_r1i1p1f1-CALIB",
         "parameter_values": {
-            "c1": 0.5973762471816414,
-            "c2": 0.21465166712474582,
-            "c3": 0.7144955309209415,
-            "d1": 415.04254846802536,
-            "d2": 2780.492810273432,
-            "d3": 3.790515332735432
+            "c1": 0.27030228041030024,
+            "c2": 0.42887740673338254,
+            "c3": 0.6342948203785234,
+            "d1": 767.112132009237,
+            "d2": 170.02926727480175,
+            "d3": 7.167756858753883
         }
     },
     {
