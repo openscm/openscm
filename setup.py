@@ -41,7 +41,7 @@ REQUIREMENTS_INSTALL = [
     "scmdata",
     "scipy",
     "pint",
-    "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
+    "pandas>=0.24.2",
     "python-dateutil",
     "tqdm",
 ]
