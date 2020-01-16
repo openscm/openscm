@@ -41,7 +41,7 @@ REQUIREMENTS_INSTALL = [
     "scmdata",
     "scipy",
     "pint",
-    "pandas>=0.24.2",
+    "pandas>=0.25",
     "python-dateutil",
     "tqdm",
 ]
