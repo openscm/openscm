@@ -41,7 +41,7 @@ REQUIREMENTS_INSTALL = [
     "scmdata",
     "scipy",
     "pint",
-    "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
+    "pandas>=0.25",
     "python-dateutil",
     "tqdm",
 ]
@@ -49,7 +49,7 @@ REQUIREMENTS_NOTEBOOKS = [
     "matplotlib",
     "notebook",
     "seaborn",
-    "pyam-iamc>=0.2.0",
+    "pyam-iamc>=0.4.0",
     "ipywidgets",
 ]
 REQUIREMENTS_TESTS = [
@@ -57,7 +57,7 @@ REQUIREMENTS_TESTS = [
     "nbval",
     "pytest==4.5.0",  # TODO lift restriction after pytest 4.7
     "pytest-cov",
-    "pyam-iamc>=0.2.0",
+    "pyam-iamc>=0.4.0",
 ]
 REQUIREMENTS_DOCS = ["sphinx>=1.8", "sphinx_rtd_theme", "sphinx-autodoc-typehints"]
 REQUIREMENTS_DEPLOY = ["setuptools>=38.6.0", "twine>=1.11.0", "wheel>=0.31.0"]
