@@ -1,0 +1,96 @@
+name: OpenSCM-CI
+on: push
+
+jobs:
+  linting-and-docs:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Setup python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dev dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -e .[dev]
+    - name: Formatting and linters
+      run: |
+        black --check openscm tests setup.py --exclude openscm/_version.py
+        isort --check-only --quiet --recursive openscm tests setup.py
+        pydocstyle openscm
+        bandit -c .bandit.yml -r openscm
+        flake8 openscm tests setup.py
+        pylint openscm
+    - name: Build docs
+      # treat warnings as errors (-W)...
+      # ...but not when being nitpicky (-n)
+      run: |
+          sphinx-build -M html docs docs/build -qW
+          sphinx-build -M html docs docs/build -Eqn -b coverage
+          if [[ -s docs/build/html/python.txt ]]
+          then
+              echo
+              echo \"Error: Documentation missing:\"
+              echo
+              cat docs/build/html/python.txt
+              exit 1
+          fi
+
+  build:
+    needs: linting-and-docs
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Setup python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install test dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -e .[tests]
+    - name: Test with pytest
+      env:
+        MIN_COVERAGE: 70  # TODO: put this back up to 95 once we start writing
+      run: |
+          pytest tests -r a --cov=openscm --cov-report=''
+          if ! coverage report --fail-under=${MIN_COVERAGE} --show-missing
+          then
+              echo
+              echo "Error: Test coverage has to be at least ${MIN_COVERAGE}"
+              exit 1
+          fi
+    - name: Install notebook dependencies
+      run: |
+        pip install -e .[tests,notebooks]
+    - name: Test notebooks with nbval
+      run: |
+          pytest notebooks -r a --nbval --sanitize-with tests/notebook-tests.cfg --no-cov
+
+  deploy:
+    needs: build
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - name: Placeholder
+      env:
+        TWINE_PASSWORD: "take from secrets e.g. https://github.com/actions/starter-workflows/blob/master/ci/python-publish.yml"
+      run: |
+        echo "Deploy commands go here, this could also be a separate file triggered by a suitable event see https://github.community/t5/GitHub-Actions/Depend-on-another-workflow/td-p/32317 or https://help.github.com/en/actions/reference/events-that-trigger-workflows"

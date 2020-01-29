@@ -28,12 +28,11 @@ checks: venv  ## run all the checks
 		echo "\n\n=== black ==="; ./venv/bin/black --check openscm tests setup.py --exclude openscm/_version.py || echo "--- black failed ---" >&2; \
 		echo "\n\n=== flake8 ==="; ./venv/bin/flake8 openscm tests setup.py || echo "--- flake8 failed ---" >&2; \
 		echo "\n\n=== isort ==="; ./venv/bin/isort --check-only --quiet --recursive openscm tests setup.py || echo "--- isort failed ---" >&2; \
-		echo "\n\n=== mypy ==="; ./venv/bin/mypy openscm || echo "--- mypy failed ---" >&2; \
 		echo "\n\n=== pydocstyle ==="; ./venv/bin/pydocstyle openscm || echo "--- pydocstyle failed ---" >&2; \
 		echo "\n\n=== pylint ==="; ./venv/bin/pylint openscm || echo "--- pylint failed ---" >&2; \
-		echo "\n\n=== notebook tests ==="; ./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg || echo "--- notebook tests failed ---" >&2; \
+		echo "\n\n=== notebook tests ==="; ./venv/bin/pytest notebooks -r a --nbval --sanitize-with tests/notebook-tests.cfg || echo "--- notebook tests failed ---" >&2; \
 		echo "\n\n=== tests ==="; ./venv/bin/pytest tests -r a --cov=openscm --cov-report='' \
-			&& ./venv/bin/coverage report --fail-under=100 || echo "--- tests failed ---" >&2; \
+			&& ./venv/bin/coverage report --fail-under=95 || echo "--- tests failed ---" >&2; \
 		echo "\n\n=== sphinx ==="; ./venv/bin/sphinx-build -M html docs docs/build -EW || echo "--- sphinx failed ---" >&2
 
 check-docs: venv  ## check that the docs build successfully
@@ -41,21 +40,6 @@ check-docs: venv  ## check that the docs build successfully
 
 clean:  ## remove the virtual environment
 	@rm -rf venv
-
-define clean_notebooks_code
-	(.cells[] | select(has("execution_count")) | .execution_count) = 0 \
-	| (.cells[] | select(has("outputs")) | .outputs[] | select(has("execution_count")) | .execution_count) = 0 \
-	| .metadata = {"language_info": {"name": "python", "pygments_lexer": "ipython3"}} \
-	| .cells[].metadata = {}
-endef
-
-clean-notebooks: venv  ## clean the notebooks of spurious changes to prepare for a PR
-	@tmp=$$(mktemp); \
-	for notebook in notebooks/*.ipynb; do \
-		jq --indent 1 '${clean_notebooks_code}' "$${notebook}" > "$${tmp}"; \
-		cp "$${tmp}" "$${notebook}"; \
-	done; \
-	rm "$${tmp}"
 
 coverage: venv  ## run all the tests and show code coverage
 	./venv/bin/pytest tests -r a --cov=openscm --cov-report='' --durations=10
@@ -65,7 +49,7 @@ coverage: venv  ## run all the tests and show code coverage
 docs: venv  ## build the docs
 	./venv/bin/sphinx-build -M html docs docs/build
 
-format: venv clean-notebooks  ## format the code and clean notebooks
+format: venv  ## format the code and clean notebooks
 	./venv/bin/isort --recursive openscm tests setup.py
 	./venv/bin/black openscm tests setup.py --exclude openscm/_version.py
 
@@ -73,7 +57,7 @@ test: venv  ## run all the code tests
 	./venv/bin/pytest -sx tests
 
 test-notebooks: venv  ## run all notebook tests
-	./venv/bin/pytest notebooks -r a --nbval --sanitize tests/notebook-tests.cfg
+	./venv/bin/pytest notebooks -r a --nbval --sanitize-with tests/notebook-tests.cfg
 
 test-all: test test-notebooks  ## run the testsuite and the notebook tests
 

@@ -33,7 +33,6 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
-    "sphinx_autodoc_typehints",  # must be after sphinx.ext.napoleon
 ]
 language = "en"
 master_doc = "index"
@@ -147,4 +146,4 @@ intersphinx_mapping = {
 }
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
-set_type_checking_flag = True
+set_type_checking_flag = False
