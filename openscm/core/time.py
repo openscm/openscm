@@ -421,16 +421,48 @@ class TimeseriesConverter:
         self._timeseries_type = timeseries_type
         self._interpolation_type = interpolation_type
         self._extrapolation_type = extrapolation_type
+        if not self.points_are_compatible(self._source, self._target):
+            error_msg = (
+                "Target time points are outside the source time points, use an "
+                "extrapolation type other than None"
+            )
+            raise InsufficientDataError(error_msg)
 
-        if self._source[0] > self._target[1]:  # TODO: consider extrapolation type
-            raise InsufficientDataError
+    def points_are_compatible(
+        self, source: Union[list, np.ndarray], target: Union[list, np.ndarray]
+    ) -> bool:
+        """
+        Are the two sets of time points compatible i.e. can I convert between the two?
+
+        Parameters
+        ----------
+        source
+            Source timeseries time points
+        target
+            Target timeseries time points
+
+        Returns
+        -------
+        bool
+            Can I convert between the time points?
+        """
+        if self._extrapolation_type == ExtrapolationType.NONE:
+
+            def _wrong_type(inp):
+                return not isinstance(inp, np.ndarray) or inp.dtype != _TARGET_TYPE
+
+            if _wrong_type(source):
+                source = np.array(source).astype(_TARGET_TYPE)
+            if _wrong_type(target):
+                target = np.array(target).astype(_TARGET_TYPE)
+
+            if source[0] > target[0] or source[-1] < target[-1]:
+                return False
+
+        return True
 
     def _calc_continuous_representation(
-        # TODO: remove when NotImplementedError removed:
-        # pylint: disable=missing-raises-doc
-        self,
-        time_points: np.ndarray,
-        values: np.ndarray,
+        self, time_points: np.ndarray, values: np.ndarray
     ) -> Callable[[float], float]:
         """
         Calculate a "continuous" representation of a timeseries (see
@@ -450,6 +482,11 @@ class TimeseriesConverter:
             Function that represents the interpolated timeseries. It takes a single
             argument, time ("x-value"), and returns a single float, the value of the
             interpolated timeseries at that point in time ("y-value").
+
+        Raises
+        ------
+        NotImplementedError
+            A conversion which has not yet been implemented is requested.
         """
         if (self._timeseries_type == ParameterType.AVERAGE_TIMESERIES) and (
             self._interpolation_type == InterpolationType.LINEAR
@@ -529,9 +566,8 @@ class TimeseriesConverter:
         ------
         InsufficientDataError
             Length of the time series is too short to convert
-        InsufficientDataError
-            Target time points are outside the source time points and
-            :attr:`_extrapolation_type` is :attr:`ExtrapolationType.NONE`
+        ValueError
+            Timeseries conversion fails
 
         Returns
         -------
@@ -543,12 +579,9 @@ class TimeseriesConverter:
 
         try:
             return self._convert_unsafe(values, source_time_points, target_time_points)
-        except ValueError:
-            error_msg = (
-                "Target time points are outside the source time points, use an "
-                "extrapolation type other than None"
-            )
-            raise InsufficientDataError(error_msg)
+        except ValueError:  # pragma: no cover # emergency valve
+            print("Timeseries conversion failed")
+            raise
 
     def _convert_unsafe(
         self,

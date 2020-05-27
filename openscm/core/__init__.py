@@ -93,8 +93,6 @@ class OpenSCM:
         """
         Reset the model before starting stepping.
         """
-        self._model.initialize_model_input()
-        self._model.initialize_run_parameters()
         self._model.reset()
 
     def run(self) -> None:
