@@ -1818,7 +1818,7 @@ def test_scmdataframe_to_parameterset(rcp26, prefill):
         res.timeseries(
             ("Emissions", "CO2", "MAGICC Fossil and Industrial"),
             "GtC / yr",
-            get_comparison_times_for_year(2017),
+            time_points=get_comparison_times_for_year(2017),
             region="World",
             timeseries_type="average",
         ).values,
@@ -1829,7 +1829,7 @@ def test_scmdataframe_to_parameterset(rcp26, prefill):
         res.timeseries(
             ("Emissions", "CO2"),
             "GtC / yr",
-            get_comparison_times_for_year(1993),
+            time_points=get_comparison_times_for_year(1993),
             region="World",
             timeseries_type="average",
         ).values,
@@ -1840,7 +1840,7 @@ def test_scmdataframe_to_parameterset(rcp26, prefill):
         res.timeseries(
             ("Emissions", "N2O"),
             "MtN2ON / yr",
-            get_comparison_times_for_year(1983),
+            time_points=get_comparison_times_for_year(1983),
             region="World",
             timeseries_type="average",
         ).values,
@@ -1851,7 +1851,7 @@ def test_scmdataframe_to_parameterset(rcp26, prefill):
         res.timeseries(
             ("Emissions", "OC"),
             "MtOC / yr",
-            get_comparison_times_for_year(1766),
+            time_points=get_comparison_times_for_year(1766),
             region="World",
             timeseries_type="average",
         ).values,
@@ -1862,7 +1862,7 @@ def test_scmdataframe_to_parameterset(rcp26, prefill):
         res.timeseries(
             ("Emissions", "SF6"),
             "ktSF6 / yr",
-            get_comparison_times_for_year(2087),
+            time_points=get_comparison_times_for_year(2087),
             region="World",
             timeseries_type="average",
         ).values,

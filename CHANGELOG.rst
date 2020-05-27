@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#187 <https://github.com/openclimatedata/openscm/pull/187>`_) Update timeseries view setting based on `#178 <https://github.com/openclimatedata/openscm/issues/178>`_ and fix bug in time axis overlap checking
 - (`#184 <https://github.com/openclimatedata/openscm/pull/184>`_) Fix unit view bug identified in `#177 <https://github.com/openclimatedata/openscm/issues/177>`_
 - (`#146 <https://github.com/openclimatedata/openscm/pull/146>`_) Refactor the core interface
 - (`#168 <https://github.com/openclimatedata/openscm/pull/168>`_) Fix false positive detection of duplicates when appending timeseries

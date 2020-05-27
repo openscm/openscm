@@ -506,6 +506,17 @@ possible_target_values = [  # TODO: Use years here after create_time_points has 
         interpolation_type=time.InterpolationType.LINEAR,
         extrapolation_type=time.ExtrapolationType.LINEAR,
     ),
+    dict(
+        source_start_time=np.datetime64("2000-01-06"),
+        source_period_length=np.timedelta64(3, "D"),
+        target_start_time=np.datetime64("2000-01-01"),
+        target_period_length=np.timedelta64(4, "D"),
+        source_values=possible_source_values[0],
+        target_values=[-5.0, 0.33333333, 4.58333333, 3.75, 6.66666667],
+        timeseries_type=ParameterType.AVERAGE_TIMESERIES,
+        interpolation_type=time.InterpolationType.LINEAR,
+        extrapolation_type=time.ExtrapolationType.LINEAR,
+    ),
 ]
 
 test_combinations = []
@@ -595,3 +606,31 @@ def read_magicc7_variables():
 @pytest.fixture(scope="module", params=(read_magicc7_variables()))
 def magicc7_variable(request):
     yield request.param
+
+
+# temporary workaround until this is in Pint itself and can be imported
+def assert_pint_equal(a, b, **kwargs):
+    c = b.to(a.units)
+    try:
+        np.testing.assert_allclose(a.magnitude, c.magnitude, **kwargs)
+
+    except AssertionError as e:
+        original_msg = "{}".format(e)
+        note_line = "Note: values above have been converted to {}".format(a.units)
+        units_lines = "Input units:\n" "x: {}\n" "y: {}".format(a.units, b.units)
+
+        numerical_lines = (
+            "Numerical values with units:\n" "x: {}\n" "y: {}".format(a, b)
+        )
+
+        error_msg = (
+            "{}\n"
+            "\n"
+            "{}\n"
+            "\n"
+            "{}\n"
+            "\n"
+            "{}".format(original_msg, note_line, units_lines, numerical_lines)
+        )
+
+        raise AssertionError(error_msg)
