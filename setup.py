@@ -36,8 +36,21 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = ["numpy>=1.7", "scipy", "pint", "pandas", "python-dateutil"]
-REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0"]
+REQUIREMENTS_INSTALL = [
+    "numpy>=1.7",
+    "scipy",
+    "pint",
+    "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
+    "python-dateutil",
+    "tqdm",
+]
+REQUIREMENTS_NOTEBOOKS = [
+    "matplotlib",
+    "notebook",
+    "seaborn",
+    "pyam-iamc>=0.2.0",
+    "ipywidgets",
+]
 REQUIREMENTS_TESTS = [
     "codecov",
     "nbval",

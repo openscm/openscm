@@ -259,21 +259,17 @@ class _Parameter:
         if self.parameter_type is None:
             self.unit = unit
             self.parameter_type = parameter_type
-            if parameter_type == ParameterType.SCALAR:
-                self.data = float("NaN")
-            elif parameter_type == ParameterType.GENERIC:
+            if parameter_type == ParameterType.GENERIC:
                 if self.children:
                     raise ParameterAggregationError
-                self.data = None
-            else:  # parameter is a timeseries
-                self.data = np.full(
-                    (
-                        (len(time_points) - 1)  # type: ignore
-                        if parameter_type == ParameterType.AVERAGE_TIMESERIES
-                        else len(time_points)  # type: ignore
-                    ),
-                    float("NaN"),
-                )
+        if time_points is not None:
+            is_timeseries = parameter_type in (
+                ParameterType.POINT_TIMESERIES,
+                ParameterType.AVERAGE_TIMESERIES,
+            )
+            if not is_timeseries:
+                raise ParameterTypeError
+            if not hasattr(self, "time_points"):
                 self.time_points = np.array(time_points, copy=True)
         self.has_been_read_from = True
 
@@ -381,6 +377,11 @@ class ParameterInfo:
         """
         Check if parameter is empty, i.e. has not yet been written to.
         """
+        if self._parameter.children:
+            # this is also still wrong as it only checks one level...
+            return any(
+                [not v.has_been_written_to for v in self._parameter.children.values()]
+            )
         return not self._parameter.has_been_written_to
 
     @property
