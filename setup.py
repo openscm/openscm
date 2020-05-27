@@ -57,6 +57,7 @@ REQUIREMENTS_DEV = (
         "mypy",
         "pydocstyle",
         "pylint @ git+https://github.com/PyCQA/pylint.git@b1ee385",  # TODO: change when new release comes out
+        "requests",
     ]
     + REQUIREMENTS_NOTEBOOKS
     + REQUIREMENTS_TESTS
