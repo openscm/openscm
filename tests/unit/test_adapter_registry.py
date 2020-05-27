@@ -29,6 +29,7 @@ def test_adapter_registry_unknown_model():
         load_adapter("unknown")
 
 
+@patch("openscm.adapters._loaded_adapters", new={})
 def test_adapter_registry_import_error():
     error_msg = re.escape(
         "To run 'DICE' you need to install additional dependencies. Please "

@@ -29,16 +29,43 @@ def test_none_extrapolation_error(combo):
         ],
         dtype=np.datetime64,
     )
-    timeseriesconverter = TimeseriesConverter(
-        combo.source,
-        target,
-        combo.timeseries_type,
-        combo.interpolation_type,
-        ExtrapolationType.NONE,
-    )
     error_msg = re.escape(
         "Target time points are outside the source time points, use an "
         "extrapolation type other than None"
     )
     with pytest.raises(InsufficientDataError, match=error_msg):
-        timeseriesconverter._convert(combo.source_values, combo.source, target)
+        TimeseriesConverter(
+            combo.source,
+            target,
+            combo.timeseries_type,
+            combo.interpolation_type,
+            ExtrapolationType.NONE,
+        )
+
+
+@pytest.mark.parametrize("miss_type", ["forward", "backward"])
+def test_no_overlap(combo, miss_type):
+    if miss_type == "forward":
+        missing_overlap_target = combo.source.copy()
+        missing_overlap_target[0] -= np.timedelta64(1, "D")
+    else:
+        missing_overlap_target = combo.source.copy()
+        missing_overlap_target[-1] += np.timedelta64(1, "D")
+
+    with pytest.raises(InsufficientDataError):
+        TimeseriesConverter(
+            combo.source,
+            missing_overlap_target,
+            combo.timeseries_type,
+            combo.interpolation_type,
+            ExtrapolationType.NONE,
+        )
+
+    # all ok if extrapolation is not NONE
+    TimeseriesConverter(
+        combo.source,
+        missing_overlap_target,
+        combo.timeseries_type,
+        combo.interpolation_type,
+        ExtrapolationType.LINEAR,
+    )

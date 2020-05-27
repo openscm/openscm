@@ -152,7 +152,7 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
             ts = parameterset.timeseries(
                 param_name,
                 cast(str, p_info.unit),
-                tp,
+                time_points=tp,
                 region=region,
                 timeseries_type=para_type,
             )

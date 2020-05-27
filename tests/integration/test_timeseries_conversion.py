@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from openscm.core.parameters import ParameterType
-from openscm.core.time import TimeseriesConverter
+from openscm.core.time import ExtrapolationType, TimeseriesConverter
 from openscm.errors import InsufficientDataError
 
 
@@ -33,7 +33,7 @@ def test_insufficient_overlap(combo):
             combo.target - np.timedelta64(3650, "D"),
             combo.timeseries_type,
             combo.interpolation_type,
-            combo.extrapolation_type,
+            ExtrapolationType.NONE,
         )
 
 

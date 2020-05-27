@@ -8,8 +8,10 @@ from openscm import OpenSCM
 from openscm.core.parameters import ParameterType
 from openscm.core.parameterset import ParameterSet
 from openscm.core.time import create_time_points
+from openscm.core.views import TimeseriesView
 from openscm.errors import (
     DimensionalityError,
+    InsufficientDataError,
     ParameterAggregationError,
     ParameterEmptyError,
     ParameterReadError,
@@ -53,7 +55,7 @@ def model_run(model_name, start_time, stop_time):
     model_run.parameters.timeseries(
         ("Emissions", "CO2"),
         "GtCO2/a",
-        create_time_points(
+        time_points=create_time_points(
             start_time,
             stop_time - start_time,
             npoints,
@@ -230,7 +232,7 @@ def test_view_str_rep(view_type):
         tp = create_time_points(
             np.datetime64("2010-01-01"), np.timedelta64(365, "D"), 10, "average"
         )
-        v = paraset.timeseries(para_name, unit, tp)
+        v = paraset.timeseries(para_name, unit, time_points=tp)
         assert str(v) == "View of {} {} in {}".format(view_type, para_name, unit)
 
 
@@ -280,7 +282,7 @@ def test_scalar_parameter_view(model):
     assert not cs.empty
     np.testing.assert_allclose(cs.value, 20)
     with pytest.raises(ParameterTypeError):
-        parameterset.timeseries("Climate Sensitivity", "degC", (0,))
+        parameterset.timeseries("Climate Sensitivity", "degC", time_points=(0,))
     with pytest.raises(DimensionalityError):
         parameterset.scalar("Climate Sensitivity", "kg")
     cs_writable.value = 45
@@ -340,7 +342,7 @@ def test_timeseries_parameter_view(model, start_time, series):
     carbon = parameterset.timeseries(
         ("Emissions", "CO2"),
         "GtCO2/a",
-        create_time_points(
+        time_points=create_time_points(
             start_time,
             365 * 24 * 3600,
             len(outseries),
@@ -355,7 +357,7 @@ def test_timeseries_parameter_view(model, start_time, series):
     carbon_writable = parameterset.timeseries(
         ("Emissions", "CO2"),
         "ktC/d",
-        create_time_points(
+        time_points=create_time_points(
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
         ),
         timeseries_type="average",
@@ -373,7 +375,7 @@ def test_timeseries_parameter_view(model, start_time, series):
         parameterset.scalar(("Emissions", "CO2"), "GtCO2/a")
     with pytest.raises(DimensionalityError):
         parameterset.timeseries(
-            ("Emissions", "CO2"), "kg", (0,), timeseries_type="average"
+            ("Emissions", "CO2"), "kg", time_points=(0,), timeseries_type="average"
         )
 
 
@@ -385,9 +387,9 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     parameterset = model.parameters
 
     fossil_industry_writable = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Industry"),
-        "GtC/yr",
-        create_time_points(
+        ("Emissions", "CH4", "Fossil", "Industry"),
+        "GtCH4/yr",
+        time_points=create_time_points(
             start_time,
             24 * 3600,
             len(fossil_industry_emms),
@@ -398,9 +400,9 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     fossil_industry_writable.values = fossil_industry_emms
 
     fossil_energy_writable = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Energy"),
-        "GtC/yr",
-        create_time_points(
+        ("Emissions", "CH4", "Fossil", "Energy"),
+        "GtCH4/yr",
+        time_points=create_time_points(
             start_time,
             24 * 3600,
             len(fossil_energy_emms),
@@ -408,12 +410,27 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
         ),
         timeseries_type="average",
     )
+
+    fossil = parameterset.timeseries(
+        ("Emissions", "CH4", "Fossil"),
+        "GtCH4/yr",
+        time_points=create_time_points(
+            start_time,
+            24 * 3600,
+            len(fossil_energy_emms),
+            ParameterType.AVERAGE_TIMESERIES,
+        ),
+        timeseries_type="average",
+    )
+    with pytest.raises(ParameterEmptyError):
+        fossil.values
+
     fossil_energy_writable.values = fossil_energy_emms
 
     land_writable = parameterset.timeseries(
-        ("Emissions", "CO2", "Land"),
-        "MtC/yr",
-        create_time_points(
+        ("Emissions", "CH4", "Land"),
+        "MtCH4/yr",
+        time_points=create_time_points(
             start_time,
             24 * 3600,
             len(fossil_energy_emms),
@@ -424,9 +441,9 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     land_writable.values = land_emms * 1000
 
     fossil_industry = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Industry"),
-        "GtC/yr",
-        create_time_points(
+        ("Emissions", "CH4", "Fossil", "Industry"),
+        "GtCH4/yr",
+        time_points=create_time_points(
             start_time,
             24 * 3600,
             len(fossil_industry_emms),
@@ -441,9 +458,9 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     )
 
     fossil_energy = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil", "Energy"),
-        "GtC/yr",
-        create_time_points(
+        ("Emissions", "CH4", "Fossil", "Energy"),
+        "GtCH4/yr",
+        time_points=create_time_points(
             start_time,
             24 * 3600,
             len(fossil_energy_emms),
@@ -453,26 +470,15 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
     )
     np.testing.assert_allclose(fossil_energy.values, fossil_energy_emms)
 
-    fossil = parameterset.timeseries(
-        ("Emissions", "CO2", "Fossil"),
-        "GtC/yr",
-        create_time_points(
-            start_time,
-            24 * 3600,
-            len(fossil_energy_emms),
-            ParameterType.AVERAGE_TIMESERIES,
-        ),
-        timeseries_type="average",
-    )
     np.testing.assert_allclose(fossil.values, fossil_industry_emms + fossil_energy_emms)
 
     # ensure that you can't write extra children once you've got a parent view, this
     # avoids ever having the child views being out of date
     with pytest.raises(ParameterReadError):
         parameterset.timeseries(
-            ("Emissions", "CO2", "Fossil", "Transport"),
-            "GtC/yr",
-            create_time_points(
+            ("Emissions", "CH4", "Fossil", "Transport"),
+            "GtCH4/yr",
+            time_points=create_time_points(
                 start_time,
                 24 * 3600,
                 len(fossil_industry_emms),
@@ -482,9 +488,9 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
         )
 
     land = parameterset.timeseries(
-        ("Emissions", "CO2", "Land"),
-        "GtC/yr",
-        create_time_points(
+        ("Emissions", "CH4", "Land"),
+        "GtCH4/yr",
+        time_points=create_time_points(
             start_time, 24 * 3600, len(land_emms), ParameterType.AVERAGE_TIMESERIES
         ),
         timeseries_type="average",
@@ -493,21 +499,21 @@ def test_timeseries_parameter_view_aggregation(model, start_time):
 
     with pytest.raises(ParameterReadonlyError):
         parameterset.timeseries(
-            ("Emissions", "CO2"),
-            "GtC/yr",
-            create_time_points(
+            ("Emissions", "CH4"),
+            "GtCH4/yr",
+            time_points=create_time_points(
                 start_time,
                 24 * 3600,
                 len(fossil_energy_emms),
                 ParameterType.AVERAGE_TIMESERIES,
             ),
             timeseries_type="average",
-        ).values = np.ndarray([])
+        ).values = np.array([1, 2, 3])
 
     total = parameterset.timeseries(
-        ("Emissions", "CO2"),
-        "GtC/yr",
-        create_time_points(
+        ("Emissions", "CH4"),
+        "GtCH4/yr",
+        time_points=create_time_points(
             start_time,
             24 * 3600,
             len(fossil_energy_emms),
@@ -551,7 +557,7 @@ def test_view_updates_with_new_write(ptype):
         tp = create_time_points(
             np.datetime64("1989-03-05"), np.timedelta64(24, "s"), 3, "point"
         )
-        v = p.timeseries(name, "A", tp)
+        v = p.timeseries(name, "A", time_points=tp)
 
     assert v.version == 0
     if ptype == "generic":
@@ -561,7 +567,7 @@ def test_view_updates_with_new_write(ptype):
         p.scalar(name, "kg").value = 12
         assert v.value == 12000
     elif ptype == "timeseries":
-        p.timeseries(name, "mA", tp).values = np.arange(0, 3, 1)
+        p.timeseries(name, "mA", time_points=tp).values = np.arange(0, 3, 1)
         np.testing.assert_allclose(v.values, 10 ** -3 * np.arange(0, 3, 1))
 
     assert v.version == 1
@@ -583,7 +589,7 @@ def test_view_updates_with_new_write(ptype):
         p.scalar(name, "kg").value = -3
         assert v.value == -3000
     elif ptype == "timeseries":
-        p.timeseries(name, "mA", tp).values = 3 * np.arange(0, 3, 1)
+        p.timeseries(name, "mA", time_points=tp).values = 3 * np.arange(0, 3, 1)
         np.testing.assert_allclose(v.values, 3 * 10 ** -3 * np.arange(0, 3, 1))
 
     assert v.version == 3
@@ -622,7 +628,7 @@ def test_timeseries_class(model, start_time, series):
     parameter = parameterset.timeseries(
         "Parameter",
         "",
-        create_time_points(
+        time_points=create_time_points(
             start_time, 24 * 3600, len(inseries), ParameterType.AVERAGE_TIMESERIES
         ),
         timeseries_type="average",
@@ -661,7 +667,7 @@ def test_view_units(view_type):
         v1 = p.scalar("example", a_unit)
         v1.value = 2
     else:
-        v1 = p.timeseries("example", a_unit, [0, 1, 2])
+        v1 = p.timeseries("example", a_unit, time_points=[0, 1, 2])
         v1.values = np.array([0, 1, 2])
 
     assert v1.unit == a_unit
@@ -670,8 +676,167 @@ def test_view_units(view_type):
         v2 = p.scalar("example", b_unit)
         assert v2.value == v1.value * 1000
     else:
-        v2 = p.timeseries("example", b_unit, [0, 1, 2])
+        v2 = p.timeseries("example", b_unit, time_points=[0, 1, 2])
         # should we just make this `.value` too?
         assert (v2.values == v1.values * 1000).all()
 
     assert v2.unit == b_unit
+
+
+def test_timeseries_view_requests():
+    p = ParameterSet()
+
+    v1 = p.timeseries("example", "s", timeseries_type="point")
+
+    assert isinstance(v1, TimeseriesView)
+    assert v1.unit == "s"
+    assert v1.region == ("World",)
+    assert v1.parameter_type == ParameterType.from_timeseries_type("point")
+    assert v1.empty
+
+    with pytest.raises(ParameterEmptyError):
+        v1.values
+
+    with pytest.raises(DimensionalityError):
+        # now requesting a view with unit conflict causes error
+        p.timeseries("example", "kg", timeseries_type="point")
+
+    with pytest.raises(ParameterTypeError):
+        # at least until we get the point <-> average conversion working
+        p.timeseries("example", "s", timeseries_type="average")
+
+    tph = create_time_points(
+        np.datetime64("2000-01-01"), np.timedelta64(365, "D"), 3, "point"
+    )
+    v2 = p.timeseries("example", "day", time_points=tph, timeseries_type="point")
+    tvalues = np.array([1, 2, 3])
+    v2.values = tvalues
+    np.testing.assert_array_equal(v2.values, tvalues)
+
+    # make sure writing with float now works
+    tvalues = np.array([-1.2, 0.3, 4.5])
+    v2.values = tvalues
+    np.testing.assert_array_equal(v2.values, tvalues)
+
+    tp_no_overlap = tph + np.timedelta64(3000, "D")
+    with pytest.raises(InsufficientDataError):
+        p.timeseries(
+            "example", "day", time_points=tp_no_overlap, timeseries_type="point"
+        ).values
+
+    v3 = p.timeseries("example", "day", timeseries_type="point")
+    with pytest.raises(TimeseriesPointsValuesMismatchError):
+        v3.values
+
+
+def test_timeseries_view_only_checks_overlap_on_request():
+    p = ParameterSet()
+
+    tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
+    v1 = p.timeseries("example", "s", time_points=tp1)
+
+    tp2 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1900, 2051)])
+    v2 = p.timeseries("example", "s", time_points=tp2)
+
+    tp3 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1800, 2301)])
+    v3 = p.timeseries("example", "s", time_points=tp3)
+    v3.values = np.arange(len(tp3))
+
+    np.testing.assert_array_equal(v1.values, np.arange(200, 301))
+    np.testing.assert_array_equal(v2.values, np.arange(100, 251))
+
+    tp4 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(1790, 2291)])
+    v4 = p.timeseries("example", "s", time_points=tp4)
+    with pytest.raises(InsufficientDataError):
+        v4.values
+
+    # works with extrapolation
+    v4_extrap = p.timeseries("example", "s", time_points=tp4, extrapolation="constant")
+    np.testing.assert_array_equal(
+        v4_extrap.values, np.concatenate([[0] * 10, np.arange(491)])
+    )
+
+    # setting values again overwrites time points too
+    v4.values = np.arange(len(tp4))
+
+    # now v3 won't work cause it doesn't overlap
+    with pytest.raises(InsufficientDataError):
+        v3.values
+
+    # with extrapolation all works again
+    v3_extrap = p.timeseries("example", "s", time_points=tp3, extrapolation="linear")
+    np.testing.assert_allclose(
+        v3_extrap.values,
+        np.arange(10, 511),
+        rtol=2 * 1e-5,  # not perfect as a year is not always 365 days
+    )
+
+
+def test_timeseries_view_time_points():
+    p = ParameterSet()
+
+    tp1 = np.array([np.datetime64("{}-01-01".format(y)) for y in range(2000, 2101)])
+    p.timeseries("example", "s", time_points=tp1).values = np.arange(len(tp1))
+
+    view = p.timeseries("example", "s", time_points=tp1)
+    np.testing.assert_array_equal(view.time_points, tp1)
+    np.testing.assert_array_equal(view.values, np.arange(len(tp1)))
+
+    view.time_points = np.array(
+        [np.datetime64("{}-01-01".format(y)) for y in range(2020, 2031)]
+    )
+    np.testing.assert_array_equal(view.values, np.arange(20, 31))
+
+
+def test_request_time_points_with_scalar_view_error():
+    pset = ParameterSet()
+    tparameter = pset._get_or_create_parameter(
+        ("Emissions", "CO2"), pset._get_or_create_region(("World",))
+    )
+    with pytest.raises(ParameterTypeError):
+        tparameter.attempt_read(ParameterType.SCALAR, "GtCO2/a", np.array([0, 1]))
+
+
+@pytest.mark.parametrize("view_type", ["generic", "scalar", "timeseries"])
+def test_outdated(view_type):
+    p = ParameterSet()
+    a_unit = "kg"
+    b_unit = "g"
+
+    if view_type == "generic":
+        view = p.generic("example")
+        assert view._version == 0
+        view.value = ["hi", 2, 3]
+    elif view_type == "scalar":
+        view = p.scalar("example", a_unit)
+        assert view._version == 0
+        view.value = 2
+    else:
+        view = p.timeseries("example", a_unit, time_points=[0, 1, 2])
+        assert view._version == 0
+        # should we just make this `.value` too?
+        view.values = np.array([0, 1, 2])
+    assert view._version == 1
+    assert not view.outdated
+
+    if view_type == "generic":
+        p.generic("example").value = ["hi", 2, 4]
+    elif view_type == "scalar":
+        p.scalar("example", b_unit).value = 2
+    else:
+        # should we just make this `.value` too?
+        p.timeseries("example", b_unit, time_points=[0, 1, 2]).values = np.array(
+            [0, 1, 2]
+        )
+
+    assert view.outdated
+
+    # read value
+    if view_type == "generic":
+        view.value
+    elif view_type == "scalar":
+        view.value
+    else:
+        view.values
+
+    assert not view.outdated
