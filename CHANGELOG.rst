@@ -4,6 +4,7 @@ Changelog
 master
 ******
 
+- (`#190 <https://github.com/openclimatedata/openscm/pull/190>`_) Switch to analytic integration for linear interpolation
 - (`#184 <https://github.com/openclimatedata/openscm/pull/184>`_) Fix unit view bug identified in `#177 <https://github.com/openclimatedata/openscm/issues/177>`_
 - (`#146 <https://github.com/openclimatedata/openscm/pull/146>`_) Refactor the core interface
 - (`#168 <https://github.com/openclimatedata/openscm/pull/168>`_) Fix false positive detection of duplicates when appending timeseries
