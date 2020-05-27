@@ -324,10 +324,10 @@ def time_match(
 
     conv_codes
         If :obj:`times` contains strings, conversion codes to try passing to
-        :func:`time.strptime` to convert :obj:`times` to :class:`datetime.datetime`
+        :func:`time.strptime` to convert :obj:`times` to :class:`np.datetime64`
 
     strptime_attr
-        If :obj:`times` contains strings, the :class:`datetime.datetime` attribute to
+        If :obj:`times` contains strings, the :class:`np.datetime64` attribute to
         finalize the conversion of strings to integers
 
     name
@@ -395,7 +395,7 @@ def time_match(
 
 
 def datetime_match(
-    data: List, dts: Union[List[datetime.datetime], datetime.datetime]
+    data: List, dts: Union[List[np.datetime64], np.datetime64]
 ) -> np.ndarray:
     """
     Match datetimes in time columns for data filtering.
@@ -418,7 +418,7 @@ def datetime_match(
     TypeError
         :obj:`dts` contains :class:`int`
     """
-    dts = [dts] if isinstance(dts, datetime.datetime) else dts
+    dts = [dts] if isinstance(dts, np.datetime64) else dts
     if isinstance(dts, int) or any([isinstance(d, int) for d in dts]):
         error_msg = "`time` can only be filtered with datetimes or lists of datetimes"
         raise TypeError(error_msg)

@@ -184,7 +184,7 @@ def _format_wide_data(df):
     time_cols, extra_cols = False, []
     for i in cols:
         # if in wide format, check if columns are years (int) or datetime
-        if isinstance(i, datetime.datetime):
+        if isinstance(i, np.datetime64):
             time_cols = True
         else:
             try:
@@ -194,7 +194,7 @@ def _format_wide_data(df):
                 try:
                     try:
                         # most common format
-                        datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S")
+                        pd.to_datetime(i, format="%Y-%m-%d %H:%M:%S")
                     except ValueError:
                         # this is super slow so avoid if possible
                         parser.parse(str(i))  # if no ValueError, this is datetime
@@ -625,8 +625,8 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
             - 'level': the maximum "depth" of IAM variables (number of hierarchy levels,
               excluding the strings given in the 'variable' argument)
 
-            - 'time': takes a :class:`datetime.datetime` or list of
-              :class:`datetime.datetime`'s
+            - 'time': takes a :class:`np.datetime64` or list of
+              :class:`np.datetime64`'s
               TODO: default to np.datetime64
 
             - 'year', 'month', 'day', hour': takes an :class:`int` or list of
@@ -939,7 +939,7 @@ class ScmDataFrameBase:  # pylint: disable=too-many-public-methods
 
     def interpolate(  # pylint: disable=too-many-locals
         self,
-        target_times: Union[np.ndarray, List[Union[datetime.datetime, int]]],
+        target_times: Union[np.ndarray, List[Union[np.datetime64, int]]],
         interpolation_type: Union[InterpolationType, str] = InterpolationType.LINEAR,
         extrapolation_type: Union[ExtrapolationType, str] = ExtrapolationType.CONSTANT,
     ) -> ScmDataFrameBase:

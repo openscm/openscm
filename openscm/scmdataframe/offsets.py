@@ -8,7 +8,7 @@ for longer running models.
 
 TODO: use np.timedelta64 instead?
 """
-import datetime
+import numpy as np
 import functools
 from typing import Any, Iterable
 
@@ -37,7 +37,7 @@ def apply_dt(func, self):
     """
     # should self be renamed in the function signature to something else, `ipt`?
     @functools.wraps(func)
-    def wrapper(other: datetime.datetime) -> Any:
+    def wrapper(other: np.datetime64) -> Any:
         if pd.isnull(other):
             return NaT
 
@@ -64,7 +64,7 @@ def apply_rollforward(obj):
     Roll provided date forward to next offset, only if not on offset.
     """
     # custom wrapper
-    def wrapper(dt: datetime.datetime) -> datetime.datetime:
+    def wrapper(dt: np.datetime64) -> np.datetime64:
         dt = as_datetime(dt)
         if not obj.onOffset(dt):
             dt = dt + obj.__class__(1, normalize=obj.normalize, **obj.kwds)
@@ -78,7 +78,7 @@ def apply_rollback(obj):
     Roll provided date backward to previous offset, only if not on offset.
     """
     # custom wrapper
-    def wrapper(dt: datetime.datetime) -> datetime.datetime:
+    def wrapper(dt: np.datetime64) -> np.datetime64:
         dt = as_datetime(dt)
         if not obj.onOffset(dt):
             dt = dt - obj.__class__(1, normalize=obj.normalize, **obj.kwds)
@@ -135,8 +135,8 @@ def to_offset(rule: str) -> DateOffset:
 
 
 def generate_range(
-    start: datetime.datetime, end: datetime.datetime, offset: DateOffset
-) -> Iterable[datetime.datetime]:
+    start: np.datetime64, end: np.datetime64, offset: DateOffset
+) -> Iterable[np.datetime64]:
     """
     Generate a range of datetime objects between start and end, using offset to
     determine the steps.
@@ -160,13 +160,13 @@ def generate_range(
 
     Yields
     ------
-    :obj:`datetime.datetime`
+    :obj:`np.datetime64`
         Next datetime in the range
 
     Raises
     ------
     ValueError
-        Offset does not result in increasing :class`datetime.datetime`s
+        Offset does not result in increasing :class`np.datetime64`s
 
     Examples
     --------
@@ -184,12 +184,12 @@ def generate_range(
     ... )
 
     >>> pprint([d for d in g])
-    [datetime.datetime(2001, 1, 1, 0, 0),
-     datetime.datetime(2002, 1, 1, 0, 0),
-     datetime.datetime(2003, 1, 1, 0, 0),
-     datetime.datetime(2004, 1, 1, 0, 0),
-     datetime.datetime(2005, 1, 1, 0, 0),
-     datetime.datetime(2006, 1, 1, 0, 0)]
+    [np.datetime64(2001, 1, 1, 0, 0),
+     np.datetime64(2002, 1, 1, 0, 0),
+     dnp.datetime64(2003, 1, 1, 0, 0),
+     np.datetime64(2004, 1, 1, 0, 0),
+     np.datetime64(2005, 1, 1, 0, 0),
+     np.datetime64(2006, 1, 1, 0, 0)]
 
     In this example the first timestep is rolled back to 31st Dec 2000 whilst the last
     is extended to 31st Dec 2005.
@@ -200,12 +200,12 @@ def generate_range(
     ...     to_offset("A"),
     ... )
     >>> pprint([d for d in g])
-    [datetime.datetime(2000, 12, 31, 0, 0),
-     datetime.datetime(2001, 12, 31, 0, 0),
-     datetime.datetime(2002, 12, 31, 0, 0),
-     datetime.datetime(2003, 12, 31, 0, 0),
-     datetime.datetime(2004, 12, 31, 0, 0),
-     datetime.datetime(2005, 12, 31, 0, 0)]
+    [np.datetime64(2000, 12, 31, 0, 0),
+     np.datetime64e(2001, 12, 31, 0, 0),
+     np.datetime64(2002, 12, 31, 0, 0),
+     np.datetime64(2003, 12, 31, 0, 0),
+     np.datetime64(2004, 12, 31, 0, 0),
+     np.datetime64(2005, 12, 31, 0, 0)]
 
     In this example the first timestep is already on the offset so stays there, the last
     timestep is to 1st Sep 2005.
@@ -216,24 +216,24 @@ def generate_range(
     ...     to_offset("QS"),
     ... )
     >>> pprint([d for d in g])
-    [datetime.datetime(2001, 4, 1, 0, 0),
-     datetime.datetime(2001, 7, 1, 0, 0),
-     datetime.datetime(2001, 10, 1, 0, 0),
-     datetime.datetime(2002, 1, 1, 0, 0),
-     datetime.datetime(2002, 4, 1, 0, 0),
-     datetime.datetime(2002, 7, 1, 0, 0),
-     datetime.datetime(2002, 10, 1, 0, 0),
-     datetime.datetime(2003, 1, 1, 0, 0),
-     datetime.datetime(2003, 4, 1, 0, 0),
-     datetime.datetime(2003, 7, 1, 0, 0),
-     datetime.datetime(2003, 10, 1, 0, 0),
-     datetime.datetime(2004, 1, 1, 0, 0),
-     datetime.datetime(2004, 4, 1, 0, 0),
-     datetime.datetime(2004, 7, 1, 0, 0),
-     datetime.datetime(2004, 10, 1, 0, 0),
-     datetime.datetime(2005, 1, 1, 0, 0),
-     datetime.datetime(2005, 4, 1, 0, 0),
-     datetime.datetime(2005, 7, 1, 0, 0)]
+    [np.datetime64(2001, 4, 1, 0, 0),
+     np.datetime64(2001, 7, 1, 0, 0),
+     np.datetime64(2001, 10, 1, 0, 0),
+     np.datetime64(2002, 1, 1, 0, 0),
+     np.datetime64(2002, 4, 1, 0, 0),
+     np.datetime64(2002, 7, 1, 0, 0),
+     np.datetime64(2002, 10, 1, 0, 0),
+     np.datetime64(2003, 1, 1, 0, 0),
+     np.datetime64(2003, 4, 1, 0, 0),
+     np.datetime64(2003, 7, 1, 0, 0),
+     np.datetime64(2003, 10, 1, 0, 0),
+     np.datetime64(2004, 1, 1, 0, 0),
+     np.datetime64(2004, 4, 1, 0, 0),
+     np.datetime64(2004, 7, 1, 0, 0),
+     np.datetime64(2004, 10, 1, 0, 0),
+     np.datetime64(2005, 1, 1, 0, 0),
+     np.datetime64(2005, 4, 1, 0, 0),
+     np.datetime64(2005, 7, 1, 0, 0)]
     """
     # Get the bounds
     start = offset.rollback(start)

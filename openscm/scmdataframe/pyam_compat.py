@@ -2,7 +2,7 @@
 Imports and classes required to ensure compatibility with Pyam is intelligently
 handled.
 """
-import datetime
+import numpy as np
 
 from dateutil import parser
 
@@ -35,7 +35,7 @@ try:
                 self.data["time"] = self.data["time"].apply(convert_str_to_datetime)
 
             not_datetime = [
-                not isinstance(x, (datetime.datetime, datetime.date))
+                not isinstance(x, np.datetime64)
                 for x in self.data["time"]
             ]
             if any(not_datetime):

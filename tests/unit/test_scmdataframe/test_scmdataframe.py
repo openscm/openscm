@@ -28,9 +28,9 @@ def test_init_df_year_converted_to_datetime(test_pd_df):
     assert (
         res["time"].unique()
         == [
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 1, 1),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 1, 1),
         ]
     ).all()
 
@@ -66,14 +66,14 @@ def test_init_df_formats(test_pd_df, in_format):
         idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
         test_init = test_pd_df.melt(id_vars=idx, var_name="year")
         test_init["time"] = test_init["year"].apply(
-            lambda x: datetime.datetime(x, 1, 1)
+            lambda x: np.datetime64(x, 1, 1)
         )
         test_init = test_init.drop("year", axis="columns")
     elif in_format == "time_col_index":
         idx = ["climate_model", "model", "scenario", "region", "variable", "unit"]
         test_init = test_pd_df.melt(id_vars=idx, var_name="year")
         test_init["time"] = test_init["year"].apply(
-            lambda x: datetime.datetime(x, 1, 1)
+            lambda x: np.datetime64(x, 1, 1)
         )
         test_init = test_init.drop("year", axis="columns")
         test_init = test_init.set_index(idx + ["time"])
@@ -100,9 +100,9 @@ def test_init_df_formats(test_pd_df, in_format):
     assert (
         res["time"].unique()
         == [
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 1, 1),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 1, 1),
         ]
     ).all()
 
@@ -225,9 +225,9 @@ def test_init_ts_col_wrong_length_error(test_ts, fail_setting):
 def get_test_pd_df_with_datetime_columns(tpdf):
     return tpdf.rename(
         {
-            2005.0: datetime.datetime(2005, 1, 1),
-            2010.0: datetime.datetime(2010, 1, 1),
-            2015.0: datetime.datetime(2015, 1, 1),
+            2005.0: np.datetime64(2005, 1, 1),
+            2010.0: np.datetime64(2010, 1, 1),
+            2015.0: np.datetime64(2015, 1, 1),
         },
         axis="columns",
     )
@@ -272,9 +272,9 @@ def test_init_with_years_as_str(test_pd_df, years):
     obs = df._data.index
     exp = pd.Index(
         [
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 1, 1),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 1, 1),
         ],
         name="time",
         dtype="object",
@@ -310,9 +310,9 @@ def test_init_with_decimal_years():
     assert (
         res["time"].unique()
         == [
-            datetime.datetime(1765, 1, 1, 0, 0),
-            datetime.datetime(1765, 1, 31, 7, 4, 48),
-            datetime.datetime(1765, 3, 2, 22, 55, 11),
+            np.datetime64(1765, 1, 1, 0, 0),
+            np.datetime64(1765, 1, 31, 7, 4, 48),
+            np.datetime64(1765, 3, 2, 22, 55, 11),
         ]
     ).all()
     npt.assert_array_equal(res._data.loc[:, 0].values, inp_array)
@@ -465,9 +465,9 @@ def test_variable_depth_0_with_base():
             "unit": ["EJ/yr"],
         },
         index=[
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 6, 12),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 6, 12),
         ],
     )
 
@@ -522,7 +522,7 @@ def test_filter_error(test_scm_df):
 
 def test_filter_year(test_scm_datetime_df):
     obs = test_scm_datetime_df.filter(year=2005)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
 
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
@@ -537,7 +537,7 @@ def test_filter_year_error(test_scm_datetime_df):
 
 def test_filter_inplace(test_scm_datetime_df):
     test_scm_datetime_df.filter(year=2005, inplace=True)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
 
     unique_time = test_scm_datetime_df["time"].unique()
     assert len(unique_time) == 1
@@ -547,7 +547,7 @@ def test_filter_inplace(test_scm_datetime_df):
 @pytest.mark.parametrize("test_month", [6, "June", "Jun", "jun", ["Jun", "jun"]])
 def test_filter_month(test_scm_datetime_df, test_month):
     obs = test_scm_datetime_df.filter(month=test_month)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
@@ -556,7 +556,7 @@ def test_filter_month(test_scm_datetime_df, test_month):
 @pytest.mark.parametrize("test_month", [6, "Jun", "jun", ["Jun", "jun"]])
 def test_filter_year_month(test_scm_datetime_df, test_month):
     obs = test_scm_datetime_df.filter(year=2005, month=test_month)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
@@ -565,7 +565,7 @@ def test_filter_year_month(test_scm_datetime_df, test_month):
 @pytest.mark.parametrize("test_day", [17, "Fri", "Friday", "friday", ["Fri", "fri"]])
 def test_filter_day(test_scm_datetime_df, test_day):
     obs = test_scm_datetime_df.filter(day=test_day)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
@@ -594,18 +594,18 @@ def test_filter_hour_multiple(test_scm_datetime_df):
 
 
 def test_filter_time_exact_match(test_scm_datetime_df):
-    obs = test_scm_datetime_df.filter(time=datetime.datetime(2005, 6, 17, 12))
-    expected = datetime.datetime(2005, 6, 17, 12)
+    obs = test_scm_datetime_df.filter(time=np.datetime64(2005, 6, 17, 12))
+    expected = np.datetime64(2005, 6, 17, 12)
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
 
 
 def test_filter_time_range(test_scm_datetime_df):
-    error_msg = r".*datetime.datetime.*"
+    error_msg = r".*np.datetime64.*"
     with pytest.raises(TypeError, match=error_msg):
         test_scm_datetime_df.filter(
-            year=range(datetime.datetime(2000, 6, 17), datetime.datetime(2009, 6, 17))
+            year=range(np.datetime64(2000, 6, 17), np.datetime64(2009, 6, 17))
         )
 
 
@@ -613,7 +613,7 @@ def test_filter_time_range_year(test_scm_datetime_df):
     obs = test_scm_datetime_df.filter(year=range(2000, 2008))
 
     unique_time = obs["time"].unique()
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
 
     assert len(unique_time) == 1
     assert unique_time[0] == expected
@@ -622,7 +622,7 @@ def test_filter_time_range_year(test_scm_datetime_df):
 @pytest.mark.parametrize("month_range", [range(3, 7), "Mar-Jun"])
 def test_filter_time_range_month(test_scm_datetime_df, month_range):
     obs = test_scm_datetime_df.filter(month=month_range)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
 
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
@@ -653,7 +653,7 @@ def test_filter_time_range_round_the_clock_error(test_scm_datetime_df, month_ran
 @pytest.mark.parametrize("day_range", [range(14, 20), "Thu-Sat"])
 def test_filter_time_range_day(test_scm_datetime_df, day_range):
     obs = test_scm_datetime_df.filter(day=day_range)
-    expected = datetime.datetime(2005, 6, 17, 12)
+    expected = np.datetime64(2005, 6, 17, 12)
     unique_time = obs["time"].unique()
     assert len(unique_time) == 1
     assert unique_time[0] == expected
@@ -685,7 +685,7 @@ def test_filter_time_range_hour(test_scm_datetime_df, hour_range):
 
 
 def test_filter_time_no_match(test_scm_datetime_df):
-    obs = test_scm_datetime_df.filter(time=datetime.datetime(2004, 6, 18))
+    obs = test_scm_datetime_df.filter(time=np.datetime64(2004, 6, 18))
     assert obs._data.empty
 
 
@@ -837,9 +837,9 @@ def test_quantile_over_lower(test_processing_scm_df):
             "region",
             "variable",
             "unit",
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 6, 12),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 6, 12),
         ],
     )
     obs = test_processing_scm_df.process_over("scenario", "quantile", q=0)
@@ -857,9 +857,9 @@ def test_quantile_over_upper(test_processing_scm_df):
             "region",
             "variable",
             "unit",
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 6, 12),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 6, 12),
         ],
     )
     obs = test_processing_scm_df.process_over(["model", "scenario"], "quantile", q=1)
@@ -896,9 +896,9 @@ def test_mean_over(test_processing_scm_df):
             "region",
             "variable",
             "unit",
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 6, 12),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 6, 12),
         ],
     )
     obs = test_processing_scm_df.process_over("scenario", "mean")
@@ -926,9 +926,9 @@ def test_median_over(test_processing_scm_df):
             "region",
             "variable",
             "unit",
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 6, 12),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 6, 12),
         ],
     )
     obs = test_processing_scm_df.process_over("scenario", "median")
@@ -950,7 +950,7 @@ def test_process_over_kwargs_error(test_scm_df):
     "tfilter,tappend_str,exp_append_str",
     [
         (
-            {"time": [datetime.datetime(y, 1, 1, 0, 0, 0) for y in range(2005, 2011)]},
+            {"time": [np.datetime64(y, 1, 1, 0, 0, 0) for y in range(2005, 2011)]},
             None,
             "(ref. period time: 2005-01-01 00:00:00 - 2010-01-01 00:00:00)",
         ),
@@ -1015,9 +1015,9 @@ def test_relative_to_ref_period_mean(
             "region",
             "variable",
             "unit",
-            datetime.datetime(2005, 1, 1),
-            datetime.datetime(2010, 1, 1),
-            datetime.datetime(2015, 6, 12),
+            np.datetime64(2005, 1, 1),
+            np.datetime64(2010, 1, 1),
+            np.datetime64(2015, 6, 12),
         ],
     )
 
@@ -1208,9 +1208,9 @@ def get_append_col_order_time_dfs(base):
 
     tdata = other._data.copy().reset_index()
     tdata["time"] = [
-        datetime.datetime(2002, 1, 1, 0, 0),
-        datetime.datetime(2008, 1, 1, 0, 0),
-        datetime.datetime(2009, 1, 1, 0, 0),
+        np.datetime64(2002, 1, 1, 0, 0),
+        np.datetime64(2008, 1, 1, 0, 0),
+        np.datetime64(2009, 1, 1, 0, 0),
     ]
     tdata = tdata.set_index("time")
     tdata.index = tdata.index.astype("object")
@@ -1809,7 +1809,7 @@ def test_scmdataframe_to_parameterset(rcp26, prefill):
 
     def get_comparison_times_for_year(yr):
         return np.asarray(
-            [datetime.datetime(yr, 1, 1), datetime.datetime(yr + 1, 1, 1)],
+            [np.datetime64(yr, 1, 1), np.datetime64(yr + 1, 1, 1)],
             dtype="datetime64[s]",
         )
 
@@ -1941,13 +1941,13 @@ def test_convert_openscm_to_scmdataframe_circularity(rcp26):
 
 def test_resample():
     df_dts = [
-        datetime.datetime(2000, 1, 1),
-        datetime.datetime(2000, 6, 1),
-        datetime.datetime(2001, 1, 1),
-        datetime.datetime(2001, 6, 1),
-        datetime.datetime(2002, 1, 1),
-        datetime.datetime(2002, 6, 1),
-        datetime.datetime(2003, 1, 1),
+        np.datetime64(2000, 1, 1),
+        np.datetime64(2000, 6, 1),
+        np.datetime64(2001, 1, 1),
+        np.datetime64(2001, 6, 1),
+        np.datetime64(2002, 1, 1),
+        np.datetime64(2002, 6, 1),
+        np.datetime64(2003, 1, 1),
     ]
     df = ScmDataFrame(
         [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
@@ -1969,7 +1969,7 @@ def test_resample():
 
 
 def test_resample_long_datetimes():
-    df_dts = [datetime.datetime(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
+    df_dts = [np.datetime64(year, 1, 1) for year in np.arange(1700, 2500 + 1, 100)]
     df = ScmDataFrame(
         np.arange(1700, 2500 + 1, 100),
         columns={
