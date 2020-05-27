@@ -65,12 +65,6 @@ Detailed documentation is available at `ReadTheDocs
 
 .. sec-end-long-description
 
-Schema
-------
-
-.. image:: docs/static/schema_small.png
-    :align: center
-
 .. sec-begin-installation
 
 Installation
@@ -100,6 +94,8 @@ dependencies (see `ReadTheDocs
 Quickstart
 ----------
 
+To be written
+
 .. sec-end-quickstart
 .. sec-begin-development
 
@@ -115,7 +111,7 @@ Tests can be run locally with
 
 .. code:: bash
 
-    python setup.py test
+    pytest tests/
 
 .. sec-end-development
 

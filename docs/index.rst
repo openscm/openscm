@@ -5,50 +5,39 @@ OpenSCM
     :start-after: sec-begin-index
     :end-before: sec-end-index
 
-Schema
-------
-
-.. image:: static/schema.png
-    :align: center
-
-
 .. toctree::
     :maxdepth: 2
     :caption: Documentation
 
     installation
-    tool
     quickstart
     usage
     models
     development
 
-.. toctree::
-    :maxdepth: 2
-    :caption: Standards
+.. tool TODO: write CLI
 
-    parameters
-    fileformats
-
-..
-    TODO: split into public and internals
+.. TODO decide on these
+.. .. toctree::
+..     :maxdepth: 2
+..     :caption: Standards
+..     parameters
+..     fileformats
 
 .. toctree::
     :maxdepth: 2
     :caption: Public API
 
-    openscm
     errors
     scenarios
-    scmdataframe
+
+.. openscm
 
 .. toctree::
     :maxdepth: 2
     :caption: Internal API
 
     adapter
-    core
-    units
 
 .. toctree::
     :maxdepth: 2
