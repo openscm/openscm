@@ -175,8 +175,8 @@ class ParameterSet:
         self,
         name: HierarchicalName,
         unit: str,
-        time_points: np.ndarray,
         region: HierarchicalName = ("World",),
+        time_points: Optional[np.ndarray] = None,
         timeseries_type: Union[ParameterType, str] = ParameterType.POINT_TIMESERIES,
         interpolation: Union[InterpolationType, str] = InterpolationType.LINEAR,
         extrapolation: Union[ExtrapolationType, str] = ExtrapolationType.NONE,
@@ -197,7 +197,7 @@ class ParameterSet:
         region
             Hierarchical name of the region
         timeseries_type
-            Time series type
+            Time series type for this view
         interpolation_type
             Interpolation type
         extrapolation_type
@@ -221,10 +221,20 @@ class ParameterSet:
         parameter = self._get_or_create_parameter(
             name, self._get_or_create_region(region)
         )
-
-        parameter.attempt_read(timeseries_type, unit, time_points)
+        para_timeseries_type = (
+            parameter.parameter_type
+            if parameter.parameter_type
+            in (ParameterType.POINT_TIMESERIES, ParameterType.AVERAGE_TIMESERIES)
+            else timeseries_type
+        )
+        parameter.attempt_read(para_timeseries_type, unit)
         return TimeseriesView(
-            parameter, unit, time_points, timeseries_type, interpolation, extrapolation
+            parameter,
+            unit,
+            timeseries_type,
+            interpolation,
+            extrapolation,
+            time_points=time_points,
         )  # TimeseriesView
 
     def generic(
