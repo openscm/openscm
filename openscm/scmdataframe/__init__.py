@@ -10,6 +10,7 @@ import numpy as np
 
 from ..core.parameters import ParameterInfo, ParameterType, _Parameter
 from ..core.parameterset import ParameterSet
+from ..errors import ParameterEmptyError
 from .base import ScmDataFrameBase, df_append  # noqa: F401
 
 
@@ -128,18 +129,27 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
                 raise ValueError(
                     "Only generic types with Region==World can be extracted"
                 )
-            metadata[parameter_name_to_scm(param_name)] = [
-                parameterset.generic(param_name, region=region).value
-            ]
+            value = parameterset.generic(param_name, region=region).value
+            if isinstance(value, list):
+                value = tuple(value)
+
+            meta_key = parameter_name_to_scm(param_name)
+            if meta_key in ["model", "scenario", "climate_model"]:
+                continue  # should always come from kwargs
+            metadata[meta_key] = [value]
         elif p_info.parameter_type == ParameterType.SCALAR:
             if region != ("World",):
                 raise ValueError(
                     "Only scalar types with Region==World can be extracted"
                 )
             meta_key = "{} ({})".format(parameter_name_to_scm(param_name), p_info.unit)
-            meta_value = parameterset.scalar(
-                param_name, unit=cast(str, p_info.unit)
-            ).value
+
+            try:
+                meta_value = parameterset.scalar(
+                    param_name, unit=cast(str, p_info.unit)
+                ).value
+            except ParameterEmptyError:  # hack hack hack
+                continue
             metadata[meta_key] = [meta_value]
         else:
             para_type = cast(ParameterType, p_info.parameter_type)
@@ -152,11 +162,15 @@ def convert_openscm_to_scmdataframe(  # pylint: disable=too-many-locals
             ts = parameterset.timeseries(
                 param_name,
                 cast(str, p_info.unit),
-                tp,
+                time_points=tp,
                 region=region,
                 timeseries_type=para_type,
             )
-            data.append(ts.values)
+            try:
+                data.append(ts.values)
+            except ParameterEmptyError:
+                print("Empty {}".format(param_name))
+                continue
             metadata["variable"].append(parameter_name_to_scm(param_name))
             metadata["region"].append(parameter_name_to_scm(region))
             metadata["unit"].append(cast(str, p_info.unit))

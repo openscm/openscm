@@ -36,8 +36,21 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
 ]
-REQUIREMENTS_INSTALL = ["numpy>=1.7", "scipy", "pint", "pandas", "python-dateutil"]
-REQUIREMENTS_NOTEBOOKS = ["matplotlib", "notebook", "seaborn", "pyam-iamc>=0.2.0"]
+REQUIREMENTS_INSTALL = [
+    "numpy>=1.7",
+    "scipy",
+    "pint",
+    "pandas==0.24.2",  # Until next release https://github.com/IAMconsortium/pyam/issues/245
+    "python-dateutil",
+    "tqdm",
+]
+REQUIREMENTS_NOTEBOOKS = [
+    "matplotlib",
+    "notebook",
+    "seaborn",
+    "pyam-iamc>=0.2.0",
+    "ipywidgets",
+]
 REQUIREMENTS_TESTS = [
     "codecov",
     "nbval",
@@ -71,7 +84,13 @@ When implementing an additional adapter, include your adapter NAME here as:
 "NAME": [ ... additional pip modules you need ... ],
 ```
 """
-REQUIREMENTS_MODELS = {}
+magicc_requirements = [
+    "pymagicc @ git+https://github.com/openclimatedata/pymagicc.git@openscm-update"
+]
+REQUIREMENTS_MODELS = {
+    "MAGICC6": magicc_requirements,
+    "MAGICC7": magicc_requirements,
+}
 
 REQUIREMENTS_EXTRAS = {
     "notebooks": REQUIREMENTS_NOTEBOOKS,
